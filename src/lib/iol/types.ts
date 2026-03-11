@@ -50,3 +50,16 @@ export interface OrderRequest {
   validez?: string;
   side: 'buy' | 'sell'; // added for internal logic
 }
+
+export interface Operation {
+  numero: number;
+  fechaOrden: string;
+  tipo: string;
+  estado: string;
+  mercado: string;
+  simbolo: string;
+  cantidad: number;
+  monto: number;
+  modalidad: string;
+  precio: number;
+}

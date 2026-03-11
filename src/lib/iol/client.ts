@@ -1,4 +1,4 @@
-import { IOLToken, PortfolioResponse, Quote, OrderRequest, OrderResponse } from './types';
+import { IOLToken, PortfolioResponse, Quote, OrderRequest, OrderResponse, Operation } from './types';
 
 const SIMULATION_MODE = process.env.SIMULATION_MODE === 'true';
 
@@ -9,8 +9,20 @@ export class IOLClient {
 
   constructor() {
     // In simulation mode, we don't need to authenticate immediately
-    if (!SIMULATION_MODE && (!process.env.IOL_USERNAME || !process.env.IOL_PASSWORD)) {
-      console.warn('IOL credentials not found in environment variables. Running in limited mode.');
+    if (!SIMULATION_MODE && !process.env.IOL_REFRESH_TOKEN) {
+      console.warn('IOL refresh token not found in environment variables. Running in limited mode.');
+    }
+
+    if (!SIMULATION_MODE && process.env.IOL_ACCESS_TOKEN) {
+      this.token = {
+        access_token: process.env.IOL_ACCESS_TOKEN,
+        refresh_token: process.env.IOL_REFRESH_TOKEN || '',
+        expires_in: 1200,
+        token_type: 'bearer',
+        issued: new Date().toISOString(),
+        expires: new Date(Date.now() + 1200 * 1000).toISOString()
+      };
+      this.tokenExpiry = new Date(Date.now() + 1200 * 1000);
     }
   }
 
@@ -21,6 +33,12 @@ export class IOLClient {
       return;
     }
 
+    const refreshTokenToUse = this.token?.refresh_token || process.env.IOL_REFRESH_TOKEN;
+
+    if (!refreshTokenToUse) {
+      throw new Error('No refresh token available to authenticate with IOL');
+    }
+
     try {
       const response = await fetch(`${this.baseUrl}/token`, {
         method: 'POST',
@@ -28,9 +46,8 @@ export class IOLClient {
           'Content-Type': 'application/x-www-form-urlencoded',
         },
         body: new URLSearchParams({
-          username: process.env.IOL_USERNAME || '',
-          password: process.env.IOL_PASSWORD || '',
-          grant_type: 'password',
+          refresh_token: refreshTokenToUse,
+          grant_type: 'refresh_token',
         }),
       });
 
@@ -138,6 +155,18 @@ export class IOLClient {
       body: JSON.stringify(order),
     });
   }
+
+  async getOperations(): Promise<Operation[]> {
+    if (SIMULATION_MODE) {
+      return [
+        { numero: 1001, fechaOrden: new Date().toISOString(), tipo: 'Compra', estado: 'Terminada', mercado: 'bcba', simbolo: 'AAPL', cantidad: 10, monto: 150000, modalidad: 't0', precio: 15000 },
+        { numero: 1002, fechaOrden: new Date(Date.now() - 86400000).toISOString(), tipo: 'Venta', estado: 'Terminada', mercado: 'bcba', simbolo: 'KO', cantidad: 5, monto: 60000, modalidad: 't0', precio: 12000 },
+        { numero: 1003, fechaOrden: new Date(Date.now() - 172800000).toISOString(), tipo: 'Compra', estado: 'Pendiente', mercado: 'bcba', simbolo: 'TSLA', cantidad: 2, monto: 40000, modalidad: 't0', precio: 20000 },
+      ];
+    }
+    return this.fetchWithAuth(`/api/v2/operaciones`);
+  }
+
 
   async getCCL(): Promise<number> {
     try {

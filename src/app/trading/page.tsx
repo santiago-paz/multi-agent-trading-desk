@@ -6,6 +6,7 @@ import { AgentLog } from '@/components/ui/AgentLog';
 import { RiskGauge } from '@/components/ui/RiskGauge';
 import { OrderReview } from '@/components/ui/OrderReview';
 import { NewsFeed } from '@/components/ui/NewsFeed';
+import { OperationsFeed } from '@/components/ui/OperationsFeed';
 import { Sparkline } from '@/components/ui/Sparkline';
 import { DesktopIcon } from '@/components/ui/DesktopIcon';
 import {
@@ -13,8 +14,8 @@ import {
   WindowState,
 } from '@/components/ui/DraggableResizableWindow';
 import { useNewsStore } from '@/lib/store/news-store';
-import { runAnalysis, executeOrders, getPortfolioSummary, getMarketData } from './actions';
-import { OrderRequest, PortfolioResponse } from '@/lib/iol/types';
+import { runAnalysis, executeOrders, getPortfolioSummary, getMarketData, getOperations } from './actions';
+import { OrderRequest, PortfolioResponse, Operation } from '@/lib/iol/types';
 import { AnalystOutput, SentinelOutput, StrategistOutput } from '@/lib/agents/types';
 import { HistoricalRow } from '@/lib/market-data';
 import { DESKTOP_APP_ICONS } from '@/lib/win98se-icons';
@@ -30,6 +31,9 @@ export default function TradingDashboard() {
     data: HistoricalRow[];
   }[] | null>(null);
   const [isLoadingMarketData, setIsLoadingMarketData] = useState(true);
+
+  const [operations, setOperations] = useState<Operation[]>([]);
+  const [isLoadingOperations, setIsLoadingOperations] = useState(false);
 
   const {
     generalNews,
@@ -70,7 +74,17 @@ export default function TradingDashboard() {
   useEffect(() => {
     fetchPortfolio();
     fetchMarketData();
+    fetchOperationsData();
   }, []);
+
+  const fetchOperationsData = async () => {
+    setIsLoadingOperations(true);
+    const result = await getOperations();
+    if (result.success && result.data) {
+      setOperations(result.data as Operation[]);
+    }
+    setIsLoadingOperations(false);
+  };
 
   const fetchPortfolio = async () => {
     setIsLoadingPortfolio(true);
@@ -158,6 +172,12 @@ export default function TradingDashboard() {
           iconSrc={DESKTOP_APP_ICONS.marketdata}
           icon="📈"
           onClick={() => openOrFocusWindow('marketdata')}
+        />
+        <DesktopIcon
+          label="Movimientos"
+          iconSrc={DESKTOP_APP_ICONS.orders}
+          icon="💸"
+          onClick={() => openOrFocusWindow('movements')}
         />
       </div>
 
@@ -311,6 +331,13 @@ export default function TradingDashboard() {
                   <p className="m-0 text-red-600">Failed to load market data.</p>
                 )}
               </>
+            )}
+            {appId === 'movements' && (
+              <OperationsFeed
+                operations={operations}
+                isLoading={isLoadingOperations}
+                onRefresh={fetchOperationsData}
+              />
             )}
           </DraggableResizableWindow>
         );

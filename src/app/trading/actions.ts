@@ -133,3 +133,14 @@ export async function getPortfolioSummary() {
         return { success: false, error: 'Failed to fetch portfolio summary' };
     }
 }
+
+export async function getOperations() {
+    try {
+        const operations = await iolClient.getOperations();
+        return { success: true, data: operations };
+    } catch (error) {
+        console.error('Failed to fetch operations:', error);
+        return { success: false, error: 'Failed to fetch operations' };
+    }
+}
+

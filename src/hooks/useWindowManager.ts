@@ -1,7 +1,7 @@
 import { useState, useCallback } from 'react';
 import { WindowState } from '@/components/ui/DraggableResizableWindow';
 
-export const APP_IDS = ['portfolio', 'analysis', 'agent', 'orders', 'news', 'marketdata'] as const;
+export const APP_IDS = ['portfolio', 'analysis', 'agent', 'orders', 'news', 'marketdata', 'movements'] as const;
 export type AppId = (typeof APP_IDS)[number];
 
 export const DEFAULT_WINDOWS: Record<AppId, { width: number; height: number; x: number; y: number }> = {
@@ -11,6 +11,7 @@ export const DEFAULT_WINDOWS: Record<AppId, { width: number; height: number; x: 
   orders: { x: 24, y: 220, width: 340, height: 320 },
   news: { x: 380, y: 24, width: 500, height: 440 },
   marketdata: { x: 400, y: 80, width: 540, height: 400 },
+  movements: { x: 120, y: 120, width: 440, height: 320 },
 };
 
 export const APP_LABELS: Record<AppId, string> = {
@@ -20,6 +21,7 @@ export const APP_LABELS: Record<AppId, string> = {
   orders: 'Orders',
   news: 'Market Intelligence Feed',
   marketdata: 'Market Data',
+  movements: 'Movimientos',
 };
 
 function createWindowState(id: AppId, zIndex: number, minimized = false): WindowState {

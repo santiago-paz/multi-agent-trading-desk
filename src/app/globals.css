@@ -114,6 +114,55 @@ button.desktop-icon:active span:last-child {
   box-shadow: inset -1px -1px #fff, inset 1px 1px #0a0a0a;
 }
 
+
 .taskbar-button.active {
   box-shadow: inset 1px 1px 0 #0a0a0a, inset -1px -1px 0 #fff;
+}
+
+/* Windows 98 Custom Scrollbar */
+.win98-scrollbar::-webkit-scrollbar {
+  width: 16px;
+  height: 16px;
+  background: #dfdfdf;
+  border-left: 1px solid #fff;
+  border-top: 1px solid #fff;
+}
+
+.win98-scrollbar::-webkit-scrollbar-track {
+  background: url("data:image/svg+xml;utf8,<svg width='2' height='2' viewBox='0 0 2 2' xmlns='http://www.w3.org/2000/svg'><rect width='1' height='1' fill='%23c0c0c0'/><rect x='1' y='1' width='1' height='1' fill='%23c0c0c0'/><rect x='1' width='1' height='1' fill='%23ffffff'/><rect y='1' width='1' height='1' fill='%23ffffff'/></svg>") repeat;
+}
+
+.win98-scrollbar::-webkit-scrollbar-thumb {
+  background: #c0c0c0;
+  box-shadow: inset -1px -1px #0a0a0a, inset 1px 1px #fff, inset -2px -2px #808080, inset 2px 2px #dfdfdf;
+}
+
+.win98-scrollbar::-webkit-scrollbar-button:vertical:start:decrement {
+  display: block;
+  height: 16px;
+  background: #c0c0c0;
+  box-shadow: inset -1px -1px #0a0a0a, inset 1px 1px #fff, inset -2px -2px #808080, inset 2px 2px #dfdfdf;
+  background-image: url("data:image/svg+xml;utf8,<svg width='7' height='4' viewBox='0 0 7 4' xmlns='http://www.w3.org/2000/svg'><path d='M3.5 0L7 4H0L3.5 0Z' fill='black'/></svg>");
+  background-repeat: no-repeat;
+  background-position: center;
+}
+
+.win98-scrollbar::-webkit-scrollbar-button:vertical:start:decrement:active {
+  box-shadow: inset 1px 1px #0a0a0a, inset -1px -1px #fff, inset 2px 2px #808080, inset -2px -2px #dfdfdf;
+  background-position: calc(50% + 1px) calc(50% + 1px);
+}
+
+.win98-scrollbar::-webkit-scrollbar-button:vertical:end:increment {
+  display: block;
+  height: 16px;
+  background: #c0c0c0;
+  box-shadow: inset -1px -1px #0a0a0a, inset 1px 1px #fff, inset -2px -2px #808080, inset 2px 2px #dfdfdf;
+  background-image: url("data:image/svg+xml;utf8,<svg width='7' height='4' viewBox='0 0 7 4' xmlns='http://www.w3.org/2000/svg'><path d='M3.5 4L0 0H7L3.5 4Z' fill='black'/></svg>");
+  background-repeat: no-repeat;
+  background-position: center;
+}
+
+.win98-scrollbar::-webkit-scrollbar-button:vertical:end:increment:active {
+  box-shadow: inset 1px 1px #0a0a0a, inset -1px -1px #fff, inset 2px 2px #808080, inset -2px -2px #dfdfdf;
+  background-position: calc(50% + 1px) calc(50% + 1px);
 }
