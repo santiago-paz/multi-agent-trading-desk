@@ -58,8 +58,8 @@ export async function executeOrders(orders: OrderRequest[]) {
   }
 }
 
-import { getHistoricalData, getNews, getGeneralMarketNews } from '@/lib/market-data';
-import { processNewsBatch } from '@/lib/news-processor';
+import { getHistoricalData, getNews, getGeneralMarketNews, NewsItem } from '@/lib/market-data';
+import { processNewsItem } from '@/lib/news-processor';
 
 export async function getMarketData() {
   try {
@@ -77,25 +77,24 @@ export async function getMarketData() {
   }
 }
 
-export async function getNewsData() {
+// 1. Fetch Metadata Only (Fast)
+export async function getNewsMetadata() {
   try {
     const symbols = ['AAPL', 'KO', 'TSLA'];
     
     // Fetch general market news
-    const rawGeneralNews = await getGeneralMarketNews(10);
-    const generalNews = await processNewsBatch(rawGeneralNews);
+    const generalNews = await getGeneralMarketNews(10);
     
     // Fetch specific news for each symbol
     const specificNewsPromises = symbols.map(async (symbol) => {
-      const rawNews = await getNews(symbol, 6);
-      const processedNews = await processNewsBatch(rawNews);
-      return { symbol, news: processedNews };
+      const news = await getNews(symbol, 6);
+      return { symbol, news };
     });
     
     const specificNewsResults = await Promise.all(specificNewsPromises);
     
     // Transform array to object map
-    const specificNews: Record<string, any[]> = {};
+    const specificNews: Record<string, NewsItem[]> = {};
     specificNewsResults.forEach(item => {
       specificNews[item.symbol] = item.news;
     });
@@ -108,8 +107,19 @@ export async function getNewsData() {
       } 
     };
   } catch (error) {
-    console.error('Failed to fetch news data:', error);
-    return { success: false, error: 'Failed to fetch news data' };
+    console.error('Failed to fetch news metadata:', error);
+    return { success: false, error: 'Failed to fetch news metadata' };
+  }
+}
+
+// 2. Enrich Single Item (Slow)
+export async function enrichNewsItem(item: NewsItem) {
+  try {
+    const enriched = await processNewsItem(item);
+    return { success: true, data: enriched };
+  } catch (error) {
+    console.error('Failed to enrich news item:', error);
+    return { success: false, error: 'Failed to enrich item' };
   }
 }
 

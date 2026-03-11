@@ -87,6 +87,8 @@ export const NewsFeed: React.FC<NewsFeedProps> = ({ generalNews, specificNews })
   );
 };
 
+import { CheckCircle2, AlertCircle } from 'lucide-react';
+
 const NewsCard = ({ news, badge }: { news: NewsItem & { symbol?: string }, badge?: string }) => (
   <div className="border-l-4 border-gray-700 pl-4 py-1 hover:border-neon-green transition-colors group">
     <div className="flex items-center gap-2 mb-1">
@@ -103,6 +105,14 @@ const NewsCard = ({ news, badge }: { news: NewsItem & { symbol?: string }, badge
           {new Date(news.providerPublishTime).toLocaleDateString()}
         </span>
       )}
+      
+      <div className="ml-auto flex items-center" title={news.fullContent ? "Full content analyzed" : "Headline analysis only"}>
+        {news.fullContent ? (
+          <CheckCircle2 className="w-3 h-3 text-neon-green" />
+        ) : (
+          <AlertCircle className="w-3 h-3 text-yellow-600" />
+        )}
+      </div>
     </div>
     <a 
       href={news.link} 

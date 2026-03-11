@@ -6,10 +6,12 @@ import { AgentLog } from '@/components/ui/AgentLog';
 import { RiskGauge } from '@/components/ui/RiskGauge';
 import { OrderReview } from '@/components/ui/OrderReview';
 import { NewsFeed } from '@/components/ui/NewsFeed';
-import { runAnalysis, executeOrders, getPortfolioSummary, getMarketData, getNewsData } from './actions';
+import { Sparkline } from '@/components/ui/Sparkline';
+import { useNewsStore } from '@/lib/store/news-store';
+import { runAnalysis, executeOrders, getPortfolioSummary, getMarketData } from './actions';
 import { OrderRequest, PortfolioResponse } from '@/lib/iol/types';
 import { AnalystOutput, SentinelOutput, StrategistOutput } from '@/lib/agents/types';
-import { HistoricalRow, NewsItem } from '@/lib/market-data';
+import { HistoricalRow } from '@/lib/market-data';
 
 export default function TradingDashboard() {
   const [portfolio, setPortfolio] = useState<PortfolioResponse | null>(null);
@@ -19,8 +21,8 @@ export default function TradingDashboard() {
   const [marketData, setMarketData] = useState<{ symbol: string; data: HistoricalRow[] }[] | null>(null);
   const [isLoadingMarketData, setIsLoadingMarketData] = useState(true);
 
-  const [newsData, setNewsData] = useState<{ general: NewsItem[], specific: Record<string, NewsItem[]> } | null>(null);
-  const [isLoadingNews, setIsLoadingNews] = useState(true);
+  // Use Zustand store for news
+  const { generalNews, specificNews, isLoading: isLoadingNews, fetchNews, lastUpdated, progress } = useNewsStore();
 
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysisResult, setAnalysisResult] = useState<{
@@ -36,6 +38,7 @@ export default function TradingDashboard() {
   useEffect(() => {
     fetchPortfolio();
     fetchMarketData();
+    // Fetch news on mount (store handles caching logic)
     fetchNews();
   }, []);
 
@@ -56,15 +59,6 @@ export default function TradingDashboard() {
       setMarketData(result.data);
     }
     setIsLoadingMarketData(false);
-  };
-
-  const fetchNews = async () => {
-    setIsLoadingNews(true);
-    const result = await getNewsData();
-    if (result.success && result.data) {
-      setNewsData(result.data);
-    }
-    setIsLoadingNews(false);
   };
 
   const handleRunAnalysis = async () => {
@@ -173,13 +167,50 @@ export default function TradingDashboard() {
 
       {/* News Feed Section */}
       <div className="mb-8 h-96">
-        <h2 className="text-2xl font-bold uppercase mb-4">Market Intelligence Feed</h2>
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-2xl font-bold uppercase">Market Intelligence Feed</h2>
+          <div className="flex items-center gap-4">
+            {lastUpdated && (
+              <span className="text-xs text-gray-500">
+                Last updated: {new Date(lastUpdated).toLocaleTimeString()}
+              </span>
+            )}
+            <button
+              onClick={() => fetchNews(true)}
+              disabled={isLoadingNews}
+              className={`px-4 py-2 text-xs font-bold uppercase border-2 border-white hover:bg-white hover:text-black transition-colors
+                ${isLoadingNews ? 'opacity-50 cursor-wait' : ''}
+              `}
+            >
+              {isLoadingNews ? 'REFRESHING...' : 'REFRESH NEWS'}
+            </button>
+          </div>
+        </div>
+        
         {isLoadingNews ? (
-          <div className="animate-pulse h-full bg-gray-900 border-4 border-gray-800"></div>
-        ) : newsData ? (
-          <NewsFeed generalNews={newsData.general} specificNews={newsData.specific} />
+          <div className="h-full flex flex-col items-center justify-center border-4 border-gray-800 bg-gray-900/50">
+            {progress ? (
+              <div className="w-64">
+                <div className="flex justify-between text-xs text-gray-400 mb-2 uppercase">
+                  <span>Processing Intelligence</span>
+                  <span>{progress.current} / {progress.total}</span>
+                </div>
+                <div className="h-2 bg-gray-800 rounded-full overflow-hidden">
+                  <div 
+                    className="h-full bg-neon-green transition-all duration-300 ease-out"
+                    style={{ width: `${(progress.current / progress.total) * 100}%` }}
+                  />
+                </div>
+                <p className="text-center text-xs text-gray-500 mt-4 animate-pulse">
+                  Analyzing market sentiment...
+                </p>
+              </div>
+            ) : (
+              <div className="animate-pulse text-gray-500">Initializing...</div>
+            )}
+          </div>
         ) : (
-          <div className="border-4 border-red-500 p-4 text-red-500">Failed to load news feed.</div>
+          <NewsFeed generalNews={generalNews} specificNews={specificNews} />
         )}
       </div>
       
@@ -210,6 +241,15 @@ export default function TradingDashboard() {
                     </tbody>
                   </table>
                   <p className="text-gray-500 mt-2 italic">Showing last 5 days</p>
+                </div>
+                
+                <div className="mt-4 border-t border-gray-800 pt-4">
+                  <p className="text-xs text-gray-500 mb-2 uppercase tracking-wider">7-Day Trend</p>
+                  <Sparkline 
+                    data={item.data.map(d => d.close)} 
+                    height={100} 
+                    color={item.data[item.data.length - 1].close >= item.data[0].close ? '#ccff00' : '#ef4444'} 
+                  />
                 </div>
               </div>
             ))}
