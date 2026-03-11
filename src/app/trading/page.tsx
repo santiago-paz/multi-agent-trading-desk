@@ -5,15 +5,19 @@ import { PortfolioSummary } from '@/components/ui/PortfolioSummary';
 import { AgentLog } from '@/components/ui/AgentLog';
 import { RiskGauge } from '@/components/ui/RiskGauge';
 import { OrderReview } from '@/components/ui/OrderReview';
-import { runAnalysis, executeOrders, getPortfolioSummary } from './actions';
+import { runAnalysis, executeOrders, getPortfolioSummary, getMarketData } from './actions';
 import { OrderRequest, PortfolioResponse } from '@/lib/iol/types';
 import { AnalystOutput, SentinelOutput, StrategistOutput } from '@/lib/agents/types';
+import { HistoricalRow } from '@/lib/market-data';
 
 export default function TradingDashboard() {
   const [portfolio, setPortfolio] = useState<PortfolioResponse | null>(null);
   const [portfolioValueUSD, setPortfolioValueUSD] = useState<number>(0);
   const [isLoadingPortfolio, setIsLoadingPortfolio] = useState(true);
   
+  const [marketData, setMarketData] = useState<{ symbol: string; data: HistoricalRow[] }[] | null>(null);
+  const [isLoadingMarketData, setIsLoadingMarketData] = useState(true);
+
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysisResult, setAnalysisResult] = useState<{
     analystResults: AnalystOutput[];
@@ -27,6 +31,7 @@ export default function TradingDashboard() {
 
   useEffect(() => {
     fetchPortfolio();
+    fetchMarketData();
   }, []);
 
   const fetchPortfolio = async () => {
@@ -37,6 +42,15 @@ export default function TradingDashboard() {
       setPortfolioValueUSD(result.data.valueUSD);
     }
     setIsLoadingPortfolio(false);
+  };
+
+  const fetchMarketData = async () => {
+    setIsLoadingMarketData(true);
+    const result = await getMarketData();
+    if (result.success && result.data) {
+      setMarketData(result.data);
+    }
+    setIsLoadingMarketData(false);
   };
 
   const handleRunAnalysis = async () => {
@@ -141,6 +155,42 @@ export default function TradingDashboard() {
             </div>
           )}
         </div>
+      </div>
+      
+      <div className="mt-8 border-t-4 border-white pt-8">
+        <h2 className="text-2xl font-bold uppercase mb-4">Market Data Verification</h2>
+        {isLoadingMarketData ? (
+          <div className="animate-pulse h-20 bg-gray-900 border-4 border-gray-800"></div>
+        ) : marketData ? (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {marketData.map((item) => (
+              <div key={item.symbol} className="border-2 border-gray-700 p-4">
+                <h3 className="font-bold text-neon-green mb-2">{item.symbol}</h3>
+                <div className="text-xs overflow-x-auto">
+                  <table className="w-full text-left">
+                    <thead>
+                      <tr className="border-b border-gray-800">
+                        <th className="py-1">Date</th>
+                        <th className="py-1 text-right">Close</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {item.data.slice(0, 5).map((row, i) => (
+                        <tr key={i} className="border-b border-gray-900">
+                          <td className="py-1">{new Date(row.date).toLocaleDateString()}</td>
+                          <td className="py-1 text-right">${row.close.toFixed(2)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                  <p className="text-gray-500 mt-2 italic">Showing last 5 days</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="text-red-500">Failed to load market data.</div>
+        )}
       </div>
       
       <style jsx global>{`

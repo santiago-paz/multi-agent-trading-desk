@@ -1,27 +1,10 @@
 import { generateText } from 'ai';
-import { createOpenAI } from '@ai-sdk/openai';
 import { AnalystOutput } from './types';
-
-// Configure Vercel AI Gateway
-const openai = createOpenAI({
-  baseURL: process.env.OPENAI_BASE_URL || 'https://gateway.ai.vercel.sh/v1',
-  apiKey: process.env.OPENAI_API_KEY,
-  headers: {
-    'x-vercel-ai-provider': 'anthropic',
-    'x-vercel-ai-model': 'claude-3-5-sonnet-20240620',
-  },
-});
-
-// Mock historical data for simulation
-const MOCK_HISTORY = {
-  AAPL: 'Price trend for last 30 days: 150, 152, 155, 153, 158, 160, 162, 165, 163, 168...',
-  KO: 'Price trend for last 30 days: 60, 60.5, 61, 60.8, 61.2, 61.5, 62, 61.8, 62.2, 62.5...',
-  TSLA: 'Price trend for last 30 days: 200, 195, 190, 192, 188, 185, 182, 180, 178, 175...',
-};
+import { getHistoricalPrices } from '../market-data';
 
 export class AnalystAgent {
   async analyze(symbol: string): Promise<AnalystOutput> {
-    const history = MOCK_HISTORY[symbol as keyof typeof MOCK_HISTORY] || 'No data available';
+    const history = await getHistoricalPrices(symbol);
 
     const prompt = `
       You are a Technical Analyst for a hedge fund.
@@ -43,7 +26,7 @@ export class AnalystAgent {
 
     try {
       const { text } = await generateText({
-        model: openai('claude-3-5-sonnet-20240620'),
+        model: 'meta/llama-3.3-70b',
         prompt: prompt,
       });
 

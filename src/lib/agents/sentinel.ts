@@ -1,16 +1,5 @@
 import { generateText } from 'ai';
-import { createOpenAI } from '@ai-sdk/openai';
 import { SentinelOutput } from './types';
-
-// Configure Vercel AI Gateway
-const openai = createOpenAI({
-  baseURL: process.env.OPENAI_BASE_URL || 'https://gateway.ai.vercel.sh/v1',
-  apiKey: process.env.OPENAI_API_KEY,
-  headers: {
-    'x-vercel-ai-provider': 'anthropic',
-    'x-vercel-ai-model': 'claude-3-5-sonnet-20240620',
-  },
-});
 
 // Mock news headlines for simulation
 const MOCK_NEWS = [
@@ -46,7 +35,7 @@ export class SentinelAgent {
 
     try {
       const { text } = await generateText({
-        model: openai('claude-3-5-sonnet-20240620'),
+        model: 'meta/llama-3.3-70b',
         prompt: prompt,
       });
 

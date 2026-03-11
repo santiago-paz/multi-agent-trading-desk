@@ -58,6 +58,24 @@ export async function executeOrders(orders: OrderRequest[]) {
   }
 }
 
+import { getHistoricalData } from '@/lib/market-data';
+
+export async function getMarketData() {
+  try {
+    const symbols = ['AAPL', 'KO', 'TSLA'];
+    const promises = symbols.map(async (symbol) => {
+      const data = await getHistoricalData(symbol, 7); // Get last 7 days for verification
+      return { symbol, data };
+    });
+    
+    const results = await Promise.all(promises);
+    return { success: true, data: results };
+  } catch (error) {
+    console.error('Failed to fetch market data:', error);
+    return { success: false, error: 'Failed to fetch market data' };
+  }
+}
+
 export async function getPortfolioSummary() {
     try {
         const portfolio = await iolClient.getPortfolio();
