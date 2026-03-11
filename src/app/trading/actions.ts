@@ -15,7 +15,7 @@ export async function runAnalysis() {
     const analystResults = await Promise.all(analystPromises);
 
     // 2. Run Sentinel
-    const sentinelResult = await sentinelAgent.analyzeRisk();
+    const sentinelResult = await sentinelAgent.analyzeRisk(symbols);
 
     // 3. Run Strategist
     const strategyResult = await strategistAgent.decide(analystResults, sentinelResult);
@@ -58,7 +58,8 @@ export async function executeOrders(orders: OrderRequest[]) {
   }
 }
 
-import { getHistoricalData } from '@/lib/market-data';
+import { getHistoricalData, getNews, getGeneralMarketNews } from '@/lib/market-data';
+import { processNewsBatch } from '@/lib/news-processor';
 
 export async function getMarketData() {
   try {
@@ -73,6 +74,42 @@ export async function getMarketData() {
   } catch (error) {
     console.error('Failed to fetch market data:', error);
     return { success: false, error: 'Failed to fetch market data' };
+  }
+}
+
+export async function getNewsData() {
+  try {
+    const symbols = ['AAPL', 'KO', 'TSLA'];
+    
+    // Fetch general market news
+    const rawGeneralNews = await getGeneralMarketNews(10);
+    const generalNews = await processNewsBatch(rawGeneralNews);
+    
+    // Fetch specific news for each symbol
+    const specificNewsPromises = symbols.map(async (symbol) => {
+      const rawNews = await getNews(symbol, 6);
+      const processedNews = await processNewsBatch(rawNews);
+      return { symbol, news: processedNews };
+    });
+    
+    const specificNewsResults = await Promise.all(specificNewsPromises);
+    
+    // Transform array to object map
+    const specificNews: Record<string, any[]> = {};
+    specificNewsResults.forEach(item => {
+      specificNews[item.symbol] = item.news;
+    });
+
+    return { 
+      success: true, 
+      data: {
+        general: generalNews,
+        specific: specificNews
+      } 
+    };
+  } catch (error) {
+    console.error('Failed to fetch news data:', error);
+    return { success: false, error: 'Failed to fetch news data' };
   }
 }
 

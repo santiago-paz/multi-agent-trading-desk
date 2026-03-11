@@ -28,11 +28,27 @@ export const AgentLog: React.FC<AgentLogProps> = ({ analystResults, sentinelResu
           <div className="pl-4 border-l-2 border-red-800">
             <p className="font-bold">Risk Score: {sentinelResult.riskScore}</p>
             <p className="text-sm text-gray-400 mb-2">{sentinelResult.reasoning}</p>
-            <ul className="list-disc list-inside text-xs text-gray-500">
-              {sentinelResult.topHeadlines.map((headline, i) => (
-                <li key={i}>{headline}</li>
-              ))}
-            </ul>
+            {sentinelResult.topHeadlines && sentinelResult.topHeadlines.length > 0 ? (
+              <ul className="list-disc list-inside text-xs text-gray-500 space-y-1">
+                {sentinelResult.topHeadlines.map((headline, i) => (
+                  <li key={i}>
+                    <a 
+                      href={headline.link} 
+                      target="_blank" 
+                      rel="noopener noreferrer" 
+                      className="text-white hover:text-neon-green hover:underline transition-colors"
+                    >
+                      {headline.title}
+                    </a>
+                    <span className="text-gray-500 ml-1 text-[10px] uppercase tracking-wider">
+                      [{headline.publisher}]
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="text-xs text-gray-600 italic">No specific headlines identified.</p>
+            )}
           </div>
         </div>
 

@@ -8,7 +8,11 @@ export interface AnalystOutput {
 export interface SentinelOutput {
   riskScore: number; // -1 to 1
   sentiment: 'positive' | 'negative' | 'neutral';
-  topHeadlines: string[];
+  topHeadlines: {
+    title: string;
+    link: string;
+    publisher: string;
+  }[];
   reasoning: string;
 }
 

@@ -12,6 +12,16 @@ export interface HistoricalRow {
   volume: number;
 }
 
+export interface NewsItem {
+  title: string;
+  link: string;
+  publisher: string;
+  providerPublishTime?: Date;
+  relatedTickers?: string[];
+  summary?: string;
+  fullContent?: string;
+}
+
 export async function getHistoricalData(symbol: string, days: number = 30): Promise<HistoricalRow[]> {
   try {
     const today = new Date();
@@ -57,4 +67,29 @@ export async function getHistoricalPrices(symbol: string, days: number = 30): Pr
   } catch (error) {
     return `Error fetching data for ${symbol}: ${(error as Error).message}`;
   }
+}
+
+export async function getNews(query: string, count: number = 5): Promise<NewsItem[]> {
+  try {
+    const result = await yahooFinance.search(query, { newsCount: count });
+    if (!result.news || result.news.length === 0) {
+      return [];
+    }
+    
+    return result.news.map((item: any) => ({
+      title: item.title,
+      link: item.link,
+      publisher: item.publisher,
+      providerPublishTime: item.providerPublishTime ? new Date(item.providerPublishTime) : undefined,
+      relatedTickers: item.relatedTickers
+    }));
+  } catch (error) {
+    console.error(`Error fetching news for ${query}:`, error);
+    return [];
+  }
+}
+
+export async function getGeneralMarketNews(count: number = 5): Promise<NewsItem[]> {
+  // Use SPY (S&P 500 ETF) as a proxy for general market news
+  return getNews('SPY', count);
 }

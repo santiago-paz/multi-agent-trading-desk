@@ -5,10 +5,11 @@ import { PortfolioSummary } from '@/components/ui/PortfolioSummary';
 import { AgentLog } from '@/components/ui/AgentLog';
 import { RiskGauge } from '@/components/ui/RiskGauge';
 import { OrderReview } from '@/components/ui/OrderReview';
-import { runAnalysis, executeOrders, getPortfolioSummary, getMarketData } from './actions';
+import { NewsFeed } from '@/components/ui/NewsFeed';
+import { runAnalysis, executeOrders, getPortfolioSummary, getMarketData, getNewsData } from './actions';
 import { OrderRequest, PortfolioResponse } from '@/lib/iol/types';
 import { AnalystOutput, SentinelOutput, StrategistOutput } from '@/lib/agents/types';
-import { HistoricalRow } from '@/lib/market-data';
+import { HistoricalRow, NewsItem } from '@/lib/market-data';
 
 export default function TradingDashboard() {
   const [portfolio, setPortfolio] = useState<PortfolioResponse | null>(null);
@@ -17,6 +18,9 @@ export default function TradingDashboard() {
   
   const [marketData, setMarketData] = useState<{ symbol: string; data: HistoricalRow[] }[] | null>(null);
   const [isLoadingMarketData, setIsLoadingMarketData] = useState(true);
+
+  const [newsData, setNewsData] = useState<{ general: NewsItem[], specific: Record<string, NewsItem[]> } | null>(null);
+  const [isLoadingNews, setIsLoadingNews] = useState(true);
 
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysisResult, setAnalysisResult] = useState<{
@@ -32,6 +36,7 @@ export default function TradingDashboard() {
   useEffect(() => {
     fetchPortfolio();
     fetchMarketData();
+    fetchNews();
   }, []);
 
   const fetchPortfolio = async () => {
@@ -51,6 +56,15 @@ export default function TradingDashboard() {
       setMarketData(result.data);
     }
     setIsLoadingMarketData(false);
+  };
+
+  const fetchNews = async () => {
+    setIsLoadingNews(true);
+    const result = await getNewsData();
+    if (result.success && result.data) {
+      setNewsData(result.data);
+    }
+    setIsLoadingNews(false);
   };
 
   const handleRunAnalysis = async () => {
@@ -97,7 +111,7 @@ export default function TradingDashboard() {
         <p className="text-gray-400 mt-2">Automated Portfolio Management // v1.0.0</p>
       </header>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
         {/* Left Column: Portfolio & Controls */}
         <div className="lg:col-span-1 space-y-8">
           {isLoadingPortfolio ? (
@@ -155,6 +169,18 @@ export default function TradingDashboard() {
             </div>
           )}
         </div>
+      </div>
+
+      {/* News Feed Section */}
+      <div className="mb-8 h-96">
+        <h2 className="text-2xl font-bold uppercase mb-4">Market Intelligence Feed</h2>
+        {isLoadingNews ? (
+          <div className="animate-pulse h-full bg-gray-900 border-4 border-gray-800"></div>
+        ) : newsData ? (
+          <NewsFeed generalNews={newsData.general} specificNews={newsData.specific} />
+        ) : (
+          <div className="border-4 border-red-500 p-4 text-red-500">Failed to load news feed.</div>
+        )}
       </div>
       
       <div className="mt-8 border-t-4 border-white pt-8">
