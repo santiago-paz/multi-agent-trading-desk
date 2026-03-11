@@ -23,10 +23,26 @@ export async function getHistoricalData(symbol: string, days: number = 30): Prom
     const period2 = today.toISOString().split('T')[0];
 
     const queryOptions = { period1, period2, interval: '1d' as const };
-    // Cast the result to unknown and then to our interface to avoid type inference issues
-    const result = await yahooFinance.historical(symbol, queryOptions) as unknown as HistoricalRow[];
     
-    return result;
+    // Use chart() instead of historical() as historical() is deprecated
+    const result = await yahooFinance.chart(symbol, queryOptions);
+    
+    if (!result || !result.quotes) {
+      throw new Error('No data returned from Yahoo Finance');
+    }
+
+    // Map the chart result to our HistoricalRow format
+    return result.quotes
+      .filter(quote => quote.date && quote.close !== null)
+      .map(quote => ({
+        date: quote.date,
+        open: quote.open || 0,
+        high: quote.high || 0,
+        low: quote.low || 0,
+        close: quote.close || 0,
+        adjClose: quote.adjclose || undefined,
+        volume: quote.volume || 0,
+      }));
   } catch (error) {
     console.error(`Error fetching data for ${symbol}:`, error);
     throw error;
