@@ -9,7 +9,7 @@
     "lint": "eslint"
   },
   "dependencies": {
-    "@ai-sdk/anthropic": "^3.0.58",
+    "@ai-sdk/openai": "^3.0.41",
     "ai": "^6.0.116",
     "clsx": "^2.1.1",
     "langchain": "^1.2.30",

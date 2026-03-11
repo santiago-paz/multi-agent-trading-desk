@@ -1,6 +1,16 @@
 import { generateText } from 'ai';
-import { anthropic } from '@ai-sdk/anthropic';
+import { createOpenAI } from '@ai-sdk/openai';
 import { AnalystOutput } from './types';
+
+// Configure Vercel AI Gateway
+const openai = createOpenAI({
+  baseURL: process.env.OPENAI_BASE_URL || 'https://gateway.ai.vercel.sh/v1',
+  apiKey: process.env.OPENAI_API_KEY,
+  headers: {
+    'x-vercel-ai-provider': 'anthropic',
+    'x-vercel-ai-model': 'claude-3-5-sonnet-20240620',
+  },
+});
 
 // Mock historical data for simulation
 const MOCK_HISTORY = {
@@ -33,7 +43,7 @@ export class AnalystAgent {
 
     try {
       const { text } = await generateText({
-        model: anthropic('claude-3-5-sonnet-20240620'),
+        model: openai('claude-3-5-sonnet-20240620'),
         prompt: prompt,
       });
 
