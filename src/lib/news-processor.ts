@@ -1,7 +1,7 @@
 import { generateText } from 'ai';
 import { NewsItem } from './market-data';
 import { Readability } from '@mozilla/readability';
-import { JSDOM } from 'jsdom';
+import { JSDOM, VirtualConsole } from 'jsdom';
 import puppeteer from 'puppeteer';
 
 // Keep fetch as a fallback for simple sites or if Puppeteer fails
@@ -95,7 +95,7 @@ async function fetchArticleContent(url: string): Promise<string | null> {
 
   try {
     // Use JSDOM to parse HTML
-    const virtualConsole = new JSDOM.VirtualConsole();
+    const virtualConsole = new VirtualConsole();
     virtualConsole.on("error", () => { /* ignore css parsing errors */ });
     const doc = new JSDOM(html, { url, virtualConsole });
     
@@ -130,24 +130,34 @@ export async function processNewsItem(item: NewsItem): Promise<NewsItem> {
     
     if (hasContent) {
       prompt = `
-        Summarize the following financial news article in 1-2 concise sentences.
-        Focus on the market impact or key event.
-        
-        Title: ${item.title}
-        Content: ${textToSummarize.slice(0, 2000)}...
+You are a financial news summarizer. Output ONLY the summary—no preamble, no "Here's a summary", no meta-commentary.
+
+Rules:
+- Write 1-2 concise sentences focusing on market impact or the key event.
+- Output the summary directly. Start with the first word of the summary.
+- Do not add any introductory phrases.
+
+Title: ${item.title}
+Content: ${textToSummarize.slice(0, 2000)}...
       `;
     } else {
       prompt = `
-        The full content of this article is unavailable, but here is the headline: "${item.title}".
-        Based ONLY on this headline, provide a 1-sentence summary of the likely market implication or event.
-        Do not mention that the content is missing.
-        If the headline is too vague to summarize, just return the headline itself.
+You are a financial news summarizer. Output ONLY the summary—no preamble, no meta-commentary.
+
+Rules:
+- Based ONLY on this headline, write 1 sentence about the likely market implication or event.
+- Output the summary directly. Start with the first word of the summary.
+- Do not mention that content is missing. Do not add "Here's..." or similar.
+- If the headline is too vague, output the headline itself verbatim.
+
+Headline: "${item.title}"
       `;
     }
 
     // 2. Generate Summary with LLM
     const { text: summary } = await generateText({
       model: 'meta/llama-3.1-8b',
+      system: 'Output only the requested summary. No preamble, no "Here\'s a summary", no meta-commentary. Start directly with the first word of the summary.',
       prompt: prompt,
     });
 

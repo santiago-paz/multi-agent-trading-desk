@@ -1,8 +1,23 @@
 @import "tailwindcss";
+@import "98.css/dist/98.css";
+
+/* Override 98.css font paths so they resolve from public */
+@font-face {
+  font-family: "Pixelated MS Sans Serif";
+  font-style: normal;
+  font-weight: 400;
+  src: url("/98/ms_sans_serif.woff2") format("woff2"), url("/98/ms_sans_serif.woff") format("woff");
+}
+@font-face {
+  font-family: "Pixelated MS Sans Serif";
+  font-style: normal;
+  font-weight: 700;
+  src: url("/98/ms_sans_serif_bold.woff2") format("woff2"), url("/98/ms_sans_serif_bold.woff") format("woff");
+}
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #008080;
+  --foreground: #222;
 }
 
 @theme inline {
@@ -12,15 +27,93 @@
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+  min-height: 100vh;
+}
+
+/* Desktop layout */
+.desktop {
+  position: fixed;
+  inset: 0;
+  padding-top: 4px;
+  padding-left: 4px;
+  padding-bottom: 28px;
+  overflow: hidden;
+}
+
+.desktop-icons {
+  display: flex;
+  flex-wrap: wrap;
+  align-content: flex-start;
+  gap: 4px 2px;
+  padding: 8px;
+}
+
+/* Classic Windows 98 desktop icon: icon + label, NO 98.css button chrome */
+button.desktop-icon {
+  background: transparent !important;
+  box-shadow: none !important;
+  border: none !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+  padding: 4px 2px !important;
+  -webkit-font-smoothing: none;
+  font-family: "Pixelated MS Sans Serif", Arial, sans-serif;
+  color: inherit;
+}
+button.desktop-icon:hover,
+button.desktop-icon:focus,
+button.desktop-icon:active {
+  background: transparent !important;
+  box-shadow: none !important;
+  border: none !important;
+}
+button.desktop-icon:hover span:last-child,
+button.desktop-icon:focus span:last-child {
+  background-color: #000080;
+  color: #fff;
+}
+button.desktop-icon:active span:last-child {
+  background-color: #000080;
+  color: #fff;
+}
+
+/* Taskbar */
+.taskbar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 28px;
+  background: linear-gradient(90deg, #c0c0c0 0%, #c0c0c0 100%);
+  box-shadow: inset 1px 1px 0 #fff, inset -1px -1px 0 #0a0a0a;
+  display: flex;
+  align-items: stretch;
+  padding: 2px;
+  gap: 2px;
+  z-index: 10000;
+}
+
+.taskbar-button {
+  min-width: 24px;
+  padding: 2px 8px;
+  font-size: 11px;
+  background: silver;
+  box-shadow: inset -1px -1px #0a0a0a, inset 1px 1px #fff;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.taskbar-button:hover {
+  box-shadow: inset -1px -1px #fff, inset 1px 1px #0a0a0a;
+}
+
+.taskbar-button.active {
+  box-shadow: inset 1px 1px 0 #0a0a0a, inset -1px -1px 0 #fff;
 }
