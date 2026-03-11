@@ -1,5 +1,5 @@
 import { iolClient } from '../iol/client';
-import { OrderRequest, PortfolioResponse } from '../iol/types';
+import { OrderRequest } from '../iol/types';
 
 // CEDEAR Ratios: How many CEDEARs equal one underlying share
 export const CEDEAR_RATIOS: Record<string, number> = {

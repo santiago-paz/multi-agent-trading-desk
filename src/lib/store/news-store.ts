@@ -103,7 +103,7 @@ export const useNewsStore = create<NewsState>()(
             progress: null
           });
 
-        } catch (error) {
+        } catch {
           set({ 
             isLoading: false, 
             error: 'An unexpected error occurred during news processing',

@@ -7,6 +7,7 @@ import { RiskGauge } from '@/components/ui/RiskGauge';
 import { OrderReview } from '@/components/ui/OrderReview';
 import { NewsFeed } from '@/components/ui/NewsFeed';
 import { OperationsFeed } from '@/components/ui/OperationsFeed';
+import { AccountData } from '@/components/ui/AccountData';
 import { Sparkline } from '@/components/ui/Sparkline';
 import { DesktopIcon } from '@/components/ui/DesktopIcon';
 import {
@@ -14,8 +15,8 @@ import {
   WindowState,
 } from '@/components/ui/DraggableResizableWindow';
 import { useNewsStore } from '@/lib/store/news-store';
-import { runAnalysis, executeOrders, getPortfolioSummary, getMarketData, getOperations } from './actions';
-import { OrderRequest, PortfolioResponse, Operation } from '@/lib/iol/types';
+import { runAnalysis, executeOrders, getPortfolioSummary, getMarketData, getOperations, getProfileData, getAccountStatement } from './actions';
+import { OrderRequest, PortfolioResponse, Operation, DatosPerfil, EstadoCuenta } from '@/lib/iol/types';
 import { AnalystOutput, SentinelOutput, StrategistOutput } from '@/lib/agents/types';
 import { HistoricalRow } from '@/lib/market-data';
 import { DESKTOP_APP_ICONS } from '@/lib/win98se-icons';
@@ -34,6 +35,10 @@ export default function TradingDashboard() {
 
   const [operations, setOperations] = useState<Operation[]>([]);
   const [isLoadingOperations, setIsLoadingOperations] = useState(false);
+
+  const [perfil, setPerfil] = useState<DatosPerfil | null>(null);
+  const [estadoCuenta, setEstadoCuenta] = useState<EstadoCuenta | null>(null);
+  const [isLoadingAccount, setIsLoadingAccount] = useState(false);
 
   const {
     generalNews,
@@ -67,16 +72,6 @@ export default function TradingDashboard() {
     toggleMinimize
   } = useWindowManager();
 
-  useEffect(() => {
-    fetchNews();
-  }, []);
-
-  useEffect(() => {
-    fetchPortfolio();
-    fetchMarketData();
-    fetchOperationsData();
-  }, []);
-
   const fetchOperationsData = async () => {
     setIsLoadingOperations(true);
     const result = await getOperations();
@@ -84,6 +79,22 @@ export default function TradingDashboard() {
       setOperations(result.data as Operation[]);
     }
     setIsLoadingOperations(false);
+  };
+
+  const fetchAccountData = async () => {
+    setIsLoadingAccount(true);
+    const [perfilResult, estadoResult] = await Promise.all([
+      getProfileData(),
+      getAccountStatement(),
+    ]);
+
+    if (perfilResult.success && perfilResult.data) {
+      setPerfil(perfilResult.data as DatosPerfil);
+    }
+    if (estadoResult.success && estadoResult.data) {
+      setEstadoCuenta(estadoResult.data as EstadoCuenta);
+    }
+    setIsLoadingAccount(false);
   };
 
   const fetchPortfolio = async () => {
@@ -104,6 +115,19 @@ export default function TradingDashboard() {
     }
     setIsLoadingMarketData(false);
   };
+
+  /* eslint-disable react-hooks/exhaustive-deps, react-hooks/set-state-in-effect */
+  useEffect(() => {
+    fetchNews();
+  }, []);
+
+  useEffect(() => {
+    fetchPortfolio();
+    fetchMarketData();
+    fetchOperationsData();
+    fetchAccountData();
+  }, []);
+  /* eslint-enable react-hooks/exhaustive-deps, react-hooks/set-state-in-effect */
 
   const handleRunAnalysis = async () => {
     setIsAnalyzing(true);
@@ -178,6 +202,15 @@ export default function TradingDashboard() {
           iconSrc={DESKTOP_APP_ICONS.orders}
           icon="💸"
           onClick={() => openOrFocusWindow('movements')}
+        />
+        <DesktopIcon
+          label="Mi Cuenta"
+          iconSrc={DESKTOP_APP_ICONS.account}
+          icon="👤"
+          onClick={() => {
+            openOrFocusWindow('account');
+            if (!perfil) fetchAccountData();
+          }}
         />
       </div>
 
@@ -337,6 +370,14 @@ export default function TradingDashboard() {
                 operations={operations}
                 isLoading={isLoadingOperations}
                 onRefresh={fetchOperationsData}
+              />
+            )}
+            {appId === 'account' && (
+              <AccountData
+                perfil={perfil}
+                estadoCuenta={estadoCuenta}
+                isLoading={isLoadingAccount}
+                onRefresh={fetchAccountData}
               />
             )}
           </DraggableResizableWindow>

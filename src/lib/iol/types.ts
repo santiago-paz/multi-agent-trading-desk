@@ -63,3 +63,32 @@ export interface Operation {
   modalidad: string;
   precio: number;
 }
+
+export interface DatosPerfil {
+  numeroCuenta: string;
+  email: string;
+  nombre: string;
+  apellido: string;
+  tipoInversor: string;
+  perfilInversor: string;
+}
+
+export interface EstadoCuentaItem {
+  fecha: string;
+  tipoOperacion: string;
+  descripcion: string;
+  monto: number;
+  saldo: number;
+}
+
+export interface EstadoCuenta {
+  moneda: string;
+  cuentas: {
+    numero: string;
+    tipo: string;
+    moneda: string;
+    saldoDisponible: number;
+    saldoAliquidar: number;
+  }[];
+  movimientos: EstadoCuentaItem[];
+}

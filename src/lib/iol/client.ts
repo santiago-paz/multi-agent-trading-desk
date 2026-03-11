@@ -1,4 +1,4 @@
-import { IOLToken, PortfolioResponse, Quote, OrderRequest, OrderResponse, Operation } from './types';
+import { IOLToken, PortfolioResponse, Quote, OrderRequest, OrderResponse, Operation, EstadoCuenta, DatosPerfil } from './types';
 
 const SIMULATION_MODE = process.env.SIMULATION_MODE === 'true';
 
@@ -65,7 +65,7 @@ export class IOLClient {
     }
   }
 
-  private async fetchWithAuth(endpoint: string, options: RequestInit = {}): Promise<any> {
+  private async fetchWithAuth(endpoint: string, options: RequestInit = {}): Promise<unknown> {
     if (SIMULATION_MODE) {
       return this.mockResponse(endpoint);
     }
@@ -88,7 +88,7 @@ export class IOLClient {
   }
 
   // Mock responses for simulation mode
-  private mockResponse(endpoint: string): any {
+  private mockResponse(endpoint: string): unknown {
     console.log(`[SIMULATION] Mocking response for ${endpoint}`);
     
     if (endpoint.includes('/api/v2/Portafolio')) {
@@ -120,23 +120,46 @@ export class IOLClient {
       } as Quote;
     }
 
+    if (endpoint.includes('/api/v2/estadocuenta')) {
+      return {
+        moneda: 'peso_argentino',
+        cuentas: [
+          { numero: '123456', tipo: 'inversion', moneda: 'peso_argentino', saldoDisponible: 100000, saldoAliquidar: 0 },
+        ],
+        movimientos: [
+          { fecha: new Date().toISOString(), tipoOperacion: 'Acreditacion', descripcion: 'Fondeo de cuenta', monto: 100000, saldo: 100000 }
+        ]
+      } as EstadoCuenta;
+    }
+
+    if (endpoint.includes('/api/v2/datos-perfil')) {
+      return {
+        numeroCuenta: '123456',
+        email: 'user@example.com',
+        nombre: 'Satoshi',
+        apellido: 'Nakamoto',
+        tipoInversor: 'Fisica',
+        perfilInversor: 'Agresivo'
+      } as DatosPerfil;
+    }
+
     return {};
   }
 
   async getPortfolio(): Promise<PortfolioResponse> {
-    return this.fetchWithAuth('/api/v2/Portafolio/Argentina');
+    return this.fetchWithAuth('/api/v2/Portafolio/Argentina') as Promise<PortfolioResponse>;
   }
 
   async getQuote(symbol: string, market: string = 'bcba'): Promise<Quote> {
     if (SIMULATION_MODE) {
         // Mock specific quotes for CCL calculation or general use
-        if (symbol === 'GGAL') return { ...this.mockResponse('/api/v2/Cotizaciones'), simbolo: 'GGAL', ultimoPrecio: 4500 };
-        if (symbol === 'GGAL.D') return { ...this.mockResponse('/api/v2/Cotizaciones'), simbolo: 'GGAL.D', ultimoPrecio: 4.5 }; // Mock ADR price roughly
-        if (symbol === 'AAPL') return { ...this.mockResponse('/api/v2/Cotizaciones'), simbolo: 'AAPL', ultimoPrecio: 22000 };
-        if (symbol === 'KO') return { ...this.mockResponse('/api/v2/Cotizaciones'), simbolo: 'KO', ultimoPrecio: 18000 };
-        return { ...this.mockResponse('/api/v2/Cotizaciones'), simbolo: symbol };
+        if (symbol === 'GGAL') return { ...(this.mockResponse('/api/v2/Cotizaciones') as Quote), simbolo: 'GGAL', ultimoPrecio: 4500 };
+        if (symbol === 'GGAL.D') return { ...(this.mockResponse('/api/v2/Cotizaciones') as Quote), simbolo: 'GGAL.D', ultimoPrecio: 4.5 }; // Mock ADR price roughly
+        if (symbol === 'AAPL') return { ...(this.mockResponse('/api/v2/Cotizaciones') as Quote), simbolo: 'AAPL', ultimoPrecio: 22000 };
+        if (symbol === 'KO') return { ...(this.mockResponse('/api/v2/Cotizaciones') as Quote), simbolo: 'KO', ultimoPrecio: 18000 };
+        return { ...(this.mockResponse('/api/v2/Cotizaciones') as Quote), simbolo: symbol };
     }
-    return this.fetchWithAuth(`/api/v2/Cotizaciones/${market}/${symbol}`);
+    return this.fetchWithAuth(`/api/v2/Cotizaciones/${market}/${symbol}`) as Promise<Quote>;
   }
 
   async placeOrder(order: OrderRequest): Promise<OrderResponse> {
@@ -153,7 +176,7 @@ export class IOLClient {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(order),
-    });
+    }) as Promise<OrderResponse>;
   }
 
   async getOperations(): Promise<Operation[]> {
@@ -164,7 +187,15 @@ export class IOLClient {
         { numero: 1003, fechaOrden: new Date(Date.now() - 172800000).toISOString(), tipo: 'Compra', estado: 'Pendiente', mercado: 'bcba', simbolo: 'TSLA', cantidad: 2, monto: 40000, modalidad: 't0', precio: 20000 },
       ];
     }
-    return this.fetchWithAuth(`/api/v2/operaciones`);
+    return this.fetchWithAuth(`/api/v2/operaciones`) as Promise<Operation[]>;
+  }
+
+  async getEstadoCuenta(): Promise<EstadoCuenta> {
+    return this.fetchWithAuth('/api/v2/estadocuenta') as Promise<EstadoCuenta>;
+  }
+
+  async getDatosPerfil(): Promise<DatosPerfil> {
+    return this.fetchWithAuth('/api/v2/datos-perfil') as Promise<DatosPerfil>;
   }
 
 

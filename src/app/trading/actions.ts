@@ -144,3 +144,23 @@ export async function getOperations() {
     }
 }
 
+export async function getAccountStatement() {
+  try {
+    const estadoCuenta = await iolClient.getEstadoCuenta();
+    return { success: true, data: estadoCuenta };
+  } catch (error) {
+    console.error('Failed to fetch account statement:', error);
+    return { success: false, error: 'Failed to fetch account statement' };
+  }
+}
+
+export async function getProfileData() {
+  try {
+    const perfil = await iolClient.getDatosPerfil();
+    return { success: true, data: perfil };
+  } catch (error) {
+    console.error('Failed to fetch profile data:', error);
+    return { success: false, error: 'Failed to fetch profile data' };
+  }
+}
+

@@ -86,7 +86,7 @@ async function fetchArticleContent(url: string): Promise<string | null> {
       if (response.ok) {
         html = await response.text();
       }
-    } catch (e) {
+    } catch {
       // Ignore fetch error
     }
   }
@@ -112,7 +112,7 @@ async function fetchArticleContent(url: string): Promise<string | null> {
     
     // Return first 3000 chars as context
     return cleanText.slice(0, 3000);
-  } catch (error) {
+  } catch {
     return null;
   }
 }

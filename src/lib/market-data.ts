@@ -76,6 +76,7 @@ export async function getNews(query: string, count: number = 5): Promise<NewsIte
       return [];
     }
     
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return result.news.map((item: any) => ({
       title: item.title,
       link: item.link,
