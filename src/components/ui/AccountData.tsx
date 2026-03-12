@@ -4,55 +4,68 @@ import { DatosPerfil, EstadoCuenta } from '@/lib/iol/types';
 interface AccountDataProps {
   perfil: DatosPerfil | null;
   estadoCuenta: EstadoCuenta | null;
+  cclRate: number;
   isLoading: boolean;
   onRefresh: () => void;
 }
 
-/* ─── Inline style constants ─────────────────────────────────────────────── */
-const WIN98: React.CSSProperties = {
-  fontFamily: '"MS Sans Serif", "Tahoma", Arial, sans-serif',
+/* ─── Win98 authentic inline style constants ─────────────────────────────── */
+const FONT: React.CSSProperties = {
+  fontFamily: '"Pixelated MS Sans Serif", Arial, sans-serif',
   fontSize: '11px',
   WebkitFontSmoothing: 'none',
-  // @ts-ignore – non-standard but works in most browsers
+  // @ts-ignore – non-standard
   MozOsxFontSmoothing: 'grayscale',
-  fontSmooth: 'never',
-  textShadow: 'none',
 };
 
 const LABEL: React.CSSProperties = {
-  width: '100px',
+  ...FONT,
+  width: '90px',
   flexShrink: 0,
   textAlign: 'right',
-  marginRight: '6px',
+  paddingRight: '6px',
   whiteSpace: 'nowrap',
 };
 
-const INPUT_READONLY: React.CSSProperties = {
-  flex: 1,
-  ...WIN98,
-  background: '#ffffff',
-  cursor: 'default',
+/* ─── Win98 ListView column header (raised 3D button look) ───────────────── */
+const COL_HEADER: React.CSSProperties = {
+  ...FONT,
+  fontWeight: 'normal',
+  textAlign: 'left',
+  padding: '2px 6px',
+  background: '#c0c0c0',
+  borderTop: '1px solid #ffffff',
+  borderLeft: '1px solid #ffffff',
+  borderRight: '1px solid #808080',
+  borderBottom: '1px solid #808080',
+  whiteSpace: 'nowrap',
 };
 
-const INPUT_STATIC: React.CSSProperties = {
-  flex: 1,
-  ...WIN98,
-  background: '#c0c0c0',
+const COL_HEADER_RIGHT: React.CSSProperties = {
+  ...COL_HEADER,
+  textAlign: 'right',
+};
+
+/* Win98 inset groove separator (horizontal rule) */
+const HR98: React.CSSProperties = {
   border: 'none',
-  cursor: 'default',
+  borderTop: '1px solid #808080',
+  borderBottom: '1px solid #ffffff',
+  margin: '4px 0',
 };
 
 /* ─── Component ──────────────────────────────────────────────────────────── */
 export const AccountData: React.FC<AccountDataProps> = ({
   perfil,
   estadoCuenta,
+  cclRate,
   isLoading,
   onRefresh,
 }) => {
   return (
     <div
       style={{
-        ...WIN98,
+        ...FONT,
         display: 'flex',
         flexDirection: 'column',
         height: '100%',
@@ -62,7 +75,7 @@ export const AccountData: React.FC<AccountDataProps> = ({
     >
       {/* ── Scrollable body ── */}
       <div
-        className="window-body"
+        className="win98-scrollbar"
         style={{
           flex: 1,
           overflowY: 'auto',
@@ -73,121 +86,246 @@ export const AccountData: React.FC<AccountDataProps> = ({
         }}
       >
         {isLoading && !perfil && !estadoCuenta ? (
-          <p style={{ ...WIN98, margin: 0, padding: '4px', fontStyle: 'italic' }}>
+          <p style={{ ...FONT, margin: 0, padding: '4px' }}>
             Cargando datos de la cuenta...
           </p>
         ) : (
           <>
             {/* ─── Información del Titular ─── */}
-            <fieldset style={{ marginBottom: '6px', padding: '4px 8px 6px' }}>
-              <legend style={WIN98}>Información del Titular</legend>
+            <fieldset>
+              <legend>Información del Titular</legend>
 
               {perfil ? (
                 <>
-                  <div className="field-row" style={{ marginBottom: '3px' }}>
-                    <label style={{ ...WIN98, ...LABEL }}>Nombre:</label>
-                    <input type="text" readOnly value={`${perfil.nombre} ${perfil.apellido}`} style={INPUT_READONLY} />
+                  <div className="field-row" style={{ marginBottom: '2px' }}>
+                    <label style={LABEL}>Nombre:</label>
+                    <input
+                      type="text"
+                      readOnly
+                      value={`${perfil.nombre} ${perfil.apellido}`}
+                      style={{ ...FONT, flex: 1, cursor: 'default' }}
+                    />
                   </div>
-                  <div className="field-row" style={{ marginBottom: '3px' }}>
-                    <label style={{ ...WIN98, ...LABEL }}>Nro. Cuenta:</label>
-                    <input type="text" readOnly value={String(perfil.numeroCuenta)} style={INPUT_READONLY} />
+                  <div className="field-row" style={{ marginBottom: '2px' }}>
+                    <label style={LABEL}>Nro. Cuenta:</label>
+                    <input
+                      type="text"
+                      readOnly
+                      value={String(perfil.numeroCuenta)}
+                      style={{ ...FONT, flex: 1, cursor: 'default' }}
+                    />
                   </div>
-                  <div className="field-row" style={{ marginBottom: '3px' }}>
-                    <label style={{ ...WIN98, ...LABEL }}>Email:</label>
-                    <input type="text" readOnly value={perfil.email} style={INPUT_READONLY} />
+                  <div className="field-row" style={{ marginBottom: '2px' }}>
+                    <label style={LABEL}>Email:</label>
+                    <input
+                      type="text"
+                      readOnly
+                      value={perfil.email}
+                      style={{ ...FONT, flex: 1, cursor: 'default' }}
+                    />
                   </div>
                   <div className="field-row">
-                    <label style={{ ...WIN98, ...LABEL }}>Perfil:</label>
-                    <input type="text" readOnly value={perfil.perfilInversor} style={INPUT_READONLY} />
+                    <label style={LABEL}>Perfil:</label>
+                    <input
+                      type="text"
+                      readOnly
+                      value={perfil.perfilInversor}
+                      style={{ ...FONT, flex: 1, cursor: 'default' }}
+                    />
                   </div>
                 </>
               ) : (
-                <p style={{ ...WIN98, margin: 0, fontStyle: 'italic' }}>No se pudo cargar el perfil.</p>
+                <p style={{ ...FONT, margin: 0 }}>No se pudo cargar el perfil.</p>
               )}
             </fieldset>
 
             {/* ─── Estado del Portfolio ─── */}
-            <fieldset style={{ marginBottom: '6px', padding: '4px 8px 6px' }}>
-              <legend style={WIN98}>Estado del Portfolio</legend>
+            <fieldset style={{ marginTop: '6px' }}>
+              <legend>Estado del Portfolio</legend>
 
               {estadoCuenta ? (
-                estadoCuenta.cuentas.map((cuenta, index) => (
-                  <div key={index} style={{ marginBottom: index < estadoCuenta.cuentas.length - 1 ? '6px' : 0 }}>
-                    <div className="field-row" style={{ marginBottom: '3px' }}>
-                      <label style={{ ...WIN98, ...LABEL }}>Cuenta:</label>
+                estadoCuenta.cuentas.map((cuenta, index) => {
+                  const isPeso = cuenta.moneda === 'peso_Argentino';
+                  const monedaLabel = 'U$D';
+                  const divisor = isPeso ? cclRate : 1;
+                  const saldoInmediato = cuenta.saldos?.find(s => s.liquidacion === 'inmediato');
+                  const saldo24 = cuenta.saldos?.find(s => s.liquidacion === 'hrs24');
+                  const saldo48 = cuenta.saldos?.find(s => s.liquidacion === 'hrs48');
+                  return (
+                  <React.Fragment key={index}>
+                    {index > 0 && <hr style={HR98} />}
+                    <div className="field-row" style={{ marginBottom: '2px' }}>
+                      <label style={LABEL}>Cuenta:</label>
                       <input
                         type="text"
                         readOnly
-                        value={`${cuenta.tipo.toUpperCase()} #${cuenta.numero}`}
-                        style={INPUT_STATIC}
+                        disabled
+                        value={`${cuenta.tipo} #${cuenta.numero}`}
+                        style={{
+                          ...FONT,
+                          flex: 1,
+                          cursor: 'default',
+                          background: '#c0c0c0',
+                          color: '#000000',
+                        }}
                       />
                     </div>
-                    <div className="field-row" style={{ marginBottom: '3px' }}>
-                      <label style={{ ...WIN98, ...LABEL }}>Saldo Disp.:</label>
+                    <div className="field-row" style={{ marginBottom: '2px' }}>
+                      <label style={{ ...LABEL, fontWeight: 'bold' }}>Disponible:</label>
                       <input
                         type="text"
                         readOnly
-                        value={`$${(cuenta.saldoDisponible ?? 0).toLocaleString('es-AR', { minimumFractionDigits: 2 })}`}
+                        value={`${monedaLabel} ${((cuenta.disponible ?? 0) / divisor).toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
                         style={{
-                          ...INPUT_READONLY,
-                          color: (cuenta.saldoDisponible ?? 0) >= 0 ? '#008000' : '#FF0000',
+                          ...FONT,
+                          flex: 1,
+                          cursor: 'default',
+                          color: (cuenta.disponible ?? 0) >= 0 ? '#008000' : '#ff0000',
                           fontWeight: 'bold',
                         }}
                       />
                     </div>
-                    <div className="field-row">
-                      <label style={{ ...WIN98, ...LABEL }}>Saldo Liquid.:</label>
+                    <div className="field-row" style={{ marginBottom: '2px' }}>
+                      <label style={LABEL}>Títulos Valor.:</label>
                       <input
                         type="text"
                         readOnly
-                        value={`$${(cuenta.saldoAliquidar ?? 0).toLocaleString('es-AR', { minimumFractionDigits: 2 })}`}
-                        style={INPUT_READONLY}
+                        value={`${monedaLabel} ${((cuenta.titulosValorizados ?? 0) / divisor).toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+                        style={{ ...FONT, flex: 1, cursor: 'default' }}
                       />
                     </div>
-                  </div>
-                ))
+                    <div className="field-row" style={{ marginBottom: '2px' }}>
+                      <label style={{ ...LABEL, fontWeight: 'bold' }}>Total:</label>
+                      <input
+                        type="text"
+                        readOnly
+                        value={`${monedaLabel} ${((cuenta.total ?? 0) / divisor).toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+                        style={{
+                          ...FONT,
+                          flex: 1,
+                          cursor: 'default',
+                          fontWeight: 'bold',
+                        }}
+                      />
+                    </div>
+                    {saldoInmediato && (
+                      <div className="field-row" style={{ marginBottom: '2px' }}>
+                        <label style={LABEL}>CI (T+0):</label>
+                        <input
+                          type="text"
+                          readOnly
+                          value={`${monedaLabel} ${((saldoInmediato.disponible ?? 0) / divisor).toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+                          style={{ ...FONT, flex: 1, cursor: 'default' }}
+                        />
+                      </div>
+                    )}
+                    {saldo24 && (
+                      <div className="field-row" style={{ marginBottom: '2px' }}>
+                        <label style={LABEL}>24hs (T+1):</label>
+                        <input
+                          type="text"
+                          readOnly
+                          value={`${monedaLabel} ${((saldo24.disponible ?? 0) / divisor).toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+                          style={{ ...FONT, flex: 1, cursor: 'default' }}
+                        />
+                      </div>
+                    )}
+                    {saldo48 && (
+                      <div className="field-row">
+                        <label style={LABEL}>48hs (T+2):</label>
+                        <input
+                          type="text"
+                          readOnly
+                          value={`${monedaLabel} ${((saldo48.disponible ?? 0) / divisor).toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+                          style={{ ...FONT, flex: 1, cursor: 'default' }}
+                        />
+                      </div>
+                    )}
+                    <div className="field-row" style={{ marginTop: '2px' }}>
+                      <label style={LABEL}>Estado:</label>
+                      <input
+                        type="text"
+                        readOnly
+                        value={cuenta.estado ?? '-'}
+                        style={{ ...FONT, flex: 1, cursor: 'default' }}
+                      />
+                    </div>
+                  </React.Fragment>
+                  );
+                })
               ) : (
-                <p style={{ ...WIN98, margin: 0, fontStyle: 'italic' }}>No se pudo cargar el estado de cuenta.</p>
+                <p style={{ ...FONT, margin: 0 }}>No se pudo cargar el estado de cuenta.</p>
               )}
             </fieldset>
 
-            {/* ─── Últimos Movimientos ─── */}
-            <fieldset style={{ padding: '4px 8px 6px' }}>
-              <legend style={WIN98}>Últimos Movimientos</legend>
+            {/* ─── Total en Pesos + Estadísticas ─── */}
+            <fieldset style={{ marginTop: '6px' }}>
+              <legend>Resumen</legend>
 
-              {estadoCuenta?.movimientos?.length ? (
-                <div className="sunken-panel" style={{ overflow: 'auto', maxHeight: '180px', padding: 0 }}>
-                  <table style={{ width: '100%', borderCollapse: 'collapse', ...WIN98 }}>
-                    <thead>
-                      <tr>
-                        <th style={{ textAlign: 'left', padding: '1px 4px', borderRight: '1px solid #808080', fontWeight: 'normal' }}>Fecha</th>
-                        <th style={{ textAlign: 'left', padding: '1px 4px', borderRight: '1px solid #808080', fontWeight: 'normal' }}>Tipo</th>
-                        <th style={{ textAlign: 'right', padding: '1px 4px', fontWeight: 'normal' }}>Monto</th>
-                      </tr>
-                    </thead>
-                    <tbody style={{ backgroundColor: '#ffffff' }}>
-                      {estadoCuenta.movimientos.map((mov, i) => (
-                        <tr key={i} style={{ borderBottom: '1px solid #d0d0d0' }}>
-                          <td style={{ padding: '1px 4px', borderRight: '1px solid #d0d0d0', whiteSpace: 'nowrap' }}>
-                            {new Date(mov.fecha).toLocaleDateString('es-AR')}
-                          </td>
-                          <td style={{ padding: '1px 4px', borderRight: '1px solid #d0d0d0' }}>
-                            {mov.tipoOperacion}
-                          </td>
-                          <td style={{
-                            padding: '1px 4px',
-                            textAlign: 'right',
-                            color: (mov.monto ?? 0) >= 0 ? '#008000' : '#FF0000',
-                          }}>
-                            ${(mov.monto ?? 0).toLocaleString('es-AR', { minimumFractionDigits: 2 })}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+              {estadoCuenta ? (
+                <>
+                  <div className="field-row" style={{ marginBottom: '4px' }}>
+                    <label style={{ ...LABEL, fontWeight: 'bold' }}>Total (USD):</label>
+                    <input
+                      type="text"
+                      readOnly
+                      value={`U$D ${((estadoCuenta.totalEnPesos ?? 0) / cclRate).toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+                      style={{
+                        ...FONT,
+                        flex: 1,
+                        cursor: 'default',
+                        fontWeight: 'bold',
+                        color: ((estadoCuenta.totalEnPesos ?? 0) / cclRate) >= 0 ? '#008000' : '#ff0000',
+                      }}
+                    />
+                  </div>
+                  {estadoCuenta.estadisticas?.length ? (
+                    <div
+                      className="sunken-panel win98-scrollbar"
+                      style={{ overflow: 'auto', maxHeight: '120px', padding: 0 }}
+                    >
+                      <table
+                        style={{
+                          ...FONT,
+                          width: '100%',
+                          borderCollapse: 'collapse',
+                          borderSpacing: 0,
+                        }}
+                      >
+                        <thead>
+                          <tr>
+                            <th style={COL_HEADER}>Período</th>
+                            <th style={COL_HEADER_RIGHT}>Operaciones</th>
+                            <th style={COL_HEADER_RIGHT}>Volumen</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {estadoCuenta.estadisticas.map((est, i) => (
+                            <tr
+                              key={i}
+                              style={{
+                                backgroundColor: '#ffffff',
+                                borderBottom: '1px solid #c0c0c0',
+                              }}
+                            >
+                              <td style={{ padding: '1px 6px', borderRight: '1px solid #c0c0c0' }}>
+                                {est.descripcion}
+                              </td>
+                              <td style={{ padding: '1px 6px', textAlign: 'right', borderRight: '1px solid #c0c0c0' }}>
+                                {est.cantidad}
+                              </td>
+                              <td style={{ padding: '1px 6px', textAlign: 'right' }}>
+                                {est.volumen.toLocaleString('es-AR')}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  ) : null}
+                </>
               ) : (
-                <p style={{ ...WIN98, margin: 0, fontStyle: 'italic' }}>No hay movimientos recientes.</p>
+                <p style={{ ...FONT, margin: 0 }}>Sin datos.</p>
               )}
             </fieldset>
           </>
@@ -199,24 +337,21 @@ export const AccountData: React.FC<AccountDataProps> = ({
         style={{
           display: 'flex',
           justifyContent: 'flex-end',
-          padding: '4px 6px',
+          padding: '2px 6px 4px',
           background: '#c0c0c0',
           borderTop: '1px solid #808080',
           flexShrink: 0,
         }}
       >
-        <button onClick={onRefresh} disabled={isLoading} style={WIN98}>
+        <button onClick={onRefresh} disabled={isLoading}>
           {isLoading ? 'Actualizando...' : 'Actualizar'}
         </button>
       </div>
 
       {/* ── Status Bar ── */}
-      <div
-        className="status-bar"
-        style={{ ...WIN98, flexShrink: 0, margin: 0 }}
-      >
+      <div className="status-bar" style={{ ...FONT, flexShrink: 0, margin: 0 }}>
         <p className="status-bar-field">Listo</p>
-        <p className="status-bar-field">Servidor: api.invertironline.com</p>
+        <p className="status-bar-field">CCL: ${cclRate.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
         <p className="status-bar-field">
           {isLoading ? 'Actualizando...' : perfil ? `Cta: ${perfil.numeroCuenta}` : 'Sin sesión'}
         </p>

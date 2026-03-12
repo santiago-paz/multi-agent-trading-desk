@@ -11,14 +11,14 @@ function url(path: string): string {
 
 /** Icon URLs verified to be real PNG files (not symlinks) in Win98SE/SE98. */
 export const DESKTOP_APP_ICONS = {
-  portfolio: url('apps/32/gnucash-icon.png'),
+  portfolio: url('apps/32/wxbanker.png'),
   analysis: url('apps/32/system-search.png'),
-  agent: url('apps/32/terminal.png'),
+  agent: url('apps/32/utilities-terminal.png'),
   orders: url('actions/32/document-new.png'),
   news: url('apps/32/internet-feed-reader.png'),
   marketdata: url('apps/32/libreoffice-calc.png'),
   account: url('apps/32/system-users.png'),
-  movements: url('actions/32/folder-recent.png'),
+  movements: url('actions/32/document-open-recent.png'),
 } as const;
 
 export type DesktopAppId = keyof typeof DESKTOP_APP_ICONS;

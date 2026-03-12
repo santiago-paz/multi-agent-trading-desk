@@ -48,6 +48,7 @@ const DEFAULT_ICON_POSITIONS: Record<IconId, { x: number; y: number }> = {
 export default function TradingDashboard() {
   const [portfolio, setPortfolio] = useState<PortfolioResponse | null>(null);
   const [portfolioValueUSD, setPortfolioValueUSD] = useState<number>(0);
+  const [cclRate, setCclRate] = useState<number>(1200);
   const [isLoadingPortfolio, setIsLoadingPortfolio] = useState(true);
 
   const [marketData, setMarketData] = useState<{
@@ -154,6 +155,7 @@ export default function TradingDashboard() {
     if (result.success && result.data) {
       setPortfolio(result.data.portfolio);
       setPortfolioValueUSD(result.data.valueUSD);
+      setCclRate(result.data.cclRate);
     }
     setIsLoadingPortfolio(false);
   };
@@ -313,15 +315,22 @@ export default function TradingDashboard() {
           >
             {appId === 'portfolio' && (
               <>
-                {isLoadingPortfolio ? (
-                  <p className="m-0">Loading Portfolio...</p>
+                {isLoadingPortfolio && !portfolio ? (
+                  <p style={{ fontFamily: '"Pixelated MS Sans Serif", Arial, sans-serif', fontSize: '11px', margin: 0, padding: '4px' }}>
+                    Cargando portafolio...
+                  </p>
                 ) : portfolio ? (
                   <PortfolioSummary
                     portfolio={portfolio}
                     valueUSD={portfolioValueUSD}
+                    cclRate={cclRate}
+                    isLoading={isLoadingPortfolio}
+                    onRefresh={fetchPortfolio}
                   />
                 ) : (
-                  <p className="m-0 text-red-600">Failed to load portfolio.</p>
+                  <p style={{ fontFamily: '"Pixelated MS Sans Serif", Arial, sans-serif', fontSize: '11px', margin: 0, padding: '4px', color: '#ff0000' }}>
+                    No se pudo cargar el portafolio.
+                  </p>
                 )}
               </>
             )}
@@ -451,6 +460,7 @@ export default function TradingDashboard() {
             {appId === 'movements' && (
               <OperationsFeed
                 operations={operations}
+                cclRate={cclRate}
                 isLoading={isLoadingOperations}
                 onRefresh={fetchOperationsData}
               />
@@ -459,6 +469,7 @@ export default function TradingDashboard() {
               <AccountData
                 perfil={perfil}
                 estadoCuenta={estadoCuenta}
+                cclRate={cclRate}
                 isLoading={isLoadingAccount}
                 onRefresh={fetchAccountData}
               />

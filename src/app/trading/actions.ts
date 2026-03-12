@@ -125,9 +125,12 @@ export async function enrichNewsItem(item: NewsItem) {
 
 export async function getPortfolioSummary() {
     try {
-        const portfolio = await iolClient.getPortfolio();
-        const valueUSD = await tradingEngine.calculatePortfolioValue();
-        return { success: true, data: { portfolio, valueUSD } };
+        const [portfolio, valueUSD, cclRate] = await Promise.all([
+            iolClient.getPortfolio(),
+            tradingEngine.calculatePortfolioValue(),
+            iolClient.getCCL(),
+        ]);
+        return { success: true, data: { portfolio, valueUSD, cclRate } };
     } catch (error) {
         console.error('Failed to fetch portfolio summary:', error);
         return { success: false, error: 'Failed to fetch portfolio summary' };

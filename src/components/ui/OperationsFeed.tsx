@@ -3,11 +3,12 @@ import { Operation } from '@/lib/iol/types';
 
 interface OperationsFeedProps {
   operations: Operation[];
+  cclRate: number;
   isLoading: boolean;
   onRefresh: () => void;
 }
 
-export function OperationsFeed({ operations, isLoading, onRefresh }: OperationsFeedProps) {
+export function OperationsFeed({ operations, cclRate, isLoading, onRefresh }: OperationsFeedProps) {
   return (
     <div className="flex flex-col h-full bg-[#c0c0c0]">
       <div className="flex justify-between items-center mb-2 px-1">
@@ -42,8 +43,8 @@ export function OperationsFeed({ operations, isLoading, onRefresh }: OperationsF
                   <td className="p-1 font-bold">{op.simbolo}</td>
                   <td className={`p-1 ${op.tipo === 'Compra' ? 'text-green-700' : 'text-red-700'} group-hover:text-white`}>{op.tipo}</td>
                   <td className="p-1 text-right">{op.cantidad ?? '-'}</td>
-                  <td className="p-1 text-right">{op.precio != null ? `$${op.precio.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : '-'}</td>
-                  <td className="p-1 text-right">{op.monto != null ? `$${op.monto.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : '-'}</td>
+                  <td className="p-1 text-right">{op.precio != null ? `U$D ${(op.precio / cclRate).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : '-'}</td>
+                  <td className="p-1 text-right">{op.monto != null ? `U$D ${(op.monto / cclRate).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : '-'}</td>
                   <td className="p-1 text-center">{op.estado ?? '-'}</td>
                 </tr>
               ))}

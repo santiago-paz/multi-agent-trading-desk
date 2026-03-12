@@ -111,7 +111,7 @@ export class IOLClient {
     }
   }
 
-  private async fetchWithAuth(endpoint: string, options: RequestInit = {}): Promise<unknown> {
+  private async fetchWithAuth(endpoint: string, options: RequestInit = {}, _isRetry = false): Promise<unknown> {
     if (SIMULATION_MODE) {
       return this.mockResponse(endpoint);
     }
@@ -125,6 +125,14 @@ export class IOLClient {
         'Authorization': `Bearer ${this.token?.access_token}`,
       },
     });
+
+    // If we get a 401 and haven't retried yet, force re-authentication and retry once
+    if (response.status === 401 && !_isRetry) {
+      console.warn(`[IOL API] Got 401 on ${endpoint}, forcing token refresh and retrying...`);
+      this.token = null;
+      this.tokenExpiry = null;
+      return this.fetchWithAuth(endpoint, options, true);
+    }
 
     if (!response.ok) {
       throw new Error(`API request failed: ${response.statusText}`);
@@ -141,9 +149,9 @@ export class IOLClient {
       return {
         pais: 'argentina',
         activos: [
-          { simbolo: 'AAPL', descripcion: 'Apple Inc.', cantidad: 10, ultimoPrecio: 15000, valorizado: 150000, moneda: 'peso_argentino' },
-          { simbolo: 'KO', descripcion: 'Coca-Cola Co.', cantidad: 5, ultimoPrecio: 12000, valorizado: 60000, moneda: 'peso_argentino' },
-          { simbolo: 'PESOS', descripcion: 'Cuenta Corriente', cantidad: 100000, ultimoPrecio: 1, valorizado: 100000, moneda: 'peso_argentino' },
+          { cantidad: 10, comprometido: 0, puntosVariacion: 0, variacionDiaria: 1.5, ultimoPrecio: 15000, ppc: 14000, gananciaPorcentaje: 7.14, gananciaDinero: 10000, valorizado: 150000, titulo: { simbolo: 'AAPL', descripcion: 'Cedear Apple Inc.', pais: 'argentina', mercado: 'bcba', tipo: 'CEDEARS', plazo: 't1', moneda: 'peso_Argentino' }, parking: null },
+          { cantidad: 5, comprometido: 0, puntosVariacion: 0, variacionDiaria: -0.5, ultimoPrecio: 12000, ppc: 11500, gananciaPorcentaje: 4.35, gananciaDinero: 2500, valorizado: 60000, titulo: { simbolo: 'KO', descripcion: 'Cedear Coca-Cola Co.', pais: 'argentina', mercado: 'bcba', tipo: 'CEDEARS', plazo: 't1', moneda: 'peso_Argentino' }, parking: null },
+          { cantidad: 100000, comprometido: 0, puntosVariacion: 0, variacionDiaria: 0, ultimoPrecio: 1, ppc: 1, gananciaPorcentaje: 0, gananciaDinero: 0, valorizado: 100000, titulo: { simbolo: 'PESOS', descripcion: 'Cuenta Corriente', pais: 'argentina', mercado: 'bcba', tipo: 'MONEDA', plazo: 't0', moneda: 'peso_Argentino' }, parking: null },
         ]
       } as PortfolioResponse;
     }
@@ -168,13 +176,30 @@ export class IOLClient {
 
     if (endpoint.includes('/api/v2/estadocuenta')) {
       return {
-        moneda: 'peso_argentino',
         cuentas: [
-          { numero: '123456', tipo: 'inversion', moneda: 'peso_argentino', saldoDisponible: 100000, saldoAliquidar: 0 },
+          {
+            numero: '123456',
+            tipo: 'inversion_Argentina_Pesos',
+            moneda: 'peso_Argentino',
+            disponible: 100000,
+            comprometido: 0,
+            saldo: 100000,
+            titulosValorizados: 250000,
+            total: 350000,
+            margenDescubierto: 0,
+            saldos: [
+              { liquidacion: 'inmediato', saldo: 100000, comprometido: 0, disponible: 100000, disponibleOperar: 100000 },
+              { liquidacion: 'hrs24', saldo: 0, comprometido: 0, disponible: 0, disponibleOperar: 100000 },
+              { liquidacion: 'hrs48', saldo: 0, comprometido: 0, disponible: 0, disponibleOperar: 100000 },
+            ],
+            estado: 'operable',
+          },
         ],
-        movimientos: [
-          { fecha: new Date().toISOString(), tipoOperacion: 'Acreditacion', descripcion: 'Fondeo de cuenta', monto: 100000, saldo: 100000 }
-        ]
+        estadisticas: [
+          { descripcion: 'Anterior', cantidad: 0, volumen: 0 },
+          { descripcion: 'Actual', cantidad: 5, volumen: 150000 },
+        ],
+        totalEnPesos: 350000,
       } as EstadoCuenta;
     }
 
@@ -247,40 +272,26 @@ export class IOLClient {
 
   async getCCL(): Promise<number> {
     try {
-      // Fetch GGAL (Local) and GGAL (ADR)
-      // Note: In a real scenario, we might need to adjust the ticker for ADR or fetch from a US source if IOL doesn't provide it directly in the same way.
-      // For this implementation, we'll assume we can get a local price and a reference price.
-      // Often CCL is calculated as (Local Price / ADR Price) * Conversion Factor
-      // GGAL ADR conversion factor is 10.
-      
-      // In simulation mode, we return a fixed mock value
-      if (SIMULATION_MODE) return 1000;
+      // CCL = (GGAL local price / GGAL.D cedear-ADR price) * conversion ratio
+      // GGAL conversion ratio: 10 CEDEARs = 1 ADR
+      if (SIMULATION_MODE) return 1200;
 
-      const ggalLocal = await this.getQuote('GGAL', 'bcba');
-      // For ADR, we might need to fetch from a different endpoint or source if IOL doesn't list NASDAQ directly easily for this specific calc
-      // Assuming we can get the ADR price or a proxy. 
-      // If IOL only gives local market, we might need an external source for the ADR price (e.g. Yahoo Finance via the Analyst agent).
-      // For now, let's assume we have a way or use a fallback.
-      
-      // FALLBACK: For the purpose of this exercise without external US market data in this class, 
-      // we will use a simplified mock or placeholder if we can't get the ADR.
-      // However, the requirements say "Implement a getCCL() utility that compares the price of a liquid ADR (like GGAL) vs. its local counterpart".
-      
-      // Let's try to fetch GGAL from NASDAQ if possible, or use a hardcoded value for the example if the API doesn't support it directly.
-      // IOL API primarily serves local market. 
-      // We will use a mock value for now in the non-simulation path if we can't reach US markets, 
-      // but the structure is here.
-      
-      const ggalAdrPrice = 18.5; // Placeholder for real-time ADR price fetch
-      
-      if (ggalLocal && ggalLocal.ultimoPrecio) {
-          return (ggalLocal.ultimoPrecio / ggalAdrPrice) * 10;
+      const [ggalLocal, ggalD] = await Promise.all([
+        this.getQuote('GGAL', 'bcba'),
+        this.getQuote('GGAL.D', 'bcba'),
+      ]);
+
+      if (ggalLocal?.ultimoPrecio && ggalD?.ultimoPrecio) {
+        const ccl = (ggalLocal.ultimoPrecio / ggalD.ultimoPrecio) * 10;
+        console.log(`[IOL CCL] GGAL=${ggalLocal.ultimoPrecio} GGAL.D=${ggalD.ultimoPrecio} → CCL=${ccl.toFixed(2)}`);
+        return ccl;
       }
-      
-      return 1000; // Fallback
+
+      console.warn('[IOL CCL] Could not get GGAL prices, using fallback');
+      return 1200;
     } catch (error) {
-      console.error('Error calculating CCL:', error);
-      return 1000; // Fallback to a safe default or last known value
+      console.error('[IOL CCL] Error calculating CCL:', error);
+      return 1200;
     }
   }
 }

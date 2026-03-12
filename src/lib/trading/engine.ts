@@ -48,7 +48,7 @@ export class TradingEngine {
       const { symbol, percentage } = target;
       
       // Find current holding
-      const asset = portfolio.activos.find(a => a.simbolo === symbol);
+      const asset = portfolio.activos.find(a => a.titulo.simbolo === symbol);
       const currentValueARS = asset ? asset.valorizado : 0;
       
       const targetValueARS = totalPortfolioValueARS * percentage;

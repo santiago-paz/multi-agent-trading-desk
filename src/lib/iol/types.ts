@@ -7,13 +7,28 @@ export interface IOLToken {
   expires: string;
 }
 
-export interface PortfolioAsset {
+export interface PortfolioTitulo {
   simbolo: string;
   descripcion: string;
-  cantidad: number;
-  ultimoPrecio: number;
-  valorizado: number;
+  pais: string;
+  mercado: string;
+  tipo: string;
+  plazo: string;
   moneda: string;
+}
+
+export interface PortfolioAsset {
+  cantidad: number;
+  comprometido: number;
+  puntosVariacion: number;
+  variacionDiaria: number;
+  ultimoPrecio: number;
+  ppc: number;
+  gananciaPorcentaje: number;
+  gananciaDinero: number;
+  valorizado: number;
+  titulo: PortfolioTitulo;
+  parking: unknown;
 }
 
 export interface PortfolioResponse {
@@ -73,22 +88,36 @@ export interface DatosPerfil {
   perfilInversor: string;
 }
 
-export interface EstadoCuentaItem {
-  fecha: string;
-  tipoOperacion: string;
-  descripcion: string;
-  monto: number;
+export interface SaldoLiquidacion {
+  liquidacion: string; // "inmediato", "hrs24", "hrs48", "hrs72", "masHrs72"
   saldo: number;
+  comprometido: number;
+  disponible: number;
+  disponibleOperar: number;
+}
+
+export interface EstadoCuentaCuenta {
+  numero: string;
+  tipo: string;
+  moneda: string;
+  disponible: number;
+  comprometido: number;
+  saldo: number;
+  titulosValorizados: number;
+  total: number;
+  margenDescubierto: number;
+  saldos: SaldoLiquidacion[];
+  estado: string;
+}
+
+export interface EstadoCuentaEstadistica {
+  descripcion: string;
+  cantidad: number;
+  volumen: number;
 }
 
 export interface EstadoCuenta {
-  moneda: string;
-  cuentas: {
-    numero: string;
-    tipo: string;
-    moneda: string;
-    saldoDisponible: number;
-    saldoAliquidar: number;
-  }[];
-  movimientos: EstadoCuentaItem[];
+  cuentas: EstadoCuentaCuenta[];
+  estadisticas: EstadoCuentaEstadistica[];
+  totalEnPesos: number;
 }
