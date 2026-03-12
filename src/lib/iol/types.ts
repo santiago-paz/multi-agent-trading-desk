@@ -51,6 +51,40 @@ export interface Quote {
   moneda: string;
 }
 
+export interface PanelTitulo {
+  simbolo: string;
+  descripcion: string;
+  pais: string;
+  mercado: string;
+  tipo: string;
+  plazo: string;
+  moneda: string;
+}
+
+export interface PanelQuote {
+  simbolo: string;
+  ultimoPrecio: number;
+  variacionPorcentual: number;
+  apertura: number;
+  maximo: number;
+  minimo: number;
+  cierreAnterior: number;
+  volumen: number;
+  cantidadOperaciones: number;
+  fecha: string;
+  tipoOpcion: string | null;
+  precioEjercicio: number | null;
+  fechaVencimiento: string | null;
+  mercado: string;
+  moneda: string;
+  descripcion: string;
+  plazo: string;
+}
+
+export interface PanelResponse {
+  titulos: PanelQuote[];
+}
+
 export interface OrderResponse {
   numeroOperacion: number;
   mensaje: string;

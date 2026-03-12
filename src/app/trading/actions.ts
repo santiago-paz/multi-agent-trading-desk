@@ -3,6 +3,7 @@
 import { analystAgent } from '@/lib/agents/analyst';
 import { sentinelAgent } from '@/lib/agents/sentinel';
 import { strategistAgent } from '@/lib/agents/strategist';
+import { advisorAgent } from '@/lib/agents/advisor';
 import { tradingEngine } from '@/lib/trading/engine';
 import { iolClient } from '@/lib/iol/client';
 import { OrderRequest, OrderResponse } from '@/lib/iol/types';
@@ -174,6 +175,37 @@ export async function getProfileData() {
   } catch (error) {
     console.error('Failed to fetch profile data:', error);
     return { success: false, error: 'Failed to fetch profile data' };
+  }
+}
+
+export async function getAdvisorRecommendation(strategy: 'Conservadora' | 'Media' | 'Arriesgada') {
+  try {
+    const cuenta = await iolClient.getEstadoCuenta();
+    const cuentaArs = cuenta.cuentas.find(c => c.moneda === 'peso_Argentino');
+    let cash = cuentaArs?.disponible || 0;
+    
+    // Try to get more accurate disponibleOperar immediately if available
+    const inmediato = cuentaArs?.saldos?.find(s => s.liquidacion === 'inmediato');
+    if (inmediato) {
+       cash = inmediato.disponibleOperar;
+    }
+
+    // Fetch both CEDEARs and Public Bonds to ensure we have cheap options
+    const [cedearsPanel, bonosPanel] = await Promise.all([
+      iolClient.getPanelQuotes('cedears'),
+      iolClient.getPanelQuotes('titulosPublicos')
+    ]);
+    
+    // Combine 
+    const combinedTitulos = [...(cedearsPanel.titulos || []), ...(bonosPanel.titulos || [])];
+    
+    // We pass quotes to the LLM agent
+    const recommendation = await advisorAgent.generateRecommendation(cash, combinedTitulos, strategy);
+
+    return { success: true, data: recommendation };
+  } catch (error) {
+    console.error('Advisor Action failed:', error);
+    return { success: false, error: 'Advisor Action failed' };
   }
 }
 

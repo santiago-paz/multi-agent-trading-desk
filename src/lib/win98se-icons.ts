@@ -19,6 +19,7 @@ export const DESKTOP_APP_ICONS = {
   marketdata: url('apps/32/libreoffice-calc.png'),
   account: url('apps/32/system-users.png'),
   movements: url('actions/32/document-open-recent.png'),
+  advisor: url('apps/32/help-browser.png'),
 } as const;
 
 export type DesktopAppId = keyof typeof DESKTOP_APP_ICONS;

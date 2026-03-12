@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { PortfolioSummary } from '@/components/ui/PortfolioSummary';
 import { PortfolioWindow } from '@/components/ui/PortfolioWindow';
+import { AdvisorWindow } from '@/components/ui/AdvisorWindow';
 import { AgentLog } from '@/components/ui/AgentLog';
 import { RiskGauge } from '@/components/ui/RiskGauge';
 import { OrderReview } from '@/components/ui/OrderReview';
@@ -31,6 +32,7 @@ const ICON_IDS = [
   'news',
   'marketdata',
   'movements',
+  'advisor',
 ] as const;
 type IconId = (typeof ICON_IDS)[number];
 
@@ -42,6 +44,7 @@ const DEFAULT_ICON_POSITIONS: Record<IconId, { x: number; y: number }> = {
   news: { x: 8, y: 264 },
   marketdata: { x: 8, y: 328 },
   movements: { x: 8, y: 392 },
+  advisor: { x: 8, y: 456 },
 };
 
 import { useMepStore } from '@/lib/store/mep-store';
@@ -293,6 +296,16 @@ export default function TradingDashboard() {
           y={iconPositions.movements.y}
           onMove={handleIconMove}
         />
+        <DesktopIcon
+          id="advisor"
+          label="Asesor IA"
+          iconSrc={DESKTOP_APP_ICONS.advisor}
+          icon="🧠"
+          onClick={() => openOrFocusWindow('advisor')}
+          x={iconPositions.advisor.x}
+          y={iconPositions.advisor.y}
+          onMove={handleIconMove}
+        />
       </div>
 
       {Object.entries(windows).map(([id, state]) => {
@@ -450,6 +463,9 @@ export default function TradingDashboard() {
                 isLoading={isLoadingOperations}
                 onRefresh={fetchOperationsData}
               />
+            )}
+            {appId === 'advisor' && (
+              <AdvisorWindow />
             )}
           </DraggableResizableWindow>
         );

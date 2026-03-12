@@ -1,4 +1,4 @@
-import { IOLToken, PortfolioResponse, Quote, OrderRequest, OrderResponse, Operation, EstadoCuenta, DatosPerfil } from './types';
+import { IOLToken, PortfolioResponse, Quote, OrderRequest, OrderResponse, Operation, EstadoCuenta, DatosPerfil, PanelResponse, PanelQuote } from './types';
 import { readFileSync, writeFileSync, unlinkSync } from 'fs';
 import { join } from 'path';
 
@@ -260,6 +260,36 @@ export class IOLClient {
         return { ...(this.mockResponse('/api/v2/Cotizaciones') as Quote), simbolo: symbol };
     }
     return this.fetchWithAuth<Quote>(`/api/v2/${market}/Titulos/${symbol}/Cotizacion`);
+  }
+
+  async getPanelQuotes(instrumento: string, pais: string = 'argentina'): Promise<PanelResponse> {
+    if (SIMULATION_MODE) {
+      if (instrumento.toLowerCase() === 'cedears') {
+        return {
+          titulos: [
+            { simbolo: 'AAPL', descripcion: 'Apple Inc.', ultimoPrecio: 22000, variacionPorcentual: 1.5, apertura: 21000, maximo: 22500, minimo: 20500, cierreAnterior: 21500, volumen: 10000, cantidadOperaciones: 500, fecha: new Date().toISOString(), tipoOpcion: null, precioEjercicio: null, fechaVencimiento: null, mercado: 'bcba', moneda: 'peso_Argentino', plazo: 't0' },
+            { simbolo: 'KO', descripcion: 'Coca-Cola Co.', ultimoPrecio: 18000, variacionPorcentual: -0.5, apertura: 18100, maximo: 18200, minimo: 17900, cierreAnterior: 18100, volumen: 5000, cantidadOperaciones: 200, fecha: new Date().toISOString(), tipoOpcion: null, precioEjercicio: null, fechaVencimiento: null, mercado: 'bcba', moneda: 'peso_Argentino', plazo: 't0' },
+            { simbolo: 'GGAL', descripcion: 'Grupo Financiero Galicia', ultimoPrecio: 4500, variacionPorcentual: 2.3, apertura: 4400, maximo: 4600, minimo: 4300, cierreAnterior: 4400, volumen: 50000, cantidadOperaciones: 1500, fecha: new Date().toISOString(), tipoOpcion: null, precioEjercicio: null, fechaVencimiento: null, mercado: 'bcba', moneda: 'peso_Argentino', plazo: 't0' },
+            { simbolo: 'SPY', descripcion: 'SPDR S&P 500 ETF Trust', ultimoPrecio: 35000, variacionPorcentual: 0.8, apertura: 34500, maximo: 35500, minimo: 34000, cierreAnterior: 34700, volumen: 15000, cantidadOperaciones: 800, fecha: new Date().toISOString(), tipoOpcion: null, precioEjercicio: null, fechaVencimiento: null, mercado: 'bcba', moneda: 'peso_Argentino', plazo: 't0' },
+            { simbolo: 'MSFT', descripcion: 'Microsoft Corp.', ultimoPrecio: 32000, variacionPorcentual: 1.2, apertura: 31500, maximo: 32500, minimo: 31000, cierreAnterior: 31600, volumen: 12000, cantidadOperaciones: 600, fecha: new Date().toISOString(), tipoOpcion: null, precioEjercicio: null, fechaVencimiento: null, mercado: 'bcba', moneda: 'peso_Argentino', plazo: 't0' },
+            { simbolo: 'TSLA', descripcion: 'Tesla Inc.', ultimoPrecio: 19000, variacionPorcentual: -2.1, apertura: 19500, maximo: 19800, minimo: 18800, cierreAnterior: 19400, volumen: 25000, cantidadOperaciones: 1200, fecha: new Date().toISOString(), tipoOpcion: null, precioEjercicio: null, fechaVencimiento: null, mercado: 'bcba', moneda: 'peso_Argentino', plazo: 't0' },
+          ]
+        } as PanelResponse;
+      }
+      if (instrumento.toLowerCase() === 'titulospublicos') {
+        return {
+          titulos: [
+            { simbolo: 'AL30', descripcion: 'Bono Rep. Argentina USD 2030', ultimoPrecio: 65000, variacionPorcentual: 1.2, apertura: 64500, maximo: 65100, minimo: 64000, cierreAnterior: 64230, volumen: 1000000, cantidadOperaciones: 5000, fecha: new Date().toISOString(), tipoOpcion: null, precioEjercicio: null, fechaVencimiento: null, mercado: 'bcba', moneda: 'peso_Argentino', plazo: 't0' },
+            { simbolo: 'GD30', descripcion: 'Bono Global Rep. Argentina USD 2030', ultimoPrecio: 72000, variacionPorcentual: 0.5, apertura: 71500, maximo: 72500, minimo: 71000, cierreAnterior: 71600, volumen: 500000, cantidadOperaciones: 3000, fecha: new Date().toISOString(), tipoOpcion: null, precioEjercicio: null, fechaVencimiento: null, mercado: 'bcba', moneda: 'peso_Argentino', plazo: 't0' },
+            { simbolo: 'TX24', descripcion: 'Bono Tesoro Nacional ARS CER 2024', ultimoPrecio: 1540, variacionPorcentual: 0.1, apertura: 1530, maximo: 1550, minimo: 1520, cierreAnterior: 1538, volumen: 2000000, cantidadOperaciones: 1500, fecha: new Date().toISOString(), tipoOpcion: null, precioEjercicio: null, fechaVencimiento: null, mercado: 'bcba', moneda: 'peso_Argentino', plazo: 't0' },
+            { simbolo: 'S31O3', descripcion: 'Letra del Tesoro Nacional ARS a Descuento', ultimoPrecio: 95, variacionPorcentual: 0.2, apertura: 94, maximo: 96, minimo: 93, cierreAnterior: 94.8, volumen: 10000000, cantidadOperaciones: 8000, fecha: new Date().toISOString(), tipoOpcion: null, precioEjercicio: null, fechaVencimiento: null, mercado: 'bcba', moneda: 'peso_Argentino', plazo: 't0' },
+          ]
+        } as PanelResponse;
+      }
+      return { titulos: [] };
+    }
+    
+    return this.fetchWithAuth<PanelResponse>(`/api/v2/Cotizaciones/${instrumento}/${pais}/Todos`);
   }
 
   async placeOrder(order: OrderRequest): Promise<OrderResponse> {
