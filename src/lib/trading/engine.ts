@@ -27,7 +27,12 @@ export class TradingEngine {
     let totalValueARS = 0;
     
     // Sum up the value of all assets in ARS
-    for (const asset of portfolio.activos) {
+    const activos = portfolio?.activos;
+    if (!activos || !Array.isArray(activos)) {
+      console.warn('[Trading Engine] Portfolio activos is not available, returning 0');
+      return 0;
+    }
+    for (const asset of activos) {
       totalValueARS += asset.valorizado;
     }
 
@@ -38,9 +43,15 @@ export class TradingEngine {
   async generateRebalancingOrders(targetAllocations: TargetAllocation[]): Promise<OrderRequest[]> {
     const portfolio = await iolClient.getPortfolio();
     
+    const activos = portfolio?.activos;
+    if (!activos || !Array.isArray(activos)) {
+      console.warn('[Trading Engine] Portfolio activos is not available, skipping rebalancing');
+      return [];
+    }
+
     // Calculate total portfolio value in ARS
     // We sum up all assets' current value.
-    const totalPortfolioValueARS = portfolio.activos.reduce((acc, asset) => acc + asset.valorizado, 0);
+    const totalPortfolioValueARS = activos.reduce((acc, asset) => acc + asset.valorizado, 0);
 
     const orders: OrderRequest[] = [];
 
@@ -48,7 +59,7 @@ export class TradingEngine {
       const { symbol, percentage } = target;
       
       // Find current holding
-      const asset = portfolio.activos.find(a => a.titulo.simbolo === symbol);
+      const asset = activos.find(a => a.titulo.simbolo === symbol);
       const currentValueARS = asset ? asset.valorizado : 0;
       
       const targetValueARS = totalPortfolioValueARS * percentage;

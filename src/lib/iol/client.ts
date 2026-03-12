@@ -1,12 +1,14 @@
 import { IOLToken, PortfolioResponse, Quote, OrderRequest, OrderResponse, Operation, EstadoCuenta, DatosPerfil } from './types';
-import { readFileSync, writeFileSync } from 'fs';
+import { readFileSync, writeFileSync, unlinkSync } from 'fs';
 import { join } from 'path';
 
 const SIMULATION_MODE = process.env.SIMULATION_MODE === 'true';
 const TOKEN_CACHE_PATH = join(process.cwd(), '.iol_token_cache.json');
+const TOKEN_SAFETY_MARGIN_MS = 60 * 1000; // Refresh 60s before expiry
 
 interface CachedToken extends IOLToken {
   cached_at: string;
+  computed_expiry?: string;
 }
 
 export class IOLClient {
@@ -21,9 +23,13 @@ export class IOLClient {
     const cached = this.loadCachedToken();
     if (cached) {
       this.token = cached;
-      // Calculate expiry from when it was cached
-      const cachedAt = new Date(cached.cached_at).getTime();
-      this.tokenExpiry = new Date(cachedAt + (cached.expires_in * 1000));
+      // Use pre-computed expiry if available, otherwise fall back to cached_at + expires_in
+      if (cached.computed_expiry) {
+        this.tokenExpiry = new Date(cached.computed_expiry);
+      } else {
+        const cachedAt = new Date(cached.cached_at).getTime();
+        this.tokenExpiry = new Date(cachedAt + (cached.expires_in * 1000));
+      }
       console.log('[IOL AUTH] Loaded token from cache, expires:', this.tokenExpiry.toISOString());
     }
   }
@@ -41,21 +47,34 @@ export class IOLClient {
     return null;
   }
 
-  private saveCachedToken(token: IOLToken): void {
+  private saveCachedToken(token: IOLToken, expiry: Date): void {
     try {
-      const cached: CachedToken = { ...token, cached_at: new Date().toISOString() };
+      const cached: CachedToken = {
+        ...token,
+        cached_at: new Date().toISOString(),
+        computed_expiry: expiry.toISOString(),
+      };
       writeFileSync(TOKEN_CACHE_PATH, JSON.stringify(cached, null, 2), 'utf-8');
-      console.log('[IOL AUTH] Token saved to cache');
+      console.log('[IOL AUTH] Token saved to cache, expires:', expiry.toISOString());
     } catch (err) {
       console.warn('[IOL AUTH] Failed to save token cache:', err);
+    }
+  }
+
+  private deleteCachedToken(): void {
+    try {
+      unlinkSync(TOKEN_CACHE_PATH);
+      console.log('[IOL AUTH] Deleted stale token cache');
+    } catch {
+      // File doesn't exist — that's fine
     }
   }
 
   private async authenticate(): Promise<void> {
     if (SIMULATION_MODE) return;
 
-    // Token still valid — skip auth
-    if (this.token && this.tokenExpiry && this.tokenExpiry > new Date()) {
+    // Token still valid (with safety margin) — skip auth
+    if (this.token && this.tokenExpiry && this.tokenExpiry.getTime() > (Date.now() + TOKEN_SAFETY_MARGIN_MS)) {
       return;
     }
 
@@ -106,8 +125,15 @@ export class IOLClient {
 
     this.token = await response.json();
     if (this.token) {
-      this.tokenExpiry = new Date(Date.now() + this.token.expires_in * 1000);
-      this.saveCachedToken(this.token);
+      // Use .expires from the API response if available (more accurate than expires_in)
+      const expiresHeader = (this.token as unknown as Record<string, unknown>)['.expires'];
+      if (expiresHeader && typeof expiresHeader === 'string') {
+        this.tokenExpiry = new Date(expiresHeader);
+        console.log(`[IOL AUTH] Using server .expires: ${expiresHeader}`);
+      } else {
+        this.tokenExpiry = new Date(Date.now() + this.token.expires_in * 1000);
+      }
+      this.saveCachedToken(this.token, this.tokenExpiry);
     }
   }
 
@@ -131,6 +157,7 @@ export class IOLClient {
       console.warn(`[IOL API] Got 401 on ${endpoint}, forcing token refresh and retrying...`);
       this.token = null;
       this.tokenExpiry = null;
+      this.deleteCachedToken();
       return this.fetchWithAuth(endpoint, options, true);
     }
 
