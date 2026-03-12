@@ -30,7 +30,7 @@ export const PortfolioWindow: React.FC<PortfolioWindowProps> = ({
 
   return (
     <div className="flex flex-col flex-1 h-full min-h-0 text-[11px]" style={{ fontFamily: '"Pixelated MS Sans Serif", Tahoma, sans-serif', WebkitFontSmoothing: 'none' }}>
-      <menu role="tablist" className="m-0 z-10" style={{ paddingLeft: '2px' }}>
+      <menu role="tablist">
         <li role="tab" aria-selected={activeTab === 'portfolio'}>
           <a href="#portfolio" onClick={(e) => { e.preventDefault(); setActiveTab('portfolio'); }} style={{ textDecoration: 'none' }}>Tenencias</a>
         </li>
@@ -39,7 +39,7 @@ export const PortfolioWindow: React.FC<PortfolioWindowProps> = ({
         </li>
       </menu>
 
-      <div className="window m-0 flex-1 flex flex-col" role="tabpanel" style={{ overflow: 'hidden', marginTop: '-1px' }}>
+      <div className="window flex-1 flex flex-col" role="tabpanel" style={{ overflow: 'hidden' }}>
         <div className="window-body flex-1 flex flex-col m-0" style={{ padding: '6px', overflow: 'hidden' }}>
           {activeTab === 'portfolio' && (
             isLoadingPortfolio && !portfolio ? (
