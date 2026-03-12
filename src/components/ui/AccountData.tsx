@@ -9,50 +9,7 @@ interface AccountDataProps {
   onRefresh: () => void;
 }
 
-/* ─── Win98 authentic inline style constants ─────────────────────────────── */
-const FONT: React.CSSProperties = {
-  fontFamily: '"Pixelated MS Sans Serif", Arial, sans-serif',
-  fontSize: '11px',
-  WebkitFontSmoothing: 'none',
-  // @ts-ignore – non-standard
-  MozOsxFontSmoothing: 'grayscale',
-};
-
-const LABEL: React.CSSProperties = {
-  ...FONT,
-  width: '90px',
-  flexShrink: 0,
-  textAlign: 'right',
-  paddingRight: '6px',
-  whiteSpace: 'nowrap',
-};
-
-/* ─── Win98 ListView column header (raised 3D button look) ───────────────── */
-const COL_HEADER: React.CSSProperties = {
-  ...FONT,
-  fontWeight: 'normal',
-  textAlign: 'left',
-  padding: '2px 6px',
-  background: '#c0c0c0',
-  borderTop: '1px solid #ffffff',
-  borderLeft: '1px solid #ffffff',
-  borderRight: '1px solid #808080',
-  borderBottom: '1px solid #808080',
-  whiteSpace: 'nowrap',
-};
-
-const COL_HEADER_RIGHT: React.CSSProperties = {
-  ...COL_HEADER,
-  textAlign: 'right',
-};
-
-/* Win98 inset groove separator (horizontal rule) */
-const HR98: React.CSSProperties = {
-  border: 'none',
-  borderTop: '1px solid #808080',
-  borderBottom: '1px solid #ffffff',
-  margin: '4px 0',
-};
+import { FONT, LABEL_ACCOUNT as LABEL, COL_HEADER, COL_HEADER_RIGHT, HR98 } from '@/lib/theme/win98';
 
 /* ─── Component ──────────────────────────────────────────────────────────── */
 export const AccountData: React.FC<AccountDataProps> = ({

@@ -1,5 +1,6 @@
 import { iolClient } from '../iol/client';
 import { OrderRequest } from '../iol/types';
+import { IMarketDataClient } from './interfaces';
 
 // CEDEAR Ratios: How many CEDEARs equal one underlying share
 export const CEDEAR_RATIOS: Record<string, number> = {
@@ -20,9 +21,11 @@ export interface TargetAllocation {
 export class TradingEngine {
   private initialCapitalUSD = 1000;
 
+  constructor(private client: IMarketDataClient) {}
+
   async calculatePortfolioValue(): Promise<number> {
-    const portfolio = await iolClient.getPortfolio();
-    const ccl = await iolClient.getCCL();
+    const portfolio = await this.client.getPortfolio();
+    const ccl = await this.client.getCCL();
 
     let totalValueARS = 0;
     
@@ -41,7 +44,7 @@ export class TradingEngine {
   }
 
   async generateRebalancingOrders(targetAllocations: TargetAllocation[]): Promise<OrderRequest[]> {
-    const portfolio = await iolClient.getPortfolio();
+    const portfolio = await this.client.getPortfolio();
     
     const activos = portfolio?.activos;
     if (!activos || !Array.isArray(activos)) {
@@ -67,7 +70,7 @@ export class TradingEngine {
       
       // Get current price of the asset (CEDEAR)
       // We need the local price in ARS
-      const quote = await iolClient.getQuote(symbol);
+      const quote = await this.client.getQuote(symbol);
       const priceARS = quote.ultimoPrecio;
 
       if (!priceARS || priceARS === 0) {
@@ -95,4 +98,4 @@ export class TradingEngine {
   }
 }
 
-export const tradingEngine = new TradingEngine();
+export const tradingEngine = new TradingEngine(iolClient);

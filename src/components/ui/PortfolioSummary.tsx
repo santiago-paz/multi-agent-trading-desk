@@ -1,6 +1,6 @@
-import React, { useState, useMemo } from 'react';
-import { PortfolioAsset } from '@/lib/iol/types';
+import React from 'react';
 import { PortfolioResponse } from '@/lib/iol/types';
+import { usePortfolioSort, SortKey } from '@/hooks/usePortfolioSort';
 
 interface PortfolioSummaryProps {
   portfolio: PortfolioResponse;
@@ -10,54 +10,7 @@ interface PortfolioSummaryProps {
   onRefresh?: () => void;
 }
 
-/* ─── Win98 authentic inline style constants ─────────────────────────────── */
-const FONT: React.CSSProperties = {
-  fontFamily: '"Pixelated MS Sans Serif", Arial, sans-serif',
-  fontSize: '11px',
-  WebkitFontSmoothing: 'none',
-  // @ts-ignore – non-standard
-  MozOsxFontSmoothing: 'grayscale',
-};
-
-const LABEL: React.CSSProperties = {
-  ...FONT,
-  width: '80px',
-  flexShrink: 0,
-  textAlign: 'right',
-  paddingRight: '6px',
-  whiteSpace: 'nowrap',
-};
-
-/* ─── Win98 ListView column header (raised 3D button look) ───────────────── */
-const COL_HEADER_BASE: React.CSSProperties = {
-  ...FONT,
-  fontWeight: 'normal',
-  padding: '2px 6px',
-  background: '#c0c0c0',
-  whiteSpace: 'nowrap',
-  cursor: 'default',
-  userSelect: 'none',
-};
-
-/* Raised look (default / inactive) */
-const COL_RAISED: React.CSSProperties = {
-  borderTop: '1px solid #ffffff',
-  borderLeft: '1px solid #ffffff',
-  borderRight: '1px solid #808080',
-  borderBottom: '1px solid #808080',
-};
-
-/* Sunken look (active sort column – pressed button) */
-const COL_SUNKEN: React.CSSProperties = {
-  borderTop: '1px solid #808080',
-  borderLeft: '1px solid #808080',
-  borderRight: '1px solid #ffffff',
-  borderBottom: '1px solid #ffffff',
-};
-
-/* ─── Sort column definitions ────────────────────────────────────────────── */
-type SortKey = 'simbolo' | 'descripcion' | 'cantidad' | 'ultimoPrecio' | 'valorizado' | 'variacionDiaria' | 'gananciaDinero';
-type SortDir = 'asc' | 'desc';
+import { FONT, LABEL, COL_HEADER_BASE, COL_RAISED, COL_SUNKEN, CELL, CELL_RIGHT } from '@/lib/theme/win98';
 
 interface ColumnDef {
   key: SortKey;
@@ -76,32 +29,7 @@ const COLUMNS: ColumnDef[] = [
   { key: 'gananciaDinero',  label: 'Ganancia',     align: 'right', width: '65px'  },
 ];
 
-function getSortValue(asset: PortfolioAsset, key: SortKey): string | number {
-  switch (key) {
-    case 'simbolo':         return asset.titulo.simbolo;
-    case 'descripcion':     return asset.titulo.descripcion;
-    case 'cantidad':        return asset.cantidad;
-    case 'ultimoPrecio':    return asset.ultimoPrecio;
-    case 'valorizado':      return asset.valorizado;
-    case 'variacionDiaria': return asset.variacionDiaria;
-    case 'gananciaDinero':  return asset.gananciaDinero;
-  }
-}
 
-/* Win98 cell style */
-const CELL: React.CSSProperties = {
-  ...FONT,
-  padding: '1px 6px',
-  borderRight: '1px solid #c0c0c0',
-  whiteSpace: 'nowrap',
-  overflow: 'hidden',
-  textOverflow: 'ellipsis',
-};
-
-const CELL_RIGHT: React.CSSProperties = {
-  ...CELL,
-  textAlign: 'right',
-};
 
 /* ─── Component ──────────────────────────────────────────────────────────── */
 export const PortfolioSummary: React.FC<PortfolioSummaryProps> = ({
@@ -111,38 +39,15 @@ export const PortfolioSummary: React.FC<PortfolioSummaryProps> = ({
   isLoading,
   onRefresh,
 }) => {
-  const totalARS = portfolio.activos.reduce((acc, asset) => acc + asset.valorizado, 0);
-  const totalUSD = totalARS / cclRate;
-  const totalGananciaARS = portfolio.activos.reduce((acc, asset) => acc + asset.gananciaDinero, 0);
-  const totalGananciaUSD = totalGananciaARS / cclRate;
-
-  const [sortKey, setSortKey] = useState<SortKey>('simbolo');
-  const [sortDir, setSortDir] = useState<SortDir>('asc');
-
-  const handleSort = (key: SortKey) => {
-    if (sortKey === key) {
-      setSortDir((d) => (d === 'asc' ? 'desc' : 'asc'));
-    } else {
-      setSortKey(key);
-      setSortDir('asc');
-    }
-  };
-
-  const sortedActivos = useMemo(() => {
-    const copy = [...portfolio.activos];
-    copy.sort((a, b) => {
-      const va = getSortValue(a, sortKey);
-      const vb = getSortValue(b, sortKey);
-      let cmp: number;
-      if (typeof va === 'string' && typeof vb === 'string') {
-        cmp = va.localeCompare(vb);
-      } else {
-        cmp = (va as number) - (vb as number);
-      }
-      return sortDir === 'asc' ? cmp : -cmp;
-    });
-    return copy;
-  }, [portfolio.activos, sortKey, sortDir]);
+  const {
+    sortKey,
+    sortDir,
+    handleSort,
+    sortedActivos,
+    totalUSD,
+    totalGananciaUSD,
+    totalActivosEnCartera,
+  } = usePortfolioSort(portfolio, cclRate);
 
   return (
     <div
@@ -203,7 +108,7 @@ export const PortfolioSummary: React.FC<PortfolioSummaryProps> = ({
 
         {/* ─── Holdings ListView ─── */}
         <fieldset style={{ marginTop: '6px' }}>
-          <legend>Tenencia ({portfolio.activos.length} títulos)</legend>
+          <legend>Tenencia ({totalActivosEnCartera} títulos)</legend>
           <div
             className="sunken-panel win98-scrollbar"
             style={{ overflow: 'auto', maxHeight: '320px', padding: 0 }}
@@ -318,7 +223,7 @@ export const PortfolioSummary: React.FC<PortfolioSummaryProps> = ({
       {/* ── Status Bar ── */}
       <div className="status-bar" style={{ ...FONT, flexShrink: 0, margin: 0 }}>
         <p className="status-bar-field">
-          {portfolio.activos.length} títulos en cartera
+          {totalActivosEnCartera} títulos en cartera
         </p>
         <p className="status-bar-field">
           CCL: ${cclRate.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}

@@ -28,7 +28,7 @@ export interface PortfolioAsset {
   gananciaDinero: number;
   valorizado: number;
   titulo: PortfolioTitulo;
-  parking: unknown;
+  parking: number | null;
 }
 
 export interface PortfolioResponse {

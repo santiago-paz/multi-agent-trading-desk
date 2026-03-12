@@ -137,9 +137,9 @@ export class IOLClient {
     }
   }
 
-  private async fetchWithAuth(endpoint: string, options: RequestInit = {}, _isRetry = false): Promise<unknown> {
+  private async fetchWithAuth<T>(endpoint: string, options: RequestInit = {}, _isRetry = false): Promise<T> {
     if (SIMULATION_MODE) {
-      return this.mockResponse(endpoint);
+      return this.mockResponse(endpoint) as T;
     }
 
     await this.authenticate();
@@ -165,7 +165,7 @@ export class IOLClient {
       throw new Error(`API request failed: ${response.statusText}`);
     }
 
-    return response.json();
+    return response.json() as Promise<T>;
   }
 
   // Mock responses for simulation mode
@@ -245,7 +245,7 @@ export class IOLClient {
   }
 
   async getPortfolio(): Promise<PortfolioResponse> {
-    return this.fetchWithAuth('/api/v2/Portafolio/Argentina') as Promise<PortfolioResponse>;
+    return this.fetchWithAuth<PortfolioResponse>('/api/v2/Portafolio/Argentina');
   }
 
   async getQuote(symbol: string, market: string = 'bcba'): Promise<Quote> {
@@ -257,7 +257,7 @@ export class IOLClient {
         if (symbol === 'KO') return { ...(this.mockResponse('/api/v2/Cotizaciones') as Quote), simbolo: 'KO', ultimoPrecio: 18000 };
         return { ...(this.mockResponse('/api/v2/Cotizaciones') as Quote), simbolo: symbol };
     }
-    return this.fetchWithAuth(`/api/v2/Cotizaciones/${market}/${symbol}`) as Promise<Quote>;
+    return this.fetchWithAuth<Quote>(`/api/v2/Cotizaciones/${market}/${symbol}`);
   }
 
   async placeOrder(order: OrderRequest): Promise<OrderResponse> {
@@ -268,13 +268,13 @@ export class IOLClient {
 
     const endpoint = order.side === 'buy' ? '/api/v2/Operar/Comprar' : '/api/v2/Operar/Vender';
 
-    return this.fetchWithAuth(endpoint, {
+    return this.fetchWithAuth<OrderResponse>(endpoint, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(order),
-    }) as Promise<OrderResponse>;
+    });
   }
 
   async getOperations(): Promise<Operation[]> {
@@ -285,15 +285,15 @@ export class IOLClient {
         { numero: 1003, fechaOrden: new Date(Date.now() - 172800000).toISOString(), tipo: 'Compra', estado: 'Pendiente', mercado: 'bcba', simbolo: 'TSLA', cantidad: 2, monto: 40000, modalidad: 't0', precio: 20000 },
       ];
     }
-    return this.fetchWithAuth(`/api/v2/operaciones`) as Promise<Operation[]>;
+    return this.fetchWithAuth<Operation[]>(`/api/v2/operaciones`);
   }
 
   async getEstadoCuenta(): Promise<EstadoCuenta> {
-    return this.fetchWithAuth('/api/v2/estadocuenta') as Promise<EstadoCuenta>;
+    return this.fetchWithAuth<EstadoCuenta>('/api/v2/estadocuenta');
   }
 
   async getDatosPerfil(): Promise<DatosPerfil> {
-    return this.fetchWithAuth('/api/v2/datos-perfil') as Promise<DatosPerfil>;
+    return this.fetchWithAuth<DatosPerfil>('/api/v2/datos-perfil');
   }
 
 
