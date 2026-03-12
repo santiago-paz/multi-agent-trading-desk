@@ -6,7 +6,6 @@ import { PortfolioResponse, DatosPerfil, EstadoCuenta } from '@/lib/iol/types';
 interface PortfolioWindowProps {
   portfolio: PortfolioResponse | null;
   portfolioValueUSD: number;
-  cclRate: number;
   isLoadingPortfolio: boolean;
   onRefreshPortfolio: () => void;
   perfil: DatosPerfil | null;
@@ -18,7 +17,6 @@ interface PortfolioWindowProps {
 export const PortfolioWindow: React.FC<PortfolioWindowProps> = ({
   portfolio,
   portfolioValueUSD,
-  cclRate,
   isLoadingPortfolio,
   onRefreshPortfolio,
   perfil,
@@ -48,7 +46,6 @@ export const PortfolioWindow: React.FC<PortfolioWindowProps> = ({
               <PortfolioSummary
                 portfolio={portfolio}
                 valueUSD={portfolioValueUSD}
-                cclRate={cclRate}
                 isLoading={isLoadingPortfolio}
                 onRefresh={onRefreshPortfolio}
               />
@@ -60,7 +57,6 @@ export const PortfolioWindow: React.FC<PortfolioWindowProps> = ({
             <AccountData
               perfil={perfil}
               estadoCuenta={estadoCuenta}
-              cclRate={cclRate}
               isLoading={isLoadingAccount}
               onRefresh={onRefreshAccount}
             />

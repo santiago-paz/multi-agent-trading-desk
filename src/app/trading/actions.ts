@@ -125,21 +125,31 @@ export async function enrichNewsItem(item: NewsItem) {
 
 export async function getPortfolioSummary() {
     try {
-        const [portfolio, valueUSD, cclRate] = await Promise.all([
+        const [portfolio, valueUSD, mepRate] = await Promise.all([
             iolClient.getPortfolio(),
             tradingEngine.calculatePortfolioValue(),
-            iolClient.getCCL(),
+            iolClient.getMEP(),
         ]);
-        return { success: true, data: { portfolio, valueUSD, cclRate } };
+        return { success: true, data: { portfolio, valueUSD, mepRate } };
     } catch (error) {
         console.error('Failed to fetch portfolio summary:', error);
         return { success: false, error: 'Failed to fetch portfolio summary' };
     }
 }
 
+export async function getMEPRate() {
+    try {
+        const mepRate = await iolClient.getMEP();
+        return { success: true, data: mepRate };
+    } catch (error) {
+        console.error('Failed to fetch MEP rate alone:', error);
+        return { success: false, error: 'Failed to fetch MEP rate' };
+    }
+}
+
 export async function getOperations() {
     try {
-        const operations = await iolClient.getOperations();
+        const operations = await iolClient.getOperations(30);
         return { success: true, data: operations };
     } catch (error) {
         console.error('Failed to fetch operations:', error);

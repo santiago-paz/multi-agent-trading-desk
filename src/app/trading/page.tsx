@@ -44,10 +44,11 @@ const DEFAULT_ICON_POSITIONS: Record<IconId, { x: number; y: number }> = {
   movements: { x: 8, y: 392 },
 };
 
+import { useMepStore } from '@/lib/store/mep-store';
+
 export default function TradingDashboard() {
   const [portfolio, setPortfolio] = useState<PortfolioResponse | null>(null);
   const [portfolioValueUSD, setPortfolioValueUSD] = useState<number>(0);
-  const [cclRate, setCclRate] = useState<number>(1200);
   const [isLoadingPortfolio, setIsLoadingPortfolio] = useState(true);
 
   const [marketData, setMarketData] = useState<{
@@ -148,13 +149,14 @@ export default function TradingDashboard() {
     setIsLoadingAccount(false);
   };
 
+  const { fetchMepRate } = useMepStore();
+
   const fetchPortfolio = async () => {
     setIsLoadingPortfolio(true);
     const result = await getPortfolioSummary();
     if (result.success && result.data) {
       setPortfolio(result.data.portfolio);
       setPortfolioValueUSD(result.data.valueUSD);
-      setCclRate(result.data.cclRate);
     }
     setIsLoadingPortfolio(false);
   };
@@ -168,9 +170,17 @@ export default function TradingDashboard() {
     setIsLoadingMarketData(false);
   };
 
-  /* eslint-disable react-hooks/exhaustive-deps, react-hooks/set-state-in-effect */
   useEffect(() => {
     fetchNews();
+    
+    // Initial MEP fetch
+    fetchMepRate();
+    // 10 minute polling
+    const interval = setInterval(() => {
+      fetchMepRate();
+    }, 10 * 60 * 1000);
+    
+    return () => clearInterval(interval);
   }, []);
 
   useEffect(() => {
@@ -303,7 +313,6 @@ export default function TradingDashboard() {
               <PortfolioWindow
                 portfolio={portfolio}
                 portfolioValueUSD={portfolioValueUSD}
-                cclRate={cclRate}
                 isLoadingPortfolio={isLoadingPortfolio}
                 onRefreshPortfolio={fetchPortfolio}
                 perfil={perfil}
@@ -438,7 +447,6 @@ export default function TradingDashboard() {
             {appId === 'movements' && (
               <OperationsFeed
                 operations={operations}
-                cclRate={cclRate}
                 isLoading={isLoadingOperations}
                 onRefresh={fetchOperationsData}
               />

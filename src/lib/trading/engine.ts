@@ -25,7 +25,7 @@ export class TradingEngine {
 
   async calculatePortfolioValue(): Promise<number> {
     const portfolio = await this.client.getPortfolio();
-    const ccl = await this.client.getCCL();
+    const mep = await this.client.getMEP();
 
     let totalValueARS = 0;
     
@@ -39,8 +39,8 @@ export class TradingEngine {
       totalValueARS += asset.valorizado;
     }
 
-    // Convert to USD using CCL
-    return totalValueARS / ccl;
+    // Convert to USD using MEP
+    return totalValueARS / mep;
   }
 
   async generateRebalancingOrders(targetAllocations: TargetAllocation[]): Promise<OrderRequest[]> {

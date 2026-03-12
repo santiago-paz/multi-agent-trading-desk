@@ -1,10 +1,11 @@
 import React from 'react';
 import { DatosPerfil, EstadoCuenta } from '@/lib/iol/types';
 
+import { useMepStore } from '@/lib/store/mep-store';
+
 interface AccountDataProps {
   perfil: DatosPerfil | null;
   estadoCuenta: EstadoCuenta | null;
-  cclRate: number;
   isLoading: boolean;
   onRefresh: () => void;
 }
@@ -15,10 +16,15 @@ import { FONT, LABEL_ACCOUNT as LABEL, COL_HEADER, COL_HEADER_RIGHT, HR98 } from
 export const AccountData: React.FC<AccountDataProps> = ({
   perfil,
   estadoCuenta,
-  cclRate,
   isLoading,
   onRefresh,
 }) => {
+  const { mepRate, fetchMepRate } = useMepStore();
+  
+  const handleRefresh = () => {
+    onRefresh();
+    fetchMepRate();
+  };
   return (
     <div
       style={{
@@ -104,7 +110,7 @@ export const AccountData: React.FC<AccountDataProps> = ({
                 estadoCuenta.cuentas.map((cuenta, index) => {
                   const isPeso = cuenta.moneda === 'peso_Argentino';
                   const monedaLabel = 'U$D';
-                  const divisor = isPeso ? cclRate : 1;
+                  const divisor = isPeso ? mepRate : 1;
                   const saldoInmediato = cuenta.saldos?.find(s => s.liquidacion === 'inmediato');
                   const saldo24 = cuenta.saldos?.find(s => s.liquidacion === 'hrs24');
                   const saldo48 = cuenta.saldos?.find(s => s.liquidacion === 'hrs48');
@@ -226,13 +232,13 @@ export const AccountData: React.FC<AccountDataProps> = ({
                     <input
                       type="text"
                       readOnly
-                      value={`U$D ${((estadoCuenta.totalEnPesos ?? 0) / cclRate).toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+                      value={`U$D ${((estadoCuenta.totalEnPesos ?? 0) / mepRate).toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
                       style={{
                         ...FONT,
                         flex: 1,
                         cursor: 'default',
                         fontWeight: 'bold',
-                        color: ((estadoCuenta.totalEnPesos ?? 0) / cclRate) >= 0 ? '#008000' : '#ff0000',
+                        color: ((estadoCuenta.totalEnPesos ?? 0) / mepRate) >= 0 ? '#008000' : '#ff0000',
                       }}
                     />
                   </div>
@@ -300,7 +306,7 @@ export const AccountData: React.FC<AccountDataProps> = ({
           flexShrink: 0,
         }}
       >
-        <button onClick={onRefresh} disabled={isLoading}>
+        <button onClick={handleRefresh} disabled={isLoading}>
           {isLoading ? 'Actualizando...' : 'Actualizar'}
         </button>
       </div>
@@ -308,7 +314,7 @@ export const AccountData: React.FC<AccountDataProps> = ({
       {/* ── Status Bar ── */}
       <div className="status-bar" style={{ ...FONT, flexShrink: 0, margin: 0 }}>
         <p className="status-bar-field">Listo</p>
-        <p className="status-bar-field">CCL: ${cclRate.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+        <p className="status-bar-field">MEP: ${mepRate.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
         <p className="status-bar-field">
           {isLoading ? 'Actualizando...' : perfil ? `Cta: ${perfil.numeroCuenta}` : 'Sin sesión'}
         </p>

@@ -162,6 +162,8 @@ export class IOLClient {
     }
 
     if (!response.ok) {
+      const errorText = await response.text();
+      console.error(`[IOL API] Request to ${endpoint} failed with ${response.status}: ${errorText}`);
       throw new Error(`API request failed: ${response.statusText}`);
     }
 
@@ -251,13 +253,13 @@ export class IOLClient {
   async getQuote(symbol: string, market: string = 'bcba'): Promise<Quote> {
     if (SIMULATION_MODE) {
         // Mock specific quotes for CCL calculation or general use
+        if (symbol === 'GGAL' && market.toUpperCase() === 'NYSE') return { ...(this.mockResponse('/api/v2/Cotizaciones') as Quote), simbolo: 'GGAL', ultimoPrecio: 45 };
         if (symbol === 'GGAL') return { ...(this.mockResponse('/api/v2/Cotizaciones') as Quote), simbolo: 'GGAL', ultimoPrecio: 4500 };
-        if (symbol === 'GGAL.D') return { ...(this.mockResponse('/api/v2/Cotizaciones') as Quote), simbolo: 'GGAL.D', ultimoPrecio: 4.5 }; // Mock ADR price roughly
         if (symbol === 'AAPL') return { ...(this.mockResponse('/api/v2/Cotizaciones') as Quote), simbolo: 'AAPL', ultimoPrecio: 22000 };
         if (symbol === 'KO') return { ...(this.mockResponse('/api/v2/Cotizaciones') as Quote), simbolo: 'KO', ultimoPrecio: 18000 };
         return { ...(this.mockResponse('/api/v2/Cotizaciones') as Quote), simbolo: symbol };
     }
-    return this.fetchWithAuth<Quote>(`/api/v2/Cotizaciones/${market}/${symbol}`);
+    return this.fetchWithAuth<Quote>(`/api/v2/${market}/Titulos/${symbol}/Cotizacion`);
   }
 
   async placeOrder(order: OrderRequest): Promise<OrderResponse> {
@@ -277,7 +279,7 @@ export class IOLClient {
     });
   }
 
-  async getOperations(): Promise<Operation[]> {
+  async getOperations(daysToFetch: number = 30): Promise<Operation[]> {
     if (SIMULATION_MODE) {
       return [
         { numero: 1001, fechaOrden: new Date().toISOString(), tipo: 'Compra', estado: 'Terminada', mercado: 'bcba', simbolo: 'AAPL', cantidad: 10, monto: 150000, modalidad: 't0', precio: 15000 },
@@ -285,7 +287,20 @@ export class IOLClient {
         { numero: 1003, fechaOrden: new Date(Date.now() - 172800000).toISOString(), tipo: 'Compra', estado: 'Pendiente', mercado: 'bcba', simbolo: 'TSLA', cantidad: 2, monto: 40000, modalidad: 't0', precio: 20000 },
       ];
     }
-    return this.fetchWithAuth<Operation[]>(`/api/v2/operaciones`);
+
+    const toDate = new Date();
+    const fromDate = new Date();
+    fromDate.setDate(toDate.getDate() - daysToFetch);
+
+    const formatDate = (d: Date) => d.toISOString().split('T')[0];
+
+    const queryString = new URLSearchParams({
+      'filtro.estado': 'Todas',
+      'filtro.fechaDesde': formatDate(fromDate),
+      'filtro.fechaHasta': formatDate(toDate),
+    }).toString();
+
+    return this.fetchWithAuth<Operation[]>(`/api/v2/operaciones?${queryString}`);
   }
 
   async getEstadoCuenta(): Promise<EstadoCuenta> {
@@ -297,27 +312,18 @@ export class IOLClient {
   }
 
 
-  async getCCL(): Promise<number> {
+  async getMEP(): Promise<number> {
     try {
-      // CCL = (GGAL local price / GGAL.D cedear-ADR price) * conversion ratio
-      // GGAL conversion ratio: 10 CEDEARs = 1 ADR
       if (SIMULATION_MODE) return 1200;
 
-      const [ggalLocal, ggalD] = await Promise.all([
-        this.getQuote('GGAL', 'bcba'),
-        this.getQuote('GGAL.D', 'bcba'),
-      ]);
-
-      if (ggalLocal?.ultimoPrecio && ggalD?.ultimoPrecio) {
-        const ccl = (ggalLocal.ultimoPrecio / ggalD.ultimoPrecio) * 10;
-        console.log(`[IOL CCL] GGAL=${ggalLocal.ultimoPrecio} GGAL.D=${ggalD.ultimoPrecio} → CCL=${ccl.toFixed(2)}`);
-        return ccl;
+      const data = await this.fetchWithAuth<number>('/api/v2/Cotizaciones/MEP/AL30');
+      if (typeof data === 'number') {
+        console.log(`[IOL MEP] MEP Rate: ${data}`);
+        return data;
       }
-
-      console.warn('[IOL CCL] Could not get GGAL prices, using fallback');
       return 1200;
     } catch (error) {
-      console.error('[IOL CCL] Error calculating CCL:', error);
+      console.error('[IOL MEP] Error fetching MEP:', error);
       return 1200;
     }
   }

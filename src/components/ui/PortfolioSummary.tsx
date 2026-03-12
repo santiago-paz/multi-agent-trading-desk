@@ -2,10 +2,11 @@ import React from 'react';
 import { PortfolioResponse } from '@/lib/iol/types';
 import { usePortfolioSort, SortKey } from '@/hooks/usePortfolioSort';
 
+import { useMepStore } from '@/lib/store/mep-store';
+
 interface PortfolioSummaryProps {
   portfolio: PortfolioResponse;
   valueUSD: number;
-  cclRate: number;
   isLoading?: boolean;
   onRefresh?: () => void;
 }
@@ -35,10 +36,10 @@ const COLUMNS: ColumnDef[] = [
 export const PortfolioSummary: React.FC<PortfolioSummaryProps> = ({
   portfolio,
   valueUSD,
-  cclRate,
   isLoading,
   onRefresh,
 }) => {
+  const { mepRate, fetchMepRate } = useMepStore();
   const {
     sortKey,
     sortDir,
@@ -47,7 +48,7 @@ export const PortfolioSummary: React.FC<PortfolioSummaryProps> = ({
     totalUSD,
     totalGananciaUSD,
     totalActivosEnCartera,
-  } = usePortfolioSort(portfolio, cclRate);
+  } = usePortfolioSort(portfolio, mepRate);
 
   return (
     <div
@@ -171,10 +172,10 @@ export const PortfolioSummary: React.FC<PortfolioSummaryProps> = ({
                       </td>
                       <td style={CELL_RIGHT}>{asset.cantidad}</td>
                       <td style={CELL_RIGHT}>
-                        {(asset.ultimoPrecio / cclRate).toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        {(asset.ultimoPrecio / mepRate).toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                       </td>
                       <td style={{ ...CELL_RIGHT, fontWeight: 'bold' }}>
-                        {(asset.valorizado / cclRate).toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        {(asset.valorizado / mepRate).toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                       </td>
                       <td
                         style={{
@@ -191,7 +192,7 @@ export const PortfolioSummary: React.FC<PortfolioSummaryProps> = ({
                           borderRight: 'none',
                         }}
                       >
-                        {ganancia >= 0 ? '+' : ''}{(ganancia / cclRate).toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        {ganancia >= 0 ? '+' : ''}{(ganancia / mepRate).toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                       </td>
                     </tr>
                   );
@@ -214,7 +215,7 @@ export const PortfolioSummary: React.FC<PortfolioSummaryProps> = ({
             flexShrink: 0,
           }}
         >
-          <button onClick={onRefresh} disabled={isLoading}>
+          <button onClick={() => { onRefresh?.(); fetchMepRate(); }} disabled={isLoading}>
             {isLoading ? 'Actualizando...' : 'Actualizar'}
           </button>
         </div>
@@ -226,7 +227,7 @@ export const PortfolioSummary: React.FC<PortfolioSummaryProps> = ({
           {totalActivosEnCartera} títulos en cartera
         </p>
         <p className="status-bar-field">
-          CCL: ${cclRate.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+          MEP: ${mepRate.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
         </p>
         <p className="status-bar-field" style={{
           color: totalGananciaUSD >= 0 ? '#008000' : '#ff0000',

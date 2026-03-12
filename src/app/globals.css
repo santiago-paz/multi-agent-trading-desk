@@ -8,6 +8,7 @@
   font-weight: 400;
   src: url("/98/ms_sans_serif.woff2") format("woff2"), url("/98/ms_sans_serif.woff") format("woff");
 }
+
 @font-face {
   font-family: "Pixelated MS Sans Serif";
   font-style: normal;
@@ -42,6 +43,10 @@ body {
   padding-left: 4px;
   padding-bottom: 28px;
   overflow: hidden;
+  background-image: url("/wallpaper_win98.gif");
+  background-size: contain;
+  background-position: center;
+  background-repeat: no-repeat;
 }
 
 .desktop-icons {
@@ -64,6 +69,7 @@ button.desktop-icon {
   font-family: "Pixelated MS Sans Serif", Arial, sans-serif;
   color: inherit;
 }
+
 button.desktop-icon:hover,
 button.desktop-icon:focus,
 button.desktop-icon:active {
@@ -71,11 +77,13 @@ button.desktop-icon:active {
   box-shadow: none !important;
   border: none !important;
 }
+
 button.desktop-icon:hover span:last-child,
 button.desktop-icon:focus span:last-child {
   background-color: #000080;
   color: #fff;
 }
+
 button.desktop-icon:active span:last-child {
   background-color: #000080;
   color: #fff;

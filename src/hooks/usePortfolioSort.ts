@@ -16,7 +16,7 @@ function getSortValue(asset: PortfolioAsset, key: SortKey): string | number {
   }
 }
 
-export function usePortfolioSort(portfolio: PortfolioResponse | null, cclRate: number) {
+export function usePortfolioSort(portfolio: PortfolioResponse | null, mepRate: number) {
   const [sortKey, setSortKey] = useState<SortKey>('simbolo');
   const [sortDir, setSortDir] = useState<SortDir>('asc');
 
@@ -32,9 +32,9 @@ export function usePortfolioSort(portfolio: PortfolioResponse | null, cclRate: n
   const activos = portfolio?.activos || [];
 
   const totalARS = activos.reduce((acc, asset) => acc + asset.valorizado, 0);
-  const totalUSD = totalARS / cclRate;
+  const totalUSD = totalARS / mepRate;
   const totalGananciaARS = activos.reduce((acc, asset) => acc + asset.gananciaDinero, 0);
-  const totalGananciaUSD = totalGananciaARS / cclRate;
+  const totalGananciaUSD = totalGananciaARS / mepRate;
 
   const sortedActivos = useMemo(() => {
     const copy = [...activos];
