@@ -22,6 +22,29 @@ import { HistoricalRow } from '@/lib/market-data';
 import { DESKTOP_APP_ICONS } from '@/lib/win98se-icons';
 import { useWindowManager, AppId, APP_LABELS } from '@/hooks/useWindowManager';
 
+const ICON_IDS = [
+  'portfolio',
+  'analysis',
+  'agent',
+  'orders',
+  'news',
+  'marketdata',
+  'movements',
+  'account',
+] as const;
+type IconId = (typeof ICON_IDS)[number];
+
+const DEFAULT_ICON_POSITIONS: Record<IconId, { x: number; y: number }> = {
+  portfolio: { x: 8, y: 8 },
+  analysis: { x: 8, y: 72 },
+  agent: { x: 8, y: 136 },
+  orders: { x: 8, y: 200 },
+  news: { x: 8, y: 264 },
+  marketdata: { x: 8, y: 328 },
+  movements: { x: 8, y: 392 },
+  account: { x: 8, y: 456 },
+};
+
 export default function TradingDashboard() {
   const [portfolio, setPortfolio] = useState<PortfolioResponse | null>(null);
   const [portfolioValueUSD, setPortfolioValueUSD] = useState<number>(0);
@@ -71,6 +94,34 @@ export default function TradingDashboard() {
     focusWindow,
     toggleMinimize
   } = useWindowManager();
+
+  const [iconPositions, setIconPositions] = useState<Record<IconId, { x: number; y: number }>>(DEFAULT_ICON_POSITIONS);
+
+  useEffect(() => {
+    const savedPositions = localStorage.getItem('desktop-icon-positions');
+    if (savedPositions) {
+      try {
+        const parsed = JSON.parse(savedPositions);
+        if (typeof parsed === 'object' && parsed !== null) {
+          setIconPositions((prev) => ({ ...prev, ...parsed }));
+        }
+      } catch (e) {
+        console.error('Failed to parse saved icon positions', e);
+      }
+    }
+  }, []);
+
+  // Use a separate effect for saving to localStorage
+  useEffect(() => {
+    if (JSON.stringify(iconPositions) !== JSON.stringify(DEFAULT_ICON_POSITIONS)) {
+      localStorage.setItem('desktop-icon-positions', JSON.stringify(iconPositions));
+    }
+  }, [iconPositions]);
+
+  const handleIconMove = useCallback((id: string, x: number, y: number) => {
+    // Cast id to IconId to satisfy TS if needed, but since it comes from our map it's safe
+    setIconPositions((prev) => ({ ...prev, [id]: { x, y } }));
+  }, []);
 
   const fetchOperationsData = async () => {
     setIsLoadingOperations(true);
@@ -159,51 +210,80 @@ export default function TradingDashboard() {
 
 
   return (
-    <div className="desktop">
-      <div className="desktop-icons">
+    <div className="desktop relative w-full h-full overflow-hidden">
+      <div className="absolute inset-0 pointer-events-none z-0">
         <DesktopIcon
+          id="portfolio"
           label="Portfolio"
           iconSrc={DESKTOP_APP_ICONS.portfolio}
           icon="📊"
           onClick={() => openOrFocusWindow('portfolio')}
+          x={iconPositions.portfolio.x}
+          y={iconPositions.portfolio.y}
+          onMove={handleIconMove}
         />
         <DesktopIcon
+          id="analysis"
           label="Analysis"
           iconSrc={DESKTOP_APP_ICONS.analysis}
           icon="⚙️"
           onClick={() => openOrFocusWindow('analysis')}
+          x={iconPositions.analysis.x}
+          y={iconPositions.analysis.y}
+          onMove={handleIconMove}
         />
         <DesktopIcon
+          id="agent"
           label="Agent Log"
           iconSrc={DESKTOP_APP_ICONS.agent}
           icon="📋"
           onClick={() => openOrFocusWindow('agent')}
+          x={iconPositions.agent.x}
+          y={iconPositions.agent.y}
+          onMove={handleIconMove}
         />
         <DesktopIcon
+          id="orders"
           label="Orders"
           iconSrc={DESKTOP_APP_ICONS.orders}
           icon="📝"
           onClick={() => openOrFocusWindow('orders')}
+          x={iconPositions.orders.x}
+          y={iconPositions.orders.y}
+          onMove={handleIconMove}
         />
         <DesktopIcon
+          id="news"
           label="News"
           iconSrc={DESKTOP_APP_ICONS.news}
           icon="📰"
           onClick={() => openOrFocusWindow('news')}
+          x={iconPositions.news.x}
+          y={iconPositions.news.y}
+          onMove={handleIconMove}
         />
         <DesktopIcon
+          id="marketdata"
           label="Market Data"
           iconSrc={DESKTOP_APP_ICONS.marketdata}
           icon="📈"
           onClick={() => openOrFocusWindow('marketdata')}
+          x={iconPositions.marketdata.x}
+          y={iconPositions.marketdata.y}
+          onMove={handleIconMove}
         />
         <DesktopIcon
+          id="movements"
           label="Movimientos"
           iconSrc={DESKTOP_APP_ICONS.orders}
           icon="💸"
           onClick={() => openOrFocusWindow('movements')}
+          x={iconPositions.movements.x}
+          y={iconPositions.movements.y}
+          onMove={handleIconMove}
         />
         <DesktopIcon
+          id="account"
           label="Mi Cuenta"
           iconSrc={DESKTOP_APP_ICONS.account}
           icon="👤"
@@ -211,6 +291,9 @@ export default function TradingDashboard() {
             openOrFocusWindow('account');
             if (!perfil) fetchAccountData();
           }}
+          x={iconPositions.account.x}
+          y={iconPositions.account.y}
+          onMove={handleIconMove}
         />
       </div>
 
