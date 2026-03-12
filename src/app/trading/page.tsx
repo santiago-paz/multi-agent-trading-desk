@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { PortfolioSummary } from '@/components/ui/PortfolioSummary';
+import { PortfolioWindow } from '@/components/ui/PortfolioWindow';
 import { AgentLog } from '@/components/ui/AgentLog';
 import { RiskGauge } from '@/components/ui/RiskGauge';
 import { OrderReview } from '@/components/ui/OrderReview';
@@ -30,7 +31,6 @@ const ICON_IDS = [
   'news',
   'marketdata',
   'movements',
-  'account',
 ] as const;
 type IconId = (typeof ICON_IDS)[number];
 
@@ -42,7 +42,6 @@ const DEFAULT_ICON_POSITIONS: Record<IconId, { x: number; y: number }> = {
   news: { x: 8, y: 264 },
   marketdata: { x: 8, y: 328 },
   movements: { x: 8, y: 392 },
-  account: { x: 8, y: 456 },
 };
 
 export default function TradingDashboard() {
@@ -284,19 +283,6 @@ export default function TradingDashboard() {
           y={iconPositions.movements.y}
           onMove={handleIconMove}
         />
-        <DesktopIcon
-          id="account"
-          label="Mi Cuenta"
-          iconSrc={DESKTOP_APP_ICONS.account}
-          icon="👤"
-          onClick={() => {
-            openOrFocusWindow('account');
-            if (!perfil) fetchAccountData();
-          }}
-          x={iconPositions.account.x}
-          y={iconPositions.account.y}
-          onMove={handleIconMove}
-        />
       </div>
 
       {Object.entries(windows).map(([id, state]) => {
@@ -314,25 +300,17 @@ export default function TradingDashboard() {
             onFocus={() => focusWindow(id)}
           >
             {appId === 'portfolio' && (
-              <>
-                {isLoadingPortfolio && !portfolio ? (
-                  <p style={{ fontFamily: '"Pixelated MS Sans Serif", Arial, sans-serif', fontSize: '11px', margin: 0, padding: '4px' }}>
-                    Cargando portafolio...
-                  </p>
-                ) : portfolio ? (
-                  <PortfolioSummary
-                    portfolio={portfolio}
-                    valueUSD={portfolioValueUSD}
-                    cclRate={cclRate}
-                    isLoading={isLoadingPortfolio}
-                    onRefresh={fetchPortfolio}
-                  />
-                ) : (
-                  <p style={{ fontFamily: '"Pixelated MS Sans Serif", Arial, sans-serif', fontSize: '11px', margin: 0, padding: '4px', color: '#ff0000' }}>
-                    No se pudo cargar el portafolio.
-                  </p>
-                )}
-              </>
+              <PortfolioWindow
+                portfolio={portfolio}
+                portfolioValueUSD={portfolioValueUSD}
+                cclRate={cclRate}
+                isLoadingPortfolio={isLoadingPortfolio}
+                onRefreshPortfolio={fetchPortfolio}
+                perfil={perfil}
+                estadoCuenta={estadoCuenta}
+                isLoadingAccount={isLoadingAccount}
+                onRefreshAccount={fetchAccountData}
+              />
             )}
             {appId === 'analysis' && (
               <div className="space-y-3">
@@ -463,15 +441,6 @@ export default function TradingDashboard() {
                 cclRate={cclRate}
                 isLoading={isLoadingOperations}
                 onRefresh={fetchOperationsData}
-              />
-            )}
-            {appId === 'account' && (
-              <AccountData
-                perfil={perfil}
-                estadoCuenta={estadoCuenta}
-                cclRate={cclRate}
-                isLoading={isLoadingAccount}
-                onRefresh={fetchAccountData}
               />
             )}
           </DraggableResizableWindow>
