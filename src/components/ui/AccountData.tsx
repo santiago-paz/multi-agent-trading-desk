@@ -127,10 +127,10 @@ export const AccountData: React.FC<AccountDataProps> = ({
                       <input
                         type="text"
                         readOnly
-                        value={`$${cuenta.saldoDisponible.toLocaleString('es-AR', { minimumFractionDigits: 2 })}`}
+                        value={`$${(cuenta.saldoDisponible ?? 0).toLocaleString('es-AR', { minimumFractionDigits: 2 })}`}
                         style={{
                           ...INPUT_READONLY,
-                          color: cuenta.saldoDisponible >= 0 ? '#008000' : '#FF0000',
+                          color: (cuenta.saldoDisponible ?? 0) >= 0 ? '#008000' : '#FF0000',
                           fontWeight: 'bold',
                         }}
                       />
@@ -140,7 +140,7 @@ export const AccountData: React.FC<AccountDataProps> = ({
                       <input
                         type="text"
                         readOnly
-                        value={`$${cuenta.saldoAliquidar.toLocaleString('es-AR', { minimumFractionDigits: 2 })}`}
+                        value={`$${(cuenta.saldoAliquidar ?? 0).toLocaleString('es-AR', { minimumFractionDigits: 2 })}`}
                         style={INPUT_READONLY}
                       />
                     </div>
@@ -177,9 +177,9 @@ export const AccountData: React.FC<AccountDataProps> = ({
                           <td style={{
                             padding: '1px 4px',
                             textAlign: 'right',
-                            color: mov.monto >= 0 ? '#008000' : '#FF0000',
+                            color: (mov.monto ?? 0) >= 0 ? '#008000' : '#FF0000',
                           }}>
-                            ${mov.monto.toLocaleString('es-AR', { minimumFractionDigits: 2 })}
+                            ${(mov.monto ?? 0).toLocaleString('es-AR', { minimumFractionDigits: 2 })}
                           </td>
                         </tr>
                       ))}

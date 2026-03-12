@@ -1,6 +1,13 @@
 import { IOLToken, PortfolioResponse, Quote, OrderRequest, OrderResponse, Operation, EstadoCuenta, DatosPerfil } from './types';
+import { readFileSync, writeFileSync } from 'fs';
+import { join } from 'path';
 
 const SIMULATION_MODE = process.env.SIMULATION_MODE === 'true';
+const TOKEN_CACHE_PATH = join(process.cwd(), '.iol_token_cache.json');
+
+interface CachedToken extends IOLToken {
+  cached_at: string;
+}
 
 export class IOLClient {
   private baseUrl = 'https://api.invertironline.com';
@@ -8,60 +15,99 @@ export class IOLClient {
   private tokenExpiry: Date | null = null;
 
   constructor() {
-    // In simulation mode, we don't need to authenticate immediately
-    if (!SIMULATION_MODE && !process.env.IOL_REFRESH_TOKEN) {
-      console.warn('IOL refresh token not found in environment variables. Running in limited mode.');
-    }
+    if (SIMULATION_MODE) return;
 
-    if (!SIMULATION_MODE && process.env.IOL_ACCESS_TOKEN) {
-      this.token = {
-        access_token: process.env.IOL_ACCESS_TOKEN,
-        refresh_token: process.env.IOL_REFRESH_TOKEN || '',
-        expires_in: 1200,
-        token_type: 'bearer',
-        issued: new Date().toISOString(),
-        expires: new Date(Date.now() + 1200 * 1000).toISOString()
-      };
-      this.tokenExpiry = new Date(Date.now() + 1200 * 1000);
+    // Try to load cached token from disk
+    const cached = this.loadCachedToken();
+    if (cached) {
+      this.token = cached;
+      // Calculate expiry from when it was cached
+      const cachedAt = new Date(cached.cached_at).getTime();
+      this.tokenExpiry = new Date(cachedAt + (cached.expires_in * 1000));
+      console.log('[IOL AUTH] Loaded token from cache, expires:', this.tokenExpiry.toISOString());
+    }
+  }
+
+  private loadCachedToken(): CachedToken | null {
+    try {
+      const data = readFileSync(TOKEN_CACHE_PATH, 'utf-8');
+      const cached = JSON.parse(data) as CachedToken;
+      if (cached.access_token && cached.refresh_token) {
+        return cached;
+      }
+    } catch {
+      // No cache file or invalid — that's fine
+    }
+    return null;
+  }
+
+  private saveCachedToken(token: IOLToken): void {
+    try {
+      const cached: CachedToken = { ...token, cached_at: new Date().toISOString() };
+      writeFileSync(TOKEN_CACHE_PATH, JSON.stringify(cached, null, 2), 'utf-8');
+      console.log('[IOL AUTH] Token saved to cache');
+    } catch (err) {
+      console.warn('[IOL AUTH] Failed to save token cache:', err);
     }
   }
 
   private async authenticate(): Promise<void> {
     if (SIMULATION_MODE) return;
 
+    // Token still valid — skip auth
     if (this.token && this.tokenExpiry && this.tokenExpiry > new Date()) {
       return;
     }
 
-    const refreshTokenToUse = this.token?.refresh_token || process.env.IOL_REFRESH_TOKEN;
+    console.log('[IOL AUTH] Token expired or missing, authenticating...');
 
-    if (!refreshTokenToUse) {
-      throw new Error('No refresh token available to authenticate with IOL');
+    // 1. Try refresh token (from current token or env)
+    const refreshToken = this.token?.refresh_token || process.env.IOL_REFRESH_TOKEN;
+    if (refreshToken) {
+      try {
+        await this.requestToken(new URLSearchParams({
+          refresh_token: refreshToken,
+          grant_type: 'refresh_token',
+        }));
+        console.log('[IOL AUTH] Authenticated via refresh token');
+        return;
+      } catch {
+        console.warn('[IOL AUTH] Refresh token failed, falling back to credentials');
+      }
     }
 
-    try {
-      const response = await fetch(`${this.baseUrl}/token`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-        },
-        body: new URLSearchParams({
-          refresh_token: refreshTokenToUse,
-          grant_type: 'refresh_token',
-        }),
-      });
+    // 2. Fall back to username/password
+    const username = process.env.IOL_USERNAME;
+    const password = process.env.IOL_PASSWORD;
+    if (!username || !password) {
+      throw new Error('No refresh token or credentials available to authenticate with IOL');
+    }
 
-      if (!response.ok) {
-        throw new Error(`Authentication failed: ${response.statusText}`);
-      }
+    await this.requestToken(new URLSearchParams({
+      username,
+      password,
+      grant_type: 'password',
+    }));
+    console.log('[IOL AUTH] Authenticated via username/password');
+  }
 
-      this.token = await response.json();
-      if (this.token) {
-        this.tokenExpiry = new Date(new Date().getTime() + (this.token.expires_in * 1000));
-      }
-    } catch (error) {
-      console.error('Error authenticating with IOL:', error);
-      throw error;
+  private async requestToken(body: URLSearchParams): Promise<void> {
+    const response = await fetch(`${this.baseUrl}/token`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body,
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error(`[IOL AUTH] Token request failed (${response.status}): ${errorText}`);
+      throw new Error(`Authentication failed: ${response.statusText} - ${errorText}`);
+    }
+
+    this.token = await response.json();
+    if (this.token) {
+      this.tokenExpiry = new Date(Date.now() + this.token.expires_in * 1000);
+      this.saveCachedToken(this.token);
     }
   }
 

@@ -15,9 +15,9 @@ export const DESKTOP_APP_ICONS = {
   analysis: url('apps/32/system-search.png'),
   agent: url('apps/32/terminal.png'),
   orders: url('actions/32/document-new.png'),
-  news: url('apps/32/internet-news-reader.png'),
+  news: url('apps/32/internet-feed-reader.png'),
   marketdata: url('apps/32/libreoffice-calc.png'),
-  account: url('apps/32/msinfo32.png'),
+  account: url('apps/32/system-users.png'),
   movements: url('actions/32/folder-recent.png'),
 } as const;
 
