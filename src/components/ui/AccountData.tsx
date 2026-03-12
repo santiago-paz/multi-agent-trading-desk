@@ -8,114 +8,218 @@ interface AccountDataProps {
   onRefresh: () => void;
 }
 
-export const AccountData: React.FC<AccountDataProps> = ({ perfil, estadoCuenta, isLoading, onRefresh }) => {
-  return (
-    <div className="flex flex-col h-full overflow-hidden p-2">
-      <div className="flex justify-between items-center mb-4">
-        <h3 className="m-0 text-sm font-bold">Datos de la Cuenta</h3>
-        <button className="default text-xs px-2 py-1" onClick={onRefresh} disabled={isLoading}>
-          Refrescar
-        </button>
-      </div>
+/* ─── Inline style constants ─────────────────────────────────────────────── */
+const WIN98: React.CSSProperties = {
+  fontFamily: '"MS Sans Serif", "Tahoma", Arial, sans-serif',
+  fontSize: '11px',
+  WebkitFontSmoothing: 'none',
+  // @ts-ignore – non-standard but works in most browsers
+  MozOsxFontSmoothing: 'grayscale',
+  fontSmooth: 'never',
+  textShadow: 'none',
+};
 
-      <div className="flex-1 overflow-auto space-y-4 pr-1">
-        {isLoading && (!perfil || !estadoCuenta) ? (
-          <p className="m-0 p-2 italic text-sm">Cargando datos de la cuenta...</p>
+const LABEL: React.CSSProperties = {
+  width: '100px',
+  flexShrink: 0,
+  textAlign: 'right',
+  marginRight: '6px',
+  whiteSpace: 'nowrap',
+};
+
+const INPUT_READONLY: React.CSSProperties = {
+  flex: 1,
+  ...WIN98,
+  background: '#ffffff',
+  cursor: 'default',
+};
+
+const INPUT_STATIC: React.CSSProperties = {
+  flex: 1,
+  ...WIN98,
+  background: '#c0c0c0',
+  border: 'none',
+  cursor: 'default',
+};
+
+/* ─── Component ──────────────────────────────────────────────────────────── */
+export const AccountData: React.FC<AccountDataProps> = ({
+  perfil,
+  estadoCuenta,
+  isLoading,
+  onRefresh,
+}) => {
+  return (
+    <div
+      style={{
+        ...WIN98,
+        display: 'flex',
+        flexDirection: 'column',
+        height: '100%',
+        background: '#c0c0c0',
+        overflow: 'hidden',
+      }}
+    >
+      {/* ── Scrollable body ── */}
+      <div
+        className="window-body"
+        style={{
+          flex: 1,
+          overflowY: 'auto',
+          overflowX: 'hidden',
+          margin: 0,
+          padding: '6px',
+          background: '#c0c0c0',
+        }}
+      >
+        {isLoading && !perfil && !estadoCuenta ? (
+          <p style={{ ...WIN98, margin: 0, padding: '4px', fontStyle: 'italic' }}>
+            Cargando datos de la cuenta...
+          </p>
         ) : (
           <>
-            {/* Perfil del Inversor */}
-            <fieldset>
-              <legend>Perfil</legend>
+            {/* ─── Información del Titular ─── */}
+            <fieldset style={{ marginBottom: '6px', padding: '4px 8px 6px' }}>
+              <legend style={WIN98}>Información del Titular</legend>
+
               {perfil ? (
-                <div className="field-row-stacked">
-                  <div className="field-row justify-between text-xs">
-                    <span>Nombre:</span>
-                    <strong>{perfil.nombre} {perfil.apellido}</strong>
+                <>
+                  <div className="field-row" style={{ marginBottom: '3px' }}>
+                    <label style={{ ...WIN98, ...LABEL }}>Nombre:</label>
+                    <input type="text" readOnly value={`${perfil.nombre} ${perfil.apellido}`} style={INPUT_READONLY} />
                   </div>
-                  <div className="field-row justify-between text-xs">
-                    <span>Nro Cuenta:</span>
-                    <strong>{perfil.numeroCuenta}</strong>
+                  <div className="field-row" style={{ marginBottom: '3px' }}>
+                    <label style={{ ...WIN98, ...LABEL }}>Nro. Cuenta:</label>
+                    <input type="text" readOnly value={String(perfil.numeroCuenta)} style={INPUT_READONLY} />
                   </div>
-                  <div className="field-row justify-between text-xs">
-                    <span>Email:</span>
-                    <strong>{perfil.email}</strong>
+                  <div className="field-row" style={{ marginBottom: '3px' }}>
+                    <label style={{ ...WIN98, ...LABEL }}>Email:</label>
+                    <input type="text" readOnly value={perfil.email} style={INPUT_READONLY} />
                   </div>
-                  <div className="field-row justify-between text-xs">
-                    <span>Perfil Inversor:</span>
-                    <strong>{perfil.perfilInversor}</strong>
+                  <div className="field-row">
+                    <label style={{ ...WIN98, ...LABEL }}>Perfil:</label>
+                    <input type="text" readOnly value={perfil.perfilInversor} style={INPUT_READONLY} />
                   </div>
-                </div>
+                </>
               ) : (
-                <p className="m-0 text-xs italic text-gray-600">No se pudo cargar el perfil.</p>
+                <p style={{ ...WIN98, margin: 0, fontStyle: 'italic' }}>No se pudo cargar el perfil.</p>
               )}
             </fieldset>
 
-            {/* Estado de Cuenta */}
-            <fieldset>
-              <legend>Estado de Cuenta</legend>
-              {estadoCuenta ? (
-                <div className="space-y-3">
-                  <div className="field-row-stacked">
-                    {estadoCuenta.cuentas.map((cuenta, index) => (
-                      <div key={index} className="sunken-panel p-2 mb-2 text-xs">
-                        <div className="flex justify-between font-bold mb-1">
-                          <span>{cuenta.tipo.toUpperCase()}</span>
-                          <span>{cuenta.numero}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span>Saldo Disponible:</span>
-                          <span className={cuenta.saldoDisponible >= 0 ? 'text-green-700' : 'text-red-700'}>
-                            ${cuenta.saldoDisponible.toLocaleString()}
-                          </span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span>Saldo a Liquidar:</span>
-                          <span>${cuenta.saldoAliquidar.toLocaleString()}</span>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
+            {/* ─── Estado del Portfolio ─── */}
+            <fieldset style={{ marginBottom: '6px', padding: '4px 8px 6px' }}>
+              <legend style={WIN98}>Estado del Portfolio</legend>
 
-                  <div>
-                    <p className="font-bold underline text-xs m-0 mb-1">Últimos Movimientos</p>
-                    {estadoCuenta.movimientos && estadoCuenta.movimientos.length > 0 ? (
-                      <div className="overflow-x-auto border border-gray-400">
-                        <table className="w-full text-xs">
-                          <thead className="bg-[#c0c0c0]">
-                            <tr>
-                              <th className="font-normal text-left p-1 border-r border-b border-gray-400">Fecha</th>
-                              <th className="font-normal text-left p-1 border-r border-b border-gray-400">Tipo</th>
-                              <th className="font-normal text-right p-1 border-r border-b border-gray-400">Monto</th>
-                            </tr>
-                          </thead>
-                          <tbody className="bg-white">
-                            {estadoCuenta.movimientos.map((mov, i) => (
-                              <tr key={i} className="border-b border-gray-300">
-                                <td className="p-1 border-r border-gray-300 whitespace-nowrap">
-                                  {new Date(mov.fecha).toLocaleDateString()}
-                                </td>
-                                <td className="p-1 border-r border-gray-300">
-                                  {mov.tipoOperacion}
-                                </td>
-                                <td className={`p-1 text-right ${mov.monto >= 0 ? 'text-green-700' : 'text-red-700'}`}>
-                                  ${mov.monto.toLocaleString()}
-                                </td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                      </div>
-                    ) : (
-                      <p className="m-0 text-xs italic text-gray-600">No hay movimientos recientes.</p>
-                    )}
+              {estadoCuenta ? (
+                estadoCuenta.cuentas.map((cuenta, index) => (
+                  <div key={index} style={{ marginBottom: index < estadoCuenta.cuentas.length - 1 ? '6px' : 0 }}>
+                    <div className="field-row" style={{ marginBottom: '3px' }}>
+                      <label style={{ ...WIN98, ...LABEL }}>Cuenta:</label>
+                      <input
+                        type="text"
+                        readOnly
+                        value={`${cuenta.tipo.toUpperCase()} #${cuenta.numero}`}
+                        style={INPUT_STATIC}
+                      />
+                    </div>
+                    <div className="field-row" style={{ marginBottom: '3px' }}>
+                      <label style={{ ...WIN98, ...LABEL }}>Saldo Disp.:</label>
+                      <input
+                        type="text"
+                        readOnly
+                        value={`$${cuenta.saldoDisponible.toLocaleString('es-AR', { minimumFractionDigits: 2 })}`}
+                        style={{
+                          ...INPUT_READONLY,
+                          color: cuenta.saldoDisponible >= 0 ? '#008000' : '#FF0000',
+                          fontWeight: 'bold',
+                        }}
+                      />
+                    </div>
+                    <div className="field-row">
+                      <label style={{ ...WIN98, ...LABEL }}>Saldo Liquid.:</label>
+                      <input
+                        type="text"
+                        readOnly
+                        value={`$${cuenta.saldoAliquidar.toLocaleString('es-AR', { minimumFractionDigits: 2 })}`}
+                        style={INPUT_READONLY}
+                      />
+                    </div>
                   </div>
+                ))
+              ) : (
+                <p style={{ ...WIN98, margin: 0, fontStyle: 'italic' }}>No se pudo cargar el estado de cuenta.</p>
+              )}
+            </fieldset>
+
+            {/* ─── Últimos Movimientos ─── */}
+            <fieldset style={{ padding: '4px 8px 6px' }}>
+              <legend style={WIN98}>Últimos Movimientos</legend>
+
+              {estadoCuenta?.movimientos?.length ? (
+                <div className="sunken-panel" style={{ overflow: 'auto', maxHeight: '180px', padding: 0 }}>
+                  <table style={{ width: '100%', borderCollapse: 'collapse', ...WIN98 }}>
+                    <thead>
+                      <tr>
+                        <th style={{ textAlign: 'left', padding: '1px 4px', borderRight: '1px solid #808080', fontWeight: 'normal' }}>Fecha</th>
+                        <th style={{ textAlign: 'left', padding: '1px 4px', borderRight: '1px solid #808080', fontWeight: 'normal' }}>Tipo</th>
+                        <th style={{ textAlign: 'right', padding: '1px 4px', fontWeight: 'normal' }}>Monto</th>
+                      </tr>
+                    </thead>
+                    <tbody style={{ backgroundColor: '#ffffff' }}>
+                      {estadoCuenta.movimientos.map((mov, i) => (
+                        <tr key={i} style={{ borderBottom: '1px solid #d0d0d0' }}>
+                          <td style={{ padding: '1px 4px', borderRight: '1px solid #d0d0d0', whiteSpace: 'nowrap' }}>
+                            {new Date(mov.fecha).toLocaleDateString('es-AR')}
+                          </td>
+                          <td style={{ padding: '1px 4px', borderRight: '1px solid #d0d0d0' }}>
+                            {mov.tipoOperacion}
+                          </td>
+                          <td style={{
+                            padding: '1px 4px',
+                            textAlign: 'right',
+                            color: mov.monto >= 0 ? '#008000' : '#FF0000',
+                          }}>
+                            ${mov.monto.toLocaleString('es-AR', { minimumFractionDigits: 2 })}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
                 </div>
               ) : (
-                <p className="m-0 text-xs italic text-gray-600">No se pudo cargar el estado de cuenta.</p>
+                <p style={{ ...WIN98, margin: 0, fontStyle: 'italic' }}>No hay movimientos recientes.</p>
               )}
             </fieldset>
           </>
         )}
+      </div>
+
+      {/* ── Botón Actualizar ── */}
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'flex-end',
+          padding: '4px 6px',
+          background: '#c0c0c0',
+          borderTop: '1px solid #808080',
+          flexShrink: 0,
+        }}
+      >
+        <button onClick={onRefresh} disabled={isLoading} style={WIN98}>
+          {isLoading ? 'Actualizando...' : 'Actualizar'}
+        </button>
+      </div>
+
+      {/* ── Status Bar ── */}
+      <div
+        className="status-bar"
+        style={{ ...WIN98, flexShrink: 0, margin: 0 }}
+      >
+        <p className="status-bar-field">Listo</p>
+        <p className="status-bar-field">Servidor: api.invertironline.com</p>
+        <p className="status-bar-field">
+          {isLoading ? 'Actualizando...' : perfil ? `Cta: ${perfil.numeroCuenta}` : 'Sin sesión'}
+        </p>
       </div>
     </div>
   );

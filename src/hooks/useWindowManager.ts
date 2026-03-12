@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { WindowState } from '@/components/ui/DraggableResizableWindow';
 
 export const APP_IDS = ['portfolio', 'analysis', 'agent', 'orders', 'news', 'marketdata', 'movements', 'account'] as const;
@@ -130,6 +130,19 @@ export function useWindowManager() {
       return { ...prev, [id]: { ...w, minimized: newMinimized } };
     });
   }, []);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && focusedId) {
+        closeWindow(focusedId);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [focusedId, closeWindow]);
 
 
   const allOpenWindows = Object.entries(windows);
