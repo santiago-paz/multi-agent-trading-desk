@@ -1,5 +1,5 @@
 import { generateText } from 'ai';
-import { PanelQuote } from '../iol/types';
+import { ComprehensiveAssetData } from '../market-data';
 
 export interface AdvisorRecommendation {
   simbolo: string;
@@ -9,40 +9,54 @@ export interface AdvisorRecommendation {
 
 export interface AdvisorOutput {
   analysis: string;
+  technical_analysis?: any;
+  sentiment_analysis?: any;
   recommendations: AdvisorRecommendation[];
 }
 
-export class AdvisorAgent {
+export const advisorAgent = {
   async generateRecommendation(
     cash: number, 
-    availableQuotes: PanelQuote[], 
-    strategy: 'Conservadora' | 'Media' | 'Arriesgada'
+    quotes: ComprehensiveAssetData[], 
+    strategy: 'Conservadora' | 'Media' | 'Arriesgada',
   ): Promise<AdvisorOutput> {
-    
-    const contextStr = availableQuotes.map(q => 
-      `- ${q.simbolo} (${q.descripcion}): Precio $${q.ultimoPrecio}, Var: ${q.variacionPorcentual}%`
-    ).join('\n');
+
+    // Construct Context from Quotes
+    const contextStr = quotes.map(q => {
+      return `- [${q.symbol}] Precio: $${q.currentPrice} ARS
+        Técnico (Últimos 60 días): SMA20=${q.technicals.sma20?.toFixed(2) || 'N/A'}, SMA50=${q.technicals.sma50?.toFixed(2) || 'N/A'}, RSI(14)=${q.technicals.rsi14?.toFixed(2) || 'N/A'}
+        Noticias Recientes:
+        ${q.recentNews.map(n => `  * ${n.title} - ${n.summary}`).join('\n')}
+      `;
+    }).join('\n');
 
     const prompt = `
-      Eres un Asesor Financiero Cuantitativo de un Hedge Fund.
+      Eres el COMITÉ DE INVERSIONES de un Hedge Fund Cuantitativo actuando como un único Agente.
       Tu tarea es recomendar en qué invertir basado en el saldo disponible, la estrategia elegida y los instrumentos del mercado disponibles.
       
+      Debes simular el razonamiento de tres roles internos:
+      1. Technical Analyst: Analiza tendencias usando SMA20, SMA50 y reversión a la media con el RSI(14).
+      2. Sentiment Analyst: Analiza el sentimiento y noticias recientes de la empresa/bono.
+      3. Portfolio Manager: Realiza las asignaciones de capital respetando estrictamente el presupuesto.
+
       Saldo Disponible: $${cash} (Pesos Argentinos - ARS)
       Estrategia Elegida: ${strategy}
       
-      Instrumentos Disponibles Hoy (con su respectivo Precio en ARS):
+      Instrumentos Pre-Filtrados Hoy (con su respectivo Precio, Técnicos y Noticias en ARS):
       ${contextStr}
       
-      Reglas:
+      Reglas de Portfolio Manager:
       1. Solo puedes recomendar instrumentos incluidos explícitamente en la lista provista arriba.
       2. Matemáticas estrictas: Debes calcular una "cantidad" entera de títulos a comprar de modo que el costo total (suma de cantidad * precio de cada instrumento) sea estrictamente MENOR o IGUAL al Saldo Disponible ($${cash} ARS). Trata de dejar siempre un margen del 1% para cubrir posibles comisiones.
-      3. CRÍTICO (FALLBACK): Si el Saldo Disponible ($${cash}) no te alcanza para comprar ni siquiera 1 unidad de los instrumentos más conocidos y caros (como los CEDEARs), NO los sugieras. Fíjate en la lista porque hemos traído alternativas baratas (Títulos Públicos, Letras, o Acciones Locales de menor valor como TX24, S31O3). Manda a recomentar esos que sí alcanzan dentro del presupuesto. Si no te alcanza para NADA en absoluto, devuelve recomendaciones vacío y explícalo en el 'analysis'.
-      4. Si la estrategia es "Conservadora", busca instrumentos con menor variación y Bonos. Si es "Arriesgada", puedes concentrar en opciones volátiles (o CEDEARs) siempre y cuando el dinero alcance.
+      3. CRÍTICO (FALLBACK): Si el Saldo Disponible ($${cash}) no te alcanza para comprar ni siquiera 1 unidad de los instrumentos, NO lo sugieras. En su lugar, si hay Bonos baratos, recuérdalos. Si no te alcanza para nada, devuelve recomendaciones vacío.
+      4. Si la estrategia es "Conservadora", busca instrumentos con poca volatilidad y RSI moderado. Si es "Arriesgada", puedes buscar breakouts y alto momentum o empresas expuestas a noticias extremas.
       5. La recomendación debe ser retornada estrictamente en formato JSON validable y nada más. No incluyas markdown \`\`\`json ni saludos, SOLAMENTE EL OBJETO JSON.
       
-      Ejemplo de estructura esperada (si por ejemplo te alcanzan 10.000 ARS y el TX24 cotiza a 1500 ARS):
+      Estructura de JSON esperada:
       {
-        "analysis": "Debido a que el saldo es de 10.000 ARS, no es posible comprar CEDEARs, por lo que nos enfocamos en Bonos como TX24 que sí entran en el presupuesto para una estrategia elegida.",
+        "technical_analysis": "Breve resumen de tu razonamiento como Analista Técnico para los activos seleccionados.",
+        "sentiment_analysis": "Breve resumen de tu razonamiento como Analista de Sentimiento de Noticias para los activos seleccionados.",
+        "analysis": "Resumen como Portfolio Manager justificando la combinación final y la asignación del capital de ${cash} ARS.",
         "recommendations": [
           { "simbolo": "TX24", "cantidad": 6, "tipo": "buy" }
         ]
@@ -51,24 +65,26 @@ export class AdvisorAgent {
 
     try {
       const { text } = await generateText({
-        model: 'meta/llama-3.3-70b',
+        model: 'meta/llama-3.3-70b', 
+        system: 'Eres un sistema de hedge fund autónomo financiero cuantitativo. Retornas estrictamente JSON y te apegas siempre al presupuesto matemáticamente.',
         prompt: prompt,
       });
 
-      const jsonMatch = text.match(/\{[\s\S]*\}/);
-      if (jsonMatch) {
-        return JSON.parse(jsonMatch[0]) as AdvisorOutput;
+      // Try to parse out the JSON if there's markdown wrappings
+      let rawJson = text;
+      if (rawJson.includes('```json')) {
+        rawJson = rawJson.split('```json')[1].split('```')[0].trim();
+      } else if (rawJson.includes('```')) {
+        rawJson = rawJson.split('```')[1].trim();
       }
-      
-      throw new Error('Failed to parse advisor output');
+
+      return JSON.parse(rawJson) as AdvisorOutput;
     } catch (error) {
-      console.error('Advisor failed:', error);
+      console.error('Advisor generation error:', error);
       return {
-        analysis: 'Error al generar recomendación. Inténtalo de nuevo.',
-        recommendations: [],
+        analysis: 'Error interno generando la recomendación del Advisor.',
+        recommendations: []
       };
     }
   }
-}
-
-export const advisorAgent = new AdvisorAgent();
+};

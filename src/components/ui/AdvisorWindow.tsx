@@ -102,7 +102,9 @@ export function AdvisorWindow() {
       {result && (
         <fieldset style={{ margin: 0, padding: '8px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
           <legend>Sugerencia del Asesor</legend>
-          <p style={{ margin: 0 }}><strong>Análisis:</strong> {result.analysis}</p>
+          {result.technical_analysis && <p style={{ margin: '0 0 4px', fontSize: '11px' }}><strong>Técnico:</strong> {result.technical_analysis}</p>}
+          {result.sentiment_analysis && <p style={{ margin: '0 0 4px', fontSize: '11px' }}><strong>Sentimiento:</strong> {result.sentiment_analysis}</p>}
+          <p style={{ margin: '0 0 8px', fontSize: '11px' }}><strong>Portfolio Manager:</strong> {result.analysis}</p>
           
           <div className="sunken-panel" style={{ padding: '2px', backgroundColor: 'white' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse' }}>

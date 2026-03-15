@@ -5,7 +5,6 @@ import { PortfolioSummary } from '@/components/ui/PortfolioSummary';
 import { PortfolioWindow } from '@/components/ui/PortfolioWindow';
 import { AdvisorWindow } from '@/components/ui/AdvisorWindow';
 import { AgentLog } from '@/components/ui/AgentLog';
-import { RiskGauge } from '@/components/ui/RiskGauge';
 import { OrderReview } from '@/components/ui/OrderReview';
 import { NewsFeed } from '@/components/ui/NewsFeed';
 import { OperationsFeed } from '@/components/ui/OperationsFeed';
@@ -17,7 +16,7 @@ import {
   WindowState,
 } from '@/components/ui/DraggableResizableWindow';
 import { useNewsStore } from '@/lib/store/news-store';
-import { runAnalysis, executeOrders, getPortfolioSummary, getMarketData, getOperations, getProfileData, getAccountStatement } from './actions';
+import { executeOrders, getPortfolioSummary, getMarketData, getOperations, getProfileData, getAccountStatement } from './actions';
 import { OrderRequest, PortfolioResponse, Operation, DatosPerfil, EstadoCuenta } from '@/lib/iol/types';
 import { AnalystOutput, SentinelOutput, StrategistOutput } from '@/lib/agents/types';
 import { HistoricalRow } from '@/lib/market-data';
@@ -26,7 +25,6 @@ import { useWindowManager, AppId, APP_LABELS } from '@/hooks/useWindowManager';
 
 const ICON_IDS = [
   'portfolio',
-  'analysis',
   'agent',
   'orders',
   'news',
@@ -38,13 +36,12 @@ type IconId = (typeof ICON_IDS)[number];
 
 const DEFAULT_ICON_POSITIONS: Record<IconId, { x: number; y: number }> = {
   portfolio: { x: 8, y: 8 },
-  analysis: { x: 8, y: 72 },
-  agent: { x: 8, y: 136 },
-  orders: { x: 8, y: 200 },
-  news: { x: 8, y: 264 },
-  marketdata: { x: 8, y: 328 },
-  movements: { x: 8, y: 392 },
-  advisor: { x: 8, y: 456 },
+  agent: { x: 8, y: 72 },
+  orders: { x: 8, y: 136 },
+  news: { x: 8, y: 200 },
+  marketdata: { x: 8, y: 264 },
+  movements: { x: 8, y: 328 },
+  advisor: { x: 8, y: 392 },
 };
 
 import { useMepStore } from '@/lib/store/mep-store';
@@ -76,7 +73,6 @@ export default function TradingDashboard() {
     progress,
   } = useNewsStore();
 
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysisResult, setAnalysisResult] = useState<{
     analystResults: AnalystOutput[];
     sentinelResult: SentinelOutput;
@@ -194,19 +190,6 @@ export default function TradingDashboard() {
   }, []);
   /* eslint-enable react-hooks/exhaustive-deps, react-hooks/set-state-in-effect */
 
-  const handleRunAnalysis = async () => {
-    setIsAnalyzing(true);
-    setAnalysisResult(null);
-    setExecutionResult(null);
-    const result = await runAnalysis();
-    if (result.success && result.data) {
-      setAnalysisResult(result.data);
-    } else {
-      console.error('Analysis failed:', result.error);
-    }
-    setIsAnalyzing(false);
-  };
-
   const handleExecuteOrders = async () => {
     if (!analysisResult?.proposedOrders) return;
     setIsExecuting(true);
@@ -234,16 +217,6 @@ export default function TradingDashboard() {
           onClick={() => openOrFocusWindow('portfolio')}
           x={iconPositions.portfolio.x}
           y={iconPositions.portfolio.y}
-          onMove={handleIconMove}
-        />
-        <DesktopIcon
-          id="analysis"
-          label="Analysis"
-          iconSrc={DESKTOP_APP_ICONS.analysis}
-          icon="⚙️"
-          onClick={() => openOrFocusWindow('analysis')}
-          x={iconPositions.analysis.x}
-          y={iconPositions.analysis.y}
           onMove={handleIconMove}
         />
         <DesktopIcon
@@ -333,25 +306,6 @@ export default function TradingDashboard() {
                 isLoadingAccount={isLoadingAccount}
                 onRefreshAccount={fetchAccountData}
               />
-            )}
-            {appId === 'analysis' && (
-              <div className="space-y-3">
-                <button
-                  type="button"
-                  onClick={handleRunAnalysis}
-                  disabled={isAnalyzing || isExecuting}
-                  className="w-full default"
-                >
-                  {isAnalyzing
-                    ? 'Analyzing Market Data...'
-                    : 'Initiate Analysis Sequence'}
-                </button>
-                {analysisResult && (
-                  <RiskGauge
-                    score={analysisResult.sentinelResult.riskScore}
-                  />
-                )}
-              </div>
             )}
             {appId === 'agent' && (
               <>

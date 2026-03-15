@@ -5,6 +5,7 @@ import { sentinelAgent } from '@/lib/agents/sentinel';
 import { strategistAgent } from '@/lib/agents/strategist';
 import { advisorAgent } from '@/lib/agents/advisor';
 import { tradingEngine } from '@/lib/trading/engine';
+import { ComprehensiveAssetData } from '@/lib/market-data';
 import { iolClient } from '@/lib/iol/client';
 import { OrderRequest, OrderResponse } from '@/lib/iol/types';
 
@@ -180,6 +181,7 @@ export async function getProfileData() {
 
 export async function getAdvisorRecommendation(strategy: 'Conservadora' | 'Media' | 'Arriesgada') {
   try {
+    // 1. Fetch available cash
     const cuenta = await iolClient.getEstadoCuenta();
     const cuentaArs = cuenta.cuentas.find(c => c.moneda === 'peso_Argentino');
     let cash = cuentaArs?.disponible || 0;
@@ -198,9 +200,40 @@ export async function getAdvisorRecommendation(strategy: 'Conservadora' | 'Media
     
     // Combine 
     const combinedTitulos = [...(cedearsPanel.titulos || []), ...(bonosPanel.titulos || [])];
-    
-    // We pass quotes to the LLM agent
-    const recommendation = await advisorAgent.generateRecommendation(cash, combinedTitulos, strategy);
+
+    // 2. We don't want to fetch 30-day Yahoo data for 100+ assets since it takes too long
+    //    We will tell the LLM to pre-filter to max 10 affordable assets.
+    const preFilterPrompt = `
+      You are a filtering agent. The user has ${cash} ARS.
+      You need to pick the top 8 to 10 best assets from this list that they can afford.
+      If the user has very little money (< 10,000 ARS), prioritize cheap bonds or letters.
+      Return ONLY a JSON array of strings with the symbols. Example: ["AAPL", "TX24"]
+      List of assets: ${JSON.stringify(combinedTitulos.map(t => ({ symbol: t.simbolo, price: t.ultimoPrecio })))}
+    `;
+
+    const { generateText: textGen } = await import('ai');
+    const { text: filteredSymbolsText } = await textGen({
+      model: 'meta/llama-3.1-8b',
+      system: 'Return ONLY a JSON array of strings.',
+      prompt: preFilterPrompt,
+    });
+
+    let topSymbols: string[] = [];
+    try {
+      topSymbols = JSON.parse(filteredSymbolsText);
+    } catch {
+      // Fallback
+      topSymbols = combinedTitulos.slice(0, 8).map(t => t.simbolo);
+    }
+
+    // 3. Fetch comprehensive data (Technicals + News) for the top candidates
+    const { getComprehensiveAssetData } = await import('@/lib/market-data');
+    const comprehensiveDataPromises = topSymbols.map(sym => getComprehensiveAssetData(sym));
+    const comprehensiveDataResults = await Promise.all(comprehensiveDataPromises);
+    const validComprehensiveData = comprehensiveDataResults.filter((data): data is NonNullable<typeof data> => data !== null);
+
+    // 4. Pass enriched data to the Hedge Fund Advisor Agent
+    const recommendation = await advisorAgent.generateRecommendation(cash, validComprehensiveData, strategy);
 
     return { success: true, data: recommendation };
   } catch (error) {

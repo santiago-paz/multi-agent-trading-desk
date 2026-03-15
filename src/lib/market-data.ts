@@ -1,4 +1,5 @@
 import YahooFinance from 'yahoo-finance2';
+import { processNewsBatch } from './news-processor';
 
 const yahooFinance = new YahooFinance();
 
@@ -20,6 +21,20 @@ export interface NewsItem {
   relatedTickers?: string[];
   summary?: string;
   fullContent?: string;
+}
+
+// Emulating Comprehensive data that the AI Hedge Fund Python agents consume
+export interface ComprehensiveAssetData {
+  symbol: string;
+  currentPrice: number;
+  historicalPrices: HistoricalRow[];
+  technicals: {
+    sma20: number | null;
+    sma50: number | null;
+    rsi14: number | null;
+    priceToSMA20Ratio: number | null;
+  };
+  recentNews: NewsItem[];
 }
 
 export async function getHistoricalData(symbol: string, days: number = 30): Promise<HistoricalRow[]> {
@@ -93,4 +108,70 @@ export async function getNews(query: string, count: number = 5): Promise<NewsIte
 export async function getGeneralMarketNews(count: number = 5): Promise<NewsItem[]> {
   // Use SPY (S&P 500 ETF) as a proxy for general market news
   return getNews('SPY', count);
+}
+
+// --- Technical Indicators Math ---
+
+function calculateSMA(data: number[], period: number): number | null {
+  if (data.length < period) return null;
+  const slice = data.slice(data.length - period);
+  const sum = slice.reduce((acc, val) => acc + val, 0);
+  return sum / period;
+}
+
+function calculateRSI(data: number[], period: number = 14): number | null {
+  if (data.length <= period) return null;
+
+  let gains = 0;
+  let losses = 0;
+
+  for (let i = data.length - period; i < data.length; i++) {
+    const diff = data[i] - data[i - 1];
+    if (diff > 0) gains += diff;
+    else losses -= diff;
+  }
+
+  const avgGain = gains / period;
+  const avgLoss = losses / period;
+
+  if (avgLoss === 0) return 100;
+  
+  const rs = avgGain / avgLoss;
+  return 100 - (100 / (1 + rs));
+}
+
+export async function getComprehensiveAssetData(symbol: string): Promise<ComprehensiveAssetData | null> {
+  try {
+    // 1. Fetch 60 days to have enough runway for SMA50
+    const history = await getHistoricalData(symbol, 60);
+    if (!history || history.length === 0) return null;
+
+    const closingPrices = history.map(h => h.close);
+    const currentPrice = closingPrices[closingPrices.length - 1];
+
+    // 2. Compute Technicals
+    const sma20 = calculateSMA(closingPrices, 20);
+    const sma50 = calculateSMA(closingPrices, 50);
+    const rsi14 = calculateRSI(closingPrices, 14);
+
+    // 3. Fetch News and Summarize
+    const rawNews = await getNews(symbol, 3); // Get 3 most recent articles
+    const processedNews = await processNewsBatch(rawNews);
+
+    return {
+      symbol,
+      currentPrice,
+      historicalPrices: history.slice(-30), // keep payload small
+      technicals: {
+        sma20,
+        sma50,
+        rsi14,
+        priceToSMA20Ratio: sma20 ? (currentPrice / sma20) : null
+      },
+      recentNews: processedNews
+    };
+  } catch (error) {
+    console.error(`Error building comprehensive data for ${symbol}:`, error);
+    return null;
+  }
 }
