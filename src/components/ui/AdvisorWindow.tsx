@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import {
-  FONT, COL_HEADER, COL_HEADER_RIGHT, CELL, CELL_RIGHT,
-  COLOR_POSITIVE, COLOR_NEGATIVE,
+  FONT, LABEL, COL_HEADER, COL_HEADER_RIGHT, CELL, CELL_RIGHT,
+  WINDOW_CONTAINER, COLOR_POSITIVE, COLOR_NEGATIVE,
 } from '@/lib/theme/win98';
 import { getAdvisorRecommendation, executeOrders } from '@/app/trading/actions';
 import { AdvisorOutput } from '@/lib/agents/advisor';
@@ -65,13 +65,13 @@ export function AdvisorWindow() {
   };
 
   return (
-    <div style={{ ...FONT, padding: '8px', display: 'flex', flexDirection: 'column', gap: '12px', height: '100%', overflowY: 'auto', background: '#c0c0c0' }}>
+    <div style={{ ...WINDOW_CONTAINER, padding: '8px', gap: '8px', overflowY: 'auto' }}>
       
       <fieldset style={{ margin: 0, padding: '8px' }}>
         <legend>Asistente de Inversión IA</legend>
         
         <div className="field-row" style={{ marginBottom: '8px' }}>
-          <label htmlFor="strategy-select" style={{ width: '80px' }}>Estrategia:</label>
+          <label htmlFor="strategy-select" style={LABEL}>Estrategia:</label>
           <select 
             id="strategy-select"
             value={strategy} 
@@ -105,9 +105,9 @@ export function AdvisorWindow() {
       {result && (
         <fieldset style={{ margin: 0, padding: '8px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
           <legend>Sugerencia del Asesor</legend>
-          {result.technical_analysis && <p style={{ margin: '0 0 4px', fontSize: '11px' }}><strong>Técnico:</strong> {result.technical_analysis}</p>}
-          {result.sentiment_analysis && <p style={{ margin: '0 0 4px', fontSize: '11px' }}><strong>Sentimiento:</strong> {result.sentiment_analysis}</p>}
-          <p style={{ margin: '0 0 8px', fontSize: '11px' }}><strong>Portfolio Manager:</strong> {result.analysis}</p>
+          {result.technical_analysis && <p style={{ ...FONT, margin: '0 0 4px' }}><strong>Técnico:</strong> {result.technical_analysis}</p>}
+          {result.sentiment_analysis && <p style={{ ...FONT, margin: '0 0 4px' }}><strong>Sentimiento:</strong> {result.sentiment_analysis}</p>}
+          <p style={{ ...FONT, margin: '0 0 8px' }}><strong>Portfolio Manager:</strong> {result.analysis}</p>
           
           <div className="sunken-panel" style={{ padding: 0 }}>
             <table style={{ ...FONT, width: '100%', borderCollapse: 'collapse', borderSpacing: 0 }}>
@@ -138,10 +138,10 @@ export function AdvisorWindow() {
             </table>
           </div>
           
-          <button 
-             onClick={handleExecute} 
+          <button
+             onClick={handleExecute}
              disabled={isExecuting}
-             style={{ marginTop: '12px', fontWeight: 'bold', height: '32px' }}
+             style={{ marginTop: '8px', fontWeight: 'bold' }}
           >
             {isExecuting ? 'Ejecutando...' : '¡Ejecutar Estrategia!'}
           </button>

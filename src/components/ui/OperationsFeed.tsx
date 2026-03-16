@@ -58,6 +58,9 @@ export function OperationsFeed({ operations, isLoading, onRefresh }: OperationsF
                           ...COL_RAISED,
                           textAlign: col.align as React.CSSProperties['textAlign'],
                           width: col.width,
+                          position: 'sticky',
+                          top: 0,
+                          zIndex: 1,
                         }}
                       >
                         {col.label}

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { PortfolioSummary } from './PortfolioSummary';
 import { AccountData } from './AccountData';
 import { PortfolioResponse, DatosPerfil, EstadoCuenta } from '@/lib/iol/types';
+import { FONT, WINDOW_CONTAINER } from '@/lib/theme/win98';
 
 interface PortfolioWindowProps {
   portfolio: PortfolioResponse | null;
@@ -25,7 +26,7 @@ export const PortfolioWindow: React.FC<PortfolioWindowProps> = ({
   const [activeTab, setActiveTab] = useState<'portfolio' | 'account'>('portfolio');
 
   return (
-    <div className="flex flex-col flex-1 h-full min-h-0 text-[11px]" style={{ fontFamily: '"Pixelated MS Sans Serif", Tahoma, sans-serif', WebkitFontSmoothing: 'none', padding: '6px 6px 0 6px' }}>
+    <div style={{ ...WINDOW_CONTAINER, padding: '6px 6px 0 6px' }}>
       <menu role="tablist">
         <li role="tab" aria-selected={activeTab === 'portfolio'}>
           <a href="#portfolio" onClick={(e) => { e.preventDefault(); setActiveTab('portfolio'); }} style={{ textDecoration: 'none' }}>Tenencias</a>
@@ -35,10 +36,10 @@ export const PortfolioWindow: React.FC<PortfolioWindowProps> = ({
         </li>
       </menu>
 
-      <div role="tabpanel" className="flex-1 flex flex-col" style={{ overflow: 'hidden', padding: '4px 0 0 0' }}>
+      <div role="tabpanel" style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column', padding: '4px 0 0 0' }}>
           {activeTab === 'portfolio' && (
             isLoadingPortfolio && !portfolio ? (
-              <p style={{ margin: 0, padding: '4px' }}>Cargando portafolio...</p>
+              <p style={{ ...FONT, margin: 0, padding: '4px' }}>Cargando portafolio...</p>
             ) : portfolio ? (
               <PortfolioSummary
                 portfolio={portfolio}
@@ -46,7 +47,7 @@ export const PortfolioWindow: React.FC<PortfolioWindowProps> = ({
                 onRefresh={onRefreshPortfolio}
               />
             ) : (
-              <p style={{ margin: 0, padding: '4px', color: '#ff0000' }}>No se pudo cargar el portafolio.</p>
+              <p style={{ ...FONT, margin: 0, padding: '4px', color: '#ff0000' }}>No se pudo cargar el portafolio.</p>
             )
           )}
           {activeTab === 'account' && (

@@ -1,6 +1,6 @@
 import React from 'react';
 import { OrderRequest } from '@/lib/iol/types';
-import { COLOR_POSITIVE, COLOR_NEGATIVE } from '@/lib/theme/win98';
+import { FONT, COLOR_POSITIVE, COLOR_NEGATIVE } from '@/lib/theme/win98';
 
 interface OrderReviewProps {
   orders: OrderRequest[];
@@ -10,25 +10,25 @@ interface OrderReviewProps {
 
 export const OrderReview: React.FC<OrderReviewProps> = ({ orders, onExecute, isLoading }) => {
   if (orders.length === 0) {
-    return <p className="m-0">No orders to review.</p>;
+    return <p style={{ ...FONT, margin: 0 }}>No orders to review.</p>;
   }
 
   return (
     <>
-      <div className="field-row-stacked mb-4">
+      <div className="field-row-stacked" style={{ marginBottom: '8px' }}>
         {orders.map((order, index) => (
           <div key={index} className="field-row" style={{ justifyContent: 'space-between' }}>
-            <span>
+            <span style={FONT}>
               <strong style={{ color: order.side === 'buy' ? COLOR_POSITIVE : COLOR_NEGATIVE }}>
-                {order.side === 'buy' ? 'BUY' : 'SELL'}
+                {order.side === 'buy' ? 'Buy' : 'Sell'}
               </strong>
               {' '}{order.simbolo}
             </span>
-            <span>{order.cantidad} shares · {order.tipo}</span>
+            <span style={FONT}>{order.cantidad} shares · {order.tipo}</span>
           </div>
         ))}
       </div>
-      <div className="field-row justify-end">
+      <div className="field-row" style={{ justifyContent: 'flex-end' }}>
         <button
           onClick={onExecute}
           disabled={isLoading}
@@ -40,4 +40,3 @@ export const OrderReview: React.FC<OrderReviewProps> = ({ orders, onExecute, isL
     </>
   );
 };
-
