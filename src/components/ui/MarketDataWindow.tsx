@@ -131,6 +131,7 @@ const ListView: React.FC<ListViewProps> = ({ items, sortCol, sortDir, onSort }) 
       className="win98-scrollbar"
       style={{
         flex: 1,
+        minHeight: 0,
         overflowY: 'auto',
         overflowX: 'hidden',
         boxShadow:
@@ -253,12 +254,14 @@ export const MarketDataWindow: React.FC<MarketDataWindowProps> = ({
 
   return (
     <div
-      className="flex flex-col flex-1 h-full min-h-0"
+      className="flex flex-col flex-1 min-h-0"
       style={{
         fontFamily: '"Pixelated MS Sans Serif", Tahoma, sans-serif',
         fontSize: 11,
         WebkitFontSmoothing: 'none',
         padding: '6px 6px 0 6px',
+        boxSizing: 'border-box',
+        overflow: 'hidden',
       }}
     >
       {/* Tab strip */}
@@ -284,8 +287,14 @@ export const MarketDataWindow: React.FC<MarketDataWindowProps> = ({
       {/* Tab panel */}
       <div
         role="tabpanel"
-        className="flex-1 flex flex-col"
-        style={{ overflow: 'hidden', minHeight: 0, padding: '4px 0 0 0' }}
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          flex: 1,
+          minHeight: 0,
+          overflow: 'hidden',
+          padding: '4px 0 0 0',
+        }}
       >
         {/* Toolbar */}
         <div
@@ -313,10 +322,10 @@ export const MarketDataWindow: React.FC<MarketDataWindowProps> = ({
         <div
           style={{
             flex: 1,
+            minHeight: 0,
             display: 'flex',
             flexDirection: 'column',
             overflow: 'hidden',
-            minHeight: 0,
           }}
         >
           {isLoading && !marketData ? (
