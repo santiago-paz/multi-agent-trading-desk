@@ -69,7 +69,7 @@ export async function getHistoricalData(symbol: string, days: number = 30): Prom
         volume: quote.volume || 0,
       }));
   } catch (error) {
-    console.error(`Error fetching data for ${symbol}:`, error);
+    console.warn(`No Yahoo Finance data for ${symbol}:`, (error as Error).message);
     throw error;
   }
 }

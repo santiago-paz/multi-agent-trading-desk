@@ -27,7 +27,7 @@ export const PortfolioWindow: React.FC<PortfolioWindowProps> = ({
   const [activeTab, setActiveTab] = useState<'portfolio' | 'account'>('portfolio');
 
   return (
-    <div className="flex flex-col flex-1 h-full min-h-0 text-[11px]" style={{ fontFamily: '"Pixelated MS Sans Serif", Tahoma, sans-serif', WebkitFontSmoothing: 'none' }}>
+    <div className="flex flex-col flex-1 h-full min-h-0 text-[11px]" style={{ fontFamily: '"Pixelated MS Sans Serif", Tahoma, sans-serif', WebkitFontSmoothing: 'none', padding: '6px 6px 0 6px' }}>
       <menu role="tablist">
         <li role="tab" aria-selected={activeTab === 'portfolio'}>
           <a href="#portfolio" onClick={(e) => { e.preventDefault(); setActiveTab('portfolio'); }} style={{ textDecoration: 'none' }}>Tenencias</a>
@@ -37,8 +37,7 @@ export const PortfolioWindow: React.FC<PortfolioWindowProps> = ({
         </li>
       </menu>
 
-      <div className="window flex-1 flex flex-col" role="tabpanel" style={{ overflow: 'hidden' }}>
-        <div className="window-body flex-1 flex flex-col m-0" style={{ padding: '6px', overflow: 'hidden' }}>
+      <div role="tabpanel" className="flex-1 flex flex-col" style={{ overflow: 'hidden', padding: '4px 0 0 0' }}>
           {activeTab === 'portfolio' && (
             isLoadingPortfolio && !portfolio ? (
               <p style={{ margin: 0, padding: '4px' }}>Cargando portafolio...</p>
@@ -61,7 +60,6 @@ export const PortfolioWindow: React.FC<PortfolioWindowProps> = ({
               onRefresh={onRefreshAccount}
             />
           )}
-        </div>
       </div>
     </div>
   );

@@ -1,5 +1,6 @@
 import React from 'react';
 import { AnalystOutput, SentinelOutput, StrategistOutput } from '@/lib/agents/types';
+import { FONT, COL_HEADER, COL_HEADER_RIGHT, CELL, CELL_RIGHT, HR98 } from '@/lib/theme/win98';
 
 interface AgentLogProps {
   analystResults: AnalystOutput[];
@@ -7,146 +8,174 @@ interface AgentLogProps {
   strategyResult: StrategistOutput;
 }
 
-const sectionHeaderStyle: React.CSSProperties = {
-  fontSize: '11px',
-  fontWeight: 'bold',
-  letterSpacing: '0.05em',
-  textTransform: 'uppercase' as const,
-  color: '#000080',
-  backgroundColor: '#d4d0c8',
-  padding: '2px 6px',
-  marginBottom: '8px',
-  borderTop: '1px solid #ffffff',
-  borderLeft: '1px solid #ffffff',
-  borderRight: '1px solid #808080',
-  borderBottom: '1px solid #808080',
+const TREND_LABEL: Record<string, string> = {
+  bullish: 'Alcista',
+  bearish: 'Bajista',
+  neutral: 'Neutral',
 };
 
-const sectionStyle: React.CSSProperties = {
-  marginBottom: '12px',
-  padding: '8px',
-  border: '2px inset #808080',
-  backgroundColor: '#d4d0c8',
+const TREND_COLOR: Record<string, string> = {
+  bullish: '#008000',
+  bearish: '#800000',
+  neutral: '#000000',
 };
 
-const symbolStyle: React.CSSProperties = {
-  fontSize: '12px',
-  fontWeight: 'bold',
-  marginBottom: '2px',
-};
-
-const scoreChipStyle: React.CSSProperties = {
-  display: 'inline-block',
-  fontSize: '10px',
-  fontWeight: 'bold',
-  padding: '1px 5px',
-  backgroundColor: '#000080',
-  color: '#ffffff',
-  marginLeft: '6px',
-  verticalAlign: 'middle',
-};
-
-const reasoningStyle: React.CSSProperties = {
-  fontSize: '11px',
-  lineHeight: '1.4',
-  color: '#222222',
-  margin: '0 0 8px 0',
-};
-
-const labelStyle: React.CSSProperties = {
-  fontSize: '10px',
-  fontWeight: 'bold',
-  textTransform: 'uppercase' as const,
-  letterSpacing: '0.05em',
-  color: '#444',
-  marginBottom: '2px',
-};
-
-const valueStyle: React.CSSProperties = {
-  fontSize: '13px',
-  fontWeight: 'bold',
-  color: '#000',
-  marginBottom: '6px',
-};
-
-const dividerStyle: React.CSSProperties = {
-  borderTop: '1px solid #808080',
-  borderBottom: '1px solid #ffffff',
-  margin: '8px 0',
-};
-
-const allocationRowStyle: React.CSSProperties = {
-  display: 'flex',
-  justifyContent: 'space-between',
-  alignItems: 'center',
-  padding: '3px 0',
-  fontSize: '12px',
-  borderBottom: '1px dotted #b0a8a0',
-};
-
-export const AgentLog: React.FC<AgentLogProps> = ({ analystResults, sentinelResult, strategyResult }) => {
-  return (
-    <div style={{ overflow: 'auto', flex: 1, minHeight: 0, padding: '6px' }}>
-
-      {/* ANALYST */}
-      <div style={sectionStyle}>
-        <div style={sectionHeaderStyle}>📊 Analyst — Technical Analysis</div>
-        {analystResults.map((result, idx) => (
-          <div key={result.symbol} style={{ marginBottom: idx < analystResults.length - 1 ? '10px' : '0' }}>
-            <div style={symbolStyle}>
-              {result.symbol}
-              <span style={scoreChipStyle}>Score: {result.score}</span>
-            </div>
-            <p style={reasoningStyle}>{result.reasoning}</p>
-          </div>
-        ))}
-      </div>
-
-      {/* SENTINEL */}
-      <div style={sectionStyle}>
-        <div style={sectionHeaderStyle}>🛡️ Sentinel — Market Risk</div>
-        <div style={labelStyle}>Risk Score</div>
-        <div style={valueStyle}>{sentinelResult.riskScore}</div>
-        <p style={reasoningStyle}>{sentinelResult.reasoning}</p>
-        {sentinelResult.topHeadlines && sentinelResult.topHeadlines.length > 0 && (
-          <>
-            <div style={dividerStyle} />
-            <div style={{ ...labelStyle, marginBottom: '6px' }}>Top Headlines</div>
-            <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
-              {sentinelResult.topHeadlines.map((headline, i) => (
-                <li key={i} style={{ fontSize: '11px', marginBottom: '4px', paddingLeft: '8px', borderLeft: '2px solid #000080' }}>
-                  <a href={headline.link} target="_blank" rel="noopener noreferrer" style={{ color: '#000080', textDecoration: 'underline' }}>
-                    {headline.title}
-                  </a>
-                  <span style={{ fontSize: '10px', color: '#555', marginLeft: '4px' }}>[{headline.publisher}]</span>
-                </li>
-              ))}
-            </ul>
-          </>
-        )}
-        {(!sentinelResult.topHeadlines || sentinelResult.topHeadlines.length === 0) && (
-          <p style={{ ...reasoningStyle, fontStyle: 'italic', color: '#666' }}>No specific headlines identified.</p>
-        )}
-      </div>
-
-      {/* STRATEGIST */}
-      <div style={sectionStyle}>
-        <div style={sectionHeaderStyle}>🎯 Strategist — Final Decision</div>
-        <p style={{ ...reasoningStyle, fontWeight: 'bold', color: '#000' }}>{strategyResult.overallStrategy}</p>
-        <div style={dividerStyle} />
-        <div style={{ ...labelStyle, marginBottom: '6px' }}>Allocations</div>
-        <div>
-          {strategyResult.allocations.map((alloc) => (
-            <div key={alloc.symbol} style={allocationRowStyle}>
-              <span style={{ fontWeight: 'bold', fontSize: '12px' }}>{alloc.symbol}</span>
-              <span style={{ fontSize: '12px', fontWeight: 'bold', color: '#000080' }}>
-                {(alloc.percentage * 100).toFixed(1)}%
+export const AgentLog: React.FC<AgentLogProps> = ({
+  analystResults,
+  sentinelResult,
+  strategyResult,
+}) => (
+  <div
+    className="win98-scrollbar"
+    style={{
+      ...FONT,
+      flex: 1,
+      minHeight: 0,
+      overflowY: 'auto',
+      overflowX: 'hidden',
+      padding: '6px',
+      background: '#c0c0c0',
+    }}
+  >
+    {/* ── Analyst ── */}
+    <fieldset style={{ marginBottom: '6px' }}>
+      <legend>Analyst — Technical Analysis</legend>
+      {analystResults.map((r, idx) => (
+        <React.Fragment key={r.symbol}>
+          {idx > 0 && <hr style={HR98} />}
+          <div style={{ marginBottom: idx < analystResults.length - 1 ? '6px' : 0 }}>
+            <div
+              style={{
+                ...FONT,
+                display: 'flex',
+                alignItems: 'baseline',
+                gap: '8px',
+                marginBottom: '2px',
+              }}
+            >
+              <span style={{ fontWeight: 'bold' }}>{r.symbol}</span>
+              <span style={{ color: TREND_COLOR[r.trend] ?? '#000' }}>
+                {TREND_LABEL[r.trend] ?? r.trend}
               </span>
+              <span style={{ color: '#555' }}>Score: {r.score}</span>
             </div>
-          ))}
-        </div>
-      </div>
+            <p style={{ ...FONT, margin: 0, lineHeight: '1.3' }}>{r.reasoning}</p>
+          </div>
+        </React.Fragment>
+      ))}
+    </fieldset>
 
-    </div>
-  );
-};
+    {/* ── Sentinel ── */}
+    <fieldset style={{ marginBottom: '6px' }}>
+      <legend>Sentinel — Market Risk</legend>
+      <div className="field-row" style={{ marginBottom: '4px' }}>
+        <label
+          style={{
+            ...FONT,
+            width: '80px',
+            flexShrink: 0,
+            textAlign: 'right',
+            paddingRight: '6px',
+          }}
+        >
+          Risk Score:
+        </label>
+        <input
+          type="text"
+          readOnly
+          value={`${sentinelResult.riskScore} (${sentinelResult.sentiment})`}
+          style={{ ...FONT, flex: 1, cursor: 'default' }}
+        />
+      </div>
+      <p style={{ ...FONT, margin: '0 0 4px 0', lineHeight: '1.3' }}>
+        {sentinelResult.reasoning}
+      </p>
+      {sentinelResult.topHeadlines.length > 0 && (
+        <>
+          <hr style={HR98} />
+          <p style={{ ...FONT, margin: '0 0 3px 0', fontWeight: 'bold' }}>
+            Top Headlines
+          </p>
+          <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+            {sentinelResult.topHeadlines.map((h, i) => (
+              <li key={i} style={{ ...FONT, marginBottom: '3px' }}>
+                <a
+                  href={h.link}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{ color: '#0000ff', textDecoration: 'underline' }}
+                >
+                  {h.title}
+                </a>
+                <span style={{ color: '#555', marginLeft: '4px' }}>
+                  [{h.publisher}]
+                </span>
+              </li>
+            ))}
+          </ul>
+        </>
+      )}
+    </fieldset>
+
+    {/* ── Strategist ── */}
+    <fieldset>
+      <legend>Strategist — Final Decision</legend>
+      <p style={{ ...FONT, margin: '0 0 4px 0', fontWeight: 'bold', lineHeight: '1.3' }}>
+        {strategyResult.overallStrategy}
+      </p>
+      <hr style={HR98} />
+      <p style={{ ...FONT, margin: '0 0 4px 0', fontWeight: 'bold' }}>Allocations</p>
+      <div className="sunken-panel" style={{ padding: 0, overflow: 'hidden' }}>
+        <table
+          style={{
+            ...FONT,
+            width: '100%',
+            borderCollapse: 'collapse',
+            tableLayout: 'fixed',
+          }}
+        >
+          <thead>
+            <tr>
+              <th style={{ ...COL_HEADER, width: '20%' }}>Símbolo</th>
+              <th style={{ ...COL_HEADER_RIGHT, width: '18%' }}>%</th>
+              <th style={COL_HEADER}>Razonamiento</th>
+            </tr>
+          </thead>
+          <tbody>
+            {strategyResult.allocations.map((alloc, idx) => (
+              <tr
+                key={alloc.symbol}
+                style={{
+                  background: idx % 2 === 0 ? '#fff' : '#f0f0f0',
+                  borderBottom: '1px solid #c0c0c0',
+                }}
+              >
+                <td style={{ ...CELL, fontWeight: 'bold' }}>{alloc.symbol}</td>
+                <td
+                  style={{
+                    ...CELL_RIGHT,
+                    fontWeight: 'bold',
+                    color: '#000080',
+                  }}
+                >
+                  {(alloc.percentage * 100).toFixed(1)}%
+                </td>
+                <td
+                  style={{
+                    ...CELL,
+                    whiteSpace: 'normal',
+                    lineHeight: '1.3',
+                    overflow: 'visible',
+                    textOverflow: 'clip',
+                  }}
+                >
+                  {alloc.reasoning}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </fieldset>
+  </div>
+);

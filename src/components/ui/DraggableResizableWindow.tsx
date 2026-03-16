@@ -156,7 +156,7 @@ export const DraggableResizableWindow: React.FC<DraggableResizableWindowProps> =
             <button type="button" aria-label="Close" onClick={handleCloseClick} />
           </div>
         </div>
-        <div className="window-body overflow-auto flex-1 min-h-0 p-2">
+        <div className="window-body overflow-hidden flex-1 min-h-0" style={{ padding: 0, margin: 0 }}>
           {children}
         </div>
       </div>

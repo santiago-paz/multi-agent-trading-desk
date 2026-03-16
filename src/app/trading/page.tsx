@@ -7,9 +7,9 @@ import { AdvisorWindow } from '@/components/ui/AdvisorWindow';
 import { AgentLog } from '@/components/ui/AgentLog';
 import { OrderReview } from '@/components/ui/OrderReview';
 import { NewsFeed } from '@/components/ui/NewsFeed';
+import { MarketDataWindow } from '@/components/ui/MarketDataWindow';
 import { OperationsFeed } from '@/components/ui/OperationsFeed';
 import { AccountData } from '@/components/ui/AccountData';
-import { Sparkline } from '@/components/ui/Sparkline';
 import { DesktopIcon } from '@/components/ui/DesktopIcon';
 import {
   DraggableResizableWindow,
@@ -52,9 +52,9 @@ export default function TradingDashboard() {
   const [isLoadingPortfolio, setIsLoadingPortfolio] = useState(true);
 
   const [marketData, setMarketData] = useState<{
-    symbol: string;
-    data: HistoricalRow[];
-  }[] | null>(null);
+    marketData: { symbol: string; data: HistoricalRow[] }[];
+    ownedSymbols: string[];
+  } | null>(null);
   const [isLoadingMarketData, setIsLoadingMarketData] = useState(true);
 
   const [operations, setOperations] = useState<Operation[]>([]);
@@ -164,7 +164,7 @@ export default function TradingDashboard() {
     setIsLoadingMarketData(true);
     const result = await getMarketData();
     if (result.success && result.data) {
-      setMarketData(result.data);
+      setMarketData(result.data as { marketData: { symbol: string; data: HistoricalRow[] }[]; ownedSymbols: string[] });
     }
     setIsLoadingMarketData(false);
   };
@@ -353,63 +353,12 @@ export default function TradingDashboard() {
               />
             )}
             {appId === 'marketdata' && (
-              <>
-                {isLoadingMarketData ? (
-                  <p className="m-0">Loading...</p>
-                ) : marketData ? (
-                  <div className="space-y-3 overflow-auto">
-                    {marketData.map((item) => (
-                      <div
-                        key={item.symbol}
-                        className="sunken-panel p-2"
-                      >
-                        <p className="font-bold m-0 mb-2">{item.symbol}</p>
-                        <div className="overflow-x-auto mb-2">
-                          <table>
-                            <thead>
-                              <tr>
-                                <th>Date</th>
-                                <th style={{ textAlign: 'right' }}>Close</th>
-                              </tr>
-                            </thead>
-                            <tbody>
-                              {item.data.slice(0, 5).map((row, i) => (
-                                <tr key={i}>
-                                  <td>
-                                    {new Date(row.date).toLocaleDateString()}
-                                  </td>
-                                  <td style={{ textAlign: 'right' }}>
-                                    ${row.close.toFixed(2)}
-                                  </td>
-                                </tr>
-                              ))}
-                            </tbody>
-                          </table>
-                        </div>
-                        <p className="text-xs italic m-0 mb-2">
-                          Showing last 5 days
-                        </p>
-                        <div className="mt-2 pt-2 border-t border-gray-300">
-                          <p className="text-xs m-0 mb-1">7-Day Trend</p>
-                          <Sparkline
-                            data={item.data.map((d) => d.close)}
-                            height={60}
-                            color={
-                              item.data[item.data.length - 1].close >=
-                              item.data[0].close
-                                ? '#008000'
-                                : '#800000'
-                            }
-                            strokeWidth={1}
-                          />
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="m-0 text-red-600">Failed to load market data.</p>
-                )}
-              </>
+              <MarketDataWindow
+                marketData={marketData?.marketData ?? null}
+                ownedSymbols={marketData?.ownedSymbols ?? []}
+                isLoading={isLoadingMarketData}
+                onRefresh={fetchMarketData}
+              />
             )}
             {appId === 'movements' && (
               <OperationsFeed

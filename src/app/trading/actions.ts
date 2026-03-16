@@ -60,19 +60,46 @@ export async function executeOrders(orders: OrderRequest[]) {
   }
 }
 
-import { getHistoricalData, getNews, getGeneralMarketNews, NewsItem } from '@/lib/market-data';
+import { getHistoricalData, getNews, getGeneralMarketNews, NewsItem, HistoricalRow } from '@/lib/market-data';
 import { processNewsItem } from '@/lib/news-processor';
 
 export async function getMarketData() {
   try {
-    const symbols = ['AAPL', 'KO', 'TSLA'];
-    const promises = symbols.map(async (symbol) => {
-      const data = await getHistoricalData(symbol, 7); // Get last 7 days for verification
-      return { symbol, data };
-    });
-    
-    const results = await Promise.all(promises);
-    return { success: true, data: results };
+    // 1. Get portfolio to identify owned CEDEARs
+    const portfolio = await iolClient.getPortfolio();
+    const ownedSymbols = portfolio.activos
+      .filter(a => a.titulo.tipo === 'CEDEARS' || a.titulo.tipo === 'cedears')
+      .map(a => a.titulo.simbolo);
+
+    // 2. Get all CEDEARs from IOL panel
+    const panelResponse = await iolClient.getPanelQuotes('cedears');
+    // IOL returns currency variants with C (pesos) and D (dollars) suffixes (e.g. AAPLC, AAPLD).
+    // Strip these suffixes to get the base Yahoo Finance ticker, then keep only standard
+    // US-style tickers (pure letters, 1–5 chars) to avoid hitting Yahoo with IOL-specific
+    // symbols like ABEV3 (has digit) or AKO.B (has dot) that are guaranteed to 404.
+    const panelSymbols = (panelResponse.titulos || [])
+      .map(t => t.simbolo.replace(/[CD]$/, ''))
+      .filter(s => /^[A-Z]{1,5}$/.test(s));
+
+    // 3. Union of symbols (owned first), capped to avoid too many requests
+    const allSymbols = Array.from(new Set([...ownedSymbols, ...panelSymbols])).slice(0, 30);
+
+    // 4. Fetch 7-day historical data in parallel, tolerating individual failures
+    const settled = await Promise.allSettled(
+      allSymbols.map(async (symbol) => {
+        const data = await getHistoricalData(symbol, 7);
+        return { symbol, data };
+      })
+    );
+
+    const marketData = settled
+      .filter(
+        (r): r is PromiseFulfilledResult<{ symbol: string; data: HistoricalRow[] }> =>
+          r.status === 'fulfilled' && r.value.data.length > 0
+      )
+      .map(r => r.value);
+
+    return { success: true, data: { marketData, ownedSymbols } };
   } catch (error) {
     console.error('Failed to fetch market data:', error);
     return { success: false, error: 'Failed to fetch market data' };

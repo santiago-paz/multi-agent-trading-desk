@@ -24,7 +24,7 @@ export const NewsFeed: React.FC<NewsFeedProps> = ({
   const symbols = Object.keys(specificNews);
 
   return (
-    <div className="flex flex-col flex-1 h-full min-h-0 text-[11px]" style={{ fontFamily: '"Pixelated MS Sans Serif", Tahoma, sans-serif', WebkitFontSmoothing: 'none' }}>
+    <div className="flex flex-col flex-1 h-full min-h-0 text-[11px]" style={{ fontFamily: '"Pixelated MS Sans Serif", Tahoma, sans-serif', WebkitFontSmoothing: 'none', padding: '6px 6px 0 6px' }}>
       {/* 98.css tabs (property sheets) - we keep the tabs but remove the outer property sheet box */}
       <menu role="tablist">
         <li role="tab" aria-selected={activeTab === 'general'}>
@@ -35,8 +35,7 @@ export const NewsFeed: React.FC<NewsFeedProps> = ({
         </li>
       </menu>
 
-      <div className="window flex-1 flex flex-col" role="tabpanel">
-        <div className="window-body flex-1 flex flex-col gap-2 m-0" style={{ padding: '6px', overflow: 'hidden' }}>
+      <div role="tabpanel" className="flex-1 flex flex-col" style={{ overflow: 'hidden', padding: '4px 0 0 0', gap: '8px', display: 'flex', flexDirection: 'column' }}>
           {isLoading ? (
             <div className="flex flex-col items-center justify-center flex-1">
               {progress ? (
@@ -105,7 +104,7 @@ export const NewsFeed: React.FC<NewsFeedProps> = ({
                         <NewsCard key={i} news={news} badge="MARKET" />
                       ))
                     ) : (
-                      <p className="m-0 text-[#808080] italic">No general market news available.</p>
+                      <p className="m-0" style={{ color: '#808080' }}>No general market news available.</p>
                     )}
                   </div>
                 ) : (
@@ -120,45 +119,48 @@ export const NewsFeed: React.FC<NewsFeedProps> = ({
                           <NewsCard key={i} news={news} badge={news.symbol} />
                         ))
                     ) : (
-                      <p className="m-0 text-[#808080] italic">No portfolio news available.</p>
+                      <p className="m-0" style={{ color: '#808080' }}>No portfolio news available.</p>
                     )}
                   </div>
                 )}
               </div>
             </>
           )}
-        </div>
       </div>
     </div>
   );
 };
 
 const NewsCard = ({ news, badge }: { news: NewsItem & { symbol?: string }; badge?: string }) => (
-  <div className="flex flex-col gap-[2px] pb-[6px] mb-[6px] border-b border-[#dfdfdf] last:border-0 last:pb-0 last:mb-0">
-    <div className="flex flex-wrap gap-2 items-center">
-      {badge && (
-        <span className="font-bold text-black" style={{ backgroundColor: 'transparent' }}>
-          {badge}
-        </span>
-      )}
-      <span className="text-black opacity-80">{news.publisher}</span>
+  <div
+    style={{
+      display: 'flex',
+      flexDirection: 'column',
+      gap: '2px',
+      paddingBottom: '6px',
+      marginBottom: '6px',
+      borderBottom: '1px solid #dfdfdf',
+    }}
+  >
+    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', alignItems: 'center' }}>
+      {badge && <span style={{ fontWeight: 'bold' }}>{badge}</span>}
+      <span style={{ color: '#555' }}>{news.publisher}</span>
       {news.providerPublishTime && (
-        <span className="text-black opacity-80">
+        <span style={{ color: '#555' }}>
           {new Date(news.providerPublishTime).toLocaleDateString()}
         </span>
       )}
     </div>
-    <a 
-      href={news.link} 
-      target="_blank" 
-      rel="noopener noreferrer" 
-      className="text-[#0000ff] hover:text-[#0000ff] underline"
-      style={{ textDecorationColor: '#0000ff' }}
+    <a
+      href={news.link}
+      target="_blank"
+      rel="noopener noreferrer"
+      style={{ color: '#0000ff', textDecoration: 'underline' }}
     >
       {news.title}
     </a>
     {news.summary && (
-      <p className="text-black m-0 leading-[1.2]">{news.summary}</p>
+      <p style={{ margin: 0, lineHeight: '1.2' }}>{news.summary}</p>
     )}
   </div>
 );
