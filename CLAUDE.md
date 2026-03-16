@@ -99,13 +99,34 @@ Every UI component must authentically replicate Windows 98/2000 aesthetics. Thes
 - Always use `FONT` from `@/lib/theme/win98` — never hardcode `fontFamily` or `fontSize`.
 
 ### 2. Layout, Margins, and Dialog Units (DLUs)
-- 1 horizontal DLU = 1/4 average character width of system font; 1 vertical DLU = 1/8 average character height.
-- Window/dialog outer margins: **7 DLUs** from all edges.
-- Between **unrelated** controls: **7 DLUs**. Between **related** controls: **4 DLUs**. Label → control: **3 DLUs**. Minimum between any controls: **2 DLUs**.
-- Standard control heights: command buttons **14 DLUs**; text boxes and combo boxes **14 DLUs**; radio buttons and checkboxes **10 DLUs**.
-- Standard button width: **50 DLUs** base (can grow for long labels; height always fixed at 14 DLUs).
-- **Group box internals:** first control starts **11 DLUs** below the top edge (below the legend); last control leaves **7 DLUs** of bottom margin. Controls inside align vertically with **4 DLUs** between them.
-- Text fields: left-aligned. Numeric columns: right-aligned at the decimal point.
+
+**Dialog Units (DLUs) and Resolution Independence**
+All element sizes and positions are defined in DLUs, not pixels, to ensure the interface scales correctly when the user changes the system font or display settings. **1 horizontal DLU = 1/4 average character width** of the current system font; **1 vertical DLU = 1/8 average character height**.
+
+**Margins and Spacing**
+- **Window margins:** 7 DLUs from all edges of a dialog box.
+- **Unrelated controls / paragraphs of text:** 7 DLUs apart.
+- **Related controls** (e.g. a set of grouped buttons): 4 DLUs apart.
+- **Label → its control** (text box, list box): exactly 3 DLUs. If a label sits beside a button, position it 3 DLUs down from the button top. For a checkbox, list box, or option button beside a button, position it 2 DLUs down from the button top.
+- **Minimum between any two controls:** 2 DLUs.
+
+**Standard Control Sizes**
+- **Command buttons:** 50 DLUs wide × 14 DLUs tall (width may grow for long labels; height is always fixed).
+- **Text boxes:** 14 DLUs tall. Drop-down combo boxes and drop-down lists: 10 DLUs tall; size width to match adjacent text boxes or drop-downs visually.
+- **Option buttons & checkboxes:** 10 DLUs tall; width as needed to fit the label.
+- **Text labels:** 8 DLUs per line; width as needed.
+
+**Internal Structure of Group Boxes**
+- First control inside: **11 DLUs** below the top edge (below the legend line), aligned to the group box title.
+- Between subsequent controls inside: **4 DLUs**.
+- Controls sit **9 DLUs from the left edge** of the group box. If the group box is left-aligned to the dialog margin (7 DLUs), internal controls end up **16 DLUs** from the absolute left edge.
+- Last control inside: must leave **7 DLUs** of bottom margin above the group box's bottom frame line.
+
+**Alignment and Text Flow**
+Orient controls left-to-right, top-to-bottom (natural western reading order). Place the primary interactive field as close to the upper-left as possible.
+- **Text fields & labels:** When stacked vertically, align fields by their left edges. Labels go above or to the left of their controls. When a label sits left of a text box, align the top of the label text with the text inside the box.
+- **Group boxes:** Standard controls inside are left-aligned to the group title; command buttons inside are right-aligned.
+- **Numeric columns:** Align numbers at the decimal point. Right-align whole-number columns and any column mixing whole numbers with text.
 
 ### 3. The 3D Shading Model (Borders and Edges)
 Light source comes from **top-left**. Four system color roles: Button Face (light gray), Window Frame (black/dark gray), Button Highlight (white), Button Shadow (dark gray).
@@ -145,16 +166,35 @@ Component rules:
 ### 5. Windows, Dialogs, and Menus
 
 **Secondary windows (dialogs & property sheets):**
-- Maximum size: **263 × 263 DLUs**. No Minimize or Maximize buttons — only Close (X). Optional **?** (What's This?) button for contextual help.
-- Property sheets (tabbed dialogs): use a **single row of tabs** — stacked multi-row tabs cause usability problems and must be avoided.
+- Maximum size: **263 × 263 DLUs** — ensures the window fits entirely on a 640×480 screen.
+- No Minimize or Maximize buttons — only Close (X). Optional **?** (What's This?) button for contextual help.
+- **Initial placement:** Open fully visible, centered just below the primary window's title bar or menu bar. On multi-monitor setups, appear on the same monitor as the parent. Preserve position between sessions.
+- **Cascading windows:** Limit nesting to a single sublevel. Offset the dependent window slightly right and below its parent — never chain more than two levels deep.
+- **Unfold buttons (progressive disclosure):** Use a `>>` button (e.g. "Define Custom Colors >>") to reveal advanced options without cluttering the initial view.
+- **Input validation:** Validate as close to the point of entry as possible (balloon tips, audio cues, or message boxes). Never block navigation away from a control due to invalid input — validate on commit if immediate validation is impossible.
+
+**Dialog box layout:**
+- **Title bar text:** Must exactly match the command that opened it, using Title Caps. Never include `...` in the title bar, even if the invoking menu command had one.
+- **Command button layout:** Stack vertically along the upper-right border, or line up horizontally across the bottom-right.
+- **Button ordering:** Default/most important button first. If OK and Cancel are present, group them together. Strict left-to-right (or top-to-bottom) order: **OK → Cancel → Help**.
+- **Default button:** Thick bold outline, responds to Enter. Keyboard focus temporarily transfers the bold outline to the focused button. Never make a destructive or irreversible action the default button.
+
+**Property sheets (tabbed dialogs):**
+- Use a **single row of tabs** — stacked multi-row tabs cause usability problems and must be avoided entirely. If too many categories exist, use a drop-down list inside the sheet instead.
 - Global action buttons (OK, Cancel, Apply) must sit **outside** the tab area, aligned to the **bottom-right**.
+- **Multiple selection:** Display the intersection of shared properties. Controls whose values differ across selected items must render in a mixed-value (indeterminate) appearance.
 
-**Access keys:**
-- Every menu item and interactive control must have an **underlined access key** (unique within the window scope) reachable via Alt+key.
+**Access keys (mnemonics):**
+- Every menu title, menu item, and interactive control must have an **underlined access key** (unique within the window scope) reachable via Alt+key.
+- Assignment priority: first letter → distinctive consonant → vowel.
+- **Exception:** Do not assign access keys to OK and Cancel — Enter and Esc handle those natively.
+- **DBCS locales (Japanese, Chinese, Korean):** Underlining does not apply — append the roman character in parentheses at the end of the label instead (e.g. "保存(S)").
 
-**Context menus (right-click / Shift+F10):**
-- Order: primary commands (Open, Play…) → transfer commands (Cut, Copy, Paste) → secondary/view commands → **Properties always last**.
-- Do **not** include keyboard shortcut annotations (Ctrl+C, etc.) in the visual text of context menus.
+**Context menus (right-click / Shift+F10 / Application key):**
+- Strict top-to-bottom order: primary commands (Open, Play, Print) → transfer commands (Cut, Copy, Paste) → other object commands → What's This? → **Properties always last**. Use visual separators between groups.
+- Do **not** include keyboard shortcut annotations (Ctrl+C, etc.) — context menus are visual shortcuts; annotation reduces readability.
+- **Disabled vs. removed:** If a command is temporarily inapplicable, disable it (grayed out) rather than removing it — preserves spatial stability. Only remove a command if the object or state permanently invalidates it.
+- **Ellipsis rule:** Append `...` only if the command requires additional user input to complete. Do not append `...` to commands that simply execute an action or change a view (e.g. "Properties", "Cut", "Outline").
 
 ### 6. Iconography
 - Sizes: **16×16** (menus/title bars), **32×32** (desktop/large view), **48×48** (optional splash).
@@ -172,14 +212,28 @@ All data tables must follow the pattern established in `src/components/ui/Portfo
 **Column Headers:**
 - Import and use `COL_HEADER_BASE`, `COL_RAISED`, `COL_SUNKEN` from `@/lib/theme/win98`.
 - **Inactive** (non-sorted): `{ ...COL_HEADER_BASE, ...COL_RAISED }`. **Active** (sorted): `{ ...COL_HEADER_BASE, ...COL_SUNKEN }`.
+- Header text: Title Caps, brief, no trailing punctuation. Initial column width should reflect the average size of its data entries.
 - Sortable headers show `▲` / `▼` suffix. Headers must be `position: sticky; top: 0; zIndex: 1`.
-- Header text alignment must match the data below (left for text, right for numbers).
+- **Header alignment must match the data below:** left-align text columns, right-align numeric columns. Never mix alignment between a header and its cells.
+- If a header uses only a graphic (no text), include a tooltip so the user can identify it on hover.
+
+**Sorting behavior:**
+- Left-click a header → sort the list by that column. If already sorted by that column, reverse the order.
+- Right-click a header → show a context menu with sort options ("Sort Ascending", "Sort Descending"). These options must also be reachable via Shift+F10 or the Application key when no list item is selected (column headers have no native keyboard navigation).
+
+**Column resizing:**
+- Users may drag the divider between column headers to manually resize. Double-clicking a divider auto-fits the left column to its longest content value.
+- Ctrl+Plus (numpad) auto-fits all columns simultaneously.
 
 **Cells:** Use `CELL` (left) and `CELL_RIGHT` (right) from `@/lib/theme/win98`. Never hardcode padding/fontSize/fontFamily. Last cell in row: `borderRight: 'none'`.
 
 **Rows:** Even rows `#ffffff`, odd rows `#f0f0f0`. Each row: `borderBottom: '1px solid #c0c0c0'`. `cursor: 'default'`.
 
+**First column:** In a standard ListView, the leftmost column always carries the item's icon and its text label. Subsequent columns hold supplementary data.
+
 **Semantic coloring:** Positive → `color: '#008000'` with `+` prefix. Negative → `color: '#800000'`.
+
+**Hierarchical range selection:** When a user begins a text selection inside a cell and drags into an adjacent cell, the selection level must automatically promote from character-level to cell-level (selecting both full cells). If the user pulls the selection back within the original cell's boundaries without releasing, the level demotes back to character selection.
 
 **Refresh button:** `REFRESH_FOOTER` from `@/lib/theme/win98` — bottom-right, outside the scrollable area.
 
