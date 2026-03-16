@@ -89,6 +89,68 @@ button.desktop-icon:active span:last-child {
   color: #fff;
 }
 
+/* Windows 98 Cursors */
+*, *::before, *::after {
+  cursor: url('/win-98-cursors/Cursor79.cur'), default;
+}
+
+a, button, [role="button"], label[for], summary, [tabindex]:not([tabindex="-1"]),
+.taskbar-button, .desktop-icon {
+  cursor: url('/win-98-cursors/Cursor107.cur'), pointer;
+}
+
+input[type="text"], input[type="number"], input[type="email"],
+input[type="password"], input[type="search"], textarea, [contenteditable] {
+  cursor: url('/win-98-cursors/Cursor80.cur'), text;
+}
+
+input[type="crosshair"] {
+  cursor: url('/win-98-cursors/Cursor84.cur'), crosshair;
+}
+
+[aria-busy="true"], .loading {
+  cursor: url('/win-98-cursors/Cursor83.cur'), wait;
+}
+
+[aria-disabled="true"], :disabled, [disabled] {
+  cursor: url('/win-98-cursors/Cursor99.cur'), not-allowed;
+}
+
+[data-cursor="progress"] {
+  cursor: url('/win-98-cursors/Cursor101.cur'), progress;
+}
+
+[data-cursor="help"] {
+  cursor: url('/win-98-cursors/Cursor103.cur'), help;
+}
+
+[data-cursor="move"] {
+  cursor: url('/win-98-cursors/Cursor97.cur'), move;
+}
+
+[data-cursor="resize-ns"] { cursor: url('/win-98-cursors/Cursor95.cur'), ns-resize; }
+[data-cursor="resize-ew"] { cursor: url('/win-98-cursors/Cursor93.cur'), ew-resize; }
+[data-cursor="resize-nwse"] { cursor: url('/win-98-cursors/Cursor89.cur'), nwse-resize; }
+[data-cursor="resize-nesw"] { cursor: url('/win-98-cursors/Cursor91.cur'), nesw-resize; }
+
+/* Override Tailwind cursor utilities */
+.cursor-pointer { cursor: url('/win-98-cursors/Cursor107.cur'), pointer !important; }
+.cursor-default { cursor: url('/win-98-cursors/Cursor79.cur'), default !important; }
+.cursor-text, .cursor-auto { cursor: url('/win-98-cursors/Cursor80.cur'), text !important; }
+.cursor-wait { cursor: url('/win-98-cursors/Cursor83.cur'), wait !important; }
+.cursor-crosshair { cursor: url('/win-98-cursors/Cursor84.cur'), crosshair !important; }
+.cursor-not-allowed { cursor: url('/win-98-cursors/Cursor99.cur'), not-allowed !important; }
+.cursor-help { cursor: url('/win-98-cursors/Cursor103.cur'), help !important; }
+.cursor-move { cursor: url('/win-98-cursors/Cursor97.cur'), move !important; }
+.cursor-se-resize { cursor: url('/win-98-cursors/Cursor89.cur'), se-resize !important; }
+.cursor-s-resize { cursor: url('/win-98-cursors/Cursor95.cur'), s-resize !important; }
+.cursor-e-resize { cursor: url('/win-98-cursors/Cursor93.cur'), e-resize !important; }
+.cursor-n-resize { cursor: url('/win-98-cursors/Cursor95.cur'), n-resize !important; }
+.cursor-w-resize { cursor: url('/win-98-cursors/Cursor93.cur'), w-resize !important; }
+.cursor-nw-resize { cursor: url('/win-98-cursors/Cursor89.cur'), nw-resize !important; }
+.cursor-ne-resize { cursor: url('/win-98-cursors/Cursor91.cur'), ne-resize !important; }
+.cursor-sw-resize { cursor: url('/win-98-cursors/Cursor91.cur'), sw-resize !important; }
+
 /* Taskbar */
 .taskbar {
   position: fixed;
