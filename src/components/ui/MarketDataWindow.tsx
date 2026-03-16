@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { HistoricalRow } from '@/lib/market-data';
+import { FONT, COL_HEADER_BASE, COL_RAISED, COL_SUNKEN, CELL, CELL_RIGHT } from '@/lib/theme/win98';
 
 interface MarketItem {
   symbol: string;
@@ -41,24 +42,6 @@ const Sparkline: React.FC<{ closes: number[]; isUp: boolean }> = ({ closes, isUp
   );
 };
 
-const colHeader = (
-  extra?: React.CSSProperties,
-  onClick?: () => void,
-  sortIndicator?: string,
-): React.CSSProperties => ({
-  padding: '2px 6px',
-  background: '#c0c0c0',
-  boxShadow: onClick
-    ? 'inset -1px -1px #0a0a0a, inset 1px 1px #fff, inset -2px -2px #808080, inset 2px 2px #dfdfdf'
-    : 'inset -1px -1px #0a0a0a, inset 1px 1px #fff, inset -2px -2px #808080, inset 2px 2px #dfdfdf',
-  fontWeight: 'normal',
-  fontSize: 11,
-  whiteSpace: 'nowrap',
-  cursor: onClick ? 'pointer' : 'default',
-  userSelect: 'none' as const,
-  ...extra,
-});
-
 interface SortableThProps {
   children: React.ReactNode;
   col: SortCol;
@@ -70,27 +53,13 @@ interface SortableThProps {
 
 const SortableTh: React.FC<SortableThProps> = ({ children, col, activeCol, dir, onSort, style }) => {
   const isActive = activeCol === col;
-  const [pressed, setPressed] = useState(false);
-
-  const boxShadow = pressed
-    ? 'inset 1px 1px #0a0a0a, inset -1px -1px #fff, inset 2px 2px #808080, inset -2px -2px #dfdfdf'
-    : 'inset -1px -1px #0a0a0a, inset 1px 1px #fff, inset -2px -2px #808080, inset 2px 2px #dfdfdf';
-
   return (
     <th
       onClick={() => onSort(col)}
-      onMouseDown={() => setPressed(true)}
-      onMouseUp={() => setPressed(false)}
-      onMouseLeave={() => setPressed(false)}
       style={{
-        padding: '2px 6px',
-        background: '#c0c0c0',
-        boxShadow,
-        fontWeight: 'normal',
-        fontSize: 11,
-        whiteSpace: 'nowrap',
+        ...COL_HEADER_BASE,
+        ...(isActive ? COL_SUNKEN : COL_RAISED),
         cursor: 'pointer',
-        userSelect: 'none',
         position: 'sticky',
         top: 0,
         zIndex: 1,
@@ -128,21 +97,15 @@ const ListView: React.FC<ListViewProps> = ({ items, sortCol, sortDir, onSort }) 
 
   return (
     <div
-      className="win98-scrollbar"
-      style={{
-        flex: 1,
-        minHeight: 0,
-        overflowY: 'auto',
-        overflowX: 'hidden',
-        boxShadow:
-          'inset 1px 1px #0a0a0a, inset -1px -1px #dfdfdf, inset 2px 2px #808080, inset -2px -2px #fff',
-        background: '#fff',
-      }}
+      className="sunken-panel win98-scrollbar"
+      style={{ overflow: 'auto', padding: 0 }}
     >
       <table
         style={{
+          ...FONT,
           width: '100%',
           borderCollapse: 'collapse',
+          borderSpacing: 0,
           tableLayout: 'fixed',
         }}
       >
@@ -165,14 +128,8 @@ const ListView: React.FC<ListViewProps> = ({ items, sortCol, sortDir, onSort }) 
             </SortableTh>
             <th
               style={{
-                padding: '2px 6px',
-                background: '#c0c0c0',
-                boxShadow:
-                  'inset -1px -1px #0a0a0a, inset 1px 1px #fff, inset -2px -2px #808080, inset 2px 2px #dfdfdf',
-                fontWeight: 'normal',
-                fontSize: 11,
-                cursor: 'default',
-                userSelect: 'none',
+                ...COL_HEADER_BASE,
+                ...COL_RAISED,
                 position: 'sticky',
                 top: 0,
                 zIndex: 1,
@@ -183,42 +140,30 @@ const ListView: React.FC<ListViewProps> = ({ items, sortCol, sortDir, onSort }) 
           </tr>
         </thead>
         <tbody>
-          {sorted.map(({ item, closes, last, pct, isUp }) => (
-            <tr key={item.symbol}>
-              <td
-                style={{
-                  padding: '2px 6px',
-                  fontSize: 11,
-                  fontWeight: 700,
-                  whiteSpace: 'nowrap',
-                  overflow: 'hidden',
-                }}
-              >
+          {sorted.map(({ item, closes, last, pct, isUp }, idx) => (
+            <tr
+              key={item.symbol}
+              style={{
+                backgroundColor: idx % 2 === 0 ? '#ffffff' : '#f0f0f0',
+                borderBottom: '1px solid #c0c0c0',
+                cursor: 'default',
+              }}
+            >
+              <td style={{ ...CELL, fontWeight: 'bold' }}>
                 {item.symbol}
               </td>
-              <td
-                style={{
-                  padding: '2px 6px',
-                  fontSize: 11,
-                  textAlign: 'right',
-                  overflow: 'hidden',
-                  whiteSpace: 'nowrap',
-                }}
-              >
+              <td style={{ ...CELL_RIGHT }}>
                 ${last.toFixed(2)}
               </td>
               <td
                 style={{
-                  padding: '2px 6px',
-                  fontSize: 11,
-                  textAlign: 'right',
+                  ...CELL_RIGHT,
                   color: isUp ? '#008000' : '#800000',
                 }}
               >
-                {isUp ? '+' : ''}
-                {pct.toFixed(2)}%
+                {isUp ? '+' : ''}{pct.toFixed(2)}%
               </td>
-              <td style={{ padding: '1px 4px' }}>
+              <td style={{ ...CELL, padding: '1px 4px', borderRight: 'none' }}>
                 <Sparkline closes={closes} isUp={isUp} />
               </td>
             </tr>
@@ -249,19 +194,20 @@ export const MarketDataWindow: React.FC<MarketDataWindowProps> = ({
   };
 
   const mineItems = (marketData ?? []).filter((d) => ownedSymbols.includes(d.symbol));
-  const othersItems = (marketData ?? []).filter((d) => !ownedSymbols.includes(d.symbol));
-  const activeItems = activeTab === 'mine' ? mineItems : othersItems;
+  const allItems = marketData ?? [];
+  const activeItems = activeTab === 'mine' ? mineItems : allItems;
 
   return (
     <div
-      className="flex flex-col flex-1 min-h-0"
       style={{
-        fontFamily: '"Pixelated MS Sans Serif", Tahoma, sans-serif',
-        fontSize: 11,
-        WebkitFontSmoothing: 'none',
+        ...FONT,
+        display: 'flex',
+        flexDirection: 'column',
+        height: '100%',
+        background: '#c0c0c0',
+        overflow: 'hidden',
         padding: '6px 6px 0 6px',
         boxSizing: 'border-box',
-        overflow: 'hidden',
       }}
     >
       {/* Tab strip */}
@@ -270,6 +216,7 @@ export const MarketDataWindow: React.FC<MarketDataWindowProps> = ({
           <a
             href="#mine"
             onClick={(e) => { e.preventDefault(); setActiveTab('mine'); }}
+            style={{ textDecoration: 'none' }}
           >
             Mis CEDEARs{mineItems.length > 0 ? ` (${mineItems.length})` : ''}
           </a>
@@ -278,8 +225,9 @@ export const MarketDataWindow: React.FC<MarketDataWindowProps> = ({
           <a
             href="#all"
             onClick={(e) => { e.preventDefault(); setActiveTab('all'); }}
+            style={{ textDecoration: 'none' }}
           >
-            Todos{othersItems.length > 0 ? ` (${othersItems.length})` : ''}
+            Todos{allItems.length > 0 ? ` (${allItems.length})` : ''}
           </a>
         </li>
       </menu>
@@ -287,47 +235,21 @@ export const MarketDataWindow: React.FC<MarketDataWindowProps> = ({
       {/* Tab panel */}
       <div
         role="tabpanel"
+        className="win98-scrollbar"
         style={{
-          display: 'flex',
-          flexDirection: 'column',
           flex: 1,
-          minHeight: 0,
-          overflow: 'hidden',
-          padding: '4px 0 0 0',
+          overflowY: 'auto',
+          overflowX: 'hidden',
+          padding: '6px',
+          background: '#c0c0c0',
         }}
       >
-        {/* Toolbar */}
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 4,
-            marginBottom: 4,
-            paddingBottom: 3,
-            borderBottom: '1px solid #808080',
-          }}
-        >
-          <button
-            type="button"
-            onClick={onRefresh}
-            disabled={isLoading}
-            aria-label="Actualizar datos de mercado"
-            style={{ fontSize: 11, padding: '1px 10px' }}
-          >
-            {isLoading ? 'Actualizando…' : '↺ Actualizar'}
-          </button>
-        </div>
+        <fieldset>
+          <legend>
+            {activeTab === 'mine' ? 'Mis CEDEARs' : 'Todos los CEDEARs'}
+            {activeItems.length > 0 ? ` (${activeItems.length})` : ''}
+          </legend>
 
-        {/* Content */}
-        <div
-          style={{
-            flex: 1,
-            minHeight: 0,
-            display: 'flex',
-            flexDirection: 'column',
-            overflow: 'hidden',
-          }}
-        >
           {isLoading && !marketData ? (
             <p style={{ margin: 0, padding: 4 }}>Cargando datos de mercado…</p>
           ) : !marketData ? (
@@ -348,25 +270,32 @@ export const MarketDataWindow: React.FC<MarketDataWindowProps> = ({
               onSort={handleSort}
             />
           )}
-        </div>
+        </fieldset>
+      </div>
 
-        {/* Status bar */}
-        <div
-          style={{
-            height: 20,
-            marginTop: 4,
-            display: 'flex',
-            alignItems: 'center',
-            padding: '0 6px',
-            fontSize: 11,
-            boxShadow: 'inset 1px 1px #808080, inset -1px -1px #fff',
-            background: '#c0c0c0',
-          }}
-        >
+      {/* Refresh button — bottom-right */}
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'flex-end',
+          padding: '2px 6px 4px',
+          background: '#c0c0c0',
+          borderTop: '1px solid #808080',
+          flexShrink: 0,
+        }}
+      >
+        <button type="button" onClick={onRefresh} disabled={isLoading}>
+          {isLoading ? 'Actualizando...' : 'Actualizar'}
+        </button>
+      </div>
+
+      {/* Status bar */}
+      <div className="status-bar" style={{ ...FONT, flexShrink: 0, margin: 0 }}>
+        <p className="status-bar-field">
           {marketData
             ? `${activeItems.length} elemento${activeItems.length !== 1 ? 's' : ''}`
             : 'Sin datos'}
-        </div>
+        </p>
       </div>
     </div>
   );

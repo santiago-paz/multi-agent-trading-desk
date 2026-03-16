@@ -74,17 +74,22 @@ export async function getMarketData() {
     // 2. Get all CEDEARs from IOL panel
     const panelResponse = await iolClient.getPanelQuotes('cedears');
     // IOL returns currency variants with C (pesos) and D (dollars) suffixes (e.g. AAPLC, AAPLD).
-    // Strip these suffixes to get the base Yahoo Finance ticker, then keep only standard
-    // US-style tickers (pure letters, 1–5 chars) to avoid hitting Yahoo with IOL-specific
-    // symbols like ABEV3 (has digit) or AKO.B (has dot) that are guaranteed to 404.
-    const panelSymbols = (panelResponse.titulos || [])
-      .map(t => t.simbolo.replace(/[CD]$/, ''))
-      .filter(s => /^[A-Z]{1,5}$/.test(s));
+    // Keep the first occurrence of each base symbol (strip suffix), preserving all CEDEARs.
+    const iolPriceMap = new Map<string, { price: number; pct: number }>();
+    for (const t of panelResponse.titulos || []) {
+      const base = t.simbolo.replace(/[CD]$/, '');
+      if (!iolPriceMap.has(base)) {
+        iolPriceMap.set(base, { price: t.ultimoPrecio, pct: t.variacionPorcentual });
+      }
+    }
+    const panelSymbols = Array.from(iolPriceMap.keys());
 
-    // 3. Union of symbols (owned first), capped to avoid too many requests
-    const allSymbols = Array.from(new Set([...ownedSymbols, ...panelSymbols])).slice(0, 30);
+    // 3. Union of symbols (owned first), no cap
+    const allSymbols = Array.from(new Set([...ownedSymbols, ...panelSymbols]));
 
-    // 4. Fetch 7-day historical data in parallel, tolerating individual failures
+    // 4. Fetch 7-day historical data in parallel, tolerating individual failures.
+    //    For symbols where Yahoo Finance has no data, fall back to IOL price as a 2-point entry
+    //    so the symbol still appears in the table with its current price and daily % change.
     const settled = await Promise.allSettled(
       allSymbols.map(async (symbol) => {
         const data = await getHistoricalData(symbol, 7);
@@ -92,12 +97,30 @@ export async function getMarketData() {
       })
     );
 
-    const marketData = settled
-      .filter(
-        (r): r is PromiseFulfilledResult<{ symbol: string; data: HistoricalRow[] }> =>
-          r.status === 'fulfilled' && r.value.data.length > 0
-      )
-      .map(r => r.value);
+    const marketData: { symbol: string; data: HistoricalRow[] }[] = [];
+    for (let i = 0; i < settled.length; i++) {
+      const r = settled[i];
+      const symbol = allSymbols[i];
+      if (r.status === 'fulfilled' && r.value.data.length > 0) {
+        marketData.push(r.value);
+      } else {
+        // Fallback: construct a 2-point history from IOL data so sparkline shows direction
+        const iol = iolPriceMap.get(symbol);
+        if (iol) {
+          const today = new Date();
+          const yesterday = new Date(today);
+          yesterday.setDate(today.getDate() - 1);
+          const prevPrice = iol.pct !== 0 ? iol.price / (1 + iol.pct / 100) : iol.price;
+          marketData.push({
+            symbol,
+            data: [
+              { date: yesterday, open: prevPrice, high: prevPrice, low: prevPrice, close: prevPrice, volume: 0 },
+              { date: today, open: iol.price, high: iol.price, low: iol.price, close: iol.price, volume: 0 },
+            ],
+          });
+        }
+      }
+    }
 
     return { success: true, data: { marketData, ownedSymbols } };
   } catch (error) {

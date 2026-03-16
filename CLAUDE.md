@@ -124,3 +124,44 @@ Every UI component must authentically replicate Windows 98/2000 aesthetics. Thes
 ### Iconography
 - Sizes: **16×16** (menus, title bars), **32×32** (desktop/large icon view), **48×48** (optional splash).
 - Provide 16-color and 256-color variants. Use real-world metaphors for icon concepts.
+
+### Tables (ListView) — Reference: `PortfolioSummary`
+All data tables in the app must follow the pattern established in `src/components/ui/PortfolioSummary.tsx`. These rules are mandatory for every table.
+
+**Structure:**
+- Wrap the table in a `<fieldset>` with a `<legend>` (e.g., `"Tenencia (12 títulos)"`).
+- Inside the fieldset, use `<div className="sunken-panel win98-scrollbar">` as the scrollable container — never apply `boxShadow` manually for the inset border.
+
+**Column Headers:**
+- Import and use `COL_HEADER_BASE`, `COL_RAISED`, `COL_SUNKEN` from `@/lib/theme/win98`.
+- **Inactive** (non-sorted) headers: `{ ...COL_HEADER_BASE, ...COL_RAISED }`.
+- **Active** (currently sorted) header: `{ ...COL_HEADER_BASE, ...COL_SUNKEN }` — border inverts to show "pressed".
+- Sortable headers show `▲` / `▼` suffix next to the label.
+- Headers must be `position: sticky; top: 0; zIndex: 1` so they stay visible while scrolling.
+
+**Cells:**
+- Import and use `CELL` (left-aligned) and `CELL_RIGHT` (right-aligned) from `@/lib/theme/win98`.
+- Never hardcode `padding`, `fontSize`, or `fontFamily` on individual cells — the theme constants handle this.
+- Last cell in a row should have `borderRight: 'none'` to avoid a double border.
+
+**Rows:**
+- Alternating row background: even rows `#ffffff`, odd rows `#f0f0f0`.
+- Each row: `borderBottom: '1px solid #c0c0c0'`.
+- `cursor: 'default'` on rows (no pointer unless the row is clickable).
+
+**Semantic coloring:**
+- Positive values (gains, up % change): `color: '#008000'` (dark green).
+- Negative values (losses, down % change): `color: '#800000'` (dark red).
+- Prefix positive values with `+` explicitly.
+
+**Refresh button:**
+- Always placed at **bottom-right**, outside the scrollable area, in a `flexShrink: 0` container with `borderTop: '1px solid #808080'` separator.
+
+**Status bar:**
+- Use `<div className="status-bar">` with `<p className="status-bar-field">` children.
+- Apply `{ ...FONT, flexShrink: 0, margin: 0 }` on the status-bar div.
+- Display item count and any relevant summary metrics.
+
+**Font / general:**
+- Apply `FONT` from `@/lib/theme/win98` to the table element — never hardcode `fontFamily`/`fontSize`.
+- `borderCollapse: 'collapse'`, `borderSpacing: 0` on all tables.
