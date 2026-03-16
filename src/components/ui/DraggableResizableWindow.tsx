@@ -161,20 +161,35 @@ export const DraggableResizableWindow: React.FC<DraggableResizableWindowProps> =
         </div>
       </div>
       {/* Resize handles */}
+      {/* Corner SE — on top, with Win98 grip visual */}
       <div
-        className="absolute bottom-0 right-0 w-3 h-3 cursor-se-resize"
-        style={{ right: 0, bottom: 0 }}
+        className="absolute cursor-se-resize"
+        style={{ right: 0, bottom: 0, width: 16, height: 16, zIndex: 2 }}
         onMouseDown={(e) => handleResizeMouseDown(e, 'se')}
-        title="Resize"
-      />
+      >
+        {/* Win98 resize grip dots */}
+        <svg width="16" height="16" style={{ display: 'block', pointerEvents: 'none' }}>
+          {[
+            [10, 14], [14, 14],
+            [14, 10],
+          ].map(([cx, cy]) => (
+            <g key={`${cx}-${cy}`}>
+              <rect x={cx - 1} y={cy - 1} width={2} height={2} fill="#ffffff" />
+              <rect x={cx}     y={cy}     width={2} height={2} fill="#808080" />
+            </g>
+          ))}
+        </svg>
+      </div>
+      {/* Right edge — stops 16px from bottom to yield to corner */}
       <div
-        className="absolute top-0 right-0 w-2 h-full cursor-e-resize"
-        style={{ right: 0, top: 0 }}
+        className="absolute cursor-e-resize"
+        style={{ right: 0, top: 0, width: 8, height: 'calc(100% - 16px)', zIndex: 1 }}
         onMouseDown={(e) => handleResizeMouseDown(e, 'e')}
       />
+      {/* Bottom edge — stops 16px from right to yield to corner */}
       <div
-        className="absolute bottom-0 left-0 h-2 w-full cursor-s-resize"
-        style={{ bottom: 0, left: 0 }}
+        className="absolute cursor-s-resize"
+        style={{ bottom: 0, left: 0, height: 8, width: 'calc(100% - 16px)', zIndex: 1 }}
         onMouseDown={(e) => handleResizeMouseDown(e, 's')}
       />
     </div>
