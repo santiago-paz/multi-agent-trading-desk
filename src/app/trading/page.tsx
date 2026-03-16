@@ -1,32 +1,25 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { PortfolioSummary } from '@/components/ui/PortfolioSummary';
 import { PortfolioWindow } from '@/components/ui/PortfolioWindow';
 import { AdvisorWindow } from '@/components/ui/AdvisorWindow';
-import { AgentLog } from '@/components/ui/AgentLog';
-import { OrderReview } from '@/components/ui/OrderReview';
 import { NewsFeed } from '@/components/ui/NewsFeed';
 import { MarketDataWindow } from '@/components/ui/MarketDataWindow';
 import { OperationsFeed } from '@/components/ui/OperationsFeed';
-import { AccountData } from '@/components/ui/AccountData';
 import { DesktopIcon } from '@/components/ui/DesktopIcon';
 import {
   DraggableResizableWindow,
   WindowState,
 } from '@/components/ui/DraggableResizableWindow';
 import { useNewsStore } from '@/lib/store/news-store';
-import { executeOrders, getPortfolioSummary, getMarketData, getOperations, getProfileData, getAccountStatement } from './actions';
-import { OrderRequest, PortfolioResponse, Operation, DatosPerfil, EstadoCuenta } from '@/lib/iol/types';
-import { AnalystOutput, SentinelOutput, StrategistOutput } from '@/lib/agents/types';
+import { getPortfolioSummary, getMarketData, getOperations, getProfileData, getAccountStatement } from './actions';
+import { PortfolioResponse, Operation, DatosPerfil, EstadoCuenta } from '@/lib/iol/types';
 import { HistoricalRow } from '@/lib/market-data';
 import { DESKTOP_APP_ICONS } from '@/lib/win98se-icons';
 import { useWindowManager, AppId, APP_LABELS } from '@/hooks/useWindowManager';
 
 const ICON_IDS = [
   'portfolio',
-  'agent',
-  'orders',
   'news',
   'marketdata',
   'movements',
@@ -36,18 +29,14 @@ type IconId = (typeof ICON_IDS)[number];
 
 const DEFAULT_ICON_POSITIONS: Record<IconId, { x: number; y: number }> = {
   portfolio: { x: 8, y: 8 },
-  agent: { x: 8, y: 72 },
-  orders: { x: 8, y: 136 },
-  news: { x: 8, y: 200 },
-  marketdata: { x: 8, y: 264 },
-  movements: { x: 8, y: 328 },
-  advisor: { x: 8, y: 392 },
+  news: { x: 8, y: 72 },
+  marketdata: { x: 8, y: 136 },
+  movements: { x: 8, y: 200 },
+  advisor: { x: 8, y: 264 },
 };
 
 const DESKTOP_ICON_CONFIG: { id: IconId; label: string; emoji: string; iconKey: keyof typeof DESKTOP_APP_ICONS }[] = [
   { id: 'portfolio',  label: 'Portfolio',    emoji: '📊', iconKey: 'portfolio'  },
-  { id: 'agent',      label: 'Agent Log',    emoji: '📋', iconKey: 'agent'      },
-  { id: 'orders',     label: 'Orders',       emoji: '📝', iconKey: 'orders'     },
   { id: 'news',       label: 'News',         emoji: '📰', iconKey: 'news'       },
   { id: 'marketdata', label: 'Market Data',  emoji: '📈', iconKey: 'marketdata' },
   { id: 'movements',  label: 'Movimientos',  emoji: '💸', iconKey: 'orders'     },
@@ -82,17 +71,7 @@ export default function TradingDashboard() {
     progress,
   } = useNewsStore();
 
-  const [analysisResult, setAnalysisResult] = useState<{
-    analystResults: AnalystOutput[];
-    sentinelResult: SentinelOutput;
-    strategyResult: StrategistOutput;
-    proposedOrders: OrderRequest[];
-  } | null>(null);
-
-  const [isExecuting, setIsExecuting] = useState(false);
-  const [executionResult, setExecutionResult] = useState<unknown[] | null>(null);
-
-  const { 
+  const {
     windows, 
     focusedId, 
     allOpenWindows, 
@@ -198,22 +177,6 @@ export default function TradingDashboard() {
   }, []);
   /* eslint-enable react-hooks/exhaustive-deps, react-hooks/set-state-in-effect */
 
-  const handleExecuteOrders = async () => {
-    if (!analysisResult?.proposedOrders) return;
-    setIsExecuting(true);
-    const result = await executeOrders(analysisResult.proposedOrders);
-    if (result.success) {
-      setExecutionResult(result.data ?? null);
-      await fetchPortfolio();
-      setAnalysisResult((prev) => (prev ? { ...prev, proposedOrders: [] } : null));
-    } else {
-      console.error('Execution failed:', result.error);
-    }
-    setIsExecuting(false);
-  };
-
-
-
   return (
     <div className="desktop relative w-full h-full overflow-hidden">
       <div className="absolute inset-0 pointer-events-none z-0">
@@ -256,41 +219,6 @@ export default function TradingDashboard() {
                 isLoadingAccount={isLoadingAccount}
                 onRefreshAccount={fetchAccountData}
               />
-            )}
-            {appId === 'agent' && (
-              <>
-                {analysisResult ? (
-                  <AgentLog
-                    analystResults={analysisResult.analystResults}
-                    sentinelResult={analysisResult.sentinelResult}
-                    strategyResult={analysisResult.strategyResult}
-                  />
-                ) : (
-                  <p className="m-0 opacity-75">Run Analysis first.</p>
-                )}
-              </>
-            )}
-            {appId === 'orders' && (
-              <div className="space-y-3">
-                {analysisResult && analysisResult.proposedOrders.length > 0 && (
-                  <OrderReview
-                    orders={analysisResult.proposedOrders}
-                    onExecute={handleExecuteOrders}
-                    isLoading={isExecuting}
-                  />
-                )}
-                {executionResult && (
-                  <div className="window-body p-2 border border-gray-400">
-                    <p className="font-bold m-0 mb-1">Execution Successful</p>
-                    <p className="m-0 text-sm">
-                      Orders processed: {executionResult?.length ?? 0}
-                    </p>
-                  </div>
-                )}
-                {(!analysisResult?.proposedOrders?.length && !executionResult) && (
-                  <p className="m-0 opacity-75">No orders. Run analysis first.</p>
-                )}
-              </div>
             )}
             {appId === 'news' && (
               <NewsFeed
