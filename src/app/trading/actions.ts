@@ -90,8 +90,15 @@ export async function getMarketData() {
     // 4. Fetch 7-day historical data in parallel, tolerating individual failures.
     //    For symbols where Yahoo Finance has no data, fall back to IOL price as a 2-point entry
     //    so the symbol still appears in the table with its current price and daily % change.
+    //
+    //    Skip symbols that are known to have no Yahoo Finance equivalent:
+    //    - Brazilian stocks trade on B3 and end in a digit (e.g. VALE3, PETR3)
+    //    - Symbols with dots or special chars (e.g. C.)
+    const hasYahooData = (sym: string) => !/\d$/.test(sym) && !/[.]/.test(sym);
+
     const settled = await Promise.allSettled(
       allSymbols.map(async (symbol) => {
+        if (!hasYahooData(symbol)) throw new Error('No Yahoo equivalent');
         const data = await getHistoricalData(symbol, 7);
         return { symbol, data };
       })

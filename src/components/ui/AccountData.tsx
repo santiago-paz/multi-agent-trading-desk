@@ -10,7 +10,12 @@ interface AccountDataProps {
   onRefresh: () => void;
 }
 
-import { FONT, LABEL_ACCOUNT as LABEL, COL_HEADER, COL_HEADER_RIGHT, HR98 } from '@/lib/theme/win98';
+import {
+  FONT, LABEL_ACCOUNT as LABEL, COL_HEADER, COL_HEADER_RIGHT, HR98,
+  CELL, CELL_RIGHT,
+  WINDOW_CONTAINER, SCROLLABLE_BODY, REFRESH_FOOTER, STATUS_BAR_STYLE,
+  COLOR_POSITIVE,
+} from '@/lib/theme/win98';
 
 /* ─── Component ──────────────────────────────────────────────────────────── */
 export const AccountData: React.FC<AccountDataProps> = ({
@@ -26,28 +31,9 @@ export const AccountData: React.FC<AccountDataProps> = ({
     fetchMepRate();
   };
   return (
-    <div
-      style={{
-        ...FONT,
-        display: 'flex',
-        flexDirection: 'column',
-        height: '100%',
-        background: '#c0c0c0',
-        overflow: 'hidden',
-      }}
-    >
+    <div style={WINDOW_CONTAINER}>
       {/* ── Scrollable body ── */}
-      <div
-        className="win98-scrollbar"
-        style={{
-          flex: 1,
-          overflowY: 'auto',
-          overflowX: 'hidden',
-          margin: 0,
-          padding: '6px',
-          background: '#c0c0c0',
-        }}
-      >
+      <div className="win98-scrollbar" style={SCROLLABLE_BODY}>
         {isLoading && !perfil && !estadoCuenta ? (
           <p style={{ ...FONT, margin: 0, padding: '4px' }}>
             Cargando datos de la cuenta...
@@ -143,7 +129,7 @@ export const AccountData: React.FC<AccountDataProps> = ({
                           ...FONT,
                           flex: 1,
                           cursor: 'default',
-                          color: (cuenta.disponible ?? 0) >= 0 ? '#008000' : '#ff0000',
+                          color: (cuenta.disponible ?? 0) >= 0 ? COLOR_POSITIVE : '#ff0000',
                           fontWeight: 'bold',
                         }}
                       />
@@ -238,7 +224,7 @@ export const AccountData: React.FC<AccountDataProps> = ({
                         flex: 1,
                         cursor: 'default',
                         fontWeight: 'bold',
-                        color: ((estadoCuenta.totalEnPesos ?? 0) / mepRate) >= 0 ? '#008000' : '#ff0000',
+                        color: ((estadoCuenta.totalEnPesos ?? 0) / mepRate) >= 0 ? COLOR_POSITIVE : '#ff0000',
                       }}
                     />
                   </div>
@@ -271,13 +257,9 @@ export const AccountData: React.FC<AccountDataProps> = ({
                                 borderBottom: '1px solid #c0c0c0',
                               }}
                             >
-                              <td style={{ padding: '1px 6px', borderRight: '1px solid #c0c0c0' }}>
-                                {est.descripcion}
-                              </td>
-                              <td style={{ padding: '1px 6px', textAlign: 'right', borderRight: '1px solid #c0c0c0' }}>
-                                {est.cantidad}
-                              </td>
-                              <td style={{ padding: '1px 6px', textAlign: 'right' }}>
+                              <td style={CELL}>{est.descripcion}</td>
+                              <td style={CELL_RIGHT}>{est.cantidad}</td>
+                              <td style={{ ...CELL_RIGHT, borderRight: 'none' }}>
                                 {est.volumen.toLocaleString('es-AR')}
                               </td>
                             </tr>
@@ -296,23 +278,14 @@ export const AccountData: React.FC<AccountDataProps> = ({
       </div>
 
       {/* ── Botón Actualizar ── */}
-      <div
-        style={{
-          display: 'flex',
-          justifyContent: 'flex-end',
-          padding: '2px 6px 4px',
-          background: '#c0c0c0',
-          borderTop: '1px solid #808080',
-          flexShrink: 0,
-        }}
-      >
+      <div style={REFRESH_FOOTER}>
         <button onClick={handleRefresh} disabled={isLoading}>
           {isLoading ? 'Actualizando...' : 'Actualizar'}
         </button>
       </div>
 
       {/* ── Status Bar ── */}
-      <div className="status-bar" style={{ ...FONT, flexShrink: 0, margin: 0 }}>
+      <div className="status-bar" style={STATUS_BAR_STYLE}>
         <p className="status-bar-field">Listo</p>
         <p className="status-bar-field">MEP: ${mepRate.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
         <p className="status-bar-field">

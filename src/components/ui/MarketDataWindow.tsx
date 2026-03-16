@@ -1,6 +1,10 @@
 import React, { useState } from 'react';
 import { HistoricalRow } from '@/lib/market-data';
-import { FONT, COL_HEADER_BASE, COL_RAISED, COL_SUNKEN, CELL, CELL_RIGHT } from '@/lib/theme/win98';
+import {
+  FONT, COL_HEADER_BASE, COL_RAISED, COL_SUNKEN, CELL, CELL_RIGHT,
+  WINDOW_CONTAINER, REFRESH_FOOTER, STATUS_BAR_STYLE,
+  COLOR_POSITIVE, COLOR_NEGATIVE,
+} from '@/lib/theme/win98';
 
 interface MarketItem {
   symbol: string;
@@ -34,7 +38,7 @@ const Sparkline: React.FC<{ closes: number[]; isUp: boolean }> = ({ closes, isUp
       <polyline
         points={pts}
         fill="none"
-        stroke={isUp ? '#008000' : '#800000'}
+        stroke={isUp ? COLOR_POSITIVE : COLOR_NEGATIVE}
         strokeWidth="1"
         vectorEffect="non-scaling-stroke"
       />
@@ -158,7 +162,7 @@ const ListView: React.FC<ListViewProps> = ({ items, sortCol, sortDir, onSort }) 
               <td
                 style={{
                   ...CELL_RIGHT,
-                  color: isUp ? '#008000' : '#800000',
+                  color: isUp ? COLOR_POSITIVE : COLOR_NEGATIVE,
                 }}
               >
                 {isUp ? '+' : ''}{pct.toFixed(2)}%
@@ -198,18 +202,7 @@ export const MarketDataWindow: React.FC<MarketDataWindowProps> = ({
   const activeItems = activeTab === 'mine' ? mineItems : allItems;
 
   return (
-    <div
-      style={{
-        ...FONT,
-        display: 'flex',
-        flexDirection: 'column',
-        height: '100%',
-        background: '#c0c0c0',
-        overflow: 'hidden',
-        padding: '6px 6px 0 6px',
-        boxSizing: 'border-box',
-      }}
-    >
+    <div style={{ ...WINDOW_CONTAINER, padding: '6px 6px 0 6px', boxSizing: 'border-box' }}>
       {/* Tab strip */}
       <menu role="tablist">
         <li role="tab" aria-selected={activeTab === 'mine'}>
@@ -274,23 +267,14 @@ export const MarketDataWindow: React.FC<MarketDataWindowProps> = ({
       </div>
 
       {/* Refresh button — bottom-right */}
-      <div
-        style={{
-          display: 'flex',
-          justifyContent: 'flex-end',
-          padding: '2px 6px 4px',
-          background: '#c0c0c0',
-          borderTop: '1px solid #808080',
-          flexShrink: 0,
-        }}
-      >
+      <div style={REFRESH_FOOTER}>
         <button type="button" onClick={onRefresh} disabled={isLoading}>
           {isLoading ? 'Actualizando...' : 'Actualizar'}
         </button>
       </div>
 
       {/* Status bar */}
-      <div className="status-bar" style={{ ...FONT, flexShrink: 0, margin: 0 }}>
+      <div className="status-bar" style={STATUS_BAR_STYLE}>
         <p className="status-bar-field">
           {marketData
             ? `${activeItems.length} elemento${activeItems.length !== 1 ? 's' : ''}`

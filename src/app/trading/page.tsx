@@ -44,11 +44,20 @@ const DEFAULT_ICON_POSITIONS: Record<IconId, { x: number; y: number }> = {
   advisor: { x: 8, y: 392 },
 };
 
+const DESKTOP_ICON_CONFIG: { id: IconId; label: string; emoji: string; iconKey: keyof typeof DESKTOP_APP_ICONS }[] = [
+  { id: 'portfolio',  label: 'Portfolio',    emoji: '📊', iconKey: 'portfolio'  },
+  { id: 'agent',      label: 'Agent Log',    emoji: '📋', iconKey: 'agent'      },
+  { id: 'orders',     label: 'Orders',       emoji: '📝', iconKey: 'orders'     },
+  { id: 'news',       label: 'News',         emoji: '📰', iconKey: 'news'       },
+  { id: 'marketdata', label: 'Market Data',  emoji: '📈', iconKey: 'marketdata' },
+  { id: 'movements',  label: 'Movimientos',  emoji: '💸', iconKey: 'orders'     },
+  { id: 'advisor',    label: 'Asesor IA',    emoji: '🧠', iconKey: 'advisor'    },
+];
+
 import { useMepStore } from '@/lib/store/mep-store';
 
 export default function TradingDashboard() {
   const [portfolio, setPortfolio] = useState<PortfolioResponse | null>(null);
-  const [portfolioValueUSD, setPortfolioValueUSD] = useState<number>(0);
   const [isLoadingPortfolio, setIsLoadingPortfolio] = useState(true);
 
   const [marketData, setMarketData] = useState<{
@@ -155,7 +164,6 @@ export default function TradingDashboard() {
     const result = await getPortfolioSummary();
     if (result.success && result.data) {
       setPortfolio(result.data.portfolio);
-      setPortfolioValueUSD(result.data.valueUSD);
     }
     setIsLoadingPortfolio(false);
   };
@@ -209,76 +217,19 @@ export default function TradingDashboard() {
   return (
     <div className="desktop relative w-full h-full overflow-hidden">
       <div className="absolute inset-0 pointer-events-none z-0">
-        <DesktopIcon
-          id="portfolio"
-          label="Portfolio"
-          iconSrc={DESKTOP_APP_ICONS.portfolio}
-          icon="📊"
-          onClick={() => openOrFocusWindow('portfolio')}
-          x={iconPositions.portfolio.x}
-          y={iconPositions.portfolio.y}
-          onMove={handleIconMove}
-        />
-        <DesktopIcon
-          id="agent"
-          label="Agent Log"
-          iconSrc={DESKTOP_APP_ICONS.agent}
-          icon="📋"
-          onClick={() => openOrFocusWindow('agent')}
-          x={iconPositions.agent.x}
-          y={iconPositions.agent.y}
-          onMove={handleIconMove}
-        />
-        <DesktopIcon
-          id="orders"
-          label="Orders"
-          iconSrc={DESKTOP_APP_ICONS.orders}
-          icon="📝"
-          onClick={() => openOrFocusWindow('orders')}
-          x={iconPositions.orders.x}
-          y={iconPositions.orders.y}
-          onMove={handleIconMove}
-        />
-        <DesktopIcon
-          id="news"
-          label="News"
-          iconSrc={DESKTOP_APP_ICONS.news}
-          icon="📰"
-          onClick={() => openOrFocusWindow('news')}
-          x={iconPositions.news.x}
-          y={iconPositions.news.y}
-          onMove={handleIconMove}
-        />
-        <DesktopIcon
-          id="marketdata"
-          label="Market Data"
-          iconSrc={DESKTOP_APP_ICONS.marketdata}
-          icon="📈"
-          onClick={() => openOrFocusWindow('marketdata')}
-          x={iconPositions.marketdata.x}
-          y={iconPositions.marketdata.y}
-          onMove={handleIconMove}
-        />
-        <DesktopIcon
-          id="movements"
-          label="Movimientos"
-          iconSrc={DESKTOP_APP_ICONS.orders}
-          icon="💸"
-          onClick={() => openOrFocusWindow('movements')}
-          x={iconPositions.movements.x}
-          y={iconPositions.movements.y}
-          onMove={handleIconMove}
-        />
-        <DesktopIcon
-          id="advisor"
-          label="Asesor IA"
-          iconSrc={DESKTOP_APP_ICONS.advisor}
-          icon="🧠"
-          onClick={() => openOrFocusWindow('advisor')}
-          x={iconPositions.advisor.x}
-          y={iconPositions.advisor.y}
-          onMove={handleIconMove}
-        />
+        {DESKTOP_ICON_CONFIG.map(({ id, label, emoji, iconKey }) => (
+          <DesktopIcon
+            key={id}
+            id={id}
+            label={label}
+            iconSrc={DESKTOP_APP_ICONS[iconKey]}
+            icon={emoji}
+            onClick={() => openOrFocusWindow(id)}
+            x={iconPositions[id].x}
+            y={iconPositions[id].y}
+            onMove={handleIconMove}
+          />
+        ))}
       </div>
 
       {Object.entries(windows).map(([id, state]) => {
@@ -298,7 +249,6 @@ export default function TradingDashboard() {
             {appId === 'portfolio' && (
               <PortfolioWindow
                 portfolio={portfolio}
-                portfolioValueUSD={portfolioValueUSD}
                 isLoadingPortfolio={isLoadingPortfolio}
                 onRefreshPortfolio={fetchPortfolio}
                 perfil={perfil}

@@ -1,6 +1,10 @@
 import React from 'react';
 import { Operation } from '@/lib/iol/types';
-import { FONT, COL_RAISED, CELL, CELL_RIGHT } from '@/lib/theme/win98';
+import {
+  FONT, COL_RAISED, CELL, CELL_RIGHT,
+  WINDOW_CONTAINER, SCROLLABLE_BODY, REFRESH_FOOTER, STATUS_BAR_STYLE,
+  COLOR_POSITIVE, COLOR_NEGATIVE,
+} from '@/lib/theme/win98';
 
 import { useMepStore } from '@/lib/store/mep-store';
 
@@ -23,28 +27,9 @@ const COLUMNS = [
 export function OperationsFeed({ operations, isLoading, onRefresh }: OperationsFeedProps) {
   const { mepRate } = useMepStore();
   return (
-    <div
-      style={{
-        ...FONT,
-        display: 'flex',
-        flexDirection: 'column',
-        height: '100%',
-        background: '#c0c0c0',
-        overflow: 'hidden',
-      }}
-    >
+    <div style={WINDOW_CONTAINER}>
       {/* ── Scrollable body ── */}
-      <div
-        className="win98-scrollbar"
-        style={{
-          flex: 1,
-          overflowY: 'auto',
-          overflowX: 'hidden',
-          margin: 0,
-          padding: '6px',
-          background: '#c0c0c0',
-        }}
-      >
+      <div className="win98-scrollbar" style={SCROLLABLE_BODY}>
         <fieldset style={{ margin: 0, paddingBottom: '6px', display: 'flex', flexDirection: 'column', height: 'calc(100% - 10px)' }}>
           <legend>Últimos Movimientos (IOL)</legend>
           <div
@@ -84,7 +69,7 @@ export function OperationsFeed({ operations, isLoading, onRefresh }: OperationsF
                   {operations.map((op, idx) => {
                     const isCompra = op.tipo === 'Compra';
                     const isVenta = op.tipo === 'Venta';
-                    const tipoColor = isCompra ? '#008000' : isVenta ? '#ff0000' : '#000000';
+                    const tipoColor = isCompra ? COLOR_POSITIVE : isVenta ? COLOR_NEGATIVE : '#000000';
                     return (
                       <tr
                         key={op.numero || idx}
@@ -136,23 +121,14 @@ export function OperationsFeed({ operations, isLoading, onRefresh }: OperationsF
       </div>
 
       {/* ── Botón Actualizar ── */}
-      <div
-        style={{
-          display: 'flex',
-          justifyContent: 'flex-end',
-          padding: '2px 6px 4px',
-          background: '#c0c0c0',
-          borderTop: '1px solid #808080',
-          flexShrink: 0,
-        }}
-      >
+      <div style={REFRESH_FOOTER}>
         <button onClick={onRefresh} disabled={isLoading}>
           {isLoading ? 'Actualizando...' : 'Actualizar'}
         </button>
       </div>
 
       {/* ── Status Bar ── */}
-      <div className="status-bar" style={{ ...FONT, flexShrink: 0, margin: 0 }}>
+      <div className="status-bar" style={STATUS_BAR_STYLE}>
         <p className="status-bar-field">
           {operations.length} movimientos
         </p>

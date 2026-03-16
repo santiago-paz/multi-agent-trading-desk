@@ -84,3 +84,47 @@ export const HR98: React.CSSProperties = {
   borderBottom: '1px solid #ffffff',
   margin: '4px 0',
 };
+
+/* ─── Semantic colors ────────────────────────────────────────────────────── */
+export const COLOR_POSITIVE = '#008000';
+export const COLOR_NEGATIVE = '#800000';
+export const COLOR_LINK = '#0000ff';
+
+/* ─── Shared window layout patterns ─────────────────────────────────────── */
+
+/** Outer container for every panel window (flex column, full height). */
+export const WINDOW_CONTAINER: React.CSSProperties = {
+  ...FONT,
+  display: 'flex',
+  flexDirection: 'column',
+  height: '100%',
+  background: '#c0c0c0',
+  overflow: 'hidden',
+};
+
+/** Scrollable inner body area inside a panel window. */
+export const SCROLLABLE_BODY: React.CSSProperties = {
+  flex: 1,
+  overflowY: 'auto',
+  overflowX: 'hidden',
+  margin: 0,
+  padding: '6px',
+  background: '#c0c0c0',
+};
+
+/** Refresh button footer strip (bottom of panel windows). */
+export const REFRESH_FOOTER: React.CSSProperties = {
+  display: 'flex',
+  justifyContent: 'flex-end',
+  padding: '2px 6px 4px',
+  background: '#c0c0c0',
+  borderTop: '1px solid #808080',
+  flexShrink: 0,
+};
+
+/** Status bar inline style (applied to the .status-bar div). */
+export const STATUS_BAR_STYLE: React.CSSProperties = {
+  ...FONT,
+  flexShrink: 0,
+  margin: 0,
+};

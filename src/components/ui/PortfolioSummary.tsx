@@ -6,12 +6,15 @@ import { useMepStore } from '@/lib/store/mep-store';
 
 interface PortfolioSummaryProps {
   portfolio: PortfolioResponse;
-  valueUSD: number;
   isLoading?: boolean;
   onRefresh?: () => void;
 }
 
-import { FONT, LABEL, COL_HEADER_BASE, COL_RAISED, COL_SUNKEN, CELL, CELL_RIGHT } from '@/lib/theme/win98';
+import {
+  FONT, LABEL, COL_HEADER_BASE, COL_RAISED, COL_SUNKEN, CELL, CELL_RIGHT,
+  WINDOW_CONTAINER, SCROLLABLE_BODY, REFRESH_FOOTER, STATUS_BAR_STYLE,
+  COLOR_POSITIVE,
+} from '@/lib/theme/win98';
 
 interface ColumnDef {
   key: SortKey;
@@ -35,7 +38,6 @@ const COLUMNS: ColumnDef[] = [
 /* ─── Component ──────────────────────────────────────────────────────────── */
 export const PortfolioSummary: React.FC<PortfolioSummaryProps> = ({
   portfolio,
-  valueUSD,
   isLoading,
   onRefresh,
 }) => {
@@ -51,28 +53,9 @@ export const PortfolioSummary: React.FC<PortfolioSummaryProps> = ({
   } = usePortfolioSort(portfolio, mepRate);
 
   return (
-    <div
-      style={{
-        ...FONT,
-        display: 'flex',
-        flexDirection: 'column',
-        height: '100%',
-        background: '#c0c0c0',
-        overflow: 'hidden',
-      }}
-    >
+    <div style={WINDOW_CONTAINER}>
       {/* ── Scrollable body ── */}
-      <div
-        className="win98-scrollbar"
-        style={{
-          flex: 1,
-          overflowY: 'auto',
-          overflowX: 'hidden',
-          margin: 0,
-          padding: '6px',
-          background: '#c0c0c0',
-        }}
-      >
+      <div className="win98-scrollbar" style={SCROLLABLE_BODY}>
         {/* ─── Resumen de Valuación ─── */}
         <fieldset>
           <legend>Valuación (USD)</legend>
@@ -101,7 +84,7 @@ export const PortfolioSummary: React.FC<PortfolioSummaryProps> = ({
                 flex: 1,
                 cursor: 'default',
                 fontWeight: 'bold',
-                color: totalGananciaUSD >= 0 ? '#008000' : '#ff0000',
+                color: totalGananciaUSD >= 0 ? COLOR_POSITIVE : '#ff0000',
               }}
             />
           </div>
@@ -180,7 +163,7 @@ export const PortfolioSummary: React.FC<PortfolioSummaryProps> = ({
                       <td
                         style={{
                           ...CELL_RIGHT,
-                          color: variacion >= 0 ? '#008000' : '#ff0000',
+                          color: variacion >= 0 ? COLOR_POSITIVE : '#ff0000',
                         }}
                       >
                         {variacion >= 0 ? '+' : ''}{variacion.toFixed(2)}%
@@ -188,7 +171,7 @@ export const PortfolioSummary: React.FC<PortfolioSummaryProps> = ({
                       <td
                         style={{
                           ...CELL_RIGHT,
-                          color: ganancia >= 0 ? '#008000' : '#ff0000',
+                          color: ganancia >= 0 ? COLOR_POSITIVE : '#ff0000',
                           borderRight: 'none',
                         }}
                       >
@@ -205,16 +188,7 @@ export const PortfolioSummary: React.FC<PortfolioSummaryProps> = ({
 
       {/* ── Botón Actualizar ── */}
       {onRefresh && (
-        <div
-          style={{
-            display: 'flex',
-            justifyContent: 'flex-end',
-            padding: '2px 6px 4px',
-            background: '#c0c0c0',
-            borderTop: '1px solid #808080',
-            flexShrink: 0,
-          }}
-        >
+        <div style={REFRESH_FOOTER}>
           <button onClick={() => { onRefresh?.(); fetchMepRate(); }} disabled={isLoading}>
             {isLoading ? 'Actualizando...' : 'Actualizar'}
           </button>
@@ -222,7 +196,7 @@ export const PortfolioSummary: React.FC<PortfolioSummaryProps> = ({
       )}
 
       {/* ── Status Bar ── */}
-      <div className="status-bar" style={{ ...FONT, flexShrink: 0, margin: 0 }}>
+      <div className="status-bar" style={STATUS_BAR_STYLE}>
         <p className="status-bar-field">
           {totalActivosEnCartera} títulos en cartera
         </p>
@@ -230,7 +204,7 @@ export const PortfolioSummary: React.FC<PortfolioSummaryProps> = ({
           MEP: ${mepRate.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
         </p>
         <p className="status-bar-field" style={{
-          color: totalGananciaUSD >= 0 ? '#008000' : '#ff0000',
+          color: totalGananciaUSD >= 0 ? COLOR_POSITIVE : '#ff0000',
         }}>
           P&L: {totalGananciaUSD >= 0 ? '+' : ''}U$D {totalGananciaUSD.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
         </p>

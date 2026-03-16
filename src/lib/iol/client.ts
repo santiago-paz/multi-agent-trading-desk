@@ -30,7 +30,6 @@ export class IOLClient {
         const cachedAt = new Date(cached.cached_at).getTime();
         this.tokenExpiry = new Date(cachedAt + (cached.expires_in * 1000));
       }
-      console.log('[IOL AUTH] Loaded token from cache, expires:', this.tokenExpiry.toISOString());
     }
   }
 
@@ -348,7 +347,6 @@ export class IOLClient {
 
       const data = await this.fetchWithAuth<number>('/api/v2/Cotizaciones/MEP/AL30');
       if (typeof data === 'number') {
-        console.log(`[IOL MEP] MEP Rate: ${data}`);
         return data;
       }
       return 1200;

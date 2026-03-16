@@ -48,9 +48,11 @@ export async function getHistoricalData(symbol: string, days: number = 30): Prom
     const period2 = today.toISOString().split('T')[0];
 
     const queryOptions = { period1, period2, interval: '1d' as const };
-    
-    // Use chart() instead of historical() as historical() is deprecated
-    const result = await yahooFinance.chart(symbol, queryOptions);
+
+    // Use chart() instead of historical() as historical() is deprecated.
+    // validateResult: false suppresses schema-validation noise for symbols Yahoo
+    // partially supports (non-US exchanges, OTC, etc.); we handle missing data below.
+    const result = await yahooFinance.chart(symbol, queryOptions, { validateResult: false });
     
     if (!result || !result.quotes) {
       throw new Error('No data returned from Yahoo Finance');

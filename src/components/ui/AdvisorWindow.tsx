@@ -1,5 +1,8 @@
 import React, { useState } from 'react';
-import { FONT } from '@/lib/theme/win98';
+import {
+  FONT, COL_HEADER, COL_HEADER_RIGHT, CELL, CELL_RIGHT,
+  COLOR_POSITIVE, COLOR_NEGATIVE,
+} from '@/lib/theme/win98';
 import { getAdvisorRecommendation, executeOrders } from '@/app/trading/actions';
 import { AdvisorOutput } from '@/lib/agents/advisor';
 
@@ -88,13 +91,13 @@ export function AdvisorWindow() {
       </fieldset>
       
       {error && (
-        <div style={{ color: 'red', marginTop: '8px' }}>
+        <div style={{ color: COLOR_NEGATIVE, marginTop: '8px' }}>
           <strong>Error: </strong> {error}
         </div>
       )}
 
       {successMsg && (
-        <div style={{ color: 'green', marginTop: '8px', fontWeight: 'bold' }}>
+        <div style={{ color: COLOR_POSITIVE, marginTop: '8px', fontWeight: 'bold' }}>
           {successMsg}
         </div>
       )}
@@ -106,23 +109,29 @@ export function AdvisorWindow() {
           {result.sentiment_analysis && <p style={{ margin: '0 0 4px', fontSize: '11px' }}><strong>Sentimiento:</strong> {result.sentiment_analysis}</p>}
           <p style={{ margin: '0 0 8px', fontSize: '11px' }}><strong>Portfolio Manager:</strong> {result.analysis}</p>
           
-          <div className="sunken-panel" style={{ padding: '2px', backgroundColor: 'white' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+          <div className="sunken-panel" style={{ padding: 0 }}>
+            <table style={{ ...FONT, width: '100%', borderCollapse: 'collapse', borderSpacing: 0 }}>
               <thead>
                 <tr>
-                  <th style={{ textAlign: 'left', padding: '2px' }}>Activo</th>
-                  <th style={{ textAlign: 'center', padding: '2px' }}>Acción</th>
-                  <th style={{ textAlign: 'right', padding: '2px' }}>Cantidad</th>
+                  <th style={COL_HEADER}>Activo</th>
+                  <th style={{ ...COL_HEADER, textAlign: 'center' }}>Acción</th>
+                  <th style={COL_HEADER_RIGHT}>Cantidad</th>
                 </tr>
               </thead>
               <tbody>
                 {result.recommendations.map((rec, i) => (
-                  <tr key={i} style={{ backgroundColor: i % 2 === 0 ? '#f0f0f0' : 'white' }}>
-                    <td style={{ padding: '2px', fontWeight: 'bold' }}>{rec.simbolo}</td>
-                    <td style={{ padding: '2px', textAlign: 'center', color: rec.tipo === 'buy' ? 'green' : 'red' }}>
-                       {rec.tipo === 'buy' ? 'COMPRAR' : 'VENDER'}
+                  <tr
+                    key={i}
+                    style={{
+                      backgroundColor: i % 2 === 0 ? '#ffffff' : '#f0f0f0',
+                      borderBottom: '1px solid #c0c0c0',
+                    }}
+                  >
+                    <td style={{ ...CELL, fontWeight: 'bold' }}>{rec.simbolo}</td>
+                    <td style={{ ...CELL, textAlign: 'center', color: rec.tipo === 'buy' ? COLOR_POSITIVE : COLOR_NEGATIVE }}>
+                      {rec.tipo === 'buy' ? 'COMPRAR' : 'VENDER'}
                     </td>
-                    <td style={{ padding: '2px', textAlign: 'right' }}>{rec.cantidad}</td>
+                    <td style={{ ...CELL_RIGHT, borderRight: 'none' }}>{rec.cantidad}</td>
                   </tr>
                 ))}
               </tbody>

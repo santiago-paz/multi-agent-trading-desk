@@ -1,5 +1,6 @@
 import React from 'react';
 import { OrderRequest } from '@/lib/iol/types';
+import { COLOR_POSITIVE, COLOR_NEGATIVE } from '@/lib/theme/win98';
 
 interface OrderReviewProps {
   orders: OrderRequest[];
@@ -18,7 +19,7 @@ export const OrderReview: React.FC<OrderReviewProps> = ({ orders, onExecute, isL
         {orders.map((order, index) => (
           <div key={index} className="field-row" style={{ justifyContent: 'space-between' }}>
             <span>
-              <strong style={{ color: order.side === 'buy' ? 'green' : 'maroon' }}>
+              <strong style={{ color: order.side === 'buy' ? COLOR_POSITIVE : COLOR_NEGATIVE }}>
                 {order.side === 'buy' ? 'BUY' : 'SELL'}
               </strong>
               {' '}{order.simbolo}

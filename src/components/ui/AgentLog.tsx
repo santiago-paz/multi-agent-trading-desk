@@ -1,6 +1,6 @@
 import React from 'react';
 import { AnalystOutput, SentinelOutput, StrategistOutput } from '@/lib/agents/types';
-import { FONT, COL_HEADER, COL_HEADER_RIGHT, CELL, CELL_RIGHT, HR98 } from '@/lib/theme/win98';
+import { FONT, LABEL, COL_HEADER, COL_HEADER_RIGHT, CELL, CELL_RIGHT, HR98 } from '@/lib/theme/win98';
 
 interface AgentLogProps {
   analystResults: AnalystOutput[];
@@ -69,15 +69,7 @@ export const AgentLog: React.FC<AgentLogProps> = ({
     <fieldset style={{ marginBottom: '6px' }}>
       <legend>Sentinel — Market Risk</legend>
       <div className="field-row" style={{ marginBottom: '4px' }}>
-        <label
-          style={{
-            ...FONT,
-            width: '80px',
-            flexShrink: 0,
-            textAlign: 'right',
-            paddingRight: '6px',
-          }}
-        >
+        <label style={LABEL}>
           Risk Score:
         </label>
         <input
