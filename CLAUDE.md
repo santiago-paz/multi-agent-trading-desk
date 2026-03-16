@@ -84,3 +84,43 @@ SIMULATION_MODE       # Set to skip real order execution
 ### Path Aliases
 
 `@/*` maps to `./src/*` (configured in `tsconfig.json`).
+
+## Win98 UI Guidelines
+
+Every UI component must authentically replicate Windows 98/2000 aesthetics. These rules are non-negotiable for all interface work.
+
+### Fonts
+- **Win98:** MS Sans Serif, 8pt. **Win2000:** Tahoma, 8pt (preferred).
+- No italics, no serif fonts. **Bold only** for title bars and default menu actions.
+- **Title Caps** (every word): window titles, menu items, button labels, tab names, icon names.
+- **Sentence caps** (first word only): checkboxes, radio buttons, field labels, status bar text, messages.
+- Append `...` to commands that open a secondary dialog before executing (e.g. "Save As...").
+
+### Colors & 3D Effect
+- Never hardcode colors — use CSS variables that map to system colors (e.g. `--btn-face`, `--btn-highlight`, `--btn-shadow`).
+- Light source comes from **top-left**. All 3D borders follow this rule.
+- **Raised** (buttons, window chrome): top/left border = highlight (white), bottom/right = shadow (dark gray).
+- **Sunken** (inputs, active areas): top/left = shadow, bottom/right = highlight.
+- **Flat** (toolbar buttons at rest): no border until hover → raised; click → sunken.
+
+### Layout & Spacing
+- Window/dialog margins: **7 DLUs** from edge to nearest control.
+- Unrelated controls: **7 DLUs** apart. Related controls: **4 DLUs**. Label → control: **3 DLUs**.
+- Standard button size: **50 × 14 DLUs** (width can grow for long labels; height stays fixed).
+
+### Controls & States
+- **Button pressed:** border flips to sunken, content shifts **1px down-right**.
+- **Button focused:** thin dotted rectangle around label text.
+- **Disabled:** gray text with inverted white emboss behind it.
+- **Toolbar buttons:** flat at rest; raised on hover; sunken on click.
+- **Checkboxes / radio buttons:** use sunken "field" border style.
+
+### Dialogs
+- Action buttons (OK/Cancel) align to **bottom-right** (horizontal) or **top-right** (vertical column).
+- Order is always: OK first, then Cancel.
+- Tab order follows visual flow: left-to-right, top-to-bottom.
+- ESC always closes without saving (equivalent to Cancel).
+
+### Iconography
+- Sizes: **16×16** (menus, title bars), **32×32** (desktop/large icon view), **48×48** (optional splash).
+- Provide 16-color and 256-color variants. Use real-world metaphors for icon concepts.
