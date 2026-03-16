@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { PortfolioWindow } from '@/components/ui/PortfolioWindow';
 import { AdvisorWindow } from '@/components/ui/AdvisorWindow';
 import { NewsFeed } from '@/components/ui/NewsFeed';
@@ -52,8 +52,9 @@ export default function TradingDashboard() {
   const [marketData, setMarketData] = useState<{
     marketData: { symbol: string; data: HistoricalRow[] }[];
     ownedSymbols: string[];
+    companyNames: Record<string, string>;
   } | null>(null);
-  const [isLoadingMarketData, setIsLoadingMarketData] = useState(true);
+  const [isLoadingMarketData, setIsLoadingMarketData] = useState(false);
 
   const [operations, setOperations] = useState<Operation[]>([]);
   const [isLoadingOperations, setIsLoadingOperations] = useState(false);
@@ -136,6 +137,9 @@ export default function TradingDashboard() {
     setIsLoadingAccount(false);
   };
 
+  const marketDataFetched = useRef(false);
+  const operationsFetched = useRef(false);
+
   const { fetchMepRate } = useMepStore();
 
   const fetchPortfolio = async () => {
@@ -151,7 +155,7 @@ export default function TradingDashboard() {
     setIsLoadingMarketData(true);
     const result = await getMarketData();
     if (result.success && result.data) {
-      setMarketData(result.data as { marketData: { symbol: string; data: HistoricalRow[] }[]; ownedSymbols: string[] });
+      setMarketData(result.data as { marketData: { symbol: string; data: HistoricalRow[] }[]; ownedSymbols: string[]; companyNames: Record<string, string> });
     }
     setIsLoadingMarketData(false);
   };
@@ -171,10 +175,23 @@ export default function TradingDashboard() {
 
   useEffect(() => {
     fetchPortfolio();
-    fetchMarketData();
-    fetchOperationsData();
     fetchAccountData();
   }, []);
+
+  // Lazy-load data only when the relevant window is first opened
+  useEffect(() => {
+    const marketDataOpen = windows['marketdata'] && !windows['marketdata'].minimized;
+    if (marketDataOpen && !marketDataFetched.current) {
+      marketDataFetched.current = true;
+      fetchMarketData();
+    }
+
+    const movementsOpen = windows['movements'] && !windows['movements'].minimized;
+    if (movementsOpen && !operationsFetched.current) {
+      operationsFetched.current = true;
+      fetchOperationsData();
+    }
+  }, [windows]);
   /* eslint-enable react-hooks/exhaustive-deps, react-hooks/set-state-in-effect */
 
   return (
@@ -234,6 +251,7 @@ export default function TradingDashboard() {
               <MarketDataWindow
                 marketData={marketData?.marketData ?? null}
                 ownedSymbols={marketData?.ownedSymbols ?? []}
+                companyNames={marketData?.companyNames ?? {}}
                 isLoading={isLoadingMarketData}
                 onRefresh={fetchMarketData}
               />

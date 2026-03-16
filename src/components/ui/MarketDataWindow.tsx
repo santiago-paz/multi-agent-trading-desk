@@ -14,12 +14,14 @@ interface MarketItem {
 interface MarketDataWindowProps {
   marketData: MarketItem[] | null;
   ownedSymbols: string[];
+  companyNames: Record<string, string>;
   isLoading: boolean;
   onRefresh: () => void;
 }
 
 type SortCol = 'symbol' | 'last' | 'pct';
 type SortDir = 'asc' | 'desc';
+
 
 const Sparkline: React.FC<{ closes: number[]; isUp: boolean }> = ({ closes, isUp }) => {
   if (closes.length < 2) return <span style={{ color: '#808080' }}>—</span>;
@@ -77,12 +79,13 @@ const SortableTh: React.FC<SortableThProps> = ({ children, col, activeCol, dir, 
 
 interface ListViewProps {
   items: MarketItem[];
+  companyNames: Record<string, string>;
   sortCol: SortCol;
   sortDir: SortDir;
   onSort: (col: SortCol) => void;
 }
 
-const ListView: React.FC<ListViewProps> = ({ items, sortCol, sortDir, onSort }) => {
+const ListView: React.FC<ListViewProps> = ({ items, companyNames, sortCol, sortDir, onSort }) => {
   const enriched = items.map((item) => {
     const closes = item.data.map((d) => d.close);
     const last = closes[closes.length - 1] ?? 0;
@@ -114,9 +117,9 @@ const ListView: React.FC<ListViewProps> = ({ items, sortCol, sortDir, onSort }) 
         }}
       >
         <colgroup>
+          <col style={{ width: '30%' }} />
           <col style={{ width: '22%' }} />
-          <col style={{ width: '28%' }} />
-          <col style={{ width: '18%' }} />
+          <col style={{ width: '16%' }} />
           <col style={{ width: '32%' }} />
         </colgroup>
         <thead>
@@ -153,8 +156,20 @@ const ListView: React.FC<ListViewProps> = ({ items, sortCol, sortDir, onSort }) 
                 cursor: 'default',
               }}
             >
-              <td style={{ ...CELL, fontWeight: 'bold' }}>
+              <td style={{ ...CELL, fontWeight: 'bold', lineHeight: '1.2' }}>
                 {item.symbol}
+                {companyNames[item.symbol] && companyNames[item.symbol] !== item.symbol && (
+                  <div style={{
+                    fontWeight: 'normal',
+                    fontSize: '9px',
+                    color: '#555555',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap',
+                  }}>
+                    {companyNames[item.symbol]}
+                  </div>
+                )}
               </td>
               <td style={{ ...CELL_RIGHT }}>
                 ${last.toFixed(2)}
@@ -181,6 +196,7 @@ const ListView: React.FC<ListViewProps> = ({ items, sortCol, sortDir, onSort }) 
 export const MarketDataWindow: React.FC<MarketDataWindowProps> = ({
   marketData,
   ownedSymbols,
+  companyNames,
   isLoading,
   onRefresh,
 }) => {
@@ -258,6 +274,7 @@ export const MarketDataWindow: React.FC<MarketDataWindowProps> = ({
           ) : (
             <ListView
               items={activeItems}
+              companyNames={companyNames}
               sortCol={sortCol}
               sortDir={sortDir}
               onSort={handleSort}

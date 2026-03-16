@@ -60,7 +60,7 @@ export async function executeOrders(orders: OrderRequest[]) {
   }
 }
 
-import { getHistoricalData, getNews, getGeneralMarketNews, NewsItem, HistoricalRow } from '@/lib/market-data';
+import { getHistoricalData, getNews, getGeneralMarketNews, getCompanyNames, NewsItem, HistoricalRow } from '@/lib/market-data';
 import { processNewsItem } from '@/lib/news-processor';
 
 export async function getMarketData() {
@@ -129,7 +129,11 @@ export async function getMarketData() {
       }
     }
 
-    return { success: true, data: { marketData, ownedSymbols } };
+    // 5. Fetch company names (cached — only calls Yahoo for new symbols)
+    const symbolsWithYahoo = allSymbols.filter(hasYahooData);
+    const companyNames = await getCompanyNames(symbolsWithYahoo);
+
+    return { success: true, data: { marketData, ownedSymbols, companyNames } };
   } catch (error) {
     console.error('Failed to fetch market data:', error);
     return { success: false, error: 'Failed to fetch market data' };

@@ -1,7 +1,54 @@
 import YahooFinance from 'yahoo-finance2';
 import { processNewsBatch } from './news-processor';
+import fs from 'fs';
+import path from 'path';
 
 const yahooFinance = new YahooFinance();
+
+const COMPANY_NAMES_CACHE_PATH = path.join(process.cwd(), '.company-names-cache.json');
+
+function readCompanyNamesCache(): Record<string, string> {
+  try {
+    const raw = fs.readFileSync(COMPANY_NAMES_CACHE_PATH, 'utf-8');
+    return JSON.parse(raw);
+  } catch {
+    return {};
+  }
+}
+
+function writeCompanyNamesCache(cache: Record<string, string>) {
+  try {
+    fs.writeFileSync(COMPANY_NAMES_CACHE_PATH, JSON.stringify(cache, null, 2), 'utf-8');
+  } catch (e) {
+    console.warn('Failed to write company names cache:', e);
+  }
+}
+
+export async function getCompanyNames(symbols: string[]): Promise<Record<string, string>> {
+  const cache = readCompanyNamesCache();
+  const missing = symbols.filter(s => !(s in cache));
+
+  if (missing.length > 0) {
+    try {
+      const results = await yahooFinance.quote(
+        missing,
+        { fields: ['symbol', 'longName', 'shortName'] },
+        { validateResult: false }
+      );
+      const arr = Array.isArray(results) ? results : [results];
+      for (const r of arr) {
+        if (r?.symbol) {
+          cache[r.symbol] = r.longName || r.shortName || r.symbol;
+        }
+      }
+      writeCompanyNamesCache(cache);
+    } catch (e) {
+      console.warn('Failed to fetch company names from Yahoo Finance:', e);
+    }
+  }
+
+  return Object.fromEntries(symbols.map(s => [s, cache[s] ?? s]));
+}
 
 export interface HistoricalRow {
   date: Date;
