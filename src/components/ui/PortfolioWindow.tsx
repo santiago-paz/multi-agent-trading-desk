@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { PortfolioSummary } from './PortfolioSummary';
 import { AccountData } from './AccountData';
 import { PortfolioResponse, DatosPerfil, EstadoCuenta } from '@/lib/iol/types';
-import { FONT, WINDOW_CONTAINER } from '@/lib/theme/win98';
+import { FONT, WINDOW_CONTAINER, COLOR_NEGATIVE } from '@/lib/theme/win98';
 
 interface PortfolioWindowProps {
   portfolio: PortfolioResponse | null;
@@ -47,7 +47,7 @@ export const PortfolioWindow: React.FC<PortfolioWindowProps> = ({
                 onRefresh={onRefreshPortfolio}
               />
             ) : (
-              <p style={{ ...FONT, margin: 0, padding: '4px', color: '#ff0000' }}>No se pudo cargar el portafolio.</p>
+              <p style={{ ...FONT, margin: 0, padding: '4px', color: COLOR_NEGATIVE }}>No se pudo cargar el portafolio.</p>
             )
           )}
           {activeTab === 'account' && (

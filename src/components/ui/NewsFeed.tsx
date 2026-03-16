@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { NewsItem } from '@/lib/market-data';
 import {
-  FONT, COLOR_LINK, WINDOW_CONTAINER, REFRESH_FOOTER, STATUS_BAR_STYLE,
+  FONT, COLOR_LINK, COLOR_SECONDARY, COLOR_DISABLED, BUTTON_PRESSED,
+  WINDOW_CONTAINER, REFRESH_FOOTER, STATUS_BAR_STYLE,
 } from '@/lib/theme/win98';
 
 interface NewsFeedProps {
@@ -72,7 +73,7 @@ export const NewsFeed: React.FC<NewsFeedProps> = ({
                 <button
                   type="button"
                   onClick={() => setSelectedSymbol('ALL')}
-                  style={selectedSymbol === 'ALL' ? { boxShadow: 'inset 1px 1px #0a0a0a, inset -1px -1px #fff, inset 2px 2px #808080, inset -2px -2px #dfdfdf', paddingTop: '3px', paddingLeft: '5px', paddingRight: '3px', paddingBottom: '1px', outline: '1px dotted #000', outlineOffset: '-4px' } : {}}
+                  style={selectedSymbol === 'ALL' ? BUTTON_PRESSED : {}}
                 >
                   ALL
                 </button>
@@ -81,7 +82,7 @@ export const NewsFeed: React.FC<NewsFeedProps> = ({
                     key={symbol}
                     type="button"
                     onClick={() => setSelectedSymbol(symbol)}
-                    style={selectedSymbol === symbol ? { boxShadow: 'inset 1px 1px #0a0a0a, inset -1px -1px #fff, inset 2px 2px #808080, inset -2px -2px #dfdfdf', paddingTop: '3px', paddingLeft: '5px', paddingRight: '3px', paddingBottom: '1px', outline: '1px dotted #000', outlineOffset: '-4px' } : {}}
+                    style={selectedSymbol === symbol ? BUTTON_PRESSED : {}}
                   >
                     {symbol}
                   </button>
@@ -97,7 +98,7 @@ export const NewsFeed: React.FC<NewsFeedProps> = ({
                       <NewsCard key={i} news={news} badge="MARKET" />
                     ))
                   ) : (
-                    <p style={{ ...FONT, margin: 0, color: '#808080' }}>No general market news available.</p>
+                    <p style={{ ...FONT, margin: 0, color: COLOR_DISABLED }}>No general market news available.</p>
                   )
                 ) : (
                   symbols.length > 0 ? (
@@ -108,7 +109,7 @@ export const NewsFeed: React.FC<NewsFeedProps> = ({
                         <NewsCard key={i} news={news} badge={news.symbol} />
                       ))
                   ) : (
-                    <p style={{ ...FONT, margin: 0, color: '#808080' }}>No portfolio news available.</p>
+                    <p style={{ ...FONT, margin: 0, color: COLOR_DISABLED }}>No portfolio news available.</p>
                   )
                 )}
               </div>
@@ -154,9 +155,9 @@ const NewsCard = ({ news, badge }: { news: NewsItem & { symbol?: string }; badge
   >
     <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', alignItems: 'center' }}>
       {badge && <span style={{ ...FONT, fontWeight: 'bold' }}>{badge}</span>}
-      <span style={{ ...FONT, color: '#555555' }}>{news.publisher}</span>
+      <span style={{ ...FONT, color: COLOR_SECONDARY }}>{news.publisher}</span>
       {news.providerPublishTime && (
-        <span style={{ ...FONT, color: '#555555' }}>
+        <span style={{ ...FONT, color: COLOR_SECONDARY }}>
           {new Date(news.providerPublishTime).toLocaleDateString()}
         </span>
       )}

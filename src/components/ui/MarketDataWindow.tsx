@@ -3,7 +3,7 @@ import { HistoricalRow } from '@/lib/market-data';
 import {
   FONT, COL_HEADER_BASE, COL_RAISED, COL_SUNKEN, CELL, CELL_RIGHT,
   WINDOW_CONTAINER, REFRESH_FOOTER, STATUS_BAR_STYLE,
-  COLOR_POSITIVE, COLOR_NEGATIVE,
+  COLOR_POSITIVE, COLOR_NEGATIVE, COLOR_SECONDARY, COLOR_DISABLED,
 } from '@/lib/theme/win98';
 
 interface MarketItem {
@@ -24,7 +24,7 @@ type SortDir = 'asc' | 'desc';
 
 
 const Sparkline: React.FC<{ closes: number[]; isUp: boolean }> = ({ closes, isUp }) => {
-  if (closes.length < 2) return <span style={{ color: '#808080' }}>—</span>;
+  if (closes.length < 2) return <span style={{ color: COLOR_DISABLED }}>—</span>;
   const min = Math.min(...closes);
   const max = Math.max(...closes);
   const range = max - min || 1;
@@ -160,9 +160,9 @@ const ListView: React.FC<ListViewProps> = ({ items, companyNames, sortCol, sortD
                 {item.symbol}
                 {companyNames[item.symbol] && companyNames[item.symbol] !== item.symbol && (
                   <div style={{
+                    ...FONT,
                     fontWeight: 'normal',
-                    fontSize: '9px',
-                    color: '#555555',
+                    color: COLOR_SECONDARY,
                     overflow: 'hidden',
                     textOverflow: 'ellipsis',
                     whiteSpace: 'nowrap',
@@ -262,11 +262,11 @@ export const MarketDataWindow: React.FC<MarketDataWindowProps> = ({
           {isLoading && !marketData ? (
             <p style={{ margin: 0, padding: 4 }}>Cargando datos de mercado…</p>
           ) : !marketData ? (
-            <p style={{ margin: 0, padding: 4, color: '#800000' }}>
+            <p style={{ margin: 0, padding: 4, color: COLOR_NEGATIVE }}>
               Error al cargar datos.
             </p>
           ) : activeItems.length === 0 ? (
-            <p style={{ margin: 0, padding: 4, color: '#555' }}>
+            <p style={{ margin: 0, padding: 4, color: COLOR_SECONDARY }}>
               {activeTab === 'mine'
                 ? 'No hay CEDEARs en tenencia.'
                 : 'No hay otros CEDEARs disponibles.'}

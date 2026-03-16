@@ -89,6 +89,19 @@ export const HR98: React.CSSProperties = {
 export const COLOR_POSITIVE = '#008000';
 export const COLOR_NEGATIVE = '#800000';
 export const COLOR_LINK = '#0000ff';
+export const COLOR_SECONDARY = '#555555';
+export const COLOR_DISABLED = '#808080';
+
+/** Pressed / toggled button (Sunken Outer + Sunken Inner, with focus ring). */
+export const BUTTON_PRESSED: React.CSSProperties = {
+  boxShadow: 'inset 1px 1px var(--window-frame, #0a0a0a), inset -1px -1px var(--btn-highlight, #ffffff), inset 2px 2px var(--btn-shadow, #808080), inset -2px -2px var(--btn-face, #dfdfdf)',
+  paddingTop: '3px',
+  paddingLeft: '5px',
+  paddingRight: '3px',
+  paddingBottom: '1px',
+  outline: '1px dotted var(--window-frame, #000)',
+  outlineOffset: '-4px',
+};
 
 /* ─── Shared window layout patterns ─────────────────────────────────────── */
 

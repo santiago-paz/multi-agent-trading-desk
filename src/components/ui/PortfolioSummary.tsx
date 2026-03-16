@@ -13,7 +13,7 @@ interface PortfolioSummaryProps {
 import {
   FONT, LABEL, COL_HEADER_BASE, COL_RAISED, COL_SUNKEN, CELL, CELL_RIGHT,
   WINDOW_CONTAINER, SCROLLABLE_BODY, REFRESH_FOOTER, STATUS_BAR_STYLE,
-  COLOR_POSITIVE,
+  COLOR_POSITIVE, COLOR_NEGATIVE,
 } from '@/lib/theme/win98';
 
 interface ColumnDef {
@@ -84,7 +84,7 @@ export const PortfolioSummary: React.FC<PortfolioSummaryProps> = ({
                 flex: 1,
                 cursor: 'default',
                 fontWeight: 'bold',
-                color: totalGananciaUSD >= 0 ? COLOR_POSITIVE : '#ff0000',
+                color: totalGananciaUSD >= 0 ? COLOR_POSITIVE : COLOR_NEGATIVE,
               }}
             />
           </div>
@@ -163,7 +163,7 @@ export const PortfolioSummary: React.FC<PortfolioSummaryProps> = ({
                       <td
                         style={{
                           ...CELL_RIGHT,
-                          color: variacion >= 0 ? COLOR_POSITIVE : '#ff0000',
+                          color: variacion >= 0 ? COLOR_POSITIVE : COLOR_NEGATIVE,
                         }}
                       >
                         {variacion >= 0 ? '+' : ''}{variacion.toFixed(2)}%
@@ -171,7 +171,7 @@ export const PortfolioSummary: React.FC<PortfolioSummaryProps> = ({
                       <td
                         style={{
                           ...CELL_RIGHT,
-                          color: ganancia >= 0 ? COLOR_POSITIVE : '#ff0000',
+                          color: ganancia >= 0 ? COLOR_POSITIVE : COLOR_NEGATIVE,
                           borderRight: 'none',
                         }}
                       >
@@ -204,7 +204,7 @@ export const PortfolioSummary: React.FC<PortfolioSummaryProps> = ({
           MEP: ${mepRate.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
         </p>
         <p className="status-bar-field" style={{
-          color: totalGananciaUSD >= 0 ? COLOR_POSITIVE : '#ff0000',
+          color: totalGananciaUSD >= 0 ? COLOR_POSITIVE : COLOR_NEGATIVE,
         }}>
           P&L: {totalGananciaUSD >= 0 ? '+' : ''}U$D {totalGananciaUSD.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
         </p>

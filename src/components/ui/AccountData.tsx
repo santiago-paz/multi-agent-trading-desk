@@ -14,7 +14,7 @@ import {
   FONT, LABEL_ACCOUNT as LABEL, COL_HEADER, COL_HEADER_RIGHT, HR98,
   CELL, CELL_RIGHT,
   WINDOW_CONTAINER, SCROLLABLE_BODY, REFRESH_FOOTER, STATUS_BAR_STYLE,
-  COLOR_POSITIVE,
+  COLOR_POSITIVE, COLOR_NEGATIVE,
 } from '@/lib/theme/win98';
 
 /* ─── Component ──────────────────────────────────────────────────────────── */
@@ -114,8 +114,7 @@ export const AccountData: React.FC<AccountDataProps> = ({
                           ...FONT,
                           flex: 1,
                           cursor: 'default',
-                          background: '#c0c0c0',
-                          color: '#000000',
+                          background: 'var(--btn-face, #c0c0c0)',
                         }}
                       />
                     </div>
@@ -129,7 +128,7 @@ export const AccountData: React.FC<AccountDataProps> = ({
                           ...FONT,
                           flex: 1,
                           cursor: 'default',
-                          color: (cuenta.disponible ?? 0) >= 0 ? COLOR_POSITIVE : '#ff0000',
+                          color: (cuenta.disponible ?? 0) >= 0 ? COLOR_POSITIVE : COLOR_NEGATIVE,
                           fontWeight: 'bold',
                         }}
                       />
@@ -224,7 +223,7 @@ export const AccountData: React.FC<AccountDataProps> = ({
                         flex: 1,
                         cursor: 'default',
                         fontWeight: 'bold',
-                        color: ((estadoCuenta.totalEnPesos ?? 0) / mepRate) >= 0 ? COLOR_POSITIVE : '#ff0000',
+                        color: ((estadoCuenta.totalEnPesos ?? 0) / mepRate) >= 0 ? COLOR_POSITIVE : COLOR_NEGATIVE,
                       }}
                     />
                   </div>
