@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { PortfolioWindow } from '@/components/ui/PortfolioWindow';
 import { AdvisorWindow } from '@/components/ui/AdvisorWindow';
 import { NewsFeed } from '@/components/ui/NewsFeed';
@@ -43,6 +43,11 @@ const DESKTOP_ICON_CONFIG: { id: IconId; label: string; emoji: string; iconKey: 
   { id: 'advisor',    label: 'Asesor IA',    emoji: '🧠', iconKey: 'advisor'    },
 ];
 
+// Grid cell size for "Alinear Iconos" — slightly larger than icon width (64px) for breathing room
+const GRID_SIZE = 75;
+const ICON_WIDTH = 64;
+const ICON_HEIGHT = 64;
+
 import { useMepStore } from '@/lib/store/mep-store';
 
 export default function TradingDashboard() {
@@ -73,18 +78,29 @@ export default function TradingDashboard() {
   } = useNewsStore();
 
   const {
-    windows, 
-    focusedId, 
-    allOpenWindows, 
-    openOrFocusWindow, 
-    updateWindow, 
-    closeWindow, 
-    minimizeWindow, 
+    windows,
+    focusedId,
+    allOpenWindows,
+    openOrFocusWindow,
+    updateWindow,
+    closeWindow,
+    minimizeWindow,
     focusWindow,
     toggleMinimize
   } = useWindowManager();
 
   const [iconPositions, setIconPositions] = useState<Record<IconId, { x: number; y: number }>>(DEFAULT_ICON_POSITIONS);
+  const [selectedIconIds, setSelectedIconIds] = useState<Set<string>>(new Set());
+  const [rubberBandRect, setRubberBandRect] = useState<{ left: number; top: number; width: number; height: number } | null>(null);
+  const [contextMenu, setContextMenu] = useState<{ x: number; y: number } | null>(null);
+
+  // Mutable refs to avoid stale closures in event handlers
+  const desktopRef = useRef<HTMLDivElement>(null);
+  const rubberBandStartRef = useRef<{ x: number; y: number } | null>(null);
+  const iconPositionsRef = useRef(iconPositions);
+  const multiDragBaseRef = useRef<Record<string, { x: number; y: number }> | null>(null);
+  // Keep ref in sync with state (no useEffect — updated every render)
+  iconPositionsRef.current = iconPositions;
 
   useEffect(() => {
     const savedPositions = localStorage.getItem('desktop-icon-positions');
@@ -100,16 +116,186 @@ export default function TradingDashboard() {
     }
   }, []);
 
-  // Use a separate effect for saving to localStorage
   useEffect(() => {
     if (JSON.stringify(iconPositions) !== JSON.stringify(DEFAULT_ICON_POSITIONS)) {
       localStorage.setItem('desktop-icon-positions', JSON.stringify(iconPositions));
     }
   }, [iconPositions]);
 
+  // ── Rubber-band selection: global mousemove/mouseup (runs once) ──────────────
+  const liveSelectionRef = useRef<Set<string>>(new Set());
+
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!rubberBandStartRef.current || !desktopRef.current) return;
+      const rect = desktopRef.current.getBoundingClientRect();
+      const currentX = e.clientX - rect.left;
+      const currentY = e.clientY - rect.top;
+      const { x: startX, y: startY } = rubberBandStartRef.current;
+      setRubberBandRect({
+        left: Math.min(startX, currentX),
+        top: Math.min(startY, currentY),
+        width: Math.abs(currentX - startX),
+        height: Math.abs(currentY - startY),
+      });
+    };
+
+    const handleMouseUp = () => {
+      if (rubberBandStartRef.current) {
+        // Persist whatever the live selection computed during render
+        setSelectedIconIds(liveSelectionRef.current);
+      }
+      rubberBandStartRef.current = null;
+      setRubberBandRect(null);
+    };
+
+    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('mouseup', handleMouseUp);
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, []);
+
+  // ── Derive live selection from rubberBandRect during render (no stale closures) ──
+  const effectiveSelectedIds = useMemo(() => {
+    if (!rubberBandRect || (rubberBandRect.width <= 5 && rubberBandRect.height <= 5)) {
+      return selectedIconIds;
+    }
+    const selLeft   = rubberBandRect.left;
+    const selTop    = rubberBandRect.top;
+    const selRight  = rubberBandRect.left + rubberBandRect.width;
+    const selBottom = rubberBandRect.top + rubberBandRect.height;
+    const live = new Set<string>();
+    ICON_IDS.forEach((id) => {
+      const pos = iconPositions[id];
+      if (
+        pos.x < selRight &&
+        pos.x + ICON_WIDTH > selLeft &&
+        pos.y < selBottom &&
+        pos.y + ICON_HEIGHT > selTop
+      ) {
+        live.add(id);
+      }
+    });
+    liveSelectionRef.current = live;
+    return live;
+  }, [rubberBandRect, iconPositions, selectedIconIds]);
+
+  // ── ESC clears selection / context menu ─────────────────────────────────────
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setSelectedIconIds(new Set());
+        setContextMenu(null);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
+  // ── Close context menu on any global mousedown ───────────────────────────────
+  useEffect(() => {
+    if (!contextMenu) return;
+    const close = () => setContextMenu(null);
+    window.addEventListener('mousedown', close);
+    return () => window.removeEventListener('mousedown', close);
+  }, [contextMenu]);
+
+  const handleDesktopMouseDown = useCallback((e: React.MouseEvent) => {
+    if (e.button !== 0) return;
+    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+    rubberBandStartRef.current = {
+      x: e.clientX - rect.left,
+      y: e.clientY - rect.top,
+    };
+    setSelectedIconIds(new Set());
+    setContextMenu(null);
+  }, []);
+
+  const handleContextMenu = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    setContextMenu({ x: e.clientX, y: e.clientY });
+  }, []);
+
+  // ── Multi-icon drag: called when an icon starts dragging ─────────────────────
+  const effectiveSelectedRef = useRef(effectiveSelectedIds);
+  effectiveSelectedRef.current = effectiveSelectedIds;
+
+  const handleIconDragStart = useCallback((id: string) => {
+    const selected = effectiveSelectedRef.current;
+    if (selected.has(id) && selected.size > 1) {
+      multiDragBaseRef.current = {};
+      selected.forEach((sid) => {
+        multiDragBaseRef.current![sid] = { ...iconPositionsRef.current[sid as IconId] };
+      });
+    } else {
+      multiDragBaseRef.current = null;
+    }
+  }, []);
+
   const handleIconMove = useCallback((id: string, x: number, y: number) => {
-    // Cast id to IconId to satisfy TS if needed, but since it comes from our map it's safe
-    setIconPositions((prev) => ({ ...prev, [id]: { x, y } }));
+    if (multiDragBaseRef.current?.[id]) {
+      const base = multiDragBaseRef.current[id];
+      const dx = x - base.x;
+      const dy = y - base.y;
+      setIconPositions((prev) => {
+        const next = { ...prev };
+        Object.entries(multiDragBaseRef.current!).forEach(([sid, sBase]) => {
+          next[sid as IconId] = { x: sBase.x + dx, y: sBase.y + dy };
+        });
+        return next;
+      });
+    } else {
+      setIconPositions((prev) => ({ ...prev, [id]: { x, y } }));
+    }
+  }, []);
+
+  // ── Align icons to nearest grid cell (no overlaps) ───────────────────────────
+  const alignIcons = useCallback(() => {
+    const snapToGrid = (v: number) => Math.max(0, Math.round(v / GRID_SIZE) * GRID_SIZE);
+
+    const items = ICON_IDS.map((id) => {
+      const pos = iconPositionsRef.current[id];
+      const px = snapToGrid(pos.x);
+      const py = snapToGrid(pos.y);
+      return { id, preferred: { x: px, y: py }, dist: Math.hypot(pos.x - px, pos.y - py) };
+    }).sort((a, b) => a.dist - b.dist); // closest-to-snap snaps first → gets ideal cell
+
+    const occupied = new Set<string>();
+
+    const findFreeCell = (preferred: { x: number; y: number }) => {
+      // BFS from preferred cell
+      type Cell = { x: number; y: number };
+      const queue: Cell[] = [preferred];
+      const seen = new Set<string>();
+      while (queue.length > 0) {
+        const cell = queue.shift()!;
+        const key = `${cell.x},${cell.y}`;
+        if (seen.has(key)) continue;
+        seen.add(key);
+        if (!occupied.has(key)) return cell;
+        ([
+          { x: cell.x + GRID_SIZE, y: cell.y },
+          { x: cell.x,             y: cell.y + GRID_SIZE },
+          { x: cell.x - GRID_SIZE, y: cell.y },
+          { x: cell.x,             y: cell.y - GRID_SIZE },
+        ] as Cell[]).forEach((n) => {
+          if (n.x >= 0 && n.y >= 0) queue.push(n);
+        });
+      }
+      return preferred;
+    };
+
+    const result: Partial<Record<IconId, { x: number; y: number }>> = {};
+    items.forEach(({ id, preferred }) => {
+      const cell = findFreeCell(preferred);
+      occupied.add(`${cell.x},${cell.y}`);
+      result[id] = cell;
+    });
+
+    setIconPositions((prev) => ({ ...prev, ...result }));
+    setContextMenu(null);
   }, []);
 
   const fetchOperationsData = async () => {
@@ -162,14 +348,12 @@ export default function TradingDashboard() {
 
   useEffect(() => {
     fetchNews();
-    
-    // Initial MEP fetch
+
     fetchMepRate();
-    // 10 minute polling
     const interval = setInterval(() => {
       fetchMepRate();
     }, 10 * 60 * 1000);
-    
+
     return () => clearInterval(interval);
   }, []);
 
@@ -178,7 +362,6 @@ export default function TradingDashboard() {
     fetchAccountData();
   }, []);
 
-  // Lazy-load data only when the relevant window is first opened
   useEffect(() => {
     const marketDataOpen = windows['marketdata'] && !windows['marketdata'].minimized;
     if (marketDataOpen && !marketDataFetched.current) {
@@ -192,10 +375,33 @@ export default function TradingDashboard() {
       fetchOperationsData();
     }
   }, [windows]);
-  /* eslint-enable react-hooks/exhaustive-deps, react-hooks/set-state-in-effect */
 
   return (
-    <div className="desktop relative w-full h-full overflow-hidden">
+    <div ref={desktopRef} className="desktop relative w-full h-full overflow-hidden">
+      {/* Desktop background — catches rubber-band and context-menu events (z-0, behind icons) */}
+      <div
+        className="absolute inset-0"
+        style={{ zIndex: 0 }}
+        onMouseDown={handleDesktopMouseDown}
+        onContextMenu={handleContextMenu}
+      />
+
+      {/* Rubber-band selection rectangle — Win98 dotted outline, no fill */}
+      {rubberBandRect && (
+        <div
+          className="absolute pointer-events-none"
+          style={{
+            left: rubberBandRect.left,
+            top: rubberBandRect.top,
+            width: rubberBandRect.width,
+            height: rubberBandRect.height,
+            border: '1px dotted #000000',
+            zIndex: 9999,
+          }}
+        />
+      )}
+
+      {/* Desktop icons */}
       <div className="absolute inset-0 pointer-events-none z-0">
         {DESKTOP_ICON_CONFIG.map(({ id, label, emoji, iconKey }) => (
           <DesktopIcon
@@ -208,6 +414,8 @@ export default function TradingDashboard() {
             x={iconPositions[id].x}
             y={iconPositions[id].y}
             onMove={handleIconMove}
+            onDragStart={handleIconDragStart}
+            selected={effectiveSelectedIds.has(id)}
           />
         ))}
       </div>
@@ -289,6 +497,54 @@ export default function TradingDashboard() {
           </button>
         ))}
       </div>
+
+      {/* Win98-style desktop context menu */}
+      {contextMenu && (
+        <div
+          onMouseDown={(e) => e.stopPropagation()}
+          style={{
+            position: 'fixed',
+            left: contextMenu.x,
+            top: contextMenu.y,
+            zIndex: 10000,
+            backgroundColor: '#c0c0c0',
+            border: '2px solid',
+            borderColor: '#ffffff #808080 #808080 #ffffff',
+            padding: '2px',
+            boxShadow: '2px 2px 0 #000000',
+            fontFamily: '"Pixelated MS Sans Serif", "MS Sans Serif", Arial, sans-serif',
+            fontSize: '11px',
+            minWidth: '160px',
+          }}
+        >
+          <button
+            type="button"
+            onClick={alignIcons}
+            style={{
+              display: 'block',
+              width: '100%',
+              textAlign: 'left',
+              padding: '3px 24px 3px 6px',
+              background: 'transparent',
+              border: 'none',
+              cursor: 'default',
+              fontFamily: 'inherit',
+              fontSize: 'inherit',
+              color: '#000000',
+            }}
+            onMouseEnter={(e) => {
+              (e.currentTarget as HTMLElement).style.backgroundColor = '#000080';
+              (e.currentTarget as HTMLElement).style.color = '#ffffff';
+            }}
+            onMouseLeave={(e) => {
+              (e.currentTarget as HTMLElement).style.backgroundColor = 'transparent';
+              (e.currentTarget as HTMLElement).style.color = '#000000';
+            }}
+          >
+            Alinear Iconos
+          </button>
+        </div>
+      )}
     </div>
   );
 }
