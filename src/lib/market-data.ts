@@ -100,22 +100,22 @@ export async function getHistoricalData(symbol: string, days: number = 30): Prom
     // validateResult: false suppresses schema-validation noise for symbols Yahoo
     // partially supports (non-US exchanges, OTC, etc.); we handle missing data below.
     const result = await yahooFinance.chart(symbol, queryOptions, { validateResult: false });
-    
-    if (!result || !result.quotes) {
+
+    if (!result || !(result as { quotes: { date: Date; open: number; high: number; low: number; close: number; adjclose: number; volume: number }[] }).quotes) {
       throw new Error('No data returned from Yahoo Finance');
     }
 
     // Map the chart result to our HistoricalRow format
-    return result.quotes
-      .filter(quote => quote.date && quote.close !== null)
-      .map(quote => ({
+    return (result as { quotes: { date: Date; open: number; high: number; low: number; close: number; adjclose: number; volume: number }[] }).quotes
+      .filter((quote: { date: Date; close: number | null }) => quote.date && quote.close !== null)
+      .map((quote: { date: Date; open: number; high: number; low: number; close: number; adjclose: number; volume: number }) => ({
         date: quote.date,
-        open: quote.open || 0,
-        high: quote.high || 0,
-        low: quote.low || 0,
-        close: quote.close || 0,
-        adjClose: quote.adjclose || undefined,
-        volume: quote.volume || 0,
+        open: quote.open,
+        high: quote.high,
+        low: quote.low,
+        close: quote.close,
+        adjClose: quote.adjclose,
+        volume: quote.volume,
       }));
   } catch (error) {
     console.warn(`No Yahoo Finance data for ${symbol}:`, (error as Error).message);
@@ -139,7 +139,7 @@ export async function getNews(query: string, count: number = 5): Promise<NewsIte
     if (!result.news || result.news.length === 0) {
       return [];
     }
-    
+
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return result.news.map((item: any) => ({
       title: item.title,
@@ -184,7 +184,7 @@ function calculateRSI(data: number[], period: number = 14): number | null {
   const avgLoss = losses / period;
 
   if (avgLoss === 0) return 100;
-  
+
   const rs = avgGain / avgLoss;
   return 100 - (100 / (1 + rs));
 }
