@@ -78,7 +78,25 @@ export const advisorAgent = {
         rawJson = rawJson.split('```')[1].trim();
       }
 
-      return JSON.parse(rawJson) as AdvisorOutput;
+      const output = JSON.parse(rawJson) as AdvisorOutput;
+
+      // ── Budget enforcement ────────────────────────────────────────────────────
+      // The LLM sometimes allocates the full budget to each position independently.
+      // Enforce that the SUM of all positions fits within the available cash (minus 1% for commissions).
+      const priceMap = Object.fromEntries(quotes.map(q => [q.symbol, q.currentPrice]));
+      const budget = cash * 0.99;
+      const totalCost = output.recommendations.reduce(
+        (sum, rec) => sum + rec.cantidad * (priceMap[rec.simbolo] ?? 0),
+        0,
+      );
+      if (totalCost > budget) {
+        const scale = budget / totalCost;
+        output.recommendations = output.recommendations
+          .map(rec => ({ ...rec, cantidad: Math.floor(rec.cantidad * scale) }))
+          .filter(rec => rec.cantidad > 0);
+      }
+
+      return output;
     } catch (error) {
       console.error('Advisor generation error:', error);
       return {

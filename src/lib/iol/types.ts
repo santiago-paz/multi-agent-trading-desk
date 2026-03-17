@@ -155,3 +155,13 @@ export interface EstadoCuenta {
   estadisticas: EstadoCuentaEstadistica[];
   totalEnPesos: number;
 }
+
+export interface IOLHistoricalEntry {
+  fecha: string;
+  apertura: number;
+  maximo: number;
+  minimo: number;
+  ultimoPrecio: number;
+  volumen: number;
+  cantidadOperaciones: number;
+}

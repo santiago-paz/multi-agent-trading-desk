@@ -67,6 +67,10 @@ export async function getMarketData() {
   try {
     // 1. Get portfolio to identify owned CEDEARs
     const portfolio = await iolClient.getPortfolio();
+    if (!portfolio?.activos) {
+      const msg = (portfolio as any)?.message;
+      throw new Error(msg ?? 'Respuesta inesperada del servidor de IOL');
+    }
     const ownedSymbols = portfolio.activos
       .filter(a => a.titulo.tipo === 'CEDEARS' || a.titulo.tipo === 'cedears')
       .map(a => a.titulo.simbolo);
@@ -244,9 +248,9 @@ export async function getAdvisorRecommendation(strategy: 'Conservadora' | 'Media
   try {
     // 1. Fetch available cash
     const cuenta = await iolClient.getEstadoCuenta();
-    const cuentaArs = cuenta.cuentas.find(c => c.moneda === 'peso_Argentino');
+    const cuentaArs = cuenta?.cuentas?.find(c => c.moneda === 'peso_Argentino');
     let cash = cuentaArs?.disponible || 0;
-    
+
     // Try to get more accurate disponibleOperar immediately if available
     const inmediato = cuentaArs?.saldos?.find(s => s.liquidacion === 'inmediato');
     if (inmediato) {
@@ -258,9 +262,11 @@ export async function getAdvisorRecommendation(strategy: 'Conservadora' | 'Media
       iolClient.getPanelQuotes('cedears'),
       iolClient.getPanelQuotes('titulosPublicos')
     ]);
-    
-    // Combine 
-    const combinedTitulos = [...(cedearsPanel.titulos || []), ...(bonosPanel.titulos || [])];
+
+    // IOL returns bond prices in ARS per unit, but the app displays paridad (price/100).
+    // Divide bond ultimoPrecio by 100 to match the real market price shown in the IOL app.
+    const bonosTitulosNormalized = (bonosPanel.titulos || []).map(t => ({ ...t, ultimoPrecio: Math.round(t.ultimoPrecio) / 100 }));
+    const combinedTitulos = [...(cedearsPanel.titulos || []), ...bonosTitulosNormalized];
 
     // 2. We don't want to fetch 30-day Yahoo data for 100+ assets since it takes too long
     //    We will tell the LLM to pre-filter to max 10 affordable assets.
@@ -300,6 +306,251 @@ export async function getAdvisorRecommendation(strategy: 'Conservadora' | 'Media
   } catch (error) {
     console.error('Advisor Action failed:', error);
     return { success: false, error: 'Advisor Action failed' };
+  }
+}
+
+// ─── Granular Advisor Steps (for progressive UI) ─────────────────────────────
+
+export async function getAdvisorStep_Cash() {
+  try {
+    const cuenta = await iolClient.getEstadoCuenta();
+    if (!cuenta?.cuentas) {
+      const msg = (cuenta as any)?.message;
+      return { success: false as const, error: msg ?? 'Respuesta inesperada del servidor de IOL' };
+    }
+    const cuentaArs = cuenta.cuentas.find((c: any) => c.moneda === 'peso_Argentino');
+    let cash = cuentaArs?.disponible || 0;
+    const inmediato = cuentaArs?.saldos?.find((s: any) => s.liquidacion === 'inmediato');
+    if (inmediato) cash = inmediato.disponibleOperar;
+    return { success: true as const, cash };
+  } catch (error) {
+    console.error('Advisor Step Cash failed:', error);
+    return { success: false as const, error: 'No se pudo obtener el saldo' };
+  }
+}
+
+export async function getAdvisorStep_Candidates(cash: number) {
+  try {
+    const [cedearsPanel, bonosPanel] = await Promise.all([
+      iolClient.getPanelQuotes('cedears'),
+      iolClient.getPanelQuotes('titulosPublicos'),
+    ]);
+    // IOL returns bond prices in ARS per unit, but the app displays paridad (price/100).
+    // Divide bond ultimoPrecio by 100 to match the real market price shown in the IOL app.
+    const bonosTitulosNormalized = (bonosPanel.titulos || []).map(t => ({ ...t, ultimoPrecio: Math.round(t.ultimoPrecio) / 100 }));
+    const combinedTitulos = [...(cedearsPanel.titulos || []), ...bonosTitulosNormalized];
+    const totalInstruments = combinedTitulos.length;
+
+    // ── Server-side pre-filter (deterministic, no LLM needed here) ────────────
+    // 1. Only instruments the user can afford (at least 1 unit)
+    const affordable = combinedTitulos.filter(
+      (t: any) => t.ultimoPrecio > 0 && t.ultimoPrecio <= cash
+    );
+
+    // 2. Sort by volume descending (most liquid / actively traded first)
+    //    then take top 30 to give the LLM a manageable, high-quality set
+    const top30 = affordable
+      .sort((a: any, b: any) => (b.volumen ?? 0) - (a.volumen ?? 0))
+      .slice(0, 30);
+
+    // 3. If the user can't afford anything meaningful, fall back to cheapest 10
+    const shortlist = top30.length >= 3 ? top30 : affordable
+      .sort((a: any, b: any) => a.ultimoPrecio - b.ultimoPrecio)
+      .slice(0, 10);
+
+    // ── LLM picks the best 8-10 from the shortlist ────────────────────────────
+    const preFilterPrompt = `
+      You are a portfolio filtering agent. The user has ${cash} ARS available.
+      From the list below (already filtered to assets they can afford, sorted by liquidity),
+      pick the 8 to 10 most promising assets for a diversified portfolio.
+      Prefer assets with high volume, spread across different sectors/types.
+      Return ONLY a JSON array of ticker symbols. Example: ["AAPL", "TX24"]
+
+      Candidates (symbol | price ARS | daily change % | volume):
+      ${shortlist.map((t: any) => `${t.simbolo} | $${t.ultimoPrecio} | ${t.variacionPorcentual?.toFixed(2) ?? '0'}% | vol:${t.volumen ?? 0}`).join('\n')}
+    `;
+
+    const { generateText: textGen } = await import('ai');
+    const { text } = await textGen({
+      model: 'meta/llama-3.1-8b',
+      system: 'Return ONLY a JSON array of ticker symbol strings. No explanation, no markdown.',
+      prompt: preFilterPrompt,
+    });
+
+    let symbols: string[] = [];
+    try {
+      let raw = text.trim();
+      if (raw.includes('```')) raw = raw.split('```')[1].replace(/^json/, '').trim();
+      symbols = JSON.parse(raw);
+      // Validate: only accept symbols that exist in our shortlist
+      const validSet = new Set(shortlist.map((t: any) => t.simbolo));
+      symbols = symbols.filter((s: string) => validSet.has(s));
+    } catch {
+      // Fallback: just take the top 8 by volume from the shortlist
+    }
+
+    if (symbols.length === 0) {
+      symbols = shortlist.slice(0, 8).map((t: any) => t.simbolo);
+    }
+
+    // Also return price and type maps so the UI can display asset info and pass IOL prices as fallback
+    const priceMap: Record<string, number> = {};
+    const typeMap: Record<string, 'CEDEAR' | 'Bono'> = {};
+    const cedearsSymbols = new Set((cedearsPanel.titulos || []).map((t: any) => t.simbolo));
+    for (const t of shortlist) {
+      const sym = (t as any).simbolo;
+      priceMap[sym] = (t as any).ultimoPrecio;
+      typeMap[sym] = cedearsSymbols.has(sym) ? 'CEDEAR' : 'Bono';
+    }
+
+    return { success: true as const, symbols, totalInstruments, priceMap, typeMap };
+  } catch (error) {
+    console.error('Advisor Step Candidates failed:', error);
+    return { success: false as const, error: 'No se pudo obtener los candidatos' };
+  }
+}
+
+export async function getAdvisorStep_AssetData(symbol: string, iolPrice?: number, type?: 'CEDEAR' | 'Bono') {
+  try {
+    // Skip Yahoo Finance entirely for bonds — they're not listed there
+    if (type !== 'Bono') {
+      const { getComprehensiveAssetData } = await import('@/lib/market-data');
+      const data = await getComprehensiveAssetData(symbol);
+      if (data) return { success: true as const, data };
+    }
+
+    // Bonds: try Yahoo Finance with .BA suffix (BYMA-listed Argentine securities).
+    // e.g. TX28 → TX28.BA, TZX26 → TZX26.BA
+    if (type === 'Bono') {
+      try {
+        const { getHistoricalData } = await import('@/lib/market-data');
+        const history = await getHistoricalData(`${symbol}.BA`, 120);
+        if (history && history.length > 0) {
+          const closes = history.map(h => h.close / 100); // .BA prices are in lote scale
+          const currentPrice = closes[closes.length - 1];
+          const historicalPrices = history.map((h, i) => ({
+            date: h.date,
+            open: h.open / 100,
+            high: h.high / 100,
+            low: h.low / 100,
+            close: closes[i],
+            volume: h.volume,
+          }));
+
+          const sma = (arr: number[], n: number) => arr.length >= n ? arr.slice(-n).reduce((s, v) => s + v, 0) / n : null;
+          const rsiCalc = (arr: number[], n = 14): number | null => {
+            if (arr.length <= n) return null;
+            let gains = 0, losses = 0;
+            for (let i = arr.length - n; i < arr.length; i++) {
+              const d = arr[i] - arr[i - 1];
+              if (d > 0) gains += d; else losses -= d;
+            }
+            const avgLoss = losses / n;
+            return avgLoss === 0 ? 100 : 100 - (100 / (1 + gains / n / avgLoss));
+          };
+          const sma20 = sma(closes, 20);
+          const sma50 = sma(closes, 50);
+          const rsi14 = rsiCalc(closes);
+
+          return {
+            success: true as const,
+            data: {
+              symbol,
+              currentPrice,
+              historicalPrices: historicalPrices.slice(-30),
+              technicals: { sma20, sma50, rsi14, priceToSMA20Ratio: sma20 ? currentPrice / sma20 : null },
+              recentNews: [],
+            } satisfies ComprehensiveAssetData,
+          };
+        }
+      } catch {
+        // .BA suffix not available for this bond — fall through
+      }
+    }
+
+    // CEDEARs that Yahoo missed: try IOL historical series.
+    // Bonds are excluded — the IOL public API v2 seriehistorica endpoint consistently
+    // returns 400 for all government bond types. The mobile app uses a private API.
+    if (type !== 'Bono') {
+      try {
+        const series = await iolClient.getHistoricalSeries(symbol, 120);
+        if (series && series.length > 0) {
+          const historicalPrices = series.map(e => ({
+            date: new Date(e.fecha),
+            open: e.apertura,
+            high: e.maximo,
+            low: e.minimo,
+            close: e.ultimoPrecio,
+            volume: e.volumen,
+          }));
+          const closes = historicalPrices.map(h => h.close);
+          const currentPrice = closes[closes.length - 1];
+
+          const sma = (arr: number[], n: number) => arr.length >= n ? arr.slice(-n).reduce((s, v) => s + v, 0) / n : null;
+          const rsiCalc = (arr: number[], n = 14): number | null => {
+            if (arr.length <= n) return null;
+            let gains = 0, losses = 0;
+            for (let i = arr.length - n; i < arr.length; i++) {
+              const d = arr[i] - arr[i - 1];
+              if (d > 0) gains += d; else losses -= d;
+            }
+            const avgLoss = losses / n;
+            return avgLoss === 0 ? 100 : 100 - (100 / (1 + gains / n / avgLoss));
+          };
+          const sma20 = sma(closes, 20);
+          const sma50 = sma(closes, 50);
+          const rsi14 = rsiCalc(closes);
+
+          const iolData: ComprehensiveAssetData = {
+            symbol,
+            currentPrice,
+            historicalPrices: historicalPrices.slice(-30),
+            technicals: { sma20, sma50, rsi14, priceToSMA20Ratio: sma20 ? currentPrice / sma20 : null },
+            recentNews: [],
+          };
+          return { success: true as const, data: iolData };
+        }
+      } catch {
+        // IOL historical also unavailable — fall through to static price
+      }
+    }
+
+    // Last resort: static IOL price fallback
+    if (iolPrice != null && iolPrice > 0) {
+      const today = new Date();
+      const yesterday = new Date(today);
+      yesterday.setDate(today.getDate() - 1);
+      const fallback: ComprehensiveAssetData = {
+        symbol,
+        currentPrice: iolPrice,
+        historicalPrices: [
+          { date: yesterday, open: iolPrice, high: iolPrice, low: iolPrice, close: iolPrice, volume: 0 },
+          { date: today,     open: iolPrice, high: iolPrice, low: iolPrice, close: iolPrice, volume: 0 },
+        ],
+        technicals: { sma20: null, sma50: null, rsi14: null, priceToSMA20Ratio: null },
+        recentNews: [],
+      };
+      return { success: true as const, data: fallback };
+    }
+
+    return { success: false as const, error: `Sin datos para ${symbol}` };
+  } catch (error) {
+    console.error(`Advisor Step AssetData failed for ${symbol}:`, error);
+    return { success: false as const, error: `Error analizando ${symbol}` };
+  }
+}
+
+export async function getAdvisorStep_Recommend(
+  cash: number,
+  assets: ComprehensiveAssetData[],
+  strategy: 'Conservadora' | 'Media' | 'Arriesgada',
+) {
+  try {
+    const recommendation = await advisorAgent.generateRecommendation(cash, assets, strategy);
+    return { success: true as const, data: recommendation };
+  } catch (error) {
+    console.error('Advisor Step Recommend failed:', error);
+    return { success: false as const, error: 'Error generando la recomendación' };
   }
 }
 

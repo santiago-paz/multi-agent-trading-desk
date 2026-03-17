@@ -1,4 +1,4 @@
-import { IOLToken, PortfolioResponse, Quote, OrderRequest, OrderResponse, Operation, EstadoCuenta, DatosPerfil, PanelResponse, PanelQuote } from './types';
+import { IOLToken, PortfolioResponse, Quote, OrderRequest, OrderResponse, Operation, EstadoCuenta, DatosPerfil, PanelResponse, PanelQuote, IOLHistoricalEntry } from './types';
 import { readFileSync, writeFileSync, unlinkSync } from 'fs';
 import { join } from 'path';
 
@@ -162,11 +162,23 @@ export class IOLClient {
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error(`[IOL API] Request to ${endpoint} failed with ${response.status}: ${errorText}`);
+      console.warn(`[IOL API] Request to ${endpoint} failed with ${response.status}: ${errorText}`);
       throw new Error(`API request failed: ${response.statusText}`);
     }
 
-    return response.json() as Promise<T>;
+    const json = await response.json();
+
+    // IOL sometimes returns HTTP 200 with a maintenance/error message body instead of real data.
+    // Detect this pattern and throw a clear error so callers don't crash on missing fields.
+    if (json && typeof json === 'object' && 'message' in json && !Array.isArray(json)) {
+      const keys = Object.keys(json);
+      if (keys.length === 1 || (keys.length <= 2 && keys.includes('message'))) {
+        console.warn(`[IOL API] ${endpoint} returned HTTP ${response.status} but body is a service message:`, json.message);
+        throw new Error(json.message);
+      }
+    }
+
+    return json as T;
   }
 
   // Mock responses for simulation mode
@@ -340,6 +352,30 @@ export class IOLClient {
     return this.fetchWithAuth<DatosPerfil>('/api/v2/datos-perfil');
   }
 
+
+  async getHistoricalSeries(symbol: string, days: number = 60, market: string = 'BCBA'): Promise<IOLHistoricalEntry[]> {
+    const formatDate = (d: Date) => d.toISOString().split('T')[0];
+    const today = new Date();
+    const from = new Date();
+    from.setDate(today.getDate() - days);
+
+    if (SIMULATION_MODE) {
+      // Generate synthetic daily entries for simulation
+      const entries: IOLHistoricalEntry[] = [];
+      let price = 1000;
+      for (let i = days; i >= 0; i--) {
+        const d = new Date();
+        d.setDate(today.getDate() - i);
+        price = price * (1 + (Math.random() - 0.49) * 0.02);
+        entries.push({ fecha: d.toISOString(), apertura: price, maximo: price * 1.01, minimo: price * 0.99, ultimoPrecio: price, volumen: 50000, cantidadOperaciones: 200 });
+      }
+      return entries;
+    }
+
+    return this.fetchWithAuth<IOLHistoricalEntry[]>(
+      `/api/v2/${market}/Titulos/${symbol}/Cotizacion/seriehistorica/${formatDate(from)}/${formatDate(today)}/false`
+    );
+  }
 
   async getMEP(): Promise<number> {
     try {
