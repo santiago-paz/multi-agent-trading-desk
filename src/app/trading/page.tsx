@@ -39,7 +39,7 @@ const DESKTOP_ICON_CONFIG: { id: IconId; label: string; emoji: string; iconKey: 
   { id: 'portfolio',  label: 'Portfolio',    emoji: '📊', iconKey: 'portfolio'  },
   { id: 'news',       label: 'News',         emoji: '📰', iconKey: 'news'       },
   { id: 'marketdata', label: 'Market Data',  emoji: '📈', iconKey: 'marketdata' },
-  { id: 'movements',  label: 'Movimientos',  emoji: '💸', iconKey: 'orders'     },
+  { id: 'movements',  label: 'Movimientos',  emoji: '💸', iconKey: 'movements'  },
   { id: 'advisor',    label: 'Asesor IA',    emoji: '🧠', iconKey: 'advisor'    },
 ];
 
