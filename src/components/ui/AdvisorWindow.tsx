@@ -35,6 +35,8 @@ interface CandidateRow {
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
+const fmtARS = (n: number) => n.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
 function LogIcon({ status }: { status: LogStatus }) {
   if (status === 'running') return <span style={{ color: COLOR_SECONDARY }}>►</span>;
   if (status === 'ok')      return <span style={{ color: COLOR_POSITIVE }}>■</span>;
@@ -97,7 +99,7 @@ export function AdvisorWindow() {
       if (!cashRes.success) throw new Error(cashRes.error);
       const availableCash = cashRes.cash;
       setCash(availableCash);
-      updateLog('cash', `Saldo disponible: $${availableCash.toLocaleString('es-AR')} ARS`, 'ok');
+      updateLog('cash', `Saldo disponible: $${availableCash.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ARS`, 'ok');
       setProgress(10);
 
       // ── Step 2: Candidates ───────────────────────────────────────────────────
@@ -115,35 +117,46 @@ export function AdvisorWindow() {
       // Seed the candidate table with loading rows
       setCandidates(symbols.map(sym => ({ symbol: sym, type: typeMap?.[sym] ?? null, price: 0, rsi: null, newsCount: 0, status: 'loading' })));
 
-      // ── Step 3: Asset data per symbol (sequential) ───────────────────────────
+      // ── Step 3: Asset data per symbol (parallel batches of 3) ─────────────────
       const perSymbolStep = 60 / symbols.length;
+      const BATCH_SIZE = 3;
 
-      for (let i = 0; i < symbols.length; i++) {
-        const sym = symbols[i];
-        addLog(`sym-${sym}`, `Analizando ${sym}...`, 'running');
+      for (let batchStart = 0; batchStart < symbols.length; batchStart += BATCH_SIZE) {
+        const batch = symbols.slice(batchStart, batchStart + BATCH_SIZE);
 
-        const dataRes = await getAdvisorStep_AssetData(sym, priceMap?.[sym], typeMap?.[sym]);
-
-        if (dataRes.success && dataRes.data) {
-          const d = dataRes.data;
-          enrichedAssets.push(d);
-          setCandidates(prev => prev.map(c =>
-            c.symbol === sym
-              ? { ...c, price: d.currentPrice, rsi: d.technicals.rsi14, newsCount: d.recentNews.length, status: 'done' }
-              : c,
-          ));
-          const newsHeadlines = d.recentNews.map(n => n.title).join(' · ');
-          updateLog(
-            `sym-${sym}`,
-            `${sym} — $${d.currentPrice.toLocaleString('es-AR')} ARS | RSI: ${d.technicals.rsi14?.toFixed(1) ?? 'N/A'} | ${d.recentNews.length} noticias${newsHeadlines ? `: ${newsHeadlines.slice(0, 80)}…` : ''}`,
-            'ok',
-          );
-        } else {
-          setCandidates(prev => prev.map(c => c.symbol === sym ? { ...c, status: 'error' } : c));
-          updateLog(`sym-${sym}`, `${sym} — error al obtener datos`, 'error');
+        // Add loading logs for the batch
+        for (const sym of batch) {
+          addLog(`sym-${sym}`, `Analizando ${sym}...`, 'running');
         }
 
-        setProgress(20 + Math.round((i + 1) * perSymbolStep));
+        // Fetch all symbols in this batch in parallel
+        const batchResults = await Promise.all(
+          batch.map(sym => getAdvisorStep_AssetData(sym, priceMap?.[sym], typeMap?.[sym]).then(res => ({ sym, res })))
+        );
+
+        // Process results
+        for (const { sym, res: dataRes } of batchResults) {
+          if (dataRes.success && dataRes.data) {
+            const d = dataRes.data;
+            enrichedAssets.push(d);
+            setCandidates(prev => prev.map(c =>
+              c.symbol === sym
+                ? { ...c, price: d.currentPrice, rsi: d.technicals.rsi14, newsCount: d.recentNews.length, status: 'done' }
+                : c,
+            ));
+            const newsHeadlines = d.recentNews.map(n => n.title).join(' · ');
+            updateLog(
+              `sym-${sym}`,
+              `${sym} — $${d.currentPrice.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ARS | RSI: ${d.technicals.rsi14?.toFixed(1) ?? 'N/A'} | ${d.recentNews.length} noticias${newsHeadlines ? `: ${newsHeadlines.slice(0, 80)}…` : ''}`,
+              'ok',
+            );
+          } else {
+            setCandidates(prev => prev.map(c => c.symbol === sym ? { ...c, status: 'error' } : c));
+            updateLog(`sym-${sym}`, `${sym} — error al obtener datos`, 'error');
+          }
+        }
+
+        setProgress(20 + Math.round(Math.min(batchStart + BATCH_SIZE, symbols.length) * perSymbolStep));
       }
 
       // ── Step 4: Final recommendation ─────────────────────────────────────────
@@ -307,7 +320,7 @@ export function AdvisorWindow() {
                               ? <span style={{ color: COLOR_DISABLED }}>…</span>
                               : c.status === 'error'
                                 ? <span style={{ color: COLOR_NEGATIVE }}>Error</span>
-                                : `$${c.price.toLocaleString('es-AR')}`
+                                : `$${c.price.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
                             }
                           </td>
                           <td style={{ ...CELL_RIGHT }}>
@@ -369,26 +382,50 @@ export function AdvisorWindow() {
                     <th style={COL_HEADER}>Activo</th>
                     <th style={{ ...COL_HEADER, textAlign: 'center' }}>Acción</th>
                     <th style={COL_HEADER_RIGHT}>Cantidad</th>
+                    <th style={COL_HEADER_RIGHT}>Precio (ARS)</th>
+                    <th style={COL_HEADER_RIGHT}>Costo Total</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {result.recommendations.map((rec, i) => (
-                    <tr
-                      key={i}
-                      style={{
-                        background: i % 2 === 0 ? '#ffffff' : '#f0f0f0',
-                        borderBottom: '1px solid #c0c0c0',
-                        cursor: 'default',
-                      }}
-                    >
-                      <td style={{ ...CELL, fontWeight: 'bold' }}>{rec.simbolo}</td>
-                      <td style={{ ...CELL, textAlign: 'center', color: rec.tipo === 'buy' ? COLOR_POSITIVE : COLOR_NEGATIVE }}>
-                        {rec.tipo === 'buy' ? 'COMPRAR' : 'VENDER'}
-                      </td>
-                      <td style={{ ...CELL_RIGHT, borderRight: 'none' }}>{rec.cantidad}</td>
-                    </tr>
-                  ))}
+                  {result.recommendations.map((rec, i) => {
+                    const price = result.precios?.[rec.simbolo] ?? 0;
+                    const cost = rec.cantidad * price;
+                    return (
+                      <tr
+                        key={i}
+                        style={{
+                          background: i % 2 === 0 ? '#ffffff' : '#f0f0f0',
+                          borderBottom: '1px solid #c0c0c0',
+                          cursor: 'default',
+                        }}
+                      >
+                        <td style={{ ...CELL, fontWeight: 'bold' }}>{rec.simbolo}</td>
+                        <td style={{ ...CELL, textAlign: 'center', color: rec.tipo === 'buy' ? COLOR_POSITIVE : COLOR_NEGATIVE }}>
+                          {rec.tipo === 'buy' ? 'COMPRAR' : 'VENDER'}
+                        </td>
+                        <td style={CELL_RIGHT}>{rec.cantidad}</td>
+                        <td style={CELL_RIGHT}>${fmtARS(price)}</td>
+                        <td style={{ ...CELL_RIGHT, borderRight: 'none' }}>${fmtARS(cost)}</td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
+                <tfoot>
+                  <tr style={{ borderTop: '2px solid #808080' }}>
+                    <td colSpan={4} style={{ ...CELL, fontWeight: 'bold', textAlign: 'right' }}>Total:</td>
+                    <td style={{ ...CELL_RIGHT, fontWeight: 'bold', borderRight: 'none' }}>
+                      ${fmtARS(result.recommendations.reduce((sum, rec) => sum + rec.cantidad * (result.precios?.[rec.simbolo] ?? 0), 0))}
+                    </td>
+                  </tr>
+                  {cash != null && (
+                    <tr>
+                      <td colSpan={4} style={{ ...CELL, textAlign: 'right', color: COLOR_SECONDARY }}>Saldo restante:</td>
+                      <td style={{ ...CELL_RIGHT, color: COLOR_SECONDARY, borderRight: 'none' }}>
+                        ${fmtARS(cash - result.recommendations.reduce((sum, rec) => sum + rec.cantidad * (result.precios?.[rec.simbolo] ?? 0), 0))}
+                      </td>
+                    </tr>
+                  )}
+                </tfoot>
               </table>
             </div>
 
@@ -411,7 +448,7 @@ export function AdvisorWindow() {
           {statusText}
         </p>
         <p className="status-bar-field" style={{ flexShrink: 0 }}>
-          {cash != null ? `$${cash.toLocaleString('es-AR')} ARS` : strategy}
+          {cash != null ? `$${cash.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ARS` : strategy}
         </p>
       </div>
     </div>

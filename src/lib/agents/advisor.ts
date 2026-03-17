@@ -12,6 +12,7 @@ export interface AdvisorOutput {
   technical_analysis?: any;
   sentiment_analysis?: any;
   recommendations: AdvisorRecommendation[];
+  precios?: Record<string, number>;
 }
 
 export const advisorAgent = {
@@ -65,9 +66,10 @@ export const advisorAgent = {
 
     try {
       const { text } = await generateText({
-        model: 'meta/llama-3.3-70b', 
+        model: 'meta/llama-3.3-70b',
         system: 'Eres un sistema de hedge fund autónomo financiero cuantitativo. Retornas estrictamente JSON y te apegas siempre al presupuesto matemáticamente.',
         prompt: prompt,
+        temperature: 0,
       });
 
       // Try to parse out the JSON if there's markdown wrappings
@@ -81,20 +83,50 @@ export const advisorAgent = {
       const output = JSON.parse(rawJson) as AdvisorOutput;
 
       // ── Budget enforcement ────────────────────────────────────────────────────
-      // The LLM sometimes allocates the full budget to each position independently.
-      // Enforce that the SUM of all positions fits within the available cash (minus 1% for commissions).
       const priceMap = Object.fromEntries(quotes.map(q => [q.symbol, q.currentPrice]));
-      const budget = cash * 0.99;
-      const totalCost = output.recommendations.reduce(
-        (sum, rec) => sum + rec.cantidad * (priceMap[rec.simbolo] ?? 0),
-        0,
+      const budget = cash * 0.99; // 1% margin for commissions
+
+      // Filter out symbols the LLM hallucinated (not in our price data) and zero quantities
+      output.recommendations = output.recommendations.filter(
+        rec => rec.cantidad > 0 && priceMap[rec.simbolo] != null,
       );
-      if (totalCost > budget) {
-        const scale = budget / totalCost;
-        output.recommendations = output.recommendations
-          .map(rec => ({ ...rec, cantidad: Math.floor(rec.cantidad * scale) }))
-          .filter(rec => rec.cantidad > 0);
+
+      // Greedy knapsack: iterate in LLM priority order, cap each position to what's affordable
+      let remaining = budget;
+      const capped: AdvisorRecommendation[] = [];
+      for (const rec of output.recommendations) {
+        const price = priceMap[rec.simbolo];
+        if (!price || price <= 0) continue;
+        const maxAffordable = Math.floor(remaining / price);
+        const qty = Math.min(rec.cantidad, maxAffordable);
+        if (qty <= 0) continue;
+        capped.push({ ...rec, cantidad: qty });
+        remaining -= qty * price;
       }
+
+      // Scale-up pass: if the LLM under-allocated (>20% budget unused), distribute
+      // remaining budget proportionally across positions (common with cheap bonds
+      // where the LLM recommends stock-like quantities of 4 instead of 4000).
+      if (remaining > budget * 0.2 && capped.length > 0) {
+        const totalCost = capped.reduce((s, r) => s + r.cantidad * (priceMap[r.simbolo] ?? 0), 0);
+        if (totalCost > 0) {
+          const scaleFactor = (totalCost + remaining) / totalCost;
+          for (const rec of capped) {
+            const price = priceMap[rec.simbolo];
+            if (!price || price <= 0) continue;
+            const scaled = Math.floor(rec.cantidad * scaleFactor);
+            const maxNow = Math.floor(remaining / price) + rec.cantidad;
+            rec.cantidad = Math.min(scaled, maxNow);
+          }
+          // Recalculate remaining after scale-up
+          remaining = budget - capped.reduce((s, r) => s + r.cantidad * (priceMap[r.simbolo] ?? 0), 0);
+        }
+      }
+
+      output.recommendations = capped;
+
+      // Attach prices so the UI can display them
+      output.precios = priceMap;
 
       return output;
     } catch (error) {

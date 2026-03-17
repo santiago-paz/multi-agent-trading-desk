@@ -265,7 +265,7 @@ export async function getAdvisorRecommendation(strategy: 'Conservadora' | 'Media
 
     // IOL returns bond prices in ARS per unit, but the app displays paridad (price/100).
     // Divide bond ultimoPrecio by 100 to match the real market price shown in the IOL app.
-    const bonosTitulosNormalized = (bonosPanel.titulos || []).map(t => ({ ...t, ultimoPrecio: Math.round(t.ultimoPrecio) / 100 }));
+    const bonosTitulosNormalized = (bonosPanel.titulos || []).map(t => ({ ...t, ultimoPrecio: t.ultimoPrecio / 100 }));
     const combinedTitulos = [...(cedearsPanel.titulos || []), ...bonosTitulosNormalized];
 
     // 2. We don't want to fetch 30-day Yahoo data for 100+ assets since it takes too long
@@ -337,7 +337,7 @@ export async function getAdvisorStep_Candidates(cash: number) {
     ]);
     // IOL returns bond prices in ARS per unit, but the app displays paridad (price/100).
     // Divide bond ultimoPrecio by 100 to match the real market price shown in the IOL app.
-    const bonosTitulosNormalized = (bonosPanel.titulos || []).map(t => ({ ...t, ultimoPrecio: Math.round(t.ultimoPrecio) / 100 }));
+    const bonosTitulosNormalized = (bonosPanel.titulos || []).map(t => ({ ...t, ultimoPrecio: t.ultimoPrecio / 100 }));
     const combinedTitulos = [...(cedearsPanel.titulos || []), ...bonosTitulosNormalized];
     const totalInstruments = combinedTitulos.length;
 
@@ -358,40 +358,18 @@ export async function getAdvisorStep_Candidates(cash: number) {
       .sort((a: any, b: any) => a.ultimoPrecio - b.ultimoPrecio)
       .slice(0, 10);
 
-    // ── LLM picks the best 8-10 from the shortlist ────────────────────────────
-    const preFilterPrompt = `
-      You are a portfolio filtering agent. The user has ${cash} ARS available.
-      From the list below (already filtered to assets they can afford, sorted by liquidity),
-      pick the 8 to 10 most promising assets for a diversified portfolio.
-      Prefer assets with high volume, spread across different sectors/types.
-      Return ONLY a JSON array of ticker symbols. Example: ["AAPL", "TX24"]
-
-      Candidates (symbol | price ARS | daily change % | volume):
-      ${shortlist.map((t: any) => `${t.simbolo} | $${t.ultimoPrecio} | ${t.variacionPorcentual?.toFixed(2) ?? '0'}% | vol:${t.volumen ?? 0}`).join('\n')}
-    `;
-
-    const { generateText: textGen } = await import('ai');
-    const { text } = await textGen({
-      model: 'meta/llama-3.1-8b',
-      system: 'Return ONLY a JSON array of ticker symbol strings. No explanation, no markdown.',
-      prompt: preFilterPrompt,
+    // ── Deterministic scoring (no LLM = no positional bias, no latency) ───────
+    // Score each candidate: volume (liquidity), affordability (diversification potential), momentum
+    const maxVolume = Math.max(...shortlist.map((t: any) => t.volumen ?? 0), 1);
+    const scored = shortlist.map((t: any) => {
+      const volumeScore = (t.volumen ?? 0) / maxVolume;
+      const affordScore = Math.min(1, cash / (t.ultimoPrecio * 3)); // can buy ≥3 units → score 1
+      const momentumScore = Math.min(1, Math.max(0, (Math.abs(t.variacionPorcentual ?? 0)) / 5)); // |change| up to 5%
+      const score = volumeScore * 0.4 + affordScore * 0.3 + momentumScore * 0.3;
+      return { ...t, _score: score };
     });
-
-    let symbols: string[] = [];
-    try {
-      let raw = text.trim();
-      if (raw.includes('```')) raw = raw.split('```')[1].replace(/^json/, '').trim();
-      symbols = JSON.parse(raw);
-      // Validate: only accept symbols that exist in our shortlist
-      const validSet = new Set(shortlist.map((t: any) => t.simbolo));
-      symbols = symbols.filter((s: string) => validSet.has(s));
-    } catch {
-      // Fallback: just take the top 8 by volume from the shortlist
-    }
-
-    if (symbols.length === 0) {
-      symbols = shortlist.slice(0, 8).map((t: any) => t.simbolo);
-    }
+    scored.sort((a: any, b: any) => b._score - a._score);
+    const symbols: string[] = scored.slice(0, 10).map((t: any) => t.simbolo);
 
     // Also return price and type maps so the UI can display asset info and pass IOL prices as fallback
     const priceMap: Record<string, number> = {};
