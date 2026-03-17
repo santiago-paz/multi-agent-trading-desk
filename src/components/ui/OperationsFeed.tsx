@@ -1,11 +1,10 @@
-import React from 'react';
+import React, { useState, useMemo } from 'react';
 import { Operation } from '@/lib/iol/types';
 import {
-  FONT, COL_RAISED, CELL, CELL_RIGHT,
+  FONT, COL_HEADER_BASE, COL_RAISED, COL_SUNKEN, CELL, CELL_RIGHT,
   WINDOW_CONTAINER, SCROLLABLE_BODY, REFRESH_FOOTER, STATUS_BAR_STYLE,
   COLOR_POSITIVE, COLOR_NEGATIVE,
 } from '@/lib/theme/win98';
-
 import { useMepStore } from '@/lib/store/mep-store';
 
 interface OperationsFeedProps {
@@ -14,24 +13,62 @@ interface OperationsFeedProps {
   onRefresh: () => void;
 }
 
-const COLUMNS = [
-  { key: 'fecha', label: 'Fecha', align: 'left', width: '70px' },
-  { key: 'simbolo', label: 'Símbolo', align: 'left', width: '60px' },
-  { key: 'tipo', label: 'Tipo', align: 'left', width: '60px' },
-  { key: 'cantidad', label: 'Cant.', align: 'right', width: '50px' },
-  { key: 'precio', label: 'Precio', align: 'right', width: '70px' },
-  { key: 'monto', label: 'Monto', align: 'right', width: '80px' },
-  { key: 'estado', label: 'Estado', align: 'center', width: '80px' }
-] as const;
+type SortKey = 'fechaOrden' | 'simbolo' | 'tipo' | 'cantidad' | 'precio' | 'monto' | 'estado';
+type SortDir = 'asc' | 'desc';
+
+const COLUMNS: { key: SortKey; label: string; align: 'left' | 'right'; width: string }[] = [
+  { key: 'fechaOrden', label: 'Fecha',   align: 'left',  width: '72px' },
+  { key: 'simbolo',    label: 'Símbolo', align: 'left',  width: '60px' },
+  { key: 'tipo',       label: 'Tipo',    align: 'left',  width: '60px' },
+  { key: 'cantidad',   label: 'Cant.',   align: 'right', width: '50px' },
+  { key: 'precio',     label: 'Precio',  align: 'right', width: '72px' },
+  { key: 'monto',      label: 'Monto',   align: 'right', width: '80px' },
+  { key: 'estado',     label: 'Estado',  align: 'left',  width: '80px' },
+];
 
 export function OperationsFeed({ operations, isLoading, onRefresh }: OperationsFeedProps) {
   const { mepRate } = useMepStore();
+
+  // Default: most recent first (▼ = descending per guideline)
+  const [sortKey, setSortKey] = useState<SortKey>('fechaOrden');
+  const [sortDir, setSortDir] = useState<SortDir>('desc');
+
+  function handleSort(key: SortKey) {
+    if (key === sortKey) {
+      setSortDir(d => (d === 'asc' ? 'desc' : 'asc'));
+    } else {
+      setSortKey(key);
+      setSortDir('asc');
+    }
+  }
+
+  const sorted = useMemo(() => {
+    return [...operations].sort((a, b) => {
+      let av: string | number;
+      let bv: string | number;
+      switch (sortKey) {
+        case 'fechaOrden': av = a.fechaOrden; bv = b.fechaOrden; break;
+        case 'simbolo':    av = a.simbolo;    bv = b.simbolo;    break;
+        case 'tipo':       av = a.tipo;       bv = b.tipo;       break;
+        case 'cantidad':   av = a.cantidad;   bv = b.cantidad;   break;
+        case 'precio':     av = a.precio;     bv = b.precio;     break;
+        case 'monto':      av = a.monto;      bv = b.monto;      break;
+        case 'estado':     av = a.estado;     bv = b.estado;     break;
+        default:           return 0;
+      }
+      if (av < bv) return sortDir === 'asc' ? -1 : 1;
+      if (av > bv) return sortDir === 'asc' ? 1 : -1;
+      return 0;
+    });
+  }, [operations, sortKey, sortDir]);
+
   return (
     <div style={WINDOW_CONTAINER}>
       {/* ── Scrollable body ── */}
       <div className="win98-scrollbar" style={SCROLLABLE_BODY}>
+        {/* Group box: sentence caps for legend (group box label rule) */}
         <fieldset style={{ margin: 0, paddingBottom: '6px', display: 'flex', flexDirection: 'column', height: 'calc(100% - 10px)' }}>
-          <legend>Últimos Movimientos (IOL)</legend>
+          <legend>Últimos movimientos (IOL)</legend>
           <div
             className="sunken-panel win98-scrollbar"
             style={{ overflow: 'auto', flex: 1, padding: 0 }}
@@ -41,35 +78,34 @@ export function OperationsFeed({ operations, isLoading, onRefresh }: OperationsF
             ) : operations.length === 0 ? (
               <p style={{ ...FONT, padding: '4px', margin: 0 }}>No hay movimientos recientes.</p>
             ) : (
-              <table
-                style={{
-                  ...FONT,
-                  width: '100%',
-                  borderCollapse: 'collapse',
-                  borderSpacing: 0,
-                }}
-              >
+              <table style={{ ...FONT, width: '100%', borderCollapse: 'collapse', borderSpacing: 0 }}>
                 <thead>
                   <tr>
-                    {COLUMNS.map((col) => (
-                      <th
-                        key={col.key}
-                        style={{
-                          ...COL_RAISED,
-                          textAlign: col.align as React.CSSProperties['textAlign'],
-                          width: col.width,
-                          position: 'sticky',
-                          top: 0,
-                          zIndex: 1,
-                        }}
-                      >
-                        {col.label}
-                      </th>
-                    ))}
+                    {COLUMNS.map((col) => {
+                      const isActive = col.key === sortKey;
+                      return (
+                        <th
+                          key={col.key}
+                          onClick={() => handleSort(col.key)}
+                          style={{
+                            ...COL_HEADER_BASE,
+                            ...(isActive ? COL_SUNKEN : COL_RAISED),
+                            textAlign: col.align,
+                            width: col.width,
+                            position: 'sticky',
+                            top: 0,
+                            zIndex: 1,
+                            cursor: 'pointer',
+                          }}
+                        >
+                          {col.label}{isActive ? (sortDir === 'asc' ? ' ▲' : ' ▼') : ''}
+                        </th>
+                      );
+                    })}
                   </tr>
                 </thead>
                 <tbody>
-                  {operations.map((op, idx) => {
+                  {sorted.map((op, idx) => {
                     const isCompra = op.tipo === 'Compra';
                     const isVenta = op.tipo === 'Venta';
                     const tipoColor = isCompra ? COLOR_POSITIVE : isVenta ? COLOR_NEGATIVE : '#000000';
@@ -83,35 +119,29 @@ export function OperationsFeed({ operations, isLoading, onRefresh }: OperationsF
                         }}
                       >
                         <td style={CELL}>
-                          {new Date(op.fechaOrden).toLocaleDateString()}
+                          {new Date(op.fechaOrden).toLocaleDateString('es-AR')}
                         </td>
-                        <td style={{ ...CELL, fontWeight: 'bold' }}>
+                        <td style={CELL}>
                           {op.simbolo}
                         </td>
                         <td style={{ ...CELL, color: tipoColor }}>
                           {op.tipo}
                         </td>
                         <td style={CELL_RIGHT}>
-                          {op.cantidad ?? '-'}
+                          {op.cantidad ?? '—'}
                         </td>
                         <td style={CELL_RIGHT}>
                           {op.precio != null
-                            ? `U$D ${(op.precio / mepRate).toLocaleString('es-AR', {
-                                minimumFractionDigits: 2,
-                                maximumFractionDigits: 2,
-                              })}`
-                            : '-'}
+                            ? `U$D ${(op.precio / mepRate).toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                            : '—'}
                         </td>
-                        <td style={{ ...CELL_RIGHT, fontWeight: 'bold' }}>
+                        <td style={CELL_RIGHT}>
                           {op.monto != null
-                            ? `U$D ${(op.monto / mepRate).toLocaleString('es-AR', {
-                                minimumFractionDigits: 2,
-                                maximumFractionDigits: 2,
-                              })}`
-                            : '-'}
+                            ? `U$D ${(op.monto / mepRate).toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                            : '—'}
                         </td>
-                        <td style={{ ...CELL, textAlign: 'center', borderRight: 'none' }}>
-                          {op.estado ?? '-'}
+                        <td style={{ ...CELL, borderRight: 'none' }}>
+                          {op.estado ?? '—'}
                         </td>
                       </tr>
                     );

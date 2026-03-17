@@ -87,4 +87,7 @@ SIMULATION_MODE       # Set to skip real order execution
 
 ## Win98 UI Guidelines
 
-**Read [`docs/win98-ui-guidelines.md`](docs/win98-ui-guidelines.md) before making any UI changes.** That file is the authoritative reference for all Win98/2000 aesthetics: typography, layout (DLUs), 3D shading, controls, windows/dialogs/menus, iconography, tables, and window layout patterns.
+Two documents together cover everything needed for UI work:
+
+- **[`docs/win98-ui-guidelines.md`](docs/win98-ui-guidelines.md)** — authoritative design rules: typography, layout (DLUs), 3D shading model, controls, windows/dialogs/menus, iconography, tables, and window layout patterns.
+- **[`docs/win98-css-implementation.md`](docs/win98-css-implementation.md)** — technical reference: maps every guideline to concrete 98.css HTML classes, JSX markup patterns, and `@/lib/theme/win98` constants. Read this when writing or reviewing component code.
