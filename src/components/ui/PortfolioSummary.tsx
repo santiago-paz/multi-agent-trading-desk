@@ -65,12 +65,7 @@ export const PortfolioSummary: React.FC<PortfolioSummaryProps> = ({
               type="text"
               readOnly
               value={`U$D ${totalUSD.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
-              style={{
-                ...FONT,
-                flex: 1,
-                cursor: 'default',
-                fontWeight: 'bold',
-              }}
+              style={{ ...FONT, flex: 1, cursor: 'default' }}
             />
           </div>
           <div className="field-row">
@@ -83,7 +78,6 @@ export const PortfolioSummary: React.FC<PortfolioSummaryProps> = ({
                 ...FONT,
                 flex: 1,
                 cursor: 'default',
-                fontWeight: 'bold',
                 color: totalGananciaUSD >= 0 ? COLOR_POSITIVE : COLOR_NEGATIVE,
               }}
             />
@@ -119,6 +113,9 @@ export const PortfolioSummary: React.FC<PortfolioSummaryProps> = ({
                           textAlign: col.align,
                           ...(isActive ? COL_SUNKEN : COL_RAISED),
                           ...(col.width ? { width: col.width } : {}),
+                          position: 'sticky',
+                          top: 0,
+                          zIndex: 1,
                           cursor: 'pointer',
                         }}
                       >
@@ -141,7 +138,7 @@ export const PortfolioSummary: React.FC<PortfolioSummaryProps> = ({
                         cursor: 'default',
                       }}
                     >
-                      <td style={{ ...CELL, fontWeight: 'bold' }}>
+                      <td style={CELL}>
                         {asset.titulo.simbolo}
                       </td>
                       <td
@@ -157,7 +154,7 @@ export const PortfolioSummary: React.FC<PortfolioSummaryProps> = ({
                       <td style={CELL_RIGHT}>
                         {(asset.ultimoPrecio / mepRate).toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                       </td>
-                      <td style={{ ...CELL_RIGHT, fontWeight: 'bold' }}>
+                      <td style={CELL_RIGHT}>
                         {(asset.valorizado / mepRate).toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                       </td>
                       <td

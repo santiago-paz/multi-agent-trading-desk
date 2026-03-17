@@ -42,7 +42,7 @@ export const AccountData: React.FC<AccountDataProps> = ({
           <>
             {/* ─── Información del Titular ─── */}
             <fieldset>
-              <legend>Información del Titular</legend>
+              <legend>Información del titular</legend>
 
               {perfil ? (
                 <>
@@ -90,7 +90,7 @@ export const AccountData: React.FC<AccountDataProps> = ({
 
             {/* ─── Estado del Portfolio ─── */}
             <fieldset style={{ marginTop: '6px' }}>
-              <legend>Estado del Portfolio</legend>
+              <legend>Estado del portfolio</legend>
 
               {estadoCuenta ? (
                 estadoCuenta.cuentas.map((cuenta, index) => {
@@ -119,7 +119,7 @@ export const AccountData: React.FC<AccountDataProps> = ({
                       />
                     </div>
                     <div className="field-row" style={{ marginBottom: '2px' }}>
-                      <label style={{ ...LABEL, fontWeight: 'bold' }}>Disponible:</label>
+                      <label style={LABEL}>Disponible:</label>
                       <input
                         type="text"
                         readOnly
@@ -129,7 +129,6 @@ export const AccountData: React.FC<AccountDataProps> = ({
                           flex: 1,
                           cursor: 'default',
                           color: (cuenta.disponible ?? 0) >= 0 ? COLOR_POSITIVE : COLOR_NEGATIVE,
-                          fontWeight: 'bold',
                         }}
                       />
                     </div>
@@ -143,17 +142,12 @@ export const AccountData: React.FC<AccountDataProps> = ({
                       />
                     </div>
                     <div className="field-row" style={{ marginBottom: '2px' }}>
-                      <label style={{ ...LABEL, fontWeight: 'bold' }}>Total:</label>
+                      <label style={LABEL}>Total:</label>
                       <input
                         type="text"
                         readOnly
                         value={`${monedaLabel} ${((cuenta.total ?? 0) / divisor).toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
-                        style={{
-                          ...FONT,
-                          flex: 1,
-                          cursor: 'default',
-                          fontWeight: 'bold',
-                        }}
+                        style={{ ...FONT, flex: 1, cursor: 'default' }}
                       />
                     </div>
                     {saldoInmediato && (
@@ -194,7 +188,7 @@ export const AccountData: React.FC<AccountDataProps> = ({
                       <input
                         type="text"
                         readOnly
-                        value={cuenta.estado ?? '-'}
+                        value={cuenta.estado ?? '—'}
                         style={{ ...FONT, flex: 1, cursor: 'default' }}
                       />
                     </div>
@@ -213,7 +207,7 @@ export const AccountData: React.FC<AccountDataProps> = ({
               {estadoCuenta ? (
                 <>
                   <div className="field-row" style={{ marginBottom: '4px' }}>
-                    <label style={{ ...LABEL, fontWeight: 'bold' }}>Total (USD):</label>
+                    <label style={LABEL}>Total (USD):</label>
                     <input
                       type="text"
                       readOnly
@@ -222,7 +216,6 @@ export const AccountData: React.FC<AccountDataProps> = ({
                         ...FONT,
                         flex: 1,
                         cursor: 'default',
-                        fontWeight: 'bold',
                         color: ((estadoCuenta.totalEnPesos ?? 0) / mepRate) >= 0 ? COLOR_POSITIVE : COLOR_NEGATIVE,
                       }}
                     />
@@ -242,9 +235,9 @@ export const AccountData: React.FC<AccountDataProps> = ({
                       >
                         <thead>
                           <tr>
-                            <th style={COL_HEADER}>Período</th>
-                            <th style={COL_HEADER_RIGHT}>Operaciones</th>
-                            <th style={COL_HEADER_RIGHT}>Volumen</th>
+                            <th style={{ ...COL_HEADER, position: 'sticky', top: 0, zIndex: 1 }}>Período</th>
+                            <th style={{ ...COL_HEADER_RIGHT, position: 'sticky', top: 0, zIndex: 1 }}>Operaciones</th>
+                            <th style={{ ...COL_HEADER_RIGHT, position: 'sticky', top: 0, zIndex: 1 }}>Volumen</th>
                           </tr>
                         </thead>
                         <tbody>
@@ -252,7 +245,7 @@ export const AccountData: React.FC<AccountDataProps> = ({
                             <tr
                               key={i}
                               style={{
-                                backgroundColor: '#ffffff',
+                                backgroundColor: i % 2 === 0 ? '#ffffff' : '#f0f0f0',
                                 borderBottom: '1px solid #c0c0c0',
                               }}
                             >
