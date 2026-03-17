@@ -373,7 +373,7 @@ export class IOLClient {
     }
 
     return this.fetchWithAuth<IOLHistoricalEntry[]>(
-      `/api/v2/${market}/Titulos/${symbol}/Cotizacion/seriehistorica/${formatDate(from)}/${formatDate(today)}/false`
+      `/api/v2/${market}/Titulos/${symbol}/Cotizacion/seriehistorica/${formatDate(from)}/${formatDate(today)}/sinAjustar`
     );
   }
 

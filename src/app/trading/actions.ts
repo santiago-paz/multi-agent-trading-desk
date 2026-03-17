@@ -446,10 +446,8 @@ export async function getAdvisorStep_AssetData(symbol: string, iolPrice?: number
       }
     }
 
-    // CEDEARs that Yahoo missed: try IOL historical series.
-    // Bonds are excluded — the IOL public API v2 seriehistorica endpoint consistently
-    // returns 400 for all government bond types. The mobile app uses a private API.
-    if (type !== 'Bono') {
+    // Fallback: try IOL historical series (works for both CEDEARs and bonds).
+    {
       try {
         const series = await iolClient.getHistoricalSeries(symbol, 120);
         if (series && series.length > 0) {
