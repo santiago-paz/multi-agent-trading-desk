@@ -24,6 +24,7 @@
 .DS_Store
 *.pem
 .iol_token_cache.json
+.historical_cache.json
 
 # debug
 npm-debug.log*

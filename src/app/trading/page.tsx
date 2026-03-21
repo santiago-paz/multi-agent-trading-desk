@@ -12,7 +12,7 @@ import {
   WindowState,
 } from '@/components/ui/DraggableResizableWindow';
 import { useNewsStore } from '@/lib/store/news-store';
-import { getPortfolioSummary, getMarketData, getOperations, getProfileData, getAccountStatement } from './actions';
+import { getPortfolioSummary, getMarketData, getOperations, getProfileData, getAccountStatement, prefetchHistoricalData } from './actions';
 import { PortfolioResponse, Operation, DatosPerfil, EstadoCuenta } from '@/lib/iol/types';
 import { HistoricalRow } from '@/lib/market-data';
 import { DESKTOP_APP_ICONS } from '@/lib/win98se-icons';
@@ -209,6 +209,7 @@ export default function TradingDashboard() {
       x: e.clientX - rect.left,
       y: e.clientY - rect.top,
     };
+    liveSelectionRef.current = new Set();
     setSelectedIconIds(new Set());
     setContextMenu(null);
   }, []);
@@ -360,6 +361,7 @@ export default function TradingDashboard() {
   useEffect(() => {
     fetchPortfolio();
     fetchAccountData();
+    prefetchHistoricalData();
   }, []);
 
   useEffect(() => {

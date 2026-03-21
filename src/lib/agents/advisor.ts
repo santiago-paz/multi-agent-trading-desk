@@ -51,7 +51,8 @@ export const advisorAgent = {
       2. Matemáticas estrictas: Debes calcular una "cantidad" entera de títulos a comprar de modo que el costo total (suma de cantidad * precio de cada instrumento) sea estrictamente MENOR o IGUAL al Saldo Disponible ($${cash} ARS). Trata de dejar siempre un margen del 1% para cubrir posibles comisiones.
       3. CRÍTICO (FALLBACK): Si el Saldo Disponible ($${cash}) no te alcanza para comprar ni siquiera 1 unidad de los instrumentos, NO lo sugieras. En su lugar, si hay Bonos baratos, recuérdalos. Si no te alcanza para nada, devuelve recomendaciones vacío.
       4. Si la estrategia es "Conservadora", busca instrumentos con poca volatilidad y RSI moderado. Si es "Arriesgada", puedes buscar breakouts y alto momentum o empresas expuestas a noticias extremas.
-      5. La recomendación debe ser retornada estrictamente en formato JSON validable y nada más. No incluyas markdown \`\`\`json ni saludos, SOLAMENTE EL OBJETO JSON.
+      5. DIVERSIFICACIÓN OBLIGATORIA: Debes recomendar entre 3 y 5 instrumentos distintos. Ningún instrumento individual puede superar el 40% del presupuesto total. Distribuye el capital entre los instrumentos seleccionados de manera razonable.
+      6. La recomendación debe ser retornada estrictamente en formato JSON validable y nada más. No incluyas markdown \`\`\`json ni saludos, SOLAMENTE EL OBJETO JSON.
       
       Estructura de JSON esperada:
       {
@@ -59,7 +60,9 @@ export const advisorAgent = {
         "sentiment_analysis": "Breve resumen de tu razonamiento como Analista de Sentimiento de Noticias para los activos seleccionados.",
         "analysis": "Resumen como Portfolio Manager justificando la combinación final y la asignación del capital de ${cash} ARS.",
         "recommendations": [
-          { "simbolo": "TX24", "cantidad": 6, "tipo": "buy" }
+          { "simbolo": "VIST", "cantidad": 10, "tipo": "buy" },
+          { "simbolo": "MELI", "cantidad": 5, "tipo": "buy" },
+          { "simbolo": "AL30", "cantidad": 3, "tipo": "buy" }
         ]
       }
     `;
@@ -92,12 +95,14 @@ export const advisorAgent = {
       );
 
       // Greedy knapsack: iterate in LLM priority order, cap each position to what's affordable
+      // and enforce max 40% of total budget per position for diversification
+      const maxPerPosition = Math.floor(budget * 0.4);
       let remaining = budget;
       const capped: AdvisorRecommendation[] = [];
       for (const rec of output.recommendations) {
         const price = priceMap[rec.simbolo];
         if (!price || price <= 0) continue;
-        const maxAffordable = Math.floor(remaining / price);
+        const maxAffordable = Math.floor(Math.min(remaining, maxPerPosition) / price);
         const qty = Math.min(rec.cantidad, maxAffordable);
         if (qty <= 0) continue;
         capped.push({ ...rec, cantidad: qty });
@@ -107,6 +112,7 @@ export const advisorAgent = {
       // Scale-up pass: if the LLM under-allocated (>20% budget unused), distribute
       // remaining budget proportionally across positions (common with cheap bonds
       // where the LLM recommends stock-like quantities of 4 instead of 4000).
+      // Respects the 40% per-position cap.
       if (remaining > budget * 0.2 && capped.length > 0) {
         const totalCost = capped.reduce((s, r) => s + r.cantidad * (priceMap[r.simbolo] ?? 0), 0);
         if (totalCost > 0) {
@@ -114,9 +120,9 @@ export const advisorAgent = {
           for (const rec of capped) {
             const price = priceMap[rec.simbolo];
             if (!price || price <= 0) continue;
-            const scaled = Math.floor(rec.cantidad * scaleFactor);
-            const maxNow = Math.floor(remaining / price) + rec.cantidad;
-            rec.cantidad = Math.min(scaled, maxNow);
+            const maxByBudgetCap = Math.floor(maxPerPosition / price);
+            const scaled = Math.min(Math.floor(rec.cantidad * scaleFactor), maxByBudgetCap);
+            rec.cantidad = scaled;
           }
           // Recalculate remaining after scale-up
           remaining = budget - capped.reduce((s, r) => s + r.cantidad * (priceMap[r.simbolo] ?? 0), 0);

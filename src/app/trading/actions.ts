@@ -8,6 +8,74 @@ import { tradingEngine } from '@/lib/trading/engine';
 import { ComprehensiveAssetData } from '@/lib/market-data';
 import { iolClient } from '@/lib/iol/client';
 import { OrderRequest, OrderResponse } from '@/lib/iol/types';
+import { getCachedAssetData, bulkSetCachedAssetData, buildAssetDataFromIOLSeries } from '@/lib/historical-cache';
+
+// ─── Prefetch historical data for all instruments ────────────────────────────
+
+export async function prefetchHistoricalData() {
+  try {
+    const [cedearsPanel, bonosPanel] = await Promise.all([
+      iolClient.getPanelQuotes('cedears'),
+      iolClient.getPanelQuotes('titulosPublicos'),
+    ]);
+
+    // Deduplicate CEDEARs: IOL lists both peso (C) and dollar (D) variants.
+    // Only strip the suffix when BOTH variants exist (e.g. AAPLC+AAPLD → AAPL).
+    // This avoids mangling tickers that naturally end in C/D (INTC, MCD, JD, GILD…).
+    const cedearsRaw = (cedearsPanel.titulos || []).map(t => t.simbolo);
+    const cedearsRawSet = new Set(cedearsRaw);
+    const cedearsSet = new Set<string>();
+    for (const sym of cedearsRaw) {
+      if (sym.length > 1 && /[CD]$/.test(sym)) {
+        const base = sym.slice(0, -1);
+        const otherSuffix = sym.endsWith('C') ? 'D' : 'C';
+        if (cedearsRawSet.has(base + otherSuffix)) {
+          cedearsSet.add(base);
+          continue;
+        }
+      }
+      cedearsSet.add(sym);
+    }
+    const bonosSymbols = (bonosPanel.titulos || []).map(t => t.simbolo);
+    const allSymbols = [...Array.from(cedearsSet), ...bonosSymbols];
+
+    console.log(`[PREFETCH] Starting historical data download for ${allSymbols.length} symbols...`);
+
+    const BATCH_SIZE = 5;
+    const results: { symbol: string; data: ComprehensiveAssetData }[] = [];
+    let ok = 0;
+    let fail = 0;
+
+    for (let i = 0; i < allSymbols.length; i += BATCH_SIZE) {
+      const batch = allSymbols.slice(i, i + BATCH_SIZE);
+      const batchResults = await Promise.allSettled(
+        batch.map(async (symbol) => {
+          const series = await iolClient.getHistoricalSeries(symbol, 120);
+          const data = buildAssetDataFromIOLSeries(symbol, series);
+          return data ? { symbol, data } : null;
+        })
+      );
+
+      for (const r of batchResults) {
+        if (r.status === 'fulfilled' && r.value) {
+          results.push(r.value);
+          ok++;
+        } else {
+          fail++;
+        }
+      }
+    }
+
+    // Write all to cache at once
+    bulkSetCachedAssetData(results);
+
+    console.log(`[PREFETCH] Done: ${ok} cached, ${fail} failed, ${allSymbols.length} total`);
+    return { success: true, cached: ok, failed: fail, total: allSymbols.length };
+  } catch (error) {
+    console.error('[PREFETCH] Failed:', error);
+    return { success: false, error: 'Prefetch failed' };
+  }
+}
 
 export async function runAnalysis() {
   try {
@@ -347,38 +415,36 @@ export async function getAdvisorStep_Candidates(cash: number) {
       (t: any) => t.ultimoPrecio > 0 && t.ultimoPrecio <= cash
     );
 
-    // 2. Sort by volume descending (most liquid / actively traded first)
-    //    then take top 30 to give the LLM a manageable, high-quality set
-    const top30 = affordable
-      .sort((a: any, b: any) => (b.volumen ?? 0) - (a.volumen ?? 0))
-      .slice(0, 30);
+    // 2. Split by type so we guarantee a mix of CEDEARs and bonds
+    const cedearsSymbolSet = new Set((cedearsPanel.titulos || []).map((t: any) => t.simbolo));
+    const affordableCedears = affordable.filter((t: any) => cedearsSymbolSet.has(t.simbolo));
+    const affordableBonos = affordable.filter((t: any) => !cedearsSymbolSet.has(t.simbolo));
 
-    // 3. If the user can't afford anything meaningful, fall back to cheapest 10
-    const shortlist = top30.length >= 3 ? top30 : affordable
-      .sort((a: any, b: any) => a.ultimoPrecio - b.ultimoPrecio)
-      .slice(0, 10);
+    // 3. Score within each type by volume (liquidity), then pick top N from each
+    const scoreAndSort = (list: any[]) => {
+      const maxVol = Math.max(...list.map((t: any) => t.volumen ?? 0), 1);
+      return list
+        .map((t: any) => ({ ...t, _score: (t.volumen ?? 0) / maxVol }))
+        .sort((a: any, b: any) => b._score - a._score);
+    };
 
-    // ── Deterministic scoring (no LLM = no positional bias, no latency) ───────
-    // Score each candidate: volume (liquidity), affordability (diversification potential), momentum
-    const maxVolume = Math.max(...shortlist.map((t: any) => t.volumen ?? 0), 1);
-    const scored = shortlist.map((t: any) => {
-      const volumeScore = (t.volumen ?? 0) / maxVolume;
-      const affordScore = Math.min(1, cash / (t.ultimoPrecio * 3)); // can buy ≥3 units → score 1
-      const momentumScore = Math.min(1, Math.max(0, (Math.abs(t.variacionPorcentual ?? 0)) / 5)); // |change| up to 5%
-      const score = volumeScore * 0.4 + affordScore * 0.3 + momentumScore * 0.3;
-      return { ...t, _score: score };
-    });
-    scored.sort((a: any, b: any) => b._score - a._score);
-    const symbols: string[] = scored.slice(0, 10).map((t: any) => t.simbolo);
+    const topCedears = scoreAndSort(affordableCedears).slice(0, 5);
+    const topBonos = scoreAndSort(affordableBonos).slice(0, 5);
+    const shortlist = [...topCedears, ...topBonos];
+
+    // 4. If one category is empty, fill from the other
+    if (topCedears.length === 0) shortlist.push(...scoreAndSort(affordableBonos).slice(5, 10));
+    if (topBonos.length === 0) shortlist.push(...scoreAndSort(affordableCedears).slice(5, 10));
+
+    const symbols: string[] = shortlist.map((t: any) => t.simbolo);
 
     // Also return price and type maps so the UI can display asset info and pass IOL prices as fallback
     const priceMap: Record<string, number> = {};
     const typeMap: Record<string, 'CEDEAR' | 'Bono'> = {};
-    const cedearsSymbols = new Set((cedearsPanel.titulos || []).map((t: any) => t.simbolo));
     for (const t of shortlist) {
       const sym = (t as any).simbolo;
       priceMap[sym] = (t as any).ultimoPrecio;
-      typeMap[sym] = cedearsSymbols.has(sym) ? 'CEDEAR' : 'Bono';
+      typeMap[sym] = cedearsSymbolSet.has(sym) ? 'CEDEAR' : 'Bono';
     }
 
     return { success: true as const, symbols, totalInstruments, priceMap, typeMap };
@@ -390,6 +456,23 @@ export async function getAdvisorStep_Candidates(cash: number) {
 
 export async function getAdvisorStep_AssetData(symbol: string, iolPrice?: number, type?: 'CEDEAR' | 'Bono') {
   try {
+    // Check prefetched cache first (has technicals from IOL, but no news)
+    const cached = getCachedAssetData(symbol);
+    if (cached) {
+      // Enrich CEDEARs with news from Yahoo Finance
+      if (type !== 'Bono' && cached.recentNews.length === 0) {
+        try {
+          const { getNews } = await import('@/lib/market-data');
+          const { processNewsBatch } = await import('@/lib/news-processor');
+          const rawNews = await getNews(symbol, 3);
+          cached.recentNews = await processNewsBatch(rawNews);
+        } catch {
+          // News enrichment failed — continue with cached data as-is
+        }
+      }
+      return { success: true as const, data: cached };
+    }
+
     // Skip Yahoo Finance entirely for bonds — they're not listed there
     if (type !== 'Bono') {
       const { getComprehensiveAssetData } = await import('@/lib/market-data');

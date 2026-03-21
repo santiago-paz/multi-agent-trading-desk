@@ -48,12 +48,17 @@ function LogIcon({ status }: { status: LogStatus }) {
 export function AdvisorWindow() {
   const [strategy, setStrategy] = useState<'Conservadora' | 'Media' | 'Arriesgada'>('Media');
 
+  // Cash override
+  const [cashOverride, setCashOverride] = useState<string>('');
+  const [useRealCash, setUseRealCash] = useState(true);
+
   // Analysis state
   const [phase, setPhase] = useState<'idle' | 'running' | 'done' | 'error'>('idle');
   const [logs, setLogs] = useState<LogEntry[]>([]);
   const [progress, setProgress] = useState(0);
   const [cash, setCash] = useState<number | null>(null);
   const [candidates, setCandidates] = useState<CandidateRow[]>([]);
+  const [enrichedAssets, setEnrichedAssets] = useState<ComprehensiveAssetData[]>([]);
   const [result, setResult] = useState<AdvisorOutput | null>(null);
 
   // Execute state
@@ -87,6 +92,7 @@ export function AdvisorWindow() {
     setProgress(0);
     setCash(null);
     setCandidates([]);
+    setEnrichedAssets([]);
     setResult(null);
     setExecMsg(null);
 
@@ -94,12 +100,21 @@ export function AdvisorWindow() {
 
     try {
       // ── Step 1: Cash ─────────────────────────────────────────────────────────
-      addLog('cash', 'Consultando saldo disponible...', 'running');
-      const cashRes = await getAdvisorStep_Cash();
-      if (!cashRes.success) throw new Error(cashRes.error);
-      const availableCash = cashRes.cash;
+      let availableCash: number;
+      const overrideValue = !useRealCash && cashOverride ? parseFloat(cashOverride) : NaN;
+
+      if (!isNaN(overrideValue) && overrideValue > 0) {
+        addLog('cash', 'Usando saldo manual de prueba...', 'running');
+        availableCash = overrideValue;
+        updateLog('cash', `Saldo manual: $${fmtARS(availableCash)} ARS (prueba)`, 'ok');
+      } else {
+        addLog('cash', 'Consultando saldo disponible...', 'running');
+        const cashRes = await getAdvisorStep_Cash();
+        if (!cashRes.success) throw new Error(cashRes.error);
+        availableCash = cashRes.cash;
+        updateLog('cash', `Saldo disponible: $${fmtARS(availableCash)} ARS`, 'ok');
+      }
       setCash(availableCash);
-      updateLog('cash', `Saldo disponible: $${availableCash.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ARS`, 'ok');
       setProgress(10);
 
       // ── Step 2: Candidates ───────────────────────────────────────────────────
@@ -158,6 +173,9 @@ export function AdvisorWindow() {
 
         setProgress(20 + Math.round(Math.min(batchStart + BATCH_SIZE, symbols.length) * perSymbolStep));
       }
+
+      // Save enriched data for the news panel
+      setEnrichedAssets([...enrichedAssets]);
 
       // ── Step 4: Final recommendation ─────────────────────────────────────────
       addLog('rec', 'Generando recomendación final...', 'running');
@@ -242,6 +260,26 @@ export function AdvisorWindow() {
               <option value="Media">Moderada</option>
               <option value="Arriesgada">Arriesgada</option>
             </select>
+          </div>
+
+          <div className="field-row" style={{ marginBottom: '6px', alignItems: 'center' }}>
+            <label htmlFor="cash-override" style={LABEL}>Saldo (ARS):</label>
+            <input
+              id="cash-override"
+              type="text"
+              placeholder="ej: 1000000"
+              value={useRealCash ? '' : cashOverride}
+              onChange={e => { setCashOverride(e.target.value); setUseRealCash(false); }}
+              disabled={isRunning || isExecuting || useRealCash}
+              style={{ ...FONT, width: '110px' }}
+            />
+            <button
+              onClick={() => { setUseRealCash(!useRealCash); if (!useRealCash) setCashOverride(''); }}
+              disabled={isRunning || isExecuting}
+              style={{ ...FONT, marginLeft: '4px', whiteSpace: 'nowrap' }}
+            >
+              {useRealCash ? '✓ Saldo real' : 'Usar saldo real'}
+            </button>
           </div>
 
           <button
@@ -346,6 +384,42 @@ export function AdvisorWindow() {
                 </div>
               </>
             )}
+          </fieldset>
+        )}
+
+        {/* ── News collected per symbol ─────────────────────────────────────── */}
+        {enrichedAssets.some(a => a.recentNews.length > 0) && (
+          <fieldset style={{ marginBottom: '6px' }}>
+            <legend>Noticias recopiladas</legend>
+            <ul className="tree-view" style={{ margin: 0 }}>
+              {enrichedAssets.filter(a => a.recentNews.length > 0).map(asset => (
+                <li key={asset.symbol}>
+                  <details>
+                    <summary style={FONT}>{asset.symbol} ({asset.recentNews.length})</summary>
+                    <ul>
+                      {asset.recentNews.map((news, ni) => (
+                        <li key={ni}>
+                          <details>
+                            <summary style={FONT}>{news.title}</summary>
+                            <div
+                              className="sunken-panel"
+                              style={{ ...FONT, padding: '4px 6px', margin: '2px 0 4px', color: COLOR_SECONDARY }}
+                            >
+                              {news.summary || news.fullContent?.slice(0, 300) || 'Sin contenido disponible.'}
+                              {news.publisher && (
+                                <span style={{ display: 'block', marginTop: '2px', color: COLOR_DISABLED }}>
+                                  — {news.publisher}
+                                </span>
+                              )}
+                            </div>
+                          </details>
+                        </li>
+                      ))}
+                    </ul>
+                  </details>
+                </li>
+              ))}
+            </ul>
           </fieldset>
         )}
 
