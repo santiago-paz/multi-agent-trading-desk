@@ -326,15 +326,16 @@ export async function getAdvisorRecommendation(strategy: 'Conservadora' | 'Media
     }
 
     // Fetch both CEDEARs and Public Bonds to ensure we have cheap options
-    const [cedearsPanel, bonosPanel] = await Promise.all([
+    const [cedearsPanel, bonosPanel, mepRate] = await Promise.all([
       iolClient.getPanelQuotes('cedears'),
-      iolClient.getPanelQuotes('titulosPublicos')
+      iolClient.getPanelQuotes('titulosPublicos'),
+      iolClient.getMEP(),
     ]);
 
-    // IOL returns bond prices in ARS per unit, but the app displays paridad (price/100).
-    // Divide bond ultimoPrecio by 100 to match the real market price shown in the IOL app.
-    const bonosTitulosNormalized = (bonosPanel.titulos || []).map(t => ({ ...t, ultimoPrecio: t.ultimoPrecio / 100 }));
-    const combinedTitulos = [...(cedearsPanel.titulos || []), ...bonosTitulosNormalized];
+    const combinedTitulos = [...(cedearsPanel.titulos || []), ...(bonosPanel.titulos || [])];
+
+    // Normalize prices to ARS: moneda "2" = USD, convert using MEP rate
+    const priceInArs = (t: any) => t.moneda === '2' ? t.ultimoPrecio * mepRate : t.ultimoPrecio;
 
     // 2. We don't want to fetch 30-day Yahoo data for 100+ assets since it takes too long
     //    We will tell the LLM to pre-filter to max 10 affordable assets.
@@ -343,7 +344,7 @@ export async function getAdvisorRecommendation(strategy: 'Conservadora' | 'Media
       You need to pick the top 8 to 10 best assets from this list that they can afford.
       If the user has very little money (< 10,000 ARS), prioritize cheap bonds or letters.
       Return ONLY a JSON array of strings with the symbols. Example: ["AAPL", "TX24"]
-      List of assets: ${JSON.stringify(combinedTitulos.map(t => ({ symbol: t.simbolo, price: t.ultimoPrecio })))}
+      List of assets: ${JSON.stringify(combinedTitulos.map(t => ({ symbol: t.simbolo, price: priceInArs(t) })))}
     `;
 
     const { generateText: textGen } = await import('ai');
@@ -399,20 +400,22 @@ export async function getAdvisorStep_Cash() {
 
 export async function getAdvisorStep_Candidates(cash: number) {
   try {
-    const [cedearsPanel, bonosPanel] = await Promise.all([
+    const [cedearsPanel, bonosPanel, mepRate] = await Promise.all([
       iolClient.getPanelQuotes('cedears'),
       iolClient.getPanelQuotes('titulosPublicos'),
+      iolClient.getMEP(),
     ]);
-    // IOL returns bond prices in ARS per unit, but the app displays paridad (price/100).
-    // Divide bond ultimoPrecio by 100 to match the real market price shown in the IOL app.
-    const bonosTitulosNormalized = (bonosPanel.titulos || []).map(t => ({ ...t, ultimoPrecio: t.ultimoPrecio / 100 }));
-    const combinedTitulos = [...(cedearsPanel.titulos || []), ...bonosTitulosNormalized];
+    const combinedTitulos = [...(cedearsPanel.titulos || []), ...(bonosPanel.titulos || [])];
     const totalInstruments = combinedTitulos.length;
+
+    // IOL panel quotes come in two currencies: moneda "1" = ARS, moneda "2" = USD.
+    // Cash is always in ARS, so convert USD prices to ARS using MEP rate for comparison.
+    const priceInArs = (t: any) => t.moneda === '2' ? t.ultimoPrecio * mepRate : t.ultimoPrecio;
 
     // ── Server-side pre-filter (deterministic, no LLM needed here) ────────────
     // 1. Only instruments the user can afford (at least 1 unit)
     const affordable = combinedTitulos.filter(
-      (t: any) => t.ultimoPrecio > 0 && t.ultimoPrecio <= cash
+      (t: any) => t.ultimoPrecio > 0 && priceInArs(t) <= cash
     );
 
     // 2. Split by type so we guarantee a mix of CEDEARs and bonds
@@ -420,11 +423,15 @@ export async function getAdvisorStep_Candidates(cash: number) {
     const affordableCedears = affordable.filter((t: any) => cedearsSymbolSet.has(t.simbolo));
     const affordableBonos = affordable.filter((t: any) => !cedearsSymbolSet.has(t.simbolo));
 
-    // 3. Score within each type by volume (liquidity), then pick top N from each
+    // 3. Score within each type by liquidity, then pick top N from each
+    // IOL's `volumen` field is often 0 (especially outside market hours),
+    // so fall back to `cantidadOperaciones` which is more reliably populated.
     const scoreAndSort = (list: any[]) => {
-      const maxVol = Math.max(...list.map((t: any) => t.volumen ?? 0), 1);
+      const hasVolume = list.some((t: any) => (t.volumen ?? 0) > 0);
+      const metric = (t: any) => hasVolume ? (t.volumen ?? 0) : (t.cantidadOperaciones ?? 0);
+      const maxVal = Math.max(...list.map(metric), 1);
       return list
-        .map((t: any) => ({ ...t, _score: (t.volumen ?? 0) / maxVol }))
+        .map((t: any) => ({ ...t, _score: metric(t) / maxVal }))
         .sort((a: any, b: any) => b._score - a._score);
     };
 
@@ -439,15 +446,16 @@ export async function getAdvisorStep_Candidates(cash: number) {
     const symbols: string[] = shortlist.map((t: any) => t.simbolo);
 
     // Also return price and type maps so the UI can display asset info and pass IOL prices as fallback
+    // Prices are normalized to ARS so downstream consumers can compare against ARS cash.
     const priceMap: Record<string, number> = {};
     const typeMap: Record<string, 'CEDEAR' | 'Bono'> = {};
     for (const t of shortlist) {
       const sym = (t as any).simbolo;
-      priceMap[sym] = (t as any).ultimoPrecio;
+      priceMap[sym] = priceInArs(t);
       typeMap[sym] = cedearsSymbolSet.has(sym) ? 'CEDEAR' : 'Bono';
     }
 
-    return { success: true as const, symbols, totalInstruments, priceMap, typeMap };
+    return { success: true as const, symbols, totalInstruments, priceMap, typeMap, mepRate };
   } catch (error) {
     console.error('Advisor Step Candidates failed:', error);
     return { success: false as const, error: 'No se pudo obtener los candidatos' };

@@ -6,6 +6,7 @@ import { AdvisorWindow } from '@/components/ui/AdvisorWindow';
 import { NewsFeed } from '@/components/ui/NewsFeed';
 import { MarketDataWindow } from '@/components/ui/MarketDataWindow';
 import { OperationsFeed } from '@/components/ui/OperationsFeed';
+import { ApiExplorerWindow } from '@/components/ui/ApiExplorerWindow';
 import { DesktopIcon } from '@/components/ui/DesktopIcon';
 import {
   DraggableResizableWindow,
@@ -24,6 +25,7 @@ const ICON_IDS = [
   'marketdata',
   'movements',
   'advisor',
+  'apiexplorer',
 ] as const;
 type IconId = (typeof ICON_IDS)[number];
 
@@ -33,6 +35,7 @@ const DEFAULT_ICON_POSITIONS: Record<IconId, { x: number; y: number }> = {
   marketdata: { x: 8, y: 136 },
   movements: { x: 8, y: 200 },
   advisor: { x: 8, y: 264 },
+  apiexplorer: { x: 8, y: 328 },
 };
 
 const DESKTOP_ICON_CONFIG: { id: IconId; label: string; emoji: string; iconKey: keyof typeof DESKTOP_APP_ICONS }[] = [
@@ -41,6 +44,7 @@ const DESKTOP_ICON_CONFIG: { id: IconId; label: string; emoji: string; iconKey: 
   { id: 'marketdata', label: 'Market Data',  emoji: '📈', iconKey: 'marketdata' },
   { id: 'movements',  label: 'Movimientos',  emoji: '💸', iconKey: 'movements'  },
   { id: 'advisor',    label: 'Asesor IA',    emoji: '🧠', iconKey: 'advisor'    },
+  { id: 'apiexplorer', label: 'API Explorer', emoji: '🔧', iconKey: 'apiexplorer' },
 ];
 
 // Grid cell size for "Alinear Iconos" — slightly larger than icon width (64px) for breathing room
@@ -475,6 +479,9 @@ export default function TradingDashboard() {
             )}
             {appId === 'advisor' && (
               <AdvisorWindow />
+            )}
+            {appId === 'apiexplorer' && (
+              <ApiExplorerWindow />
             )}
           </DraggableResizableWindow>
         );
