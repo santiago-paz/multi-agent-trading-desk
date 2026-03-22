@@ -7,6 +7,7 @@ import { NewsFeed } from '@/components/ui/NewsFeed';
 import { MarketDataWindow } from '@/components/ui/MarketDataWindow';
 import { OperationsFeed } from '@/components/ui/OperationsFeed';
 import { ApiExplorerWindow } from '@/components/ui/ApiExplorerWindow';
+import { AiHedgeFundWindow } from '@/components/ui/AiHedgeFundWindow';
 import { DesktopIcon } from '@/components/ui/DesktopIcon';
 import {
   DraggableResizableWindow,
@@ -26,6 +27,7 @@ const ICON_IDS = [
   'movements',
   'advisor',
   'apiexplorer',
+  'aihedgefund',
 ] as const;
 type IconId = (typeof ICON_IDS)[number];
 
@@ -36,6 +38,7 @@ const DEFAULT_ICON_POSITIONS: Record<IconId, { x: number; y: number }> = {
   movements: { x: 8, y: 200 },
   advisor: { x: 8, y: 264 },
   apiexplorer: { x: 8, y: 328 },
+  aihedgefund: { x: 8, y: 392 },
 };
 
 const DESKTOP_ICON_CONFIG: { id: IconId; label: string; emoji: string; iconKey: keyof typeof DESKTOP_APP_ICONS }[] = [
@@ -45,6 +48,7 @@ const DESKTOP_ICON_CONFIG: { id: IconId; label: string; emoji: string; iconKey: 
   { id: 'movements',  label: 'Movimientos',  emoji: '💸', iconKey: 'movements'  },
   { id: 'advisor',    label: 'Asesor IA',    emoji: '🧠', iconKey: 'advisor'    },
   { id: 'apiexplorer', label: 'API Explorer', emoji: '🔧', iconKey: 'apiexplorer' },
+  { id: 'aihedgefund', label: 'AI Hedge Fund', emoji: '🤖', iconKey: 'aihedgefund' },
 ];
 
 // Grid cell size for "Alinear Iconos" — slightly larger than icon width (64px) for breathing room
@@ -330,6 +334,7 @@ export default function TradingDashboard() {
 
   const marketDataFetched = useRef(false);
   const operationsFetched = useRef(false);
+  const historicalDataFetched = useRef(false);
 
   const { fetchMepRate } = useMepStore();
 
@@ -365,7 +370,6 @@ export default function TradingDashboard() {
   useEffect(() => {
     fetchPortfolio();
     fetchAccountData();
-    prefetchHistoricalData();
   }, []);
 
   useEffect(() => {
@@ -379,6 +383,12 @@ export default function TradingDashboard() {
     if (movementsOpen && !operationsFetched.current) {
       operationsFetched.current = true;
       fetchOperationsData();
+    }
+
+    const advisorOpen = windows['advisor'] && !windows['advisor'].minimized;
+    if (advisorOpen && !historicalDataFetched.current) {
+      historicalDataFetched.current = true;
+      prefetchHistoricalData();
     }
   }, [windows]);
 
@@ -482,6 +492,9 @@ export default function TradingDashboard() {
             )}
             {appId === 'apiexplorer' && (
               <ApiExplorerWindow />
+            )}
+            {appId === 'aihedgefund' && (
+              <AiHedgeFundWindow />
             )}
           </DraggableResizableWindow>
         );

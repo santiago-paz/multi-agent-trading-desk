@@ -607,6 +607,49 @@ export async function getAdvisorStep_AssetData(symbol: string, iolPrice?: number
   }
 }
 
+/**
+ * Returns the CEDEAR symbols that the user can afford based on IOL balance.
+ * Used by the AI Hedge Fund window to know which tickers to analyze.
+ */
+export async function getAffordableCedears() {
+  try {
+    // 1. Get cash
+    const cuenta = await iolClient.getEstadoCuenta();
+    if (!cuenta?.cuentas) {
+      return { success: false as const, error: 'No se pudo obtener el saldo de IOL' };
+    }
+    const cuentaArs = cuenta.cuentas.find((c: any) => c.moneda === 'peso_Argentino');
+    let cash = cuentaArs?.disponible || 0;
+    const inmediato = cuentaArs?.saldos?.find((s: any) => s.liquidacion === 'inmediato');
+    if (inmediato) cash = inmediato.disponibleOperar;
+
+    // 2. Get CEDEARs panel and MEP rate
+    const [cedearsPanel, mepRate] = await Promise.all([
+      iolClient.getPanelQuotes('cedears'),
+      iolClient.getMEP(),
+    ]);
+    const titulos = cedearsPanel.titulos || [];
+    const priceInArs = (t: any) => t.moneda === '2' ? t.ultimoPrecio * mepRate : t.ultimoPrecio;
+
+    // 3. Filter affordable, score by liquidity, pick top 10
+    const affordable = titulos.filter((t: any) => t.ultimoPrecio > 0 && priceInArs(t) <= cash);
+    const hasVolume = affordable.some((t: any) => (t.volumen ?? 0) > 0);
+    const metric = (t: any) => hasVolume ? (t.volumen ?? 0) : (t.cantidadOperaciones ?? 0);
+    const maxVal = Math.max(...affordable.map(metric), 1);
+    const sorted = affordable
+      .map((t: any) => ({ ...t, _score: metric(t) / maxVal }))
+      .sort((a: any, b: any) => b._score - a._score)
+      .slice(0, 10);
+
+    const symbols: string[] = sorted.map((t: any) => t.simbolo as string);
+
+    return { success: true as const, symbols, cash };
+  } catch (error) {
+    console.error('getAffordableCedears failed:', error);
+    return { success: false as const, error: 'No se pudo obtener CEDEARs disponibles' };
+  }
+}
+
 export async function getAdvisorStep_Recommend(
   cash: number,
   assets: ComprehensiveAssetData[],
