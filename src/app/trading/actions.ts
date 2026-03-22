@@ -641,10 +641,46 @@ export async function getAffordableCedears() {
       .sort((a: any, b: any) => b._score - a._score)
       .slice(0, 10);
 
-    const symbols: string[] = sorted.map((t: any) => t.simbolo as string);
+    // Deduplicate: IOL lists peso (C) and dollar (D) variants.
+    // Strip suffix when BOTH variants exist; also filter out D-suffix tickers
+    // that won't resolve on Yahoo Finance / FMP (e.g. BIOXD → not a real US symbol).
+    const rawSymbols: string[] = sorted.map((t: any) => t.simbolo as string);
+    const rawSet = new Set(rawSymbols);
+    const symbols: string[] = [];
+    const seen = new Set<string>();
+    for (const sym of rawSymbols) {
+      if (sym.length > 1 && /[CD]$/.test(sym)) {
+        const base = sym.slice(0, -1);
+        const otherSuffix = sym.endsWith('C') ? 'D' : 'C';
+        if (rawSet.has(base + otherSuffix)) {
+          // Both C and D exist — use base name only once
+          if (seen.has(base)) continue;
+          seen.add(base);
+          symbols.push(base);
+          continue;
+        }
+      }
+      if (!seen.has(sym)) {
+        seen.add(sym);
+        symbols.push(sym);
+      }
+    }
+
     const arsPrices: Record<string, number> = {};
     for (const t of sorted) {
-      arsPrices[t.simbolo] = priceInArs(t);
+      const sym = t.simbolo as string;
+      // Map C/D variants to their base symbol for price lookup
+      let key = sym;
+      if (sym.length > 1 && /[CD]$/.test(sym)) {
+        const base = sym.slice(0, -1);
+        const otherSuffix = sym.endsWith('C') ? 'D' : 'C';
+        if (rawSet.has(base + otherSuffix)) key = base;
+      }
+      // Keep the lowest ARS price for the base symbol (most affordable)
+      const price = priceInArs(t);
+      if (!(key in arsPrices) || price < arsPrices[key]) {
+        arsPrices[key] = price;
+      }
     }
 
     return { success: true as const, symbols, cash, arsPrices };
