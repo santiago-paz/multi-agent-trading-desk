@@ -642,8 +642,12 @@ export async function getAffordableCedears() {
       .slice(0, 10);
 
     const symbols: string[] = sorted.map((t: any) => t.simbolo as string);
+    const arsPrices: Record<string, number> = {};
+    for (const t of sorted) {
+      arsPrices[t.simbolo] = priceInArs(t);
+    }
 
-    return { success: true as const, symbols, cash };
+    return { success: true as const, symbols, cash, arsPrices };
   } catch (error) {
     console.error('getAffordableCedears failed:', error);
     return { success: false as const, error: 'No se pudo obtener CEDEARs disponibles' };

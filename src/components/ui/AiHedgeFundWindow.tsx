@@ -7,6 +7,7 @@ import {
   COLOR_POSITIVE, COLOR_NEGATIVE, COLOR_SECONDARY, COLOR_DISABLED,
 } from '@/lib/theme/win98';
 import { getAffordableCedears } from '@/app/trading/actions';
+import { useMepStore } from '@/lib/store/mep-store';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -41,6 +42,14 @@ interface LogEntry {
   id: string;
   text: string;
   status: LogStatus;
+}
+
+interface ApiLogEntry {
+  id: number;
+  timestamp: string;
+  direction: 'request' | 'response';
+  label: string;
+  data: unknown;
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -81,7 +90,56 @@ function parseSSEChunk(text: string): Array<{ event: string; data: unknown }> {
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
+const COMMISSION_RATE = 0.03; // 3% comisiones IOL
+
+function adjustDecisionsToARS(
+  rawDecisions: Record<string, Decision>,
+  arsPrices: Record<string, number>,
+  cashAfterCommission: number,
+): Record<string, Decision> {
+  const adjusted: Record<string, Decision> = {};
+  let remainingCash = cashAfterCommission;
+
+  // Sort: buy signals first (higher confidence first), so best picks get cash priority
+  const entries = Object.entries(rawDecisions).sort(([, a], [, b]) => {
+    if (a.action === 'buy' && b.action !== 'buy') return -1;
+    if (a.action !== 'buy' && b.action === 'buy') return 1;
+    return b.confidence - a.confidence;
+  });
+
+  for (const [ticker, decision] of entries) {
+    if (decision.action === 'short') {
+      adjusted[ticker] = { ...decision, action: 'hold', quantity: 0, reasoning: 'Short no soportado en CEDEARs' };
+      continue;
+    }
+
+    if (decision.action === 'buy') {
+      const iolPrice = arsPrices[ticker];
+      if (!iolPrice || iolPrice <= 0) {
+        adjusted[ticker] = { ...decision, quantity: 0, reasoning: `${decision.reasoning} (sin precio IOL disponible)` };
+        continue;
+      }
+      const maxQty = Math.floor(remainingCash / iolPrice);
+      if (maxQty <= 0) {
+        adjusted[ticker] = { ...decision, action: 'hold', quantity: 0, reasoning: `${decision.reasoning} (saldo insuficiente: AR$${iolPrice.toFixed(0)}/acción)` };
+        continue;
+      }
+      remainingCash -= maxQty * iolPrice;
+      adjusted[ticker] = { ...decision, quantity: maxQty };
+      continue;
+    }
+
+    // hold or sell — keep as-is with quantity 0 (we have no position)
+    adjusted[ticker] = { ...decision, quantity: 0 };
+  }
+
+  return adjusted;
+}
+
 export function AiHedgeFundWindow() {
+  // MEP exchange rate (ARS/USD)
+  const mepRate = useMepStore(s => s.mepRate);
+
   // Agent list
   const [agents, setAgents] = useState<Agent[]>([]);
   const [selectedAgents, setSelectedAgents] = useState<Set<string>>(new Set());
@@ -90,6 +148,7 @@ export function AiHedgeFundWindow() {
   // CEDEARs from IOL
   const [tickers, setTickers] = useState<string[]>([]);
   const [cash, setCash] = useState<number | null>(null);
+  const [arsPrices, setArsPrices] = useState<Record<string, number>>({});
   const [isLoadingCedears, setIsLoadingCedears] = useState(true);
 
   // Run state
@@ -101,13 +160,35 @@ export function AiHedgeFundWindow() {
   const [analystSignals, setAnalystSignals] = useState<Record<string, Record<string, AgentSignal>> | null>(null);
   const [decisions, setDecisions] = useState<Record<string, Decision> | null>(null);
 
+  // API debug log
+  const [apiLog, setApiLog] = useState<ApiLogEntry[]>([]);
+  const [showApiLog, setShowApiLog] = useState(false);
+  const apiLogCounter = useRef(0);
+  const apiLogBodyRef = useRef<HTMLDivElement>(null);
+
   const logBodyRef = useRef<HTMLDivElement>(null);
   const abortRef = useRef<AbortController | null>(null);
 
-  // Auto-scroll log
+  // Auto-scroll logs
   useEffect(() => {
     if (logBodyRef.current) logBodyRef.current.scrollTop = logBodyRef.current.scrollHeight;
   }, [logs]);
+  useEffect(() => {
+    if (apiLogBodyRef.current) apiLogBodyRef.current.scrollTop = apiLogBodyRef.current.scrollHeight;
+  }, [apiLog]);
+
+  const addApiLog = useCallback((direction: 'request' | 'response', label: string, data: unknown) => {
+    const entry: ApiLogEntry = {
+      id: ++apiLogCounter.current,
+      timestamp: new Date().toLocaleTimeString('es-AR', { hour12: false, fractionalSecondDigits: 3 }),
+      direction,
+      label,
+      data,
+    };
+    setApiLog(prev => [...prev, entry]);
+    // Also log to browser console for easy copy-paste
+    console.log(`[API ${direction.toUpperCase()}] ${label}`, data);
+  }, []);
 
   // Cleanup on unmount
   useEffect(() => () => { abortRef.current?.abort(); }, []);
@@ -135,6 +216,7 @@ export function AiHedgeFundWindow() {
         if (result.success) {
           setTickers(result.symbols);
           setCash(result.cash);
+          setArsPrices(result.arsPrices ?? {});
         }
       } catch (err) {
         console.error('Failed to fetch CEDEARs:', err);
@@ -175,6 +257,8 @@ export function AiHedgeFundWindow() {
 
     setPhase('running');
     setLogs([]);
+    setApiLog([]);
+    apiLogCounter.current = 0;
     setProgress(0);
     setAnalystSignals(null);
     setDecisions(null);
@@ -192,18 +276,25 @@ export function AiHedgeFundWindow() {
       target: 'portfolio_manager',
     }));
 
+    // Send a standard portfolio size so the AI generates proper buy/sell signals.
+    // We recalculate quantities locally using ARS prices from IOL afterwards.
+    const cashArs = cash ?? 0;
+    const cashAfterCommission = cashArs * (1 - COMMISSION_RATE);
+
     const body = {
       tickers,
       model_name: 'claude-haiku-4-5-20251001',
       model_provider: 'Anthropic',
-      initial_cash: cash ?? 100000,
+      initial_cash: 100000,
       graph_nodes: graphNodes,
       graph_edges: graphEdges,
     };
 
-    addLog('cash', `Saldo disponible: $${fmtARS(cash ?? 0)} ARS`, 'ok');
+    addLog('cash', `Saldo disponible: $${fmtARS(cashArs)} ARS (neto comisiones: $${fmtARS(cashAfterCommission)})`, 'ok');
     addLog('tickers', `CEDEARs seleccionados: ${tickers.join(', ')}`, 'ok');
     addLog('start', `Iniciando análisis con ${agentKeys.length} agente(s) y ${tickers.length} ticker(s)...`);
+
+    addApiLog('request', `POST ${API_URL}/hedge-fund/run`, body);
 
     try {
       const response = await fetch(`${API_URL}/hedge-fund/run`, {
@@ -213,8 +304,13 @@ export function AiHedgeFundWindow() {
         signal: abortRef.current.signal,
       });
 
+      addApiLog('response', `HTTP ${response.status} ${response.statusText}`, {
+        headers: Object.fromEntries(response.headers.entries()),
+      });
+
       if (!response.ok) {
         const errText = await response.text();
+        addApiLog('response', 'Error body', errText);
         throw new Error(`HTTP ${response.status}: ${errText}`);
       }
 
@@ -236,6 +332,7 @@ export function AiHedgeFundWindow() {
           const events = parseSSEChunk(part + '\n\n');
           for (const evt of events) {
             const d = evt.data as Record<string, unknown>;
+            addApiLog('response', `SSE event: ${evt.event}`, d);
 
             if (evt.event === 'start') {
               updateLog('start', 'Análisis iniciado', 'ok');
@@ -262,7 +359,10 @@ export function AiHedgeFundWindow() {
               const completeData = d.data as Record<string, unknown> | undefined;
               if (completeData) {
                 setAnalystSignals(completeData.analyst_signals as Record<string, Record<string, AgentSignal>>);
-                setDecisions(completeData.decisions as Record<string, Decision>);
+                // Recalculate quantities using ARS prices from IOL
+                const rawDecisions = completeData.decisions as Record<string, Decision>;
+                const adjustedDecisions = adjustDecisionsToARS(rawDecisions, arsPrices, cashAfterCommission);
+                setDecisions(adjustedDecisions);
               }
               addLog('complete', 'Análisis completado', 'ok');
               setProgress(100);
@@ -281,7 +381,25 @@ export function AiHedgeFundWindow() {
             const completeData = d.data as Record<string, unknown> | undefined;
             if (completeData) {
               setAnalystSignals(completeData.analyst_signals as Record<string, Record<string, AgentSignal>>);
-              setDecisions(completeData.decisions as Record<string, Decision>);
+              const rawDecisions = completeData.decisions as Record<string, Decision>;
+              const adjustedDecisions: Record<string, Decision> = {};
+              let remainingCash = cashAfterCommission;
+              for (const [ticker, decision] of Object.entries(rawDecisions)) {
+                const iolPrice = arsPrices[ticker];
+                if (decision.action === 'buy' && iolPrice && iolPrice > 0) {
+                  const maxQty = Math.floor(remainingCash / iolPrice);
+                  const qty = Math.min(decision.quantity, maxQty);
+                  remainingCash -= qty * iolPrice;
+                  adjustedDecisions[ticker] = { ...decision, quantity: qty };
+                } else {
+                  adjustedDecisions[ticker] = { ...decision, quantity: decision.action === 'short' ? 0 : decision.quantity };
+                  if (decision.action === 'short') {
+                    adjustedDecisions[ticker].reasoning = 'Short no soportado en CEDEARs';
+                    adjustedDecisions[ticker].action = 'hold';
+                  }
+                }
+              }
+              setDecisions(adjustedDecisions);
             }
             addLog('complete', 'Análisis completado', 'ok');
             setProgress(100);
@@ -293,6 +411,7 @@ export function AiHedgeFundWindow() {
       if (phase !== 'error') setPhase('done');
     } catch (err: unknown) {
       if ((err as Error).name === 'AbortError') return;
+      addApiLog('response', 'FETCH ERROR', { name: (err as Error).name, message: (err as Error).message, stack: (err as Error).stack });
       addLog('error', `Error: ${(err as Error).message}`, 'error');
       setPhase('error');
     }
@@ -452,6 +571,65 @@ export function AiHedgeFundWindow() {
                 </div>
               ))}
             </div>
+          </fieldset>
+        )}
+
+        {/* ── API Debug Log ──────────────────────────────────────────────── */}
+        {apiLog.length > 0 && (
+          <fieldset style={{ marginBottom: '6px' }}>
+            <legend>
+              API Log ({apiLog.length})
+              {' '}
+              <button
+                style={{ ...FONT, fontSize: '10px', padding: '0 4px' }}
+                onClick={() => setShowApiLog(v => !v)}
+              >
+                {showApiLog ? 'Ocultar' : 'Mostrar'}
+              </button>
+              {' '}
+              <button
+                style={{ ...FONT, fontSize: '10px', padding: '0 4px' }}
+                onClick={() => {
+                  navigator.clipboard.writeText(JSON.stringify(apiLog, null, 2));
+                }}
+              >
+                Copiar JSON
+              </button>
+            </legend>
+
+            {showApiLog && (
+              <div
+                ref={apiLogBodyRef}
+                className="sunken-panel win98-scrollbar"
+                style={{ maxHeight: '300px', overflowY: 'auto', padding: '3px 5px' }}
+              >
+                {apiLog.map(entry => (
+                  <details key={entry.id} style={{ ...FONT, marginBottom: '2px' }}>
+                    <summary style={{
+                      cursor: 'pointer',
+                      color: entry.direction === 'request' ? '#0000aa' : '#006600',
+                      fontWeight: 'bold',
+                    }}>
+                      [{entry.timestamp}] {entry.direction === 'request' ? '→' : '←'} {entry.label}
+                    </summary>
+                    <pre style={{
+                      ...FONT,
+                      fontSize: '10px',
+                      background: '#ffffee',
+                      border: '1px solid #c0c0c0',
+                      padding: '4px',
+                      margin: '2px 0 4px 12px',
+                      whiteSpace: 'pre-wrap',
+                      wordBreak: 'break-all',
+                      maxHeight: '200px',
+                      overflow: 'auto',
+                    }}>
+                      {JSON.stringify(entry.data, null, 2)}
+                    </pre>
+                  </details>
+                ))}
+              </div>
+            )}
           </fieldset>
         )}
 
