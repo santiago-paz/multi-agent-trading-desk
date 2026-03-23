@@ -4,6 +4,7 @@ import { tradingEngine } from '@/lib/trading/engine';
 import { iolClient } from '@/lib/iol/client';
 
 import { getHistoricalData, getAllNews, getCompanyNames, HistoricalRow } from '@/lib/market-data';
+import { stripCurrencySuffix, toFmpTicker, deduplicateIolSymbols } from '@/lib/cedear-map';
 
 export async function getMarketData() {
   try {
@@ -23,7 +24,7 @@ export async function getMarketData() {
     // Keep the first occurrence of each base symbol (strip suffix), preserving all CEDEARs.
     const iolPriceMap = new Map<string, { price: number; pct: number }>();
     for (const t of panelResponse.titulos || []) {
-      const base = t.simbolo.replace(/[CD]$/, '');
+      const base = stripCurrencySuffix(t.simbolo);
       if (!iolPriceMap.has(base)) {
         iolPriceMap.set(base, { price: t.ultimoPrecio, pct: t.variacionPorcentual });
       }
@@ -34,11 +35,14 @@ export async function getMarketData() {
     const allSymbols = Array.from(new Set([...ownedSymbols, ...panelSymbols]));
 
     // 4. Fetch 7-day historical data in parallel, tolerating individual failures.
+    //    Use toFmpTicker() to translate IOL symbols (e.g. XROX → XRX) for the FMP API.
     //    For symbols where FMP has no data, fall back to IOL price as a 2-point entry
     //    so the symbol still appears in the table with its current price and daily % change.
     const settled = await Promise.allSettled(
       allSymbols.map(async (symbol) => {
-        const data = await getHistoricalData(symbol, 7);
+        const fmpTicker = toFmpTicker(symbol);
+        if (!fmpTicker) return { symbol, data: [] as HistoricalRow[] };
+        const data = await getHistoricalData(fmpTicker, 7);
         return { symbol, data };
       })
     );
@@ -48,7 +52,8 @@ export async function getMarketData() {
       const r = settled[i];
       const symbol = allSymbols[i];
       if (r.status === 'fulfilled' && r.value.data.length > 0) {
-        marketData.push(r.value);
+        // Always key by IOL symbol for display consistency
+        marketData.push({ symbol, data: r.value.data });
       } else {
         // Fallback: construct a 2-point history from IOL data so sparkline shows direction
         const iol = iolPriceMap.get(symbol);
@@ -69,7 +74,16 @@ export async function getMarketData() {
     }
 
     // 5. Fetch company names (cached — only calls FMP for new symbols)
-    const companyNames = await getCompanyNames(allSymbols);
+    //    Use FMP tickers for the lookup, then map results back to IOL symbols.
+    const fmpSymbols = allSymbols.map(s => toFmpTicker(s)).filter((s): s is string => s !== null);
+    const fmpNames = await getCompanyNames(fmpSymbols);
+    const companyNames: Record<string, string> = {};
+    for (const sym of allSymbols) {
+      const fmp = toFmpTicker(sym);
+      if (fmp && fmpNames[fmp]) {
+        companyNames[sym] = fmpNames[fmp];
+      }
+    }
 
     return { success: true, data: { marketData, ownedSymbols, companyNames } };
   } catch (error) {
@@ -111,7 +125,7 @@ export async function getPortfolioSummary() {
         for (const t of cedearsPanel.titulos || []) {
             const sym = t.simbolo;
             if (sym.length > 1 && sym.endsWith('D')) {
-                const base = sym.slice(0, -1);
+                const base = stripCurrencySuffix(sym);
                 const cVariant = base + 'C';
                 // Only treat as D-variant if the C-variant also exists
                 if (rawSymbols.has(cVariant)) {
@@ -203,40 +217,24 @@ export async function getAffordableCedears() {
       .slice(0, 10);
 
     // Deduplicate: IOL lists peso (C) and dollar (D) variants.
-    // Strip suffix when BOTH variants exist; also filter out D-suffix tickers
-    // that won't resolve on FMP (e.g. BIOXD → not a real US symbol).
+    // Strip suffix to produce base IOL symbols, then map to FMP tickers.
     const rawSymbols: string[] = sorted.map((t: any) => t.simbolo as string);
-    const rawSet = new Set(rawSymbols);
-    const symbols: string[] = [];
-    const seen = new Set<string>();
-    for (const sym of rawSymbols) {
-      if (sym.length > 1 && /[CD]$/.test(sym)) {
-        const base = sym.slice(0, -1);
-        const otherSuffix = sym.endsWith('C') ? 'D' : 'C';
-        // Skip if both C+D variants exist (use base) or if base already in panel
-        if (rawSet.has(base + otherSuffix) || rawSet.has(base)) {
-          if (seen.has(base)) continue;
-          seen.add(base);
-          symbols.push(base);
-          continue;
-        }
-      }
-      if (!seen.has(sym)) {
-        seen.add(sym);
-        symbols.push(sym);
+    const iolSymbols = deduplicateIolSymbols(rawSymbols);
+
+    // Build FMP ticker list (excludes symbols with no US equivalent like CSNA3)
+    const fmpTickers: string[] = [];
+    const iolToFmp: Record<string, string> = {};
+    for (const sym of iolSymbols) {
+      const fmp = toFmpTicker(sym);
+      if (fmp) {
+        fmpTickers.push(fmp);
+        iolToFmp[sym] = fmp;
       }
     }
 
     const arsPrices: Record<string, number> = {};
     for (const t of sorted) {
-      const sym = t.simbolo as string;
-      // Map C/D variants to their base symbol for price lookup
-      let key = sym;
-      if (sym.length > 1 && /[CD]$/.test(sym)) {
-        const base = sym.slice(0, -1);
-        const otherSuffix = sym.endsWith('C') ? 'D' : 'C';
-        if (rawSet.has(base + otherSuffix)) key = base;
-      }
+      const key = stripCurrencySuffix(t.simbolo as string);
       // Keep the lowest ARS price for the base symbol (most affordable)
       const price = priceInArs(t);
       if (!(key in arsPrices) || price < arsPrices[key]) {
@@ -244,7 +242,7 @@ export async function getAffordableCedears() {
       }
     }
 
-    return { success: true as const, symbols, cash, arsPrices };
+    return { success: true as const, symbols: iolSymbols, fmpTickers, iolToFmp, cash, arsPrices };
   } catch (error) {
     console.error('getAffordableCedears failed:', error);
     return { success: false as const, error: 'No se pudo obtener CEDEARs disponibles' };

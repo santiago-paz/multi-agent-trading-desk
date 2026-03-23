@@ -2,8 +2,8 @@
 
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import {
-  FONT, COL_HEADER, COL_HEADER_RIGHT, CELL, CELL_RIGHT,
-  WINDOW_CONTAINER, SCROLLABLE_BODY, STATUS_BAR_STYLE, HR98,
+  FONT, LABEL, COL_HEADER_BASE, COL_RAISED, CELL, CELL_RIGHT,
+  WINDOW_CONTAINER, SCROLLABLE_BODY, REFRESH_FOOTER, STATUS_BAR_STYLE,
   COLOR_POSITIVE, COLOR_NEGATIVE, COLOR_SECONDARY, COLOR_DISABLED,
 } from '@/lib/theme/win98';
 import { getAffordableCedears } from '@/app/trading/actions';
@@ -98,16 +98,28 @@ function parseSSEChunk(text: string): Array<{ event: string; data: unknown }> {
 
 const COMMISSION_RATE = 0.03; // 3% comisiones IOL
 
+/** Remap FMP-keyed record to IOL symbols (e.g. XRX→XROX). Unmapped keys pass through. */
+function remapToIol<T>(record: Record<string, T>, fmpToIol: Record<string, string>): Record<string, T> {
+  const result: Record<string, T> = {};
+  for (const [key, val] of Object.entries(record)) {
+    result[fmpToIol[key] ?? key] = val;
+  }
+  return result;
+}
+
 function adjustDecisionsToARS(
   rawDecisions: Record<string, Decision>,
   arsPrices: Record<string, number>,
   cashAfterCommission: number,
+  fmpToIol: Record<string, string>,
 ): Record<string, Decision> {
+  // Remap FMP tickers to IOL symbols so arsPrices lookup works
+  const decisions = remapToIol(rawDecisions, fmpToIol);
   const adjusted: Record<string, Decision> = {};
   let remainingCash = cashAfterCommission;
 
   // Sort: buy signals first (higher confidence first), so best picks get cash priority
-  const entries = Object.entries(rawDecisions).sort(([, a], [, b]) => {
+  const entries = Object.entries(decisions).sort(([, a], [, b]) => {
     if (a.action === 'buy' && b.action !== 'buy') return -1;
     if (a.action !== 'buy' && b.action === 'buy') return 1;
     return b.confidence - a.confidence;
@@ -152,7 +164,9 @@ export function AiHedgeFundWindow() {
   const [isLoadingAgents, setIsLoadingAgents] = useState(true);
 
   // CEDEARs from IOL
-  const [tickers, setTickers] = useState<string[]>([]);
+  const [tickers, setTickers] = useState<string[]>([]);       // IOL base symbols (display)
+  const [fmpTickers, setFmpTickers] = useState<string[]>([]); // FMP-mapped tickers (for AI backend)
+  const [iolToFmp, setIolToFmp] = useState<Record<string, string>>({}); // IOL→FMP mapping
   const [cash, setCash] = useState<number | null>(null);
   const [arsPrices, setArsPrices] = useState<Record<string, number>>({});
   const [isLoadingCedears, setIsLoadingCedears] = useState(true);
@@ -225,6 +239,8 @@ export function AiHedgeFundWindow() {
         const result = await getAffordableCedears();
         if (result.success) {
           setTickers(result.symbols);
+          setFmpTickers(result.fmpTickers);
+          setIolToFmp(result.iolToFmp);
           setCash(result.cash);
           setArsPrices(result.arsPrices ?? {});
         }
@@ -307,8 +323,15 @@ export function AiHedgeFundWindow() {
     const cashArs = cash ?? 0;
     const cashAfterCommission = cashArs * (1 - COMMISSION_RATE);
 
+    // Send FMP tickers to the backend so it fetches correct market data
+    // (e.g. XROX→XRX). Build a reverse map to translate results back to IOL symbols.
+    const fmpToIol: Record<string, string> = {};
+    for (const [iol, fmp] of Object.entries(iolToFmp)) {
+      fmpToIol[fmp] = iol;
+    }
+
     const body = {
-      tickers,
+      tickers: fmpTickers,
       model_name: 'claude-haiku-4-5-20251001',
       model_provider: 'Anthropic',
       initial_cash: 100000,
@@ -317,8 +340,12 @@ export function AiHedgeFundWindow() {
     };
 
     addLog('cash', `Saldo disponible: $${fmtARS(cashArs)} ARS (neto comisiones: $${fmtARS(cashAfterCommission)})`, 'ok');
-    addLog('tickers', `CEDEARs seleccionados: ${tickers.join(', ')}`, 'ok');
-    addLog('start', `Iniciando análisis con ${agentKeys.length} agente(s) y ${tickers.length} ticker(s)...`);
+    const mappedNote = Object.entries(iolToFmp)
+      .filter(([iol, fmp]) => iol !== fmp)
+      .map(([iol, fmp]) => `${iol}→${fmp}`)
+      .join(', ');
+    addLog('tickers', `CEDEARs: ${tickers.join(', ')}${mappedNote ? ` (mapeados: ${mappedNote})` : ''}`, 'ok');
+    addLog('start', `Iniciando análisis con ${agentKeys.length} agente(s) y ${fmpTickers.length} ticker(s)...`);
 
     addApiLog('request', `POST ${API_URL}/hedge-fund/run`, body);
 
@@ -384,10 +411,16 @@ export function AiHedgeFundWindow() {
             } else if (evt.event === 'complete') {
               const completeData = d.data as Record<string, unknown> | undefined;
               if (completeData) {
-                setAnalystSignals(completeData.analyst_signals as Record<string, Record<string, AgentSignal>>);
+                // Remap FMP tickers back to IOL symbols in analyst signals
+                const rawSignals = completeData.analyst_signals as Record<string, Record<string, AgentSignal>>;
+                const remappedSignals: Record<string, Record<string, AgentSignal>> = {};
+                for (const [agent, tickerSignals] of Object.entries(rawSignals)) {
+                  remappedSignals[agent] = remapToIol(tickerSignals, fmpToIol);
+                }
+                setAnalystSignals(remappedSignals);
                 // Recalculate quantities using ARS prices from IOL
                 const rawDecisions = completeData.decisions as Record<string, Decision>;
-                const adjustedDecisions = adjustDecisionsToARS(rawDecisions, arsPrices, cashAfterCommission);
+                const adjustedDecisions = adjustDecisionsToARS(rawDecisions, arsPrices, cashAfterCommission, fmpToIol);
                 setDecisions(adjustedDecisions);
               }
               addLog('complete', 'Análisis completado', 'ok');
@@ -406,25 +439,14 @@ export function AiHedgeFundWindow() {
             const d = evt.data as Record<string, unknown>;
             const completeData = d.data as Record<string, unknown> | undefined;
             if (completeData) {
-              setAnalystSignals(completeData.analyst_signals as Record<string, Record<string, AgentSignal>>);
-              const rawDecisions = completeData.decisions as Record<string, Decision>;
-              const adjustedDecisions: Record<string, Decision> = {};
-              let remainingCash = cashAfterCommission;
-              for (const [ticker, decision] of Object.entries(rawDecisions)) {
-                const iolPrice = arsPrices[ticker];
-                if (decision.action === 'buy' && iolPrice && iolPrice > 0) {
-                  const maxQty = Math.floor(remainingCash / iolPrice);
-                  const qty = Math.min(decision.quantity, maxQty);
-                  remainingCash -= qty * iolPrice;
-                  adjustedDecisions[ticker] = { ...decision, quantity: qty };
-                } else {
-                  adjustedDecisions[ticker] = { ...decision, quantity: decision.action === 'short' ? 0 : decision.quantity };
-                  if (decision.action === 'short') {
-                    adjustedDecisions[ticker].reasoning = 'Short no soportado en CEDEARs';
-                    adjustedDecisions[ticker].action = 'hold';
-                  }
-                }
+              const rawSignals = completeData.analyst_signals as Record<string, Record<string, AgentSignal>>;
+              const remappedSignals: Record<string, Record<string, AgentSignal>> = {};
+              for (const [agent, tickerSignals] of Object.entries(rawSignals)) {
+                remappedSignals[agent] = remapToIol(tickerSignals, fmpToIol);
               }
+              setAnalystSignals(remappedSignals);
+              const rawDecisions = completeData.decisions as Record<string, Decision>;
+              const adjustedDecisions = adjustDecisionsToARS(rawDecisions, arsPrices, cashAfterCommission, fmpToIol);
               setDecisions(adjustedDecisions);
             }
             addLog('complete', 'Análisis completado', 'ok');
@@ -473,6 +495,8 @@ export function AiHedgeFundWindow() {
 
   // ── Render ─────────────────────────────────────────────────────────────────
 
+  const stickyTh: React.CSSProperties = { position: 'sticky', top: 0, zIndex: 1 };
+
   return (
     <div style={WINDOW_CONTAINER}>
       <div className="win98-scrollbar" style={SCROLLABLE_BODY}>
@@ -481,18 +505,20 @@ export function AiHedgeFundWindow() {
         <fieldset style={{ marginBottom: '6px' }}>
           <legend>CEDEARs disponibles (IOL)</legend>
           {isLoadingCedears ? (
-            <p style={{ ...FONT, color: COLOR_DISABLED }}>Consultando saldo y panel de CEDEARs...</p>
+            <p style={{ color: COLOR_DISABLED, margin: 0 }}>Consultando saldo y panel de CEDEARs...</p>
           ) : tickers.length === 0 ? (
-            <p style={{ ...FONT, color: COLOR_NEGATIVE }}>No se encontraron CEDEARs accesibles con el saldo actual.</p>
+            <p style={{ color: COLOR_NEGATIVE, margin: 0 }}>No se encontraron CEDEARs accesibles con el saldo actual.</p>
           ) : (
-            <div style={FONT}>
-              <p style={{ margin: '0 0 2px' }}>
-                <strong>Saldo:</strong> ${fmtARS(cash ?? 0)} ARS
-              </p>
-              <p style={{ margin: 0 }}>
-                <strong>CEDEARs ({tickers.length}):</strong> {tickers.join(', ')}
-              </p>
-            </div>
+            <>
+              <div className="field-row">
+                <span style={LABEL}>Saldo:</span>
+                <span>${fmtARS(cash ?? 0)} ARS</span>
+              </div>
+              <div className="field-row">
+                <span style={LABEL}>CEDEARs ({tickers.length}):</span>
+                <span>{tickers.join(', ')}</span>
+              </div>
+            </>
           )}
         </fieldset>
 
@@ -503,15 +529,12 @@ export function AiHedgeFundWindow() {
             <button
               onClick={handleHealthCheck}
               disabled={isCheckingHealth || isRunning}
-              style={FONT}
             >
               {isCheckingHealth ? 'Chequeando...' : 'Chequear estado'}
             </button>
             {healthChecks && (
               <span style={{
-                ...FONT,
                 color: healthChecks.every(c => c.ok) ? COLOR_POSITIVE : COLOR_NEGATIVE,
-                fontWeight: 'bold',
               }}>
                 {healthChecks.every(c => c.ok)
                   ? `${healthChecks.length}/${healthChecks.length} OK`
@@ -528,7 +551,6 @@ export function AiHedgeFundWindow() {
                 <div
                   key={i}
                   style={{
-                    ...FONT,
                     display: 'flex',
                     gap: '5px',
                     lineHeight: '16px',
@@ -554,51 +576,42 @@ export function AiHedgeFundWindow() {
         </fieldset>
 
         {/* ── Agent selection ─────────────────────────────────────────────── */}
-        <fieldset style={{ marginBottom: '6px' }}>
+        <fieldset style={{ marginBottom: '6px', display: 'flex', flexDirection: 'column', flex: phase === 'idle' ? 1 : undefined, minHeight: 0 }}>
           <legend>Agentes de inversión</legend>
 
           {isLoadingAgents ? (
-            <p style={{ ...FONT, color: COLOR_DISABLED }}>Cargando agentes...</p>
+            <p style={{ color: COLOR_DISABLED, margin: 0 }}>Cargando agentes...</p>
           ) : agents.length === 0 ? (
-            <p style={{ ...FONT, color: COLOR_NEGATIVE }}>No se pudo conectar al servidor AI Hedge Fund ({API_URL})</p>
+            <p style={{ color: COLOR_NEGATIVE, margin: 0 }}>No se pudo conectar al servidor AI Hedge Fund ({API_URL})</p>
           ) : (
             <>
-              <div style={{ marginBottom: '4px', display: 'flex', gap: '4px' }}>
+              <div style={{ marginBottom: '4px', display: 'flex', gap: '4px', alignItems: 'center' }}>
                 <button
-                  style={FONT}
                   onClick={() => setSelectedAgents(new Set(agents.map(a => a.key)))}
                   disabled={isRunning}
                 >
                   Todos
                 </button>
                 <button
-                  style={FONT}
                   onClick={() => setSelectedAgents(new Set())}
                   disabled={isRunning}
                 >
                   Ninguno
                 </button>
-                <span style={{ ...FONT, color: COLOR_SECONDARY, marginLeft: '4px', alignSelf: 'center' }}>
+                <span style={{ color: COLOR_SECONDARY, marginLeft: '4px' }}>
                   {selectedAgents.size} seleccionado{selectedAgents.size !== 1 ? 's' : ''}
                 </span>
               </div>
 
               <div
                 className="sunken-panel win98-scrollbar"
-                style={{ maxHeight: '120px', overflowY: 'auto', padding: '2px' }}
+                style={{ flex: 1, overflowY: 'auto', padding: '2px' }}
               >
                 {agents.map(agent => {
                   const selected = selectedAgents.has(agent.key);
                   const inputId = `aihf-agent-${agent.key}`;
                   return (
-                    <div
-                      key={agent.key}
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        padding: '1px 2px',
-                      }}
-                    >
+                    <div className="field-row" key={agent.key} style={{ padding: '1px 2px' }}>
                       <input
                         id={inputId}
                         type="checkbox"
@@ -609,7 +622,6 @@ export function AiHedgeFundWindow() {
                       <label
                         htmlFor={inputId}
                         style={{
-                          ...FONT,
                           flex: 1,
                           padding: '2px 4px',
                           cursor: 'inherit',
@@ -618,10 +630,9 @@ export function AiHedgeFundWindow() {
                             : {}),
                         }}
                       >
-                        <strong>{agent.display_name}</strong>
+                        {agent.display_name}
                         <span style={{ color: selected ? '#c0c0c0' : COLOR_SECONDARY }}>
-                          {' '}
-                          — {agent.description}
+                          {' '}— {agent.description}
                         </span>
                       </label>
                     </div>
@@ -630,16 +641,6 @@ export function AiHedgeFundWindow() {
               </div>
             </>
           )}
-
-          <hr style={HR98} />
-
-          <button
-            className={phase === 'idle' ? 'default' : undefined}
-            onClick={handleRun}
-            disabled={isRunning || isLoading || selectedAgents.size === 0 || tickers.length === 0}
-          >
-            {isRunning ? 'Analizando...' : 'Ejecutar análisis'}
-          </button>
         </fieldset>
 
         {/* ── Progress ─────────────────────────────────────────────────────── */}
@@ -660,7 +661,6 @@ export function AiHedgeFundWindow() {
                 <div
                   key={log.id}
                   style={{
-                    ...FONT,
                     display: 'flex',
                     gap: '5px',
                     lineHeight: '16px',
@@ -679,17 +679,17 @@ export function AiHedgeFundWindow() {
         {apiLog.length > 0 && (
           <fieldset style={{ marginBottom: '6px' }}>
             <legend>
-              API Log ({apiLog.length})
+              API log ({apiLog.length})
               {' '}
               <button
-                style={{ ...FONT, fontSize: '10px', padding: '0 4px' }}
+                style={{ padding: '0 4px' }}
                 onClick={() => setShowApiLog(v => !v)}
               >
                 {showApiLog ? 'Ocultar' : 'Mostrar'}
               </button>
               {' '}
               <button
-                style={{ ...FONT, fontSize: '10px', padding: '0 4px' }}
+                style={{ padding: '0 4px' }}
                 onClick={() => {
                   navigator.clipboard.writeText(JSON.stringify(apiLog, null, 2));
                 }}
@@ -705,17 +705,14 @@ export function AiHedgeFundWindow() {
                 style={{ maxHeight: '300px', overflowY: 'auto', padding: '3px 5px' }}
               >
                 {apiLog.map(entry => (
-                  <details key={entry.id} style={{ ...FONT, marginBottom: '2px' }}>
+                  <details key={entry.id} style={{ marginBottom: '2px' }}>
                     <summary style={{
                       cursor: 'pointer',
                       color: entry.direction === 'request' ? '#0000aa' : '#006600',
-                      fontWeight: 'bold',
                     }}>
                       [{entry.timestamp}] {entry.direction === 'request' ? '→' : '←'} {entry.label}
                     </summary>
                     <pre style={{
-                      ...FONT,
-                      fontSize: '10px',
                       background: '#ffffee',
                       border: '1px solid #c0c0c0',
                       padding: '4px',
@@ -739,15 +736,15 @@ export function AiHedgeFundWindow() {
           <fieldset style={{ marginBottom: '6px' }}>
             <legend>Señales de analistas</legend>
 
-            <div className="sunken-panel" style={{ padding: 0 }}>
+            <div className="sunken-panel win98-scrollbar" style={{ padding: 0, maxHeight: '200px', overflow: 'auto' }}>
               <table style={{ ...FONT, width: '100%', borderCollapse: 'collapse', borderSpacing: 0 }}>
                 <thead>
                   <tr>
-                    <th style={COL_HEADER}>Ticker</th>
-                    <th style={COL_HEADER}>Agente</th>
-                    <th style={{ ...COL_HEADER, textAlign: 'center' }}>Señal</th>
-                    <th style={COL_HEADER_RIGHT}>Confianza</th>
-                    <th style={COL_HEADER}>Razonamiento</th>
+                    <th style={{ ...COL_HEADER_BASE, ...COL_RAISED, textAlign: 'left', ...stickyTh }}>Ticker</th>
+                    <th style={{ ...COL_HEADER_BASE, ...COL_RAISED, textAlign: 'left', ...stickyTh }}>Agente</th>
+                    <th style={{ ...COL_HEADER_BASE, ...COL_RAISED, textAlign: 'center', ...stickyTh }}>Señal</th>
+                    <th style={{ ...COL_HEADER_BASE, ...COL_RAISED, textAlign: 'right', ...stickyTh }}>Confianza</th>
+                    <th style={{ ...COL_HEADER_BASE, ...COL_RAISED, textAlign: 'left', ...stickyTh }}>Razonamiento</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -760,9 +757,9 @@ export function AiHedgeFundWindow() {
                         cursor: 'default',
                       }}
                     >
-                      <td style={{ ...CELL, fontWeight: 'bold' }}>{row.ticker}</td>
+                      <td style={CELL}>{row.ticker}</td>
                       <td style={CELL}>{row.agent.replace(/_/g, ' ')}</td>
-                      <td style={{ ...CELL, textAlign: 'center', fontWeight: 'bold', color: signalColor(row.signal.signal) }}>
+                      <td style={{ ...CELL, textAlign: 'center', color: signalColor(row.signal.signal) }}>
                         {row.signal.signal.toUpperCase()}
                       </td>
                       <td style={CELL_RIGHT}>{row.signal.confidence}%</td>
@@ -780,18 +777,18 @@ export function AiHedgeFundWindow() {
 
         {/* ── Results: Portfolio Decisions ──────────────────────────────────── */}
         {decisions && (
-          <fieldset>
+          <fieldset style={{ marginBottom: '6px' }}>
             <legend>Decisiones del Portfolio Manager</legend>
 
-            <div className="sunken-panel" style={{ padding: 0 }}>
+            <div className="sunken-panel win98-scrollbar" style={{ padding: 0, maxHeight: '200px', overflow: 'auto' }}>
               <table style={{ ...FONT, width: '100%', borderCollapse: 'collapse', borderSpacing: 0 }}>
                 <thead>
                   <tr>
-                    <th style={COL_HEADER}>Ticker</th>
-                    <th style={{ ...COL_HEADER, textAlign: 'center' }}>Acción</th>
-                    <th style={COL_HEADER_RIGHT}>Cantidad</th>
-                    <th style={COL_HEADER_RIGHT}>Confianza</th>
-                    <th style={COL_HEADER}>Razonamiento</th>
+                    <th style={{ ...COL_HEADER_BASE, ...COL_RAISED, textAlign: 'left', ...stickyTh }}>Ticker</th>
+                    <th style={{ ...COL_HEADER_BASE, ...COL_RAISED, textAlign: 'center', ...stickyTh }}>Acción</th>
+                    <th style={{ ...COL_HEADER_BASE, ...COL_RAISED, textAlign: 'right', ...stickyTh }}>Cantidad</th>
+                    <th style={{ ...COL_HEADER_BASE, ...COL_RAISED, textAlign: 'right', ...stickyTh }}>Confianza</th>
+                    <th style={{ ...COL_HEADER_BASE, ...COL_RAISED, textAlign: 'left', ...stickyTh }}>Razonamiento</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -804,11 +801,10 @@ export function AiHedgeFundWindow() {
                         cursor: 'default',
                       }}
                     >
-                      <td style={{ ...CELL, fontWeight: 'bold' }}>{ticker}</td>
+                      <td style={CELL}>{ticker}</td>
                       <td style={{
                         ...CELL,
                         textAlign: 'center',
-                        fontWeight: 'bold',
                         color: dec.action === 'buy' ? COLOR_POSITIVE : dec.action === 'sell' ? COLOR_NEGATIVE : COLOR_SECONDARY,
                       }}>
                         {dec.action.toUpperCase()}
@@ -826,6 +822,17 @@ export function AiHedgeFundWindow() {
             </div>
           </fieldset>
         )}
+      </div>
+
+      {/* ── Run button footer ────────────────────────────────────────────────── */}
+      <div style={REFRESH_FOOTER}>
+        <button
+          className={phase === 'idle' ? 'default' : undefined}
+          onClick={handleRun}
+          disabled={isRunning || isLoading || selectedAgents.size === 0 || tickers.length === 0}
+        >
+          {isRunning ? 'Analizando...' : 'Ejecutar análisis'}
+        </button>
       </div>
 
       {/* ── Status bar ──────────────────────────────────────────────────────── */}

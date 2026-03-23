@@ -148,6 +148,7 @@ export const DraggableResizableWindow: React.FC<DraggableResizableWindowProps> =
         <div
           className="title-bar cursor-move select-none"
           onMouseDown={handleTitleBarMouseDown}
+          onDoubleClick={handleMaximizeClick}
         >
           <div className="title-bar-text truncate pr-2">{title}</div>
           <div className="title-bar-controls shrink-0">
