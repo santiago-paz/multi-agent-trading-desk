@@ -256,14 +256,14 @@ export async function getGeneralMarketNews(count: number = 5): Promise<NewsItem[
 
 // --- Technical Indicators Math ---
 
-function calculateSMA(data: number[], period: number): number | null {
+export function calculateSMA(data: number[], period: number): number | null {
   if (data.length < period) return null;
   const slice = data.slice(data.length - period);
   const sum = slice.reduce((acc, val) => acc + val, 0);
   return sum / period;
 }
 
-function calculateRSI(data: number[], period: number = 14): number | null {
+export function calculateRSI(data: number[], period: number = 14): number | null {
   if (data.length <= period) return null;
 
   let gains = 0;
