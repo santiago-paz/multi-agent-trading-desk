@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { PortfolioWindow } from '@/components/ui/PortfolioWindow';
-import { AdvisorWindow } from '@/components/ui/AdvisorWindow';
 import { NewsFeed } from '@/components/ui/NewsFeed';
 import { MarketDataWindow } from '@/components/ui/MarketDataWindow';
 import { OperationsFeed } from '@/components/ui/OperationsFeed';
@@ -14,7 +13,7 @@ import {
   WindowState,
 } from '@/components/ui/DraggableResizableWindow';
 import { useNewsStore } from '@/lib/store/news-store';
-import { getPortfolioSummary, getMarketData, getOperations, getProfileData, getAccountStatement, prefetchHistoricalData } from './actions';
+import { getPortfolioSummary, getMarketData, getOperations, getProfileData, getAccountStatement } from './actions';
 import { PortfolioResponse, Operation, DatosPerfil, EstadoCuenta } from '@/lib/iol/types';
 import { HistoricalRow } from '@/lib/market-data';
 import { DESKTOP_APP_ICONS } from '@/lib/win98se-icons';
@@ -25,7 +24,6 @@ const ICON_IDS = [
   'news',
   'marketdata',
   'movements',
-  'advisor',
   'apiexplorer',
   'aihedgefund',
 ] as const;
@@ -36,9 +34,8 @@ const DEFAULT_ICON_POSITIONS: Record<IconId, { x: number; y: number }> = {
   news: { x: 8, y: 72 },
   marketdata: { x: 8, y: 136 },
   movements: { x: 8, y: 200 },
-  advisor: { x: 8, y: 264 },
-  apiexplorer: { x: 8, y: 328 },
-  aihedgefund: { x: 8, y: 392 },
+  apiexplorer: { x: 8, y: 264 },
+  aihedgefund: { x: 8, y: 328 },
 };
 
 const DESKTOP_ICON_CONFIG: { id: IconId; label: string; emoji: string; iconKey: keyof typeof DESKTOP_APP_ICONS }[] = [
@@ -46,7 +43,6 @@ const DESKTOP_ICON_CONFIG: { id: IconId; label: string; emoji: string; iconKey: 
   { id: 'news',       label: 'News',         emoji: '📰', iconKey: 'news'       },
   { id: 'marketdata', label: 'Market Data',  emoji: '📈', iconKey: 'marketdata' },
   { id: 'movements',  label: 'Movimientos',  emoji: '💸', iconKey: 'movements'  },
-  { id: 'advisor',    label: 'Asesor IA',    emoji: '🧠', iconKey: 'advisor'    },
   { id: 'apiexplorer', label: 'API Explorer', emoji: '🔧', iconKey: 'apiexplorer' },
   { id: 'aihedgefund', label: 'AI Hedge Fund', emoji: '🤖', iconKey: 'aihedgefund' },
 ];
@@ -334,7 +330,6 @@ export default function TradingDashboard() {
 
   const marketDataFetched = useRef(false);
   const operationsFetched = useRef(false);
-  const historicalDataFetched = useRef(false);
 
   const { fetchMepRate } = useMepStore();
 
@@ -385,11 +380,6 @@ export default function TradingDashboard() {
       fetchOperationsData();
     }
 
-    const advisorOpen = windows['advisor'] && !windows['advisor'].minimized;
-    if (advisorOpen && !historicalDataFetched.current) {
-      historicalDataFetched.current = true;
-      prefetchHistoricalData();
-    }
   }, [windows]);
 
   return (
@@ -486,9 +476,6 @@ export default function TradingDashboard() {
                 isLoading={isLoadingOperations}
                 onRefresh={fetchOperationsData}
               />
-            )}
-            {appId === 'advisor' && (
-              <AdvisorWindow />
             )}
             {appId === 'apiexplorer' && (
               <ApiExplorerWindow />

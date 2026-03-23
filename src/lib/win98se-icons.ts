@@ -19,7 +19,6 @@ export const DESKTOP_APP_ICONS = {
   marketdata: url('mimes/32/x-office-spreadsheet.png'),
   account: url('apps/32/system-users.png'),
   movements: url('places/32/folder-recent.png'),
-  advisor: url('mimes/32/application-ms-htmlhelp.png'),
   apiexplorer: url('apps/32/utilities-terminal.png'),
   aihedgefund: url('apps/32/system-search.png'),
 } as const;
