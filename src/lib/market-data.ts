@@ -170,29 +170,61 @@ async function fetchFMPLatestNews(limit: number = 200): Promise<FMPNewsArticle[]
   const url = `https://financialmodelingprep.com/stable/news/stock-latest?limit=${limit}&apikey=${apiKey}`;
   const res = await fetch(url);
   if (!res.ok) throw new Error(`FMP API error: ${res.status}`);
-  return res.json();
+  const data: unknown = await res.json();
+  return Array.isArray(data) ? data : [];
+}
+
+/** Broad market / macro headlines (not tied to a single ticker). */
+async function fetchFMPGeneralLatestNews(limit: number = 200): Promise<FMPNewsArticle[]> {
+  const apiKey = process.env.FMP_API_KEY;
+  if (!apiKey) throw new Error('FMP_API_KEY not set');
+  const url = `https://financialmodelingprep.com/stable/news/general-latest?limit=${limit}&apikey=${apiKey}`;
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`FMP API error: ${res.status}`);
+  const data: unknown = await res.json();
+  return Array.isArray(data) ? data : [];
 }
 
 /**
- * Fetches general market news and per-ticker news in a single FMP call.
- * Returns both buckets ready for the news store.
+ * Fetches general market news (general-latest) and per-ticker news (stock-latest).
+ * Stock feed entries almost always carry a `symbol`, so "general" would stay empty if we
+ * only split stock-latest by missing symbol — hence the dedicated general endpoint.
  */
 export async function getAllNews(): Promise<{ general: NewsItem[]; specific: Record<string, NewsItem[]> }> {
   try {
-    const articles = await fetchFMPLatestNews(2000);
+    const [stockSettled, generalSettled] = await Promise.allSettled([
+      fetchFMPLatestNews(2000),
+      fetchFMPGeneralLatestNews(200),
+    ]);
+
+    if (stockSettled.status === 'rejected') {
+      console.error('FMP stock-latest failed:', stockSettled.reason);
+    }
+    if (generalSettled.status === 'rejected') {
+      console.error('FMP general-latest failed:', generalSettled.reason);
+    }
+
+    const articles = stockSettled.status === 'fulfilled' ? stockSettled.value : [];
+    const generalRaw = generalSettled.status === 'fulfilled' ? generalSettled.value : [];
 
     const specific: Record<string, NewsItem[]> = {};
-    const general: NewsItem[] = [];
+    const general: NewsItem[] = generalRaw.map(mapFMPToNewsItem);
+
+    // Legacy fallback: older FMP rows sometimes omitted symbol on broad stock feed items
+    if (general.length === 0) {
+      for (const article of articles) {
+        const sym = article.symbol?.toUpperCase().trim() ?? '';
+        if (!sym) {
+          general.push(mapFMPToNewsItem(article));
+        }
+      }
+    }
 
     for (const article of articles) {
-      const sym = article.symbol?.toUpperCase() ?? null;
-
-      if (sym) {
-        if (!specific[sym]) specific[sym] = [];
-        specific[sym].push(mapFMPToNewsItem(article));
-      } else {
-        general.push(mapFMPToNewsItem(article));
-      }
+      const sym = article.symbol?.toUpperCase().trim() ?? '';
+      if (!sym) continue;
+      if (!specific[sym]) specific[sym] = [];
+      specific[sym].push(mapFMPToNewsItem(article));
     }
 
     return { general, specific };
