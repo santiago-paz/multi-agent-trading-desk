@@ -5,7 +5,6 @@ import { PortfolioWindow } from '@/components/ui/PortfolioWindow';
 import { NewsFeed } from '@/components/ui/NewsFeed';
 import { MarketDataWindow } from '@/components/ui/MarketDataWindow';
 import { OperationsFeed } from '@/components/ui/OperationsFeed';
-import { ApiExplorerWindow } from '@/components/ui/ApiExplorerWindow';
 import { AiHedgeFundWindow } from '@/components/ui/AiHedgeFundWindow';
 import { BacktestingWindow } from '@/components/ui/BacktestingWindow';
 import { DesktopIcon } from '@/components/ui/DesktopIcon';
@@ -25,7 +24,6 @@ const ICON_IDS = [
   'news',
   'marketdata',
   'movements',
-  'apiexplorer',
   'aihedgefund',
   'backtesting',
 ] as const;
@@ -36,9 +34,8 @@ const DEFAULT_ICON_POSITIONS: Record<IconId, { x: number; y: number }> = {
   news: { x: 8, y: 72 },
   marketdata: { x: 8, y: 136 },
   movements: { x: 8, y: 200 },
-  apiexplorer: { x: 8, y: 264 },
-  aihedgefund: { x: 8, y: 328 },
-  backtesting: { x: 8, y: 392 },
+  aihedgefund: { x: 8, y: 264 },
+  backtesting: { x: 8, y: 328 },
 };
 
 const DESKTOP_ICON_CONFIG: { id: IconId; label: string; emoji: string; iconKey: keyof typeof DESKTOP_APP_ICONS }[] = [
@@ -46,7 +43,6 @@ const DESKTOP_ICON_CONFIG: { id: IconId; label: string; emoji: string; iconKey: 
   { id: 'news',       label: 'News',         emoji: '📰', iconKey: 'news'       },
   { id: 'marketdata', label: 'Market Data',  emoji: '📈', iconKey: 'marketdata' },
   { id: 'movements',  label: 'Movimientos',  emoji: '💸', iconKey: 'movements'  },
-  { id: 'apiexplorer', label: 'API Explorer', emoji: '🔧', iconKey: 'apiexplorer' },
   { id: 'aihedgefund', label: 'AI Hedge Fund', emoji: '🤖', iconKey: 'aihedgefund' },
   { id: 'backtesting', label: 'Backtesting', emoji: '📉', iconKey: 'backtesting' },
 ];
@@ -481,9 +477,6 @@ export default function TradingDashboard() {
                 isLoading={isLoadingOperations}
                 onRefresh={fetchOperationsData}
               />
-            )}
-            {appId === 'apiexplorer' && (
-              <ApiExplorerWindow />
             )}
             {appId === 'aihedgefund' && (
               <AiHedgeFundWindow />

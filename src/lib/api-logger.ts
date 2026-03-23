@@ -5,7 +5,7 @@
  *
  * Uses globalThis to ensure a single shared store across all Next.js server
  * action bundles (each file can get its own module instance, so module-level
- * variables are NOT shared between e.g. trading/actions.ts and api-explorer/log-actions.ts).
+ * variables are NOT shared between different server action bundles).
  */
 
 export interface ApiLogEntry {
