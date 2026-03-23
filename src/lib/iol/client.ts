@@ -2,7 +2,6 @@ import { IOLToken, PortfolioResponse, Quote, OrderRequest, OrderResponse, Operat
 import { readFileSync, writeFileSync, unlinkSync } from 'fs';
 import { join } from 'path';
 
-const SIMULATION_MODE = process.env.SIMULATION_MODE === 'true';
 const TOKEN_CACHE_PATH = join(process.cwd(), '.iol_token_cache.json');
 const TOKEN_SAFETY_MARGIN_MS = 60 * 1000; // Refresh 60s before expiry
 
@@ -17,7 +16,6 @@ export class IOLClient {
   private tokenExpiry: Date | null = null;
 
   constructor() {
-    if (SIMULATION_MODE) return;
 
     // Try to load cached token from disk
     const cached = this.loadCachedToken();
@@ -70,7 +68,6 @@ export class IOLClient {
   }
 
   private async authenticate(): Promise<void> {
-    if (SIMULATION_MODE) return;
 
     // Token still valid (with safety margin) — skip auth
     if (this.token && this.tokenExpiry && this.tokenExpiry.getTime() > (Date.now() + TOKEN_SAFETY_MARGIN_MS)) {
@@ -137,11 +134,6 @@ export class IOLClient {
   }
 
   private async fetchWithAuth<T>(endpoint: string, options: RequestInit = {}, _isRetry = false): Promise<T> {
-    if (SIMULATION_MODE) {
-      const mock = this.mockResponse(endpoint) as T;
-      return mock;
-    }
-
     await this.authenticate();
 
     const response = await fetch(`${this.baseUrl}${endpoint}`, {
@@ -264,53 +256,14 @@ export class IOLClient {
   }
 
   async getQuote(symbol: string, market: string = 'bcba'): Promise<Quote> {
-    if (SIMULATION_MODE) {
-        // Mock specific quotes for CCL calculation or general use
-        if (symbol === 'GGAL' && market.toUpperCase() === 'NYSE') return { ...(this.mockResponse('/api/v2/Cotizaciones') as Quote), simbolo: 'GGAL', ultimoPrecio: 45 };
-        if (symbol === 'GGAL') return { ...(this.mockResponse('/api/v2/Cotizaciones') as Quote), simbolo: 'GGAL', ultimoPrecio: 4500 };
-        if (symbol === 'AAPL') return { ...(this.mockResponse('/api/v2/Cotizaciones') as Quote), simbolo: 'AAPL', ultimoPrecio: 22000 };
-        if (symbol === 'KO') return { ...(this.mockResponse('/api/v2/Cotizaciones') as Quote), simbolo: 'KO', ultimoPrecio: 18000 };
-        return { ...(this.mockResponse('/api/v2/Cotizaciones') as Quote), simbolo: symbol };
-    }
     return this.fetchWithAuth<Quote>(`/api/v2/${market}/Titulos/${symbol}/Cotizacion`);
   }
 
-  async getPanelQuotes(instrumento: string, pais: string = 'argentina'): Promise<PanelResponse> {
-    if (SIMULATION_MODE) {
-      if (instrumento.toLowerCase() === 'cedears') {
-        return {
-          titulos: [
-            { simbolo: 'AAPL', descripcion: 'Apple Inc.', ultimoPrecio: 22000, variacionPorcentual: 1.5, apertura: 21000, maximo: 22500, minimo: 20500, cierreAnterior: 21500, volumen: 10000, cantidadOperaciones: 500, fecha: new Date().toISOString(), tipoOpcion: null, precioEjercicio: null, fechaVencimiento: null, mercado: 'bcba', moneda: 'peso_Argentino', plazo: 't0' },
-            { simbolo: 'KO', descripcion: 'Coca-Cola Co.', ultimoPrecio: 18000, variacionPorcentual: -0.5, apertura: 18100, maximo: 18200, minimo: 17900, cierreAnterior: 18100, volumen: 5000, cantidadOperaciones: 200, fecha: new Date().toISOString(), tipoOpcion: null, precioEjercicio: null, fechaVencimiento: null, mercado: 'bcba', moneda: 'peso_Argentino', plazo: 't0' },
-            { simbolo: 'GGAL', descripcion: 'Grupo Financiero Galicia', ultimoPrecio: 4500, variacionPorcentual: 2.3, apertura: 4400, maximo: 4600, minimo: 4300, cierreAnterior: 4400, volumen: 50000, cantidadOperaciones: 1500, fecha: new Date().toISOString(), tipoOpcion: null, precioEjercicio: null, fechaVencimiento: null, mercado: 'bcba', moneda: 'peso_Argentino', plazo: 't0' },
-            { simbolo: 'SPY', descripcion: 'SPDR S&P 500 ETF Trust', ultimoPrecio: 35000, variacionPorcentual: 0.8, apertura: 34500, maximo: 35500, minimo: 34000, cierreAnterior: 34700, volumen: 15000, cantidadOperaciones: 800, fecha: new Date().toISOString(), tipoOpcion: null, precioEjercicio: null, fechaVencimiento: null, mercado: 'bcba', moneda: 'peso_Argentino', plazo: 't0' },
-            { simbolo: 'MSFT', descripcion: 'Microsoft Corp.', ultimoPrecio: 32000, variacionPorcentual: 1.2, apertura: 31500, maximo: 32500, minimo: 31000, cierreAnterior: 31600, volumen: 12000, cantidadOperaciones: 600, fecha: new Date().toISOString(), tipoOpcion: null, precioEjercicio: null, fechaVencimiento: null, mercado: 'bcba', moneda: 'peso_Argentino', plazo: 't0' },
-            { simbolo: 'TSLA', descripcion: 'Tesla Inc.', ultimoPrecio: 19000, variacionPorcentual: -2.1, apertura: 19500, maximo: 19800, minimo: 18800, cierreAnterior: 19400, volumen: 25000, cantidadOperaciones: 1200, fecha: new Date().toISOString(), tipoOpcion: null, precioEjercicio: null, fechaVencimiento: null, mercado: 'bcba', moneda: 'peso_Argentino', plazo: 't0' },
-          ]
-        } as PanelResponse;
-      }
-      if (instrumento.toLowerCase() === 'titulospublicos') {
-        return {
-          titulos: [
-            { simbolo: 'AL30', descripcion: 'Bono Rep. Argentina USD 2030', ultimoPrecio: 65000, variacionPorcentual: 1.2, apertura: 64500, maximo: 65100, minimo: 64000, cierreAnterior: 64230, volumen: 1000000, cantidadOperaciones: 5000, fecha: new Date().toISOString(), tipoOpcion: null, precioEjercicio: null, fechaVencimiento: null, mercado: 'bcba', moneda: 'peso_Argentino', plazo: 't0' },
-            { simbolo: 'GD30', descripcion: 'Bono Global Rep. Argentina USD 2030', ultimoPrecio: 72000, variacionPorcentual: 0.5, apertura: 71500, maximo: 72500, minimo: 71000, cierreAnterior: 71600, volumen: 500000, cantidadOperaciones: 3000, fecha: new Date().toISOString(), tipoOpcion: null, precioEjercicio: null, fechaVencimiento: null, mercado: 'bcba', moneda: 'peso_Argentino', plazo: 't0' },
-            { simbolo: 'TX24', descripcion: 'Bono Tesoro Nacional ARS CER 2024', ultimoPrecio: 1540, variacionPorcentual: 0.1, apertura: 1530, maximo: 1550, minimo: 1520, cierreAnterior: 1538, volumen: 2000000, cantidadOperaciones: 1500, fecha: new Date().toISOString(), tipoOpcion: null, precioEjercicio: null, fechaVencimiento: null, mercado: 'bcba', moneda: 'peso_Argentino', plazo: 't0' },
-            { simbolo: 'S31O3', descripcion: 'Letra del Tesoro Nacional ARS a Descuento', ultimoPrecio: 95, variacionPorcentual: 0.2, apertura: 94, maximo: 96, minimo: 93, cierreAnterior: 94.8, volumen: 10000000, cantidadOperaciones: 8000, fecha: new Date().toISOString(), tipoOpcion: null, precioEjercicio: null, fechaVencimiento: null, mercado: 'bcba', moneda: 'peso_Argentino', plazo: 't0' },
-          ]
-        } as PanelResponse;
-      }
-      return { titulos: [] };
-    }
-    
+  async getPanelQuotes(instrumento: string, pais: string = 'argentina'): Promise<PanelResponse> {    
     return this.fetchWithAuth<PanelResponse>(`/api/v2/Cotizaciones/${instrumento}/${pais}/Todos`);
   }
 
   async placeOrder(order: OrderRequest): Promise<OrderResponse> {
-    if (SIMULATION_MODE) {
-      console.log(`[SIMULATION] Placing order: ${JSON.stringify(order)}`);
-      return { numeroOperacion: 123456, mensaje: 'Orden simulada exitosa' };
-    }
-
     const endpoint = order.side === 'buy' ? '/api/v2/Operar/Comprar' : '/api/v2/Operar/Vender';
 
     return this.fetchWithAuth<OrderResponse>(endpoint, {
@@ -323,14 +276,6 @@ export class IOLClient {
   }
 
   async getOperations(daysToFetch: number = 30): Promise<Operation[]> {
-    if (SIMULATION_MODE) {
-      return [
-        { numero: 1001, fechaOrden: new Date().toISOString(), tipo: 'Compra', estado: 'Terminada', mercado: 'bcba', simbolo: 'AAPL', cantidad: 10, monto: 150000, modalidad: 't0', precio: 15000 },
-        { numero: 1002, fechaOrden: new Date(Date.now() - 86400000).toISOString(), tipo: 'Venta', estado: 'Terminada', mercado: 'bcba', simbolo: 'KO', cantidad: 5, monto: 60000, modalidad: 't0', precio: 12000 },
-        { numero: 1003, fechaOrden: new Date(Date.now() - 172800000).toISOString(), tipo: 'Compra', estado: 'Pendiente', mercado: 'bcba', simbolo: 'TSLA', cantidad: 2, monto: 40000, modalidad: 't0', precio: 20000 },
-      ];
-    }
-
     const toDate = new Date();
     const fromDate = new Date();
     fromDate.setDate(toDate.getDate() - daysToFetch);
@@ -357,8 +302,6 @@ export class IOLClient {
 
   async getMEP(): Promise<number> {
     try {
-      if (SIMULATION_MODE) return 1200;
-
       const data = await this.fetchWithAuth<number>('/api/v2/Cotizaciones/MEP/AL30');
       if (typeof data === 'number') {
         return data;

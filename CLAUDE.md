@@ -48,7 +48,6 @@ The "AI Hedge Fund" window connects to a separate Python backend located at `/Us
 Broker API integration with:
 - Token caching to `.iol_token_cache.json` on disk
 - Auto-refresh 60s before expiry, fallback to username/password
-- `SIMULATION_MODE` env var skips actual order placement
 
 ### Market Data (`src/lib/market-data.ts`)
 
@@ -78,7 +77,6 @@ IOL_REFRESH_TOKEN
 FMP_API_KEY           # Financial Modeling Prep (market data, news, profiles)
 BASIC_AUTH_USER       # Optional HTTP basic auth
 BASIC_AUTH_PASSWORD
-SIMULATION_MODE       # Set to skip real order execution
 ```
 
 ### Path Aliases
