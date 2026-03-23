@@ -7,23 +7,19 @@ import { FONT, WINDOW_CONTAINER, COLOR_NEGATIVE } from '@/lib/theme/win98';
 interface PortfolioWindowProps {
   portfolio: PortfolioResponse | null;
   usdPrices?: Record<string, { price: number; pct: number }>;
-  isLoadingPortfolio: boolean;
-  onRefreshPortfolio: () => void;
+  isLoading: boolean;
+  onRefresh: () => void;
   perfil: DatosPerfil | null;
   estadoCuenta: EstadoCuenta | null;
-  isLoadingAccount: boolean;
-  onRefreshAccount: () => void;
 }
 
 export const PortfolioWindow: React.FC<PortfolioWindowProps> = ({
   portfolio,
   usdPrices,
-  isLoadingPortfolio,
-  onRefreshPortfolio,
+  isLoading,
+  onRefresh,
   perfil,
   estadoCuenta,
-  isLoadingAccount,
-  onRefreshAccount,
 }) => {
   const [activeTab, setActiveTab] = useState<'portfolio' | 'account'>('portfolio');
 
@@ -40,15 +36,15 @@ export const PortfolioWindow: React.FC<PortfolioWindowProps> = ({
 
       <div role="tabpanel" style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column', padding: '4px 0 0 0' }}>
           {activeTab === 'portfolio' && (
-            isLoadingPortfolio && !portfolio ? (
+            isLoading && !portfolio ? (
               <p style={{ ...FONT, margin: 0, padding: '4px' }}>Cargando portafolio...</p>
             ) : portfolio ? (
               <PortfolioSummary
                 portfolio={portfolio}
                 usdPrices={usdPrices}
                 estadoCuenta={estadoCuenta}
-                isLoading={isLoadingPortfolio}
-                onRefresh={onRefreshPortfolio}
+                isLoading={isLoading}
+                onRefresh={onRefresh}
               />
             ) : (
               <p style={{ ...FONT, margin: 0, padding: '4px', color: COLOR_NEGATIVE }}>No se pudo cargar el portafolio.</p>
@@ -58,8 +54,8 @@ export const PortfolioWindow: React.FC<PortfolioWindowProps> = ({
             <AccountData
               perfil={perfil}
               estadoCuenta={estadoCuenta}
-              isLoading={isLoadingAccount}
-              onRefresh={onRefreshAccount}
+              isLoading={isLoading}
+              onRefresh={onRefresh}
             />
           )}
       </div>

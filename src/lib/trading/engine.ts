@@ -10,16 +10,10 @@ interface IPortfolioClient {
 export class TradingEngine {
   constructor(private client: IPortfolioClient) {}
 
-  async calculatePortfolioValue(): Promise<number> {
-    const [portfolio, estadoCuenta, mep] = await Promise.all([
-      this.client.getPortfolio(),
-      this.client.getEstadoCuenta(),
-      this.client.getMEP(),
-    ]);
-
+  /** Pure calculation — use when data is already fetched to avoid duplicate API calls. */
+  calculatePortfolioValueFromData(portfolio: PortfolioResponse, estadoCuenta: EstadoCuenta, mep: number): number {
     let totalValueARS = 0;
 
-    // Sum up the value of all assets in ARS
     const activos = portfolio?.activos;
     if (!activos || !Array.isArray(activos)) {
       console.warn('[Trading Engine] Portfolio activos is not available, returning 0');
@@ -29,7 +23,6 @@ export class TradingEngine {
       totalValueARS += asset.valorizado;
     }
 
-    // Add cash balances
     let cashUSD = 0;
     for (const cuenta of estadoCuenta?.cuentas ?? []) {
       if (cuenta.moneda === 'peso_Argentino') {
@@ -39,8 +32,17 @@ export class TradingEngine {
       }
     }
 
-    // Convert to USD using MEP
     return totalValueARS / mep + cashUSD;
+  }
+
+  /** Convenience async wrapper — fetches data then calculates. */
+  async calculatePortfolioValue(): Promise<number> {
+    const [portfolio, estadoCuenta, mep] = await Promise.all([
+      this.client.getPortfolio(),
+      this.client.getEstadoCuenta(),
+      this.client.getMEP(),
+    ]);
+    return this.calculatePortfolioValueFromData(portfolio, estadoCuenta, mep);
   }
 }
 

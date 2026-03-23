@@ -13,7 +13,7 @@ import {
   WindowState,
 } from '@/components/ui/DraggableResizableWindow';
 import { useNewsStore } from '@/lib/store/news-store';
-import { getPortfolioSummary, getMarketData, getOperations, getProfileData, getAccountStatement } from './actions';
+import { getPortfolioSummary, getMarketData, getOperations } from './actions';
 import { PortfolioResponse, Operation, DatosPerfil, EstadoCuenta } from '@/lib/iol/types';
 import { HistoricalRow } from '@/lib/market-data';
 import { DESKTOP_APP_ICONS } from '@/lib/win98se-icons';
@@ -71,7 +71,6 @@ export default function TradingDashboard() {
 
   const [perfil, setPerfil] = useState<DatosPerfil | null>(null);
   const [estadoCuenta, setEstadoCuenta] = useState<EstadoCuenta | null>(null);
-  const [isLoadingAccount, setIsLoadingAccount] = useState(false);
 
   const {
     generalNews,
@@ -312,22 +311,6 @@ export default function TradingDashboard() {
     setIsLoadingOperations(false);
   };
 
-  const fetchAccountData = async () => {
-    setIsLoadingAccount(true);
-    const [perfilResult, estadoResult] = await Promise.all([
-      getProfileData(),
-      getAccountStatement(),
-    ]);
-
-    if (perfilResult.success && perfilResult.data) {
-      setPerfil(perfilResult.data as DatosPerfil);
-    }
-    if (estadoResult.success && estadoResult.data) {
-      setEstadoCuenta(estadoResult.data as EstadoCuenta);
-    }
-    setIsLoadingAccount(false);
-  };
-
   const marketDataFetched = useRef(false);
   const operationsFetched = useRef(false);
 
@@ -339,6 +322,8 @@ export default function TradingDashboard() {
     if (result.success && result.data) {
       setPortfolio(result.data.portfolio);
       setUsdPrices(result.data.usdPrices ?? {});
+      if (result.data.estadoCuenta) setEstadoCuenta(result.data.estadoCuenta as EstadoCuenta);
+      if (result.data.perfil) setPerfil(result.data.perfil as DatosPerfil);
     }
     setIsLoadingPortfolio(false);
   };
@@ -365,7 +350,6 @@ export default function TradingDashboard() {
 
   useEffect(() => {
     fetchPortfolio();
-    fetchAccountData();
   }, []);
 
   useEffect(() => {
@@ -445,12 +429,10 @@ export default function TradingDashboard() {
               <PortfolioWindow
                 portfolio={portfolio}
                 usdPrices={usdPrices}
-                isLoadingPortfolio={isLoadingPortfolio}
-                onRefreshPortfolio={fetchPortfolio}
+                isLoading={isLoadingPortfolio}
+                onRefresh={fetchPortfolio}
                 perfil={perfil}
                 estadoCuenta={estadoCuenta}
-                isLoadingAccount={isLoadingAccount}
-                onRefreshAccount={fetchAccountData}
               />
             )}
             {appId === 'news' && (

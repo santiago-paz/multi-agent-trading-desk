@@ -92,12 +92,17 @@ export async function getNewsMetadata() {
 
 export async function getPortfolioSummary() {
     try {
-        const [portfolio, valueUSD, mepRate, cedearsPanel] = await Promise.all([
+        // Single batch — avoids duplicate calls to getPortfolio, getEstadoCuenta, getMEP
+        const [portfolio, estadoCuenta, mepRate, cedearsPanel, perfil] = await Promise.all([
             iolClient.getPortfolio(),
-            tradingEngine.calculatePortfolioValue(),
+            iolClient.getEstadoCuenta(),
             iolClient.getMEP(),
             iolClient.getPanelQuotes('cedears'),
+            iolClient.getDatosPerfil(),
         ]);
+
+        // Calculate portfolio value from already-fetched data (no extra API calls)
+        const valueUSD = tradingEngine.calculatePortfolioValueFromData(portfolio, estadoCuenta, mepRate);
 
         // Build a map of D-suffix (dollar) prices keyed by base symbol.
         // e.g. AAPLD → AAPL, so the portfolio (which uses bare symbols) can look up USD prices.
@@ -115,7 +120,7 @@ export async function getPortfolioSummary() {
             }
         }
 
-        return { success: true, data: { portfolio, valueUSD, mepRate, usdPrices } };
+        return { success: true, data: { portfolio, valueUSD, mepRate, usdPrices, estadoCuenta, perfil } };
     } catch (error) {
         console.error('Failed to fetch portfolio summary:', error);
         return { success: false, error: 'Failed to fetch portfolio summary' };
