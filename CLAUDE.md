@@ -24,6 +24,21 @@ This is a **Win98-themed AI hedge fund dashboard** for trading CEDEARs (Argentin
 
 The trading page is a large client component (`src/app/trading/page.tsx`) that coordinates window visibility, data fetching, and AI analysis. Heavy logic lives in server actions (`src/app/trading/actions.ts`).
 
+### Desktop Windows
+
+Six draggable windows managed by `useWindowManager` hook (`src/hooks/useWindowManager.ts`):
+
+| Window | Component | Description |
+|--------|-----------|-------------|
+| Portfolio | `PortfolioWindow.tsx` | Portfolio holdings, account data (`AccountData.tsx`), summary (`PortfolioSummary.tsx`) |
+| News | `NewsFeed.tsx` | Market intelligence feed with sentiment |
+| Market Data | `MarketDataWindow.tsx` | OHLCV charts with sparklines (`Sparkline.tsx`) |
+| Movimientos | `OperationsFeed.tsx` | Recent broker operations/movements |
+| AI Hedge Fund | `AiHedgeFundWindow.tsx` | External Python backend integration for AI-driven analysis |
+| Backtesting | `BacktestingWindow.tsx` | Strategy backtesting engine |
+
+Shared UI primitives: `DraggableResizableWindow.tsx` (drag/resize shell), `DesktopIcon.tsx` (desktop shortcuts), `OrderReview.tsx` (trade confirmation), `RiskGauge.tsx` (risk visualization).
+
 ### AI Agent Pipeline
 
 Three agents run sequentially via `runAnalysis()` in `actions.ts`:
@@ -63,8 +78,16 @@ Broker API integration with:
 
 - FMP (Financial Modeling Prep) API for historical OHLCV data, company profiles, and news
 - Company names cached to `.company-names-cache.json` on disk (FMP profile endpoint doesn't support batch)
+- Historical data cached to `.historical_cache.json` (1h TTL) via `src/lib/historical-cache.ts`
 - CEDEAR ratios are hardcoded (e.g., 10 AAPL shares = 1 US share)
 - MEP rate (ARS/USD) fetched separately, polled every 10 minutes
+- API calls logged centrally via `src/lib/api-logger.ts` (in-memory, server-side only, uses `globalThis` for cross-bundle sharing)
+
+### Styling & Theme
+
+- **98.css** library for Win98 look-and-feel
+- `src/lib/theme/win98.ts` — shared inline style constants (FONT, LABEL, etc.) used across all window components
+- `src/lib/win98se-icons.ts` — Win98SE icon URLs from CDN (jsDelivr), only verified real PNGs (not symlinks)
 
 ### State Management
 
