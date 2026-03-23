@@ -4,77 +4,8 @@ import { analystAgent } from '@/lib/agents/analyst';
 import { sentinelAgent } from '@/lib/agents/sentinel';
 import { strategistAgent } from '@/lib/agents/strategist';
 import { tradingEngine } from '@/lib/trading/engine';
-import { ComprehensiveAssetData } from '@/lib/market-data';
 import { iolClient } from '@/lib/iol/client';
 import { OrderRequest, OrderResponse } from '@/lib/iol/types';
-import { bulkSetCachedAssetData, buildAssetDataFromIOLSeries } from '@/lib/historical-cache';
-
-// ─── Prefetch historical data for all instruments ────────────────────────────
-
-export async function prefetchHistoricalData() {
-  try {
-    const [cedearsPanel, bonosPanel] = await Promise.all([
-      iolClient.getPanelQuotes('cedears'),
-      iolClient.getPanelQuotes('titulosPublicos'),
-    ]);
-
-    // Deduplicate CEDEARs: IOL lists both peso (C) and dollar (D) variants.
-    // Only strip the suffix when BOTH variants exist (e.g. AAPLC+AAPLD → AAPL).
-    // This avoids mangling tickers that naturally end in C/D (INTC, MCD, JD, GILD…).
-    const cedearsRaw = (cedearsPanel.titulos || []).map(t => t.simbolo);
-    const cedearsRawSet = new Set(cedearsRaw);
-    const cedearsSet = new Set<string>();
-    for (const sym of cedearsRaw) {
-      if (sym.length > 1 && /[CD]$/.test(sym)) {
-        const base = sym.slice(0, -1);
-        const otherSuffix = sym.endsWith('C') ? 'D' : 'C';
-        if (cedearsRawSet.has(base + otherSuffix)) {
-          cedearsSet.add(base);
-          continue;
-        }
-      }
-      cedearsSet.add(sym);
-    }
-    const bonosSymbols = (bonosPanel.titulos || []).map(t => t.simbolo);
-    const allSymbols = [...Array.from(cedearsSet), ...bonosSymbols];
-
-    console.log(`[PREFETCH] Starting historical data download for ${allSymbols.length} symbols...`);
-
-    const BATCH_SIZE = 5;
-    const results: { symbol: string; data: ComprehensiveAssetData }[] = [];
-    let ok = 0;
-    let fail = 0;
-
-    for (let i = 0; i < allSymbols.length; i += BATCH_SIZE) {
-      const batch = allSymbols.slice(i, i + BATCH_SIZE);
-      const batchResults = await Promise.allSettled(
-        batch.map(async (symbol) => {
-          const series = await iolClient.getHistoricalSeries(symbol, 120);
-          const data = buildAssetDataFromIOLSeries(symbol, series);
-          return data ? { symbol, data } : null;
-        })
-      );
-
-      for (const r of batchResults) {
-        if (r.status === 'fulfilled' && r.value) {
-          results.push(r.value);
-          ok++;
-        } else {
-          fail++;
-        }
-      }
-    }
-
-    // Write all to cache at once
-    bulkSetCachedAssetData(results);
-
-    console.log(`[PREFETCH] Done: ${ok} cached, ${fail} failed, ${allSymbols.length} total`);
-    return { success: true, cached: ok, failed: fail, total: allSymbols.length };
-  } catch (error) {
-    console.error('[PREFETCH] Failed:', error);
-    return { success: false, error: 'Prefetch failed' };
-  }
-}
 
 export async function runAnalysis() {
   try {
@@ -127,7 +58,7 @@ export async function executeOrders(orders: OrderRequest[]) {
   }
 }
 
-import { getHistoricalData, getNews, getGeneralMarketNews, getAllNews, getCompanyNames, NewsItem, HistoricalRow } from '@/lib/market-data';
+import { getHistoricalData, getAllNews, getCompanyNames, HistoricalRow } from '@/lib/market-data';
 
 export async function getMarketData() {
   try {

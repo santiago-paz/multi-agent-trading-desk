@@ -78,7 +78,6 @@ Broker API integration with:
 
 - FMP (Financial Modeling Prep) API for historical OHLCV data, company profiles, and news
 - Company names cached to `.company-names-cache.json` on disk (FMP profile endpoint doesn't support batch)
-- Historical data cached to `.historical_cache.json` (1h TTL) via `src/lib/historical-cache.ts`
 - CEDEAR ratios are hardcoded (e.g., 10 AAPL shares = 1 US share)
 - MEP rate (ARS/USD) fetched separately, polled every 10 minutes
 

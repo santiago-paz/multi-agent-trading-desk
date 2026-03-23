@@ -1,4 +1,4 @@
-import { IOLToken, PortfolioResponse, Quote, OrderRequest, OrderResponse, Operation, EstadoCuenta, DatosPerfil, PanelResponse, PanelQuote, IOLHistoricalEntry } from './types';
+import { IOLToken, PortfolioResponse, Quote, OrderRequest, OrderResponse, Operation, EstadoCuenta, DatosPerfil, PanelResponse, PanelQuote } from './types';
 import { readFileSync, writeFileSync, unlinkSync } from 'fs';
 import { join } from 'path';
 
@@ -354,30 +354,6 @@ export class IOLClient {
     return this.fetchWithAuth<DatosPerfil>('/api/v2/datos-perfil');
   }
 
-
-  async getHistoricalSeries(symbol: string, days: number = 60, market: string = 'BCBA'): Promise<IOLHistoricalEntry[]> {
-    const formatDate = (d: Date) => d.toISOString().split('T')[0];
-    const today = new Date();
-    const from = new Date();
-    from.setDate(today.getDate() - days);
-
-    if (SIMULATION_MODE) {
-      // Generate synthetic daily entries for simulation
-      const entries: IOLHistoricalEntry[] = [];
-      let price = 1000;
-      for (let i = days; i >= 0; i--) {
-        const d = new Date();
-        d.setDate(today.getDate() - i);
-        price = price * (1 + (Math.random() - 0.49) * 0.02);
-        entries.push({ fecha: d.toISOString(), apertura: price, maximo: price * 1.01, minimo: price * 0.99, ultimoPrecio: price, volumen: 50000, cantidadOperaciones: 200 });
-      }
-      return entries;
-    }
-
-    return this.fetchWithAuth<IOLHistoricalEntry[]>(
-      `/api/v2/${market}/Titulos/${symbol}/Cotizacion/seriehistorica/${formatDate(from)}/${formatDate(today)}/sinAjustar`
-    );
-  }
 
   async getMEP(): Promise<number> {
     try {
