@@ -39,33 +39,9 @@ Six draggable windows managed by `useWindowManager` hook (`src/hooks/useWindowMa
 
 Shared UI primitives: `DraggableResizableWindow.tsx` (drag/resize shell), `DesktopIcon.tsx` (desktop shortcuts), `OrderReview.tsx` (trade confirmation), `RiskGauge.tsx` (risk visualization).
 
-### AI Agent Pipeline
-
-Three agents run sequentially via `runAnalysis()` in `actions.ts`:
-
-1. **Analyst** (`src/lib/agents/analyst.ts`) — Technical analysis per symbol (trend, score, reasoning)
-2. **Sentinel** (`src/lib/agents/sentinel.ts`) — Risk scoring & news sentiment
-3. **Strategist** (`src/lib/agents/strategist.ts`) — Portfolio allocation decisions → passed to trading engine
-
-All agents call `generateText()` from Vercel AI SDK, parse JSON responses, and have error fallbacks.
-
-The LLM is `meta-llama/llama-3.3-70b-instruct` via Fireworks (configured in `src/lib/llm.ts`).
-
 ### AI Hedge Fund Backend
 
 The "AI Hedge Fund" window connects to a separate Python backend located at `/Users/santiago/GitHub/ai-hedge-fund`. The frontend calls it via `NEXT_PUBLIC_AI_HEDGE_FUND_API_URL` (defaults to `http://localhost:8000`). Endpoints used: `GET /hedge-fund/agents` and `POST /hedge-fund/run`.
-
-### Trading Flow
-
-```
-runAnalysis() → Analyst → Sentinel → Strategist
-                                         ↓
-                              trading engine (order generation)
-                                         ↓
-                              user reviews orders in UI
-                                         ↓
-                              executeOrders() → IOL API
-```
 
 ### IOL Client (`src/lib/iol/client.ts`) — see [`docs/iol-api.md`](docs/iol-api.md) for full API reference
 
@@ -101,7 +77,6 @@ IOL_USERNAME          # InvertirOnline broker login
 IOL_PASSWORD
 IOL_REFRESH_TOKEN
 FMP_API_KEY           # Financial Modeling Prep (market data, news, profiles)
-FIREWORKS_API_KEY     # LLM provider
 BASIC_AUTH_USER       # Optional HTTP basic auth
 BASIC_AUTH_PASSWORD
 SIMULATION_MODE       # Set to skip real order execution
