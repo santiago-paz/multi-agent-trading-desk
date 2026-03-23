@@ -6,7 +6,7 @@ export type SortDir = 'asc' | 'desc';
 
 export interface UsdPriceEntry { price: number; pct: number }
 
-function getSortValue(asset: PortfolioAsset, key: SortKey): string | number {
+export function getSortValue(asset: PortfolioAsset, key: SortKey): string | number {
   switch (key) {
     case 'simbolo':         return asset.titulo.simbolo;
     case 'descripcion':     return asset.titulo.descripcion;
@@ -18,7 +18,7 @@ function getSortValue(asset: PortfolioAsset, key: SortKey): string | number {
   }
 }
 
-function getCashUSD(estadoCuenta: EstadoCuenta | null, mepRate: number): number {
+export function getCashUSD(estadoCuenta: EstadoCuenta | null, mepRate: number): number {
   if (!estadoCuenta?.cuentas) return 0;
   let total = 0;
   for (const cuenta of estadoCuenta.cuentas) {
