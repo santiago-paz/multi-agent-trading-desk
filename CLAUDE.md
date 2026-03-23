@@ -22,7 +22,7 @@ This is a **Win98-themed AI hedge fund dashboard** for trading CEDEARs (Argentin
 - **`/`** — Landing page with "Enter Dashboard" button
 - **`/trading`** — Main Win98-style desktop environment with draggable windows
 
-The trading page is a large client component (`src/app/trading/page.tsx`) that coordinates window visibility, data fetching, and AI analysis. Heavy logic lives in server actions (`src/app/trading/actions.ts`).
+The trading page is a large client component (`src/app/trading/page.tsx`) that coordinates window visibility and data fetching. Heavy logic lives in server actions (`src/app/trading/actions.ts`).
 
 ### Desktop Windows
 
@@ -54,7 +54,6 @@ Broker API integration with:
 
 - FMP (Financial Modeling Prep) API for historical OHLCV data, company profiles, and news
 - Company names cached to `.company-names-cache.json` on disk (FMP profile endpoint doesn't support batch)
-- CEDEAR ratios are hardcoded (e.g., 10 AAPL shares = 1 US share)
 - MEP rate (ARS/USD) fetched separately, polled every 10 minutes
 
 ### Styling & Theme
