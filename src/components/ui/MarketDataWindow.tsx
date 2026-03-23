@@ -36,7 +36,7 @@ const Sparkline: React.FC<{ closes: number[]; isUp: boolean }> = ({ closes, isUp
     })
     .join(' ');
   return (
-    <svg width={60} height={18} viewBox="0 0 60 18" style={{ display: 'block' }}>
+    <svg width={60} height={18} viewBox="0 0 60 18" style={{ display: 'block', margin: '0 auto' }}>
       <polyline
         points={pts}
         fill="none"
@@ -117,10 +117,10 @@ const ListView: React.FC<ListViewProps> = ({ items, companyNames, sortCol, sortD
         }}
       >
         <colgroup>
-          <col style={{ width: '30%' }} />
-          <col style={{ width: '22%' }} />
-          <col style={{ width: '16%' }} />
-          <col style={{ width: '32%' }} />
+          <col />
+          <col style={{ width: '7em' }} />
+          <col style={{ width: '5.2em' }} />
+          <col style={{ width: '72px' }} />
         </colgroup>
         <thead>
           <tr>
@@ -140,6 +140,12 @@ const ListView: React.FC<ListViewProps> = ({ items, companyNames, sortCol, sortD
                 position: 'sticky',
                 top: 0,
                 zIndex: 1,
+                width: 72,
+                maxWidth: 72,
+                textAlign: 'center',
+                whiteSpace: 'nowrap',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
               }}
             >
               7 Días
@@ -182,7 +188,17 @@ const ListView: React.FC<ListViewProps> = ({ items, companyNames, sortCol, sortD
               >
                 {isUp ? '+' : ''}{pct.toFixed(2)}%
               </td>
-              <td style={{ ...CELL, padding: '1px 4px', borderRight: 'none' }}>
+              <td
+                style={{
+                  ...CELL,
+                  padding: '1px 2px',
+                  borderRight: 'none',
+                  width: 72,
+                  maxWidth: 72,
+                  textAlign: 'center',
+                  verticalAlign: 'middle',
+                }}
+              >
                 <Sparkline closes={closes} isUp={isUp} />
               </td>
             </tr>
