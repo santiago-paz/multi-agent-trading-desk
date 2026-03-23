@@ -45,7 +45,7 @@ export class SentinelAgent {
     
     // Use full content if available, otherwise fallback to title
     const headlinesList = newsToAnalyze.map(n => {
-      const content = n.fullContent ? `\nCONTENT: ${n.fullContent.slice(0, 500)}...` : '';
+      const content = n.text ? `\nCONTENT: ${n.text.slice(0, 500)}...` : '';
       return `- TITLE: ${n.title} (${n.publisher})${content}`;
     }).join('\n\n');
 

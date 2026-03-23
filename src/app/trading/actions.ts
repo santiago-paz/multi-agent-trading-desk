@@ -127,8 +127,7 @@ export async function executeOrders(orders: OrderRequest[]) {
   }
 }
 
-import { getHistoricalData, getNews, getGeneralMarketNews, getCompanyNames, NewsItem, HistoricalRow } from '@/lib/market-data';
-import { processNewsItem } from '@/lib/news-processor';
+import { getHistoricalData, getNews, getGeneralMarketNews, getAllNews, getCompanyNames, NewsItem, HistoricalRow } from '@/lib/market-data';
 
 export async function getMarketData() {
   try {
@@ -211,51 +210,18 @@ export async function getMarketData() {
   }
 }
 
-// 1. Fetch Metadata Only (Fast)
 export async function getNewsMetadata() {
   try {
     const symbols = ['AAPL', 'KO', 'TSLA'];
-    
-    // Fetch general market news
-    const generalNews = await getGeneralMarketNews(10);
-    
-    // Fetch specific news for each symbol
-    const specificNewsPromises = symbols.map(async (symbol) => {
-      const news = await getNews(symbol, 6);
-      return { symbol, news };
-    });
-    
-    const specificNewsResults = await Promise.all(specificNewsPromises);
-    
-    // Transform array to object map
-    const specificNews: Record<string, NewsItem[]> = {};
-    specificNewsResults.forEach(item => {
-      specificNews[item.symbol] = item.news;
-    });
+    const { general, specific } = await getAllNews(symbols, 10, 6);
 
-    return { 
-      success: true, 
-      data: {
-        general: generalNews,
-        specific: specificNews
-      } 
-    };
+    return { success: true, data: { general, specific } };
   } catch (error) {
     console.error('Failed to fetch news metadata:', error);
     return { success: false, error: 'Failed to fetch news metadata' };
   }
 }
 
-// 2. Enrich Single Item (Slow)
-export async function enrichNewsItem(item: NewsItem) {
-  try {
-    const enriched = await processNewsItem(item);
-    return { success: true, data: enriched };
-  } catch (error) {
-    console.error('Failed to enrich news item:', error);
-    return { success: false, error: 'Failed to enrich item' };
-  }
-}
 
 export async function getPortfolioSummary() {
     try {

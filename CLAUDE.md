@@ -32,9 +32,13 @@ Three agents run sequentially via `runAnalysis()` in `actions.ts`:
 2. **Sentinel** (`src/lib/agents/sentinel.ts`) — Risk scoring & news sentiment
 3. **Strategist** (`src/lib/agents/strategist.ts`) — Portfolio allocation decisions → passed to trading engine
 
-All agents call `generateText()` from Vercel AI SDK, parse JSON responses, and have error fallbacks. The **Advisor** (`src/lib/agents/advisor.ts`) is separate — triggered on demand for buy/sell recommendations with budget constraints.
+All agents call `generateText()` from Vercel AI SDK, parse JSON responses, and have error fallbacks.
 
 The LLM is `meta-llama/llama-3.3-70b-instruct` via Fireworks (configured in `src/lib/llm.ts`).
+
+### AI Hedge Fund Backend
+
+The "AI Hedge Fund" window connects to a separate Python backend located at `/Users/santiago/GitHub/ai-hedge-fund`. The frontend calls it via `NEXT_PUBLIC_AI_HEDGE_FUND_API_URL` (defaults to `http://localhost:8000`). Endpoints used: `GET /hedge-fund/agents` and `POST /hedge-fund/run`.
 
 ### Trading Flow
 

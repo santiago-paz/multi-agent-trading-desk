@@ -151,6 +151,10 @@ export function AiHedgeFundWindow() {
   const [arsPrices, setArsPrices] = useState<Record<string, number>>({});
   const [isLoadingCedears, setIsLoadingCedears] = useState(true);
 
+  // Health check
+  const [healthChecks, setHealthChecks] = useState<Array<{ name: string; ok: boolean; status: number; error: string | null }> | null>(null);
+  const [isCheckingHealth, setIsCheckingHealth] = useState(false);
+
   // Run state
   const [phase, setPhase] = useState<'idle' | 'running' | 'done' | 'error'>('idle');
   const [logs, setLogs] = useState<LogEntry[]>([]);
@@ -246,6 +250,22 @@ export function AiHedgeFundWindow() {
       return next;
     });
   }, []);
+
+  // ── Health check ──────────────────────────────────────────────────────────
+
+  async function handleHealthCheck() {
+    setIsCheckingHealth(true);
+    setHealthChecks(null);
+    try {
+      const res = await fetch(`${API_URL}/hedge-fund/health`);
+      const data = await res.json();
+      setHealthChecks(data.checks);
+    } catch (err) {
+      setHealthChecks([{ name: 'Backend', ok: false, status: 0, error: `No se pudo conectar a ${API_URL}` }]);
+    } finally {
+      setIsCheckingHealth(false);
+    }
+  }
 
   // ── Run analysis ───────────────────────────────────────────────────────────
 
@@ -466,6 +486,63 @@ export function AiHedgeFundWindow() {
               <p style={{ margin: 0 }}>
                 <strong>CEDEARs ({tickers.length}):</strong> {tickers.join(', ')}
               </p>
+            </div>
+          )}
+        </fieldset>
+
+        {/* ── Health check ──────────────────────────────────────────────── */}
+        <fieldset style={{ marginBottom: '6px' }}>
+          <legend>Estado de APIs</legend>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <button
+              onClick={handleHealthCheck}
+              disabled={isCheckingHealth || isRunning}
+              style={FONT}
+            >
+              {isCheckingHealth ? 'Chequeando...' : 'Chequear estado'}
+            </button>
+            {healthChecks && (
+              <span style={{
+                ...FONT,
+                color: healthChecks.every(c => c.ok) ? COLOR_POSITIVE : COLOR_NEGATIVE,
+                fontWeight: 'bold',
+              }}>
+                {healthChecks.every(c => c.ok)
+                  ? `${healthChecks.length}/${healthChecks.length} OK`
+                  : `${healthChecks.filter(c => c.ok).length}/${healthChecks.length} OK`}
+              </span>
+            )}
+          </div>
+          {healthChecks && (
+            <div
+              className="sunken-panel win98-scrollbar"
+              style={{ maxHeight: '150px', overflowY: 'auto', padding: '3px 5px', marginTop: '4px' }}
+            >
+              {healthChecks.map((check, i) => (
+                <div
+                  key={i}
+                  style={{
+                    ...FONT,
+                    display: 'flex',
+                    gap: '5px',
+                    lineHeight: '16px',
+                    padding: '1px 0',
+                  }}
+                  title={check.error || undefined}
+                >
+                  <span style={{ color: check.ok ? COLOR_POSITIVE : COLOR_NEGATIVE, flexShrink: 0 }}>
+                    {check.ok ? '■' : '✕'}
+                  </span>
+                  <span style={{
+                    color: check.ok ? 'inherit' : COLOR_NEGATIVE,
+                    wordBreak: 'break-word',
+                  }}>
+                    {check.name}
+                    {check.status > 0 && !check.ok ? ` (HTTP ${check.status})` : ''}
+                    {check.error ? ` — ${check.error.slice(0, 80)}` : ''}
+                  </span>
+                </div>
+              ))}
             </div>
           )}
         </fieldset>

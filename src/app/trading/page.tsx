@@ -78,7 +78,6 @@ export default function TradingDashboard() {
     isLoading: isLoadingNews,
     fetchNews,
     lastUpdated,
-    progress,
   } = useNewsStore();
 
   const {
@@ -458,7 +457,6 @@ export default function TradingDashboard() {
                 lastUpdated={lastUpdated}
                 onRefresh={() => fetchNews(true)}
                 isLoading={isLoadingNews}
-                progress={progress}
               />
             )}
             {appId === 'marketdata' && (

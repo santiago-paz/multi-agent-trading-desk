@@ -11,7 +11,6 @@ interface NewsFeedProps {
   lastUpdated?: Date | string | number | null;
   onRefresh?: () => void;
   isLoading?: boolean;
-  progress?: { current: number; total: number } | null;
 }
 
 export const NewsFeed: React.FC<NewsFeedProps> = ({
@@ -20,7 +19,6 @@ export const NewsFeed: React.FC<NewsFeedProps> = ({
   lastUpdated,
   onRefresh,
   isLoading,
-  progress,
 }) => {
   const [activeTab, setActiveTab] = useState<'general' | 'portfolio'>('general');
   const [selectedSymbol, setSelectedSymbol] = useState<string | 'ALL'>('ALL');
@@ -51,20 +49,8 @@ export const NewsFeed: React.FC<NewsFeedProps> = ({
         style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column', padding: '4px 0 0 0', gap: '4px' }}
       >
         {isLoading ? (
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', flex: 1 }}>
-            {progress ? (
-              <div style={{ width: 256, textAlign: 'center' }}>
-                <p style={{ ...FONT, margin: '0 0 8px' }}>Processing... {progress.current} / {progress.total}</p>
-                <div className="progress-indicator" style={{ width: '100%' }}>
-                  <div
-                    className="progress-indicator-bar"
-                    style={{ width: `${(progress.current / progress.total) * 100}%` }}
-                  />
-                </div>
-              </div>
-            ) : (
-              <p style={{ ...FONT, margin: 0 }}>Initializing...</p>
-            )}
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 1 }}>
+            <p style={{ ...FONT, margin: 0 }}>Loading news...</p>
           </div>
         ) : (
           <>
@@ -146,32 +132,42 @@ const NewsCard = ({ news, badge }: { news: NewsItem & { symbol?: string }; badge
   <div
     style={{
       display: 'flex',
-      flexDirection: 'column',
-      gap: '2px',
+      gap: '8px',
       paddingBottom: '6px',
       marginBottom: '6px',
       borderBottom: '1px solid #dfdfdf',
     }}
   >
-    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', alignItems: 'center' }}>
-      {badge && <span style={{ ...FONT, fontWeight: 'bold' }}>{badge}</span>}
-      <span style={{ ...FONT, color: COLOR_SECONDARY }}>{news.publisher}</span>
-      {news.providerPublishTime && (
-        <span style={{ ...FONT, color: COLOR_SECONDARY }}>
-          {new Date(news.providerPublishTime).toLocaleDateString()}
-        </span>
+    {news.image && (
+      <img
+        src={news.image}
+        alt=""
+        style={{ width: 64, height: 64, objectFit: 'cover', flexShrink: 0, border: '1px solid #808080' }}
+      />
+    )}
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', minWidth: 0 }}>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', alignItems: 'center' }}>
+        {badge && <span style={{ ...FONT, fontWeight: 'bold' }}>{badge}</span>}
+        <span style={{ ...FONT, color: COLOR_SECONDARY }}>{news.publisher}</span>
+        {news.providerPublishTime && (
+          <span style={{ ...FONT, color: COLOR_SECONDARY }}>
+            {new Date(news.providerPublishTime).toLocaleDateString()}
+          </span>
+        )}
+      </div>
+      <a
+        href={news.link}
+        target="_blank"
+        rel="noopener noreferrer"
+        style={{ ...FONT, color: COLOR_LINK, textDecoration: 'underline', cursor: 'pointer' }}
+      >
+        {news.title}
+      </a>
+      {news.text && (
+        <p style={{ ...FONT, margin: 0, lineHeight: '1.2' }}>
+          {news.text.length > 200 ? news.text.slice(0, 200) + '...' : news.text}
+        </p>
       )}
     </div>
-    <a
-      href={news.link}
-      target="_blank"
-      rel="noopener noreferrer"
-      style={{ ...FONT, color: COLOR_LINK, textDecoration: 'underline', cursor: 'pointer' }}
-    >
-      {news.title}
-    </a>
-    {news.summary && (
-      <p style={{ ...FONT, margin: 0, lineHeight: '1.2' }}>{news.summary}</p>
-    )}
   </div>
 );

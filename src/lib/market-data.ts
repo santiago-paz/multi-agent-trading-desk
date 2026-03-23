@@ -1,5 +1,4 @@
 import YahooFinance from 'yahoo-finance2';
-import { processNewsBatch } from './news-processor';
 import fs from 'fs';
 import path from 'path';
 
@@ -66,8 +65,8 @@ export interface NewsItem {
   publisher: string;
   providerPublishTime?: Date;
   relatedTickers?: string[];
-  summary?: string;
-  fullContent?: string;
+  text?: string;
+  image?: string;
 }
 
 // Emulating Comprehensive data that the AI Hedge Fund Python agents consume
@@ -133,30 +132,95 @@ export async function getHistoricalPrices(symbol: string, days: number = 30): Pr
   }
 }
 
-export async function getNews(query: string, count: number = 5): Promise<NewsItem[]> {
+// ── FMP News API ────────────────────────────────────────────────────────────
+// The /stable/news/stock endpoint ignores the `tickers` filter (FMP bug as of
+// March 2026), so we use /stable/news/stock-latest which returns a chronological
+// feed across all symbols, and filter client-side.
+
+interface FMPNewsArticle {
+  symbol: string | null;
+  publishedDate: string;
+  title: string;
+  image: string;
+  site: string;
+  text: string;
+  url: string;
+}
+
+function mapFMPToNewsItem(article: FMPNewsArticle): NewsItem {
+  return {
+    title: article.title,
+    link: article.url,
+    publisher: article.site,
+    providerPublishTime: new Date(article.publishedDate),
+    relatedTickers: article.symbol ? [article.symbol] : undefined,
+    text: article.text,
+    image: article.image,
+  };
+}
+
+async function fetchFMPLatestNews(limit: number = 200): Promise<FMPNewsArticle[]> {
+  const apiKey = process.env.FMP_API_KEY;
+  if (!apiKey) throw new Error('FMP_API_KEY not set');
+  const url = `https://financialmodelingprep.com/stable/news/stock-latest?limit=${limit}&apikey=${apiKey}`;
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`FMP API error: ${res.status}`);
+  return res.json();
+}
+
+/**
+ * Fetches general market news and per-ticker news in a single FMP call.
+ * Returns both buckets ready for the news store.
+ */
+export async function getAllNews(
+  tickers: string[],
+  generalCount: number = 10,
+  perTickerCount: number = 6,
+): Promise<{ general: NewsItem[]; specific: Record<string, NewsItem[]> }> {
   try {
-    const result = await yahooFinance.search(query, { newsCount: count });
-    if (!result.news || result.news.length === 0) {
-      return [];
+    const articles = await fetchFMPLatestNews(2000);
+    const tickerSet = new Set(tickers.map(t => t.toUpperCase()));
+
+    const specific: Record<string, NewsItem[]> = {};
+    for (const t of tickers) specific[t] = [];
+
+    const general: NewsItem[] = [];
+
+    for (const article of articles) {
+      const sym = article.symbol?.toUpperCase() ?? null;
+
+      if (sym && tickerSet.has(sym) && specific[sym].length < perTickerCount) {
+        specific[sym].push(mapFMPToNewsItem(article));
+      } else {
+        general.push(mapFMPToNewsItem(article));
+      }
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return result.news.map((item: any) => ({
-      title: item.title,
-      link: item.link,
-      publisher: item.publisher,
-      providerPublishTime: item.providerPublishTime ? new Date(item.providerPublishTime) : undefined,
-      relatedTickers: item.relatedTickers
-    }));
+    return { general, specific };
   } catch (error) {
-    console.error(`Error fetching news for ${query}:`, error);
+    console.error('Error fetching FMP news:', error);
+    return { general: [], specific: Object.fromEntries(tickers.map(t => [t, []])) };
+  }
+}
+
+export async function getNews(ticker: string, count: number = 5): Promise<NewsItem[]> {
+  try {
+    const { specific } = await getAllNews([ticker], 0, count);
+    return specific[ticker] ?? [];
+  } catch (error) {
+    console.error(`Error fetching FMP news for ${ticker}:`, error);
     return [];
   }
 }
 
 export async function getGeneralMarketNews(count: number = 5): Promise<NewsItem[]> {
-  // Use SPY (S&P 500 ETF) as a proxy for general market news
-  return getNews('SPY', count);
+  try {
+    const { general } = await getAllNews([], count, 0);
+    return general;
+  } catch (error) {
+    console.error('Error fetching FMP general news:', error);
+    return [];
+  }
 }
 
 // --- Technical Indicators Math ---
@@ -203,9 +267,8 @@ export async function getComprehensiveAssetData(symbol: string): Promise<Compreh
     const sma50 = calculateSMA(closingPrices, 50);
     const rsi14 = calculateRSI(closingPrices, 14);
 
-    // 3. Fetch News and Summarize
-    const rawNews = await getNews(symbol, 3); // Get 3 most recent articles
-    const processedNews = await processNewsBatch(rawNews);
+    // 3. Fetch News (FMP already includes article text)
+    const recentNews = await getNews(symbol, 3);
 
     return {
       symbol,
@@ -217,7 +280,7 @@ export async function getComprehensiveAssetData(symbol: string): Promise<Compreh
         rsi14,
         priceToSMA20Ratio: sma20 ? (currentPrice / sma20) : null
       },
-      recentNews: processedNews
+      recentNews
     };
   } catch (error) {
     console.error(`Error building comprehensive data for ${symbol}:`, error);
