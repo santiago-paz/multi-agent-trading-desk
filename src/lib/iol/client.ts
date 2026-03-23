@@ -1,7 +1,6 @@
 import { IOLToken, PortfolioResponse, Quote, OrderRequest, OrderResponse, Operation, EstadoCuenta, DatosPerfil, PanelResponse, PanelQuote, IOLHistoricalEntry } from './types';
 import { readFileSync, writeFileSync, unlinkSync } from 'fs';
 import { join } from 'path';
-import { logApiCall } from '@/lib/api-logger';
 
 const SIMULATION_MODE = process.env.SIMULATION_MODE === 'true';
 const TOKEN_CACHE_PATH = join(process.cwd(), '.iol_token_cache.json');
@@ -140,13 +139,11 @@ export class IOLClient {
   private async fetchWithAuth<T>(endpoint: string, options: RequestInit = {}, _isRetry = false): Promise<T> {
     if (SIMULATION_MODE) {
       const mock = this.mockResponse(endpoint) as T;
-      logApiCall({ source: 'IOL', method: options.method ?? 'GET', endpoint, requestBody: undefined, responseBody: mock, status: 200, durationMs: 0 });
       return mock;
     }
 
     await this.authenticate();
 
-    const start = Date.now();
     const response = await fetch(`${this.baseUrl}${endpoint}`, {
       ...options,
       headers: {
@@ -168,13 +165,10 @@ export class IOLClient {
       const errorText = await response.text();
       const shortError = errorText.includes('<html') ? `[HTML error page]` : errorText.slice(0, 200);
       console.warn(`[IOL API] Request to ${endpoint} failed with ${response.status}: ${shortError}`);
-      logApiCall({ source: 'IOL', method: options.method ?? 'GET', endpoint, requestBody: options.body, responseBody: errorText, status: response.status, error: errorText, durationMs: Date.now() - start });
       throw new Error(`API request failed: ${response.statusText}`);
     }
 
     const json = await response.json();
-
-    logApiCall({ source: 'IOL', method: options.method ?? 'GET', endpoint, requestBody: options.body, responseBody: json, status: response.status, durationMs: Date.now() - start });
 
     // IOL sometimes returns HTTP 200 with a maintenance/error message body instead of real data.
     // Detect this pattern and throw a clear error so callers don't crash on missing fields.
