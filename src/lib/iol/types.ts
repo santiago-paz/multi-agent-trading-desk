@@ -51,16 +51,6 @@ export interface Quote {
   moneda: string;
 }
 
-export interface PanelTitulo {
-  simbolo: string;
-  descripcion: string;
-  pais: string;
-  mercado: string;
-  tipo: string;
-  plazo: string;
-  moneda: string;
-}
-
 export interface PanelQuote {
   simbolo: string;
   ultimoPrecio: number;
