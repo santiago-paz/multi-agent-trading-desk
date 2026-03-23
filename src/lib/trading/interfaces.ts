@@ -1,7 +1,8 @@
-import { PortfolioResponse, Quote, OrderRequest, OrderResponse, Operation } from '../iol/types';
+import { PortfolioResponse, Quote, OrderRequest, OrderResponse, Operation, EstadoCuenta } from '../iol/types';
 
 export interface IMarketDataClient {
   getPortfolio(): Promise<PortfolioResponse>;
+  getEstadoCuenta(): Promise<EstadoCuenta>;
   getMEP(): Promise<number>;
   getQuote(symbol: string, market?: string): Promise<Quote>;
 }
