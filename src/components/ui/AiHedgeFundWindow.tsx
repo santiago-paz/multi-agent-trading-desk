@@ -587,28 +587,46 @@ export function AiHedgeFundWindow() {
                 className="sunken-panel win98-scrollbar"
                 style={{ maxHeight: '120px', overflowY: 'auto', padding: '2px' }}
               >
-                {agents.map(agent => (
-                  <label
-                    key={agent.key}
-                    style={{
-                      ...FONT,
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '4px',
-                      padding: '1px 4px',
-                      cursor: 'default',
-                    }}
-                  >
-                    <input
-                      type="checkbox"
-                      checked={selectedAgents.has(agent.key)}
-                      onChange={() => toggleAgent(agent.key)}
-                      disabled={isRunning}
-                    />
-                    <strong>{agent.display_name}</strong>
-                    <span style={{ color: COLOR_SECONDARY }}> — {agent.description}</span>
-                  </label>
-                ))}
+                {agents.map(agent => {
+                  const selected = selectedAgents.has(agent.key);
+                  const inputId = `aihf-agent-${agent.key}`;
+                  return (
+                    <div
+                      key={agent.key}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        padding: '1px 2px',
+                      }}
+                    >
+                      <input
+                        id={inputId}
+                        type="checkbox"
+                        checked={selected}
+                        onChange={() => toggleAgent(agent.key)}
+                        disabled={isRunning}
+                      />
+                      <label
+                        htmlFor={inputId}
+                        style={{
+                          ...FONT,
+                          flex: 1,
+                          padding: '2px 4px',
+                          cursor: 'inherit',
+                          ...(selected
+                            ? { backgroundColor: '#000080', color: '#ffffff' }
+                            : {}),
+                        }}
+                      >
+                        <strong>{agent.display_name}</strong>
+                        <span style={{ color: selected ? '#c0c0c0' : COLOR_SECONDARY }}>
+                          {' '}
+                          — {agent.description}
+                        </span>
+                      </label>
+                    </div>
+                  );
+                })}
               </div>
             </>
           )}
