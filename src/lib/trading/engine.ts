@@ -24,11 +24,14 @@ export class TradingEngine {
   constructor(private client: IMarketDataClient) {}
 
   async calculatePortfolioValue(): Promise<number> {
-    const portfolio = await this.client.getPortfolio();
-    const mep = await this.client.getMEP();
+    const [portfolio, estadoCuenta, mep] = await Promise.all([
+      this.client.getPortfolio(),
+      this.client.getEstadoCuenta(),
+      this.client.getMEP(),
+    ]);
 
     let totalValueARS = 0;
-    
+
     // Sum up the value of all assets in ARS
     const activos = portfolio?.activos;
     if (!activos || !Array.isArray(activos)) {
@@ -39,8 +42,18 @@ export class TradingEngine {
       totalValueARS += asset.valorizado;
     }
 
+    // Add cash balances
+    let cashUSD = 0;
+    for (const cuenta of estadoCuenta?.cuentas ?? []) {
+      if (cuenta.moneda === 'peso_Argentino') {
+        cashUSD += cuenta.disponible / mep;
+      } else if (cuenta.moneda === 'dolar_Estadounidense') {
+        cashUSD += cuenta.disponible;
+      }
+    }
+
     // Convert to USD using MEP
-    return totalValueARS / mep;
+    return totalValueARS / mep + cashUSD;
   }
 
   async generateRebalancingOrders(targetAllocations: TargetAllocation[]): Promise<OrderRequest[]> {

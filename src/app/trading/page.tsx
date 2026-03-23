@@ -7,6 +7,7 @@ import { MarketDataWindow } from '@/components/ui/MarketDataWindow';
 import { OperationsFeed } from '@/components/ui/OperationsFeed';
 import { ApiExplorerWindow } from '@/components/ui/ApiExplorerWindow';
 import { AiHedgeFundWindow } from '@/components/ui/AiHedgeFundWindow';
+import { BacktestingWindow } from '@/components/ui/BacktestingWindow';
 import { DesktopIcon } from '@/components/ui/DesktopIcon';
 import {
   DraggableResizableWindow,
@@ -26,6 +27,7 @@ const ICON_IDS = [
   'movements',
   'apiexplorer',
   'aihedgefund',
+  'backtesting',
 ] as const;
 type IconId = (typeof ICON_IDS)[number];
 
@@ -36,6 +38,7 @@ const DEFAULT_ICON_POSITIONS: Record<IconId, { x: number; y: number }> = {
   movements: { x: 8, y: 200 },
   apiexplorer: { x: 8, y: 264 },
   aihedgefund: { x: 8, y: 328 },
+  backtesting: { x: 8, y: 392 },
 };
 
 const DESKTOP_ICON_CONFIG: { id: IconId; label: string; emoji: string; iconKey: keyof typeof DESKTOP_APP_ICONS }[] = [
@@ -45,6 +48,7 @@ const DESKTOP_ICON_CONFIG: { id: IconId; label: string; emoji: string; iconKey: 
   { id: 'movements',  label: 'Movimientos',  emoji: '💸', iconKey: 'movements'  },
   { id: 'apiexplorer', label: 'API Explorer', emoji: '🔧', iconKey: 'apiexplorer' },
   { id: 'aihedgefund', label: 'AI Hedge Fund', emoji: '🤖', iconKey: 'aihedgefund' },
+  { id: 'backtesting', label: 'Backtesting', emoji: '📉', iconKey: 'backtesting' },
 ];
 
 // Grid cell size for "Alinear Iconos" — slightly larger than icon width (64px) for breathing room
@@ -56,6 +60,7 @@ import { useMepStore } from '@/lib/store/mep-store';
 
 export default function TradingDashboard() {
   const [portfolio, setPortfolio] = useState<PortfolioResponse | null>(null);
+  const [usdPrices, setUsdPrices] = useState<Record<string, { price: number; pct: number }>>({});
   const [isLoadingPortfolio, setIsLoadingPortfolio] = useState(true);
 
   const [marketData, setMarketData] = useState<{
@@ -337,6 +342,7 @@ export default function TradingDashboard() {
     const result = await getPortfolioSummary();
     if (result.success && result.data) {
       setPortfolio(result.data.portfolio);
+      setUsdPrices(result.data.usdPrices ?? {});
     }
     setIsLoadingPortfolio(false);
   };
@@ -442,6 +448,7 @@ export default function TradingDashboard() {
             {appId === 'portfolio' && (
               <PortfolioWindow
                 portfolio={portfolio}
+                usdPrices={usdPrices}
                 isLoadingPortfolio={isLoadingPortfolio}
                 onRefreshPortfolio={fetchPortfolio}
                 perfil={perfil}
@@ -480,6 +487,9 @@ export default function TradingDashboard() {
             )}
             {appId === 'aihedgefund' && (
               <AiHedgeFundWindow />
+            )}
+            {appId === 'backtesting' && (
+              <BacktestingWindow />
             )}
           </DraggableResizableWindow>
         );

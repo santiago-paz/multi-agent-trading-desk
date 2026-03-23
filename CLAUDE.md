@@ -61,8 +61,8 @@ Broker API integration with:
 
 ### Market Data (`src/lib/market-data.ts`)
 
-- Yahoo Finance (`yahoo-finance2`) for quotes and 7-day historical OHLC
-- Puppeteer + `@mozilla/readability` for enriching news articles with full content
+- FMP (Financial Modeling Prep) API for historical OHLCV data, company profiles, and news
+- Company names cached to `.company-names-cache.json` on disk (FMP profile endpoint doesn't support batch)
 - CEDEAR ratios are hardcoded (e.g., 10 AAPL shares = 1 US share)
 - MEP rate (ARS/USD) fetched separately, polled every 10 minutes
 
@@ -79,6 +79,7 @@ Broker API integration with:
 IOL_USERNAME          # InvertirOnline broker login
 IOL_PASSWORD
 IOL_REFRESH_TOKEN
+FMP_API_KEY           # Financial Modeling Prep (market data, news, profiles)
 FIREWORKS_API_KEY     # LLM provider
 BASIC_AUTH_USER       # Optional HTTP basic auth
 BASIC_AUTH_PASSWORD

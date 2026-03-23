@@ -21,6 +21,7 @@ export const DESKTOP_APP_ICONS = {
   movements: url('places/32/folder-recent.png'),
   apiexplorer: url('apps/32/utilities-terminal.png'),
   aihedgefund: url('apps/32/system-search.png'),
+  backtesting: url('apps/32/accessories-calculator.png'),
 } as const;
 
 export type DesktopAppId = keyof typeof DESKTOP_APP_ICONS;

@@ -11,7 +11,7 @@
 export interface ApiLogEntry {
   id: number;
   timestamp: string;
-  source: 'IOL' | 'Yahoo' | 'LLM' | 'Other';
+  source: 'IOL' | 'FMP' | 'LLM' | 'Other';
   method: string;
   endpoint: string;
   requestBody?: unknown;

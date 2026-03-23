@@ -55,24 +55,20 @@ export const NewsFeed: React.FC<NewsFeedProps> = ({
         ) : (
           <>
             {activeTab === 'portfolio' && (
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
-                <button
-                  type="button"
-                  onClick={() => setSelectedSymbol('ALL')}
-                  style={selectedSymbol === 'ALL' ? BUTTON_PRESSED : {}}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <label style={{ ...FONT }}>Ticker:</label>
+                <select
+                  value={selectedSymbol}
+                  onChange={(e) => setSelectedSymbol(e.target.value as string | 'ALL')}
+                  style={{ ...FONT, flex: 1, maxWidth: 200 }}
                 >
-                  ALL
-                </button>
-                {symbols.map(symbol => (
-                  <button
-                    key={symbol}
-                    type="button"
-                    onClick={() => setSelectedSymbol(symbol)}
-                    style={selectedSymbol === symbol ? BUTTON_PRESSED : {}}
-                  >
-                    {symbol}
-                  </button>
-                ))}
+                  <option value="ALL">ALL ({symbols.length} tickers)</option>
+                  {symbols.map(symbol => (
+                    <option key={symbol} value={symbol}>
+                      {symbol} ({specificNews[symbol].length})
+                    </option>
+                  ))}
+                </select>
               </div>
             )}
 

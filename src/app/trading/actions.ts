@@ -158,17 +158,10 @@ export async function getMarketData() {
     const allSymbols = Array.from(new Set([...ownedSymbols, ...panelSymbols]));
 
     // 4. Fetch 7-day historical data in parallel, tolerating individual failures.
-    //    For symbols where Yahoo Finance has no data, fall back to IOL price as a 2-point entry
+    //    For symbols where FMP has no data, fall back to IOL price as a 2-point entry
     //    so the symbol still appears in the table with its current price and daily % change.
-    //
-    //    Skip symbols that are known to have no Yahoo Finance equivalent:
-    //    - Brazilian stocks trade on B3 and end in a digit (e.g. VALE3, PETR3)
-    //    - Symbols with dots or special chars (e.g. C.)
-    const hasYahooData = (sym: string) => !/\d$/.test(sym) && !/[.]/.test(sym);
-
     const settled = await Promise.allSettled(
       allSymbols.map(async (symbol) => {
-        if (!hasYahooData(symbol)) throw new Error('No Yahoo equivalent');
         const data = await getHistoricalData(symbol, 7);
         return { symbol, data };
       })
@@ -199,9 +192,8 @@ export async function getMarketData() {
       }
     }
 
-    // 5. Fetch company names (cached — only calls Yahoo for new symbols)
-    const symbolsWithYahoo = allSymbols.filter(hasYahooData);
-    const companyNames = await getCompanyNames(symbolsWithYahoo);
+    // 5. Fetch company names (cached — only calls FMP for new symbols)
+    const companyNames = await getCompanyNames(allSymbols);
 
     return { success: true, data: { marketData, ownedSymbols, companyNames } };
   } catch (error) {
@@ -212,8 +204,7 @@ export async function getMarketData() {
 
 export async function getNewsMetadata() {
   try {
-    const symbols = ['AAPL', 'KO', 'TSLA'];
-    const { general, specific } = await getAllNews(symbols, 10, 6);
+    const { general, specific } = await getAllNews();
 
     return { success: true, data: { general, specific } };
   } catch (error) {
@@ -225,12 +216,30 @@ export async function getNewsMetadata() {
 
 export async function getPortfolioSummary() {
     try {
-        const [portfolio, valueUSD, mepRate] = await Promise.all([
+        const [portfolio, valueUSD, mepRate, cedearsPanel] = await Promise.all([
             iolClient.getPortfolio(),
             tradingEngine.calculatePortfolioValue(),
             iolClient.getMEP(),
+            iolClient.getPanelQuotes('cedears'),
         ]);
-        return { success: true, data: { portfolio, valueUSD, mepRate } };
+
+        // Build a map of D-suffix (dollar) prices keyed by base symbol.
+        // e.g. AAPLD → AAPL, so the portfolio (which uses bare symbols) can look up USD prices.
+        const usdPrices: Record<string, { price: number; pct: number }> = {};
+        const rawSymbols = new Set((cedearsPanel.titulos || []).map(t => t.simbolo));
+        for (const t of cedearsPanel.titulos || []) {
+            const sym = t.simbolo;
+            if (sym.length > 1 && sym.endsWith('D')) {
+                const base = sym.slice(0, -1);
+                const cVariant = base + 'C';
+                // Only treat as D-variant if the C-variant also exists
+                if (rawSymbols.has(cVariant)) {
+                    usdPrices[base] = { price: t.ultimoPrecio, pct: t.variacionPorcentual };
+                }
+            }
+        }
+
+        return { success: true, data: { portfolio, valueUSD, mepRate, usdPrices } };
     } catch (error) {
         console.error('Failed to fetch portfolio summary:', error);
         return { success: false, error: 'Failed to fetch portfolio summary' };
@@ -314,7 +323,7 @@ export async function getAffordableCedears() {
 
     // Deduplicate: IOL lists peso (C) and dollar (D) variants.
     // Strip suffix when BOTH variants exist; also filter out D-suffix tickers
-    // that won't resolve on Yahoo Finance / FMP (e.g. BIOXD → not a real US symbol).
+    // that won't resolve on FMP (e.g. BIOXD → not a real US symbol).
     const rawSymbols: string[] = sorted.map((t: any) => t.simbolo as string);
     const rawSet = new Set(rawSymbols);
     const symbols: string[] = [];

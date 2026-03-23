@@ -1,8 +1,10 @@
 import { useState, useMemo } from 'react';
-import { PortfolioAsset, PortfolioResponse } from '@/lib/iol/types';
+import { PortfolioAsset, PortfolioResponse, EstadoCuenta } from '@/lib/iol/types';
 
 export type SortKey = 'simbolo' | 'descripcion' | 'cantidad' | 'ultimoPrecio' | 'valorizado' | 'variacionDiaria' | 'gananciaDinero';
 export type SortDir = 'asc' | 'desc';
+
+export interface UsdPriceEntry { price: number; pct: number }
 
 function getSortValue(asset: PortfolioAsset, key: SortKey): string | number {
   switch (key) {
@@ -16,7 +18,25 @@ function getSortValue(asset: PortfolioAsset, key: SortKey): string | number {
   }
 }
 
-export function usePortfolioSort(portfolio: PortfolioResponse | null, mepRate: number) {
+function getCashUSD(estadoCuenta: EstadoCuenta | null, mepRate: number): number {
+  if (!estadoCuenta?.cuentas) return 0;
+  let total = 0;
+  for (const cuenta of estadoCuenta.cuentas) {
+    if (cuenta.moneda === 'peso_Argentino') {
+      total += cuenta.disponible / mepRate;
+    } else if (cuenta.moneda === 'dolar_Estadounidense') {
+      total += cuenta.disponible;
+    }
+  }
+  return total;
+}
+
+export function usePortfolioSort(
+  portfolio: PortfolioResponse | null,
+  mepRate: number,
+  estadoCuenta?: EstadoCuenta | null,
+  usdPrices?: Record<string, UsdPriceEntry>,
+) {
   const [sortKey, setSortKey] = useState<SortKey>('simbolo');
   const [sortDir, setSortDir] = useState<SortDir>('asc');
 
@@ -31,8 +51,20 @@ export function usePortfolioSort(portfolio: PortfolioResponse | null, mepRate: n
 
   const activos = portfolio?.activos || [];
 
-  const totalARS = activos.reduce((acc, asset) => acc + asset.valorizado, 0);
-  const totalUSD = totalARS / mepRate;
+  // Use real USD prices (D-variant) when available, fallback to ARS/MEP
+  let totalUSD = 0;
+  for (const asset of activos) {
+    const sym = asset.titulo.simbolo;
+    const dPrice = usdPrices?.[sym];
+    if (dPrice) {
+      totalUSD += dPrice.price * asset.cantidad;
+    } else {
+      totalUSD += asset.valorizado / mepRate;
+    }
+  }
+  const cashUSD = getCashUSD(estadoCuenta ?? null, mepRate);
+  totalUSD += cashUSD;
+
   const totalGananciaARS = activos.reduce((acc, asset) => acc + asset.gananciaDinero, 0);
   const totalGananciaUSD = totalGananciaARS / mepRate;
 
@@ -58,6 +90,7 @@ export function usePortfolioSort(portfolio: PortfolioResponse | null, mepRate: n
     handleSort,
     sortedActivos,
     totalUSD,
+    cashUSD,
     totalGananciaUSD,
     totalActivosEnCartera: activos.length,
   };

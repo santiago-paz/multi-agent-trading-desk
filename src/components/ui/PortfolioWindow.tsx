@@ -6,6 +6,7 @@ import { FONT, WINDOW_CONTAINER, COLOR_NEGATIVE } from '@/lib/theme/win98';
 
 interface PortfolioWindowProps {
   portfolio: PortfolioResponse | null;
+  usdPrices?: Record<string, { price: number; pct: number }>;
   isLoadingPortfolio: boolean;
   onRefreshPortfolio: () => void;
   perfil: DatosPerfil | null;
@@ -16,6 +17,7 @@ interface PortfolioWindowProps {
 
 export const PortfolioWindow: React.FC<PortfolioWindowProps> = ({
   portfolio,
+  usdPrices,
   isLoadingPortfolio,
   onRefreshPortfolio,
   perfil,
@@ -43,6 +45,8 @@ export const PortfolioWindow: React.FC<PortfolioWindowProps> = ({
             ) : portfolio ? (
               <PortfolioSummary
                 portfolio={portfolio}
+                usdPrices={usdPrices}
+                estadoCuenta={estadoCuenta}
                 isLoading={isLoadingPortfolio}
                 onRefresh={onRefreshPortfolio}
               />

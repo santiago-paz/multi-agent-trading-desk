@@ -66,6 +66,12 @@ function signalColor(signal: string): string {
   return COLOR_SECONDARY;
 }
 
+function stringify(value: unknown): string {
+  if (typeof value === 'string') return value;
+  if (value == null) return '';
+  return JSON.stringify(value);
+}
+
 // ─── SSE parser ───────────────────────────────────────────────────────────────
 
 function parseSSEChunk(text: string): Array<{ event: string; data: unknown }> {
@@ -743,8 +749,8 @@ export function AiHedgeFundWindow() {
                       </td>
                       <td style={CELL_RIGHT}>{row.signal.confidence}%</td>
                       <td style={{ ...CELL, borderRight: 'none', maxWidth: '250px', overflow: 'hidden', textOverflow: 'ellipsis' }}
-                          title={row.signal.reasoning}>
-                        {row.signal.reasoning}
+                          title={stringify(row.signal.reasoning)}>
+                        {stringify(row.signal.reasoning)}
                       </td>
                     </tr>
                   ))}
@@ -792,8 +798,8 @@ export function AiHedgeFundWindow() {
                       <td style={CELL_RIGHT}>{dec.quantity}</td>
                       <td style={CELL_RIGHT}>{dec.confidence}%</td>
                       <td style={{ ...CELL, borderRight: 'none', maxWidth: '250px', overflow: 'hidden', textOverflow: 'ellipsis' }}
-                          title={dec.reasoning}>
-                        {dec.reasoning}
+                          title={stringify(dec.reasoning)}>
+                        {stringify(dec.reasoning)}
                       </td>
                     </tr>
                   ))}

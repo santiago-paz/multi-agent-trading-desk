@@ -1,8 +1,5 @@
-import YahooFinance from 'yahoo-finance2';
 import fs from 'fs';
 import path from 'path';
-
-const yahooFinance = new YahooFinance();
 
 const COMPANY_NAMES_CACHE_PATH = path.join(process.cwd(), '.company-names-cache.json');
 
@@ -23,27 +20,36 @@ function writeCompanyNamesCache(cache: Record<string, string>) {
   }
 }
 
+function getFMPApiKey(): string {
+  const key = process.env.FMP_API_KEY;
+  if (!key) throw new Error('FMP_API_KEY not set');
+  return key;
+}
+
 export async function getCompanyNames(symbols: string[]): Promise<Record<string, string>> {
   const cache = readCompanyNamesCache();
   const missing = symbols.filter(s => !(s in cache));
 
   if (missing.length > 0) {
-    try {
-      const results = await yahooFinance.quote(
-        missing,
-        { fields: ['symbol', 'longName', 'shortName'] },
-        { validateResult: false }
-      );
-      const arr = Array.isArray(results) ? results : [results];
-      for (const r of arr) {
-        if (r?.symbol) {
-          cache[r.symbol] = r.longName || r.shortName || r.symbol;
+    const apiKey = getFMPApiKey();
+    const results = await Promise.allSettled(
+      missing.map(async (symbol) => {
+        const url = `https://financialmodelingprep.com/stable/profile?symbol=${encodeURIComponent(symbol)}&apikey=${apiKey}`;
+        const res = await fetch(url);
+        if (!res.ok) return null;
+        const data = await res.json();
+        if (Array.isArray(data) && data.length > 0 && data[0].companyName) {
+          return { symbol, name: data[0].companyName as string };
         }
+        return null;
+      })
+    );
+    for (const r of results) {
+      if (r.status === 'fulfilled' && r.value) {
+        cache[r.value.symbol] = r.value.name;
       }
-      writeCompanyNamesCache(cache);
-    } catch (e) {
-      console.warn('Failed to fetch company names from Yahoo Finance:', e);
     }
+    writeCompanyNamesCache(cache);
   }
 
   return Object.fromEntries(symbols.map(s => [s, cache[s] ?? s]));
@@ -85,39 +91,38 @@ export interface ComprehensiveAssetData {
 
 export async function getHistoricalData(symbol: string, days: number = 30): Promise<HistoricalRow[]> {
   try {
+    const apiKey = getFMPApiKey();
     const today = new Date();
     const startDate = new Date();
     startDate.setDate(today.getDate() - days);
 
-    // Format dates as YYYY-MM-DD
-    const period1 = startDate.toISOString().split('T')[0];
-    const period2 = today.toISOString().split('T')[0];
+    const from = startDate.toISOString().split('T')[0];
+    const to = today.toISOString().split('T')[0];
 
-    const queryOptions = { period1, period2, interval: '1d' as const };
+    const url = `https://financialmodelingprep.com/stable/historical-price-eod/full?symbol=${encodeURIComponent(symbol)}&from=${from}&to=${to}&apikey=${apiKey}`;
+    const res = await fetch(url);
+    if (!res.ok) throw new Error(`FMP API error: ${res.status}`);
 
-    // Use chart() instead of historical() as historical() is deprecated.
-    // validateResult: false suppresses schema-validation noise for symbols Yahoo
-    // partially supports (non-US exchanges, OTC, etc.); we handle missing data below.
-    const result = await yahooFinance.chart(symbol, queryOptions, { validateResult: false });
+    const data: { date: string; open: number; high: number; low: number; close: number; volume: number }[] = await res.json();
 
-    if (!result || !(result as { quotes: { date: Date; open: number; high: number; low: number; close: number; adjclose: number; volume: number }[] }).quotes) {
-      throw new Error('No data returned from Yahoo Finance');
+    if (!Array.isArray(data) || data.length === 0) {
+      throw new Error(`No data returned from FMP for ${symbol}`);
     }
 
-    // Map the chart result to our HistoricalRow format
-    return (result as { quotes: { date: Date; open: number; high: number; low: number; close: number; adjclose: number; volume: number }[] }).quotes
-      .filter((quote: { date: Date; close: number | null }) => quote.date && quote.close !== null)
-      .map((quote: { date: Date; open: number; high: number; low: number; close: number; adjclose: number; volume: number }) => ({
-        date: quote.date,
-        open: quote.open,
-        high: quote.high,
-        low: quote.low,
-        close: quote.close,
-        adjClose: quote.adjclose,
-        volume: quote.volume,
+    // FMP returns newest-first; reverse to chronological order
+    return data
+      .filter(row => row.close != null)
+      .reverse()
+      .map(row => ({
+        date: new Date(row.date),
+        open: row.open,
+        high: row.high,
+        low: row.low,
+        close: row.close,
+        volume: row.volume,
       }));
   } catch (error) {
-    console.warn(`No Yahoo Finance data for ${symbol}:`, (error as Error).message);
+    console.warn(`No FMP data for ${symbol}:`, (error as Error).message);
     throw error;
   }
 }
@@ -149,12 +154,12 @@ interface FMPNewsArticle {
 
 function mapFMPToNewsItem(article: FMPNewsArticle): NewsItem {
   return {
-    title: article.title,
+    title: typeof article.title === 'string' ? article.title : String(article.title ?? ''),
     link: article.url,
     publisher: article.site,
     providerPublishTime: new Date(article.publishedDate),
     relatedTickers: article.symbol ? [article.symbol] : undefined,
-    text: article.text,
+    text: typeof article.text === 'string' ? article.text : undefined,
     image: article.image,
   };
 }
@@ -172,24 +177,18 @@ async function fetchFMPLatestNews(limit: number = 200): Promise<FMPNewsArticle[]
  * Fetches general market news and per-ticker news in a single FMP call.
  * Returns both buckets ready for the news store.
  */
-export async function getAllNews(
-  tickers: string[],
-  generalCount: number = 10,
-  perTickerCount: number = 6,
-): Promise<{ general: NewsItem[]; specific: Record<string, NewsItem[]> }> {
+export async function getAllNews(): Promise<{ general: NewsItem[]; specific: Record<string, NewsItem[]> }> {
   try {
     const articles = await fetchFMPLatestNews(2000);
-    const tickerSet = new Set(tickers.map(t => t.toUpperCase()));
 
     const specific: Record<string, NewsItem[]> = {};
-    for (const t of tickers) specific[t] = [];
-
     const general: NewsItem[] = [];
 
     for (const article of articles) {
       const sym = article.symbol?.toUpperCase() ?? null;
 
-      if (sym && tickerSet.has(sym) && specific[sym].length < perTickerCount) {
+      if (sym) {
+        if (!specific[sym]) specific[sym] = [];
         specific[sym].push(mapFMPToNewsItem(article));
       } else {
         general.push(mapFMPToNewsItem(article));
@@ -199,14 +198,14 @@ export async function getAllNews(
     return { general, specific };
   } catch (error) {
     console.error('Error fetching FMP news:', error);
-    return { general: [], specific: Object.fromEntries(tickers.map(t => [t, []])) };
+    return { general: [], specific: {} };
   }
 }
 
 export async function getNews(ticker: string, count: number = 5): Promise<NewsItem[]> {
   try {
-    const { specific } = await getAllNews([ticker], 0, count);
-    return specific[ticker] ?? [];
+    const { specific } = await getAllNews();
+    return (specific[ticker.toUpperCase()] ?? []).slice(0, count);
   } catch (error) {
     console.error(`Error fetching FMP news for ${ticker}:`, error);
     return [];
@@ -215,8 +214,8 @@ export async function getNews(ticker: string, count: number = 5): Promise<NewsIt
 
 export async function getGeneralMarketNews(count: number = 5): Promise<NewsItem[]> {
   try {
-    const { general } = await getAllNews([], count, 0);
-    return general;
+    const { general } = await getAllNews();
+    return general.slice(0, count);
   } catch (error) {
     console.error('Error fetching FMP general news:', error);
     return [];
