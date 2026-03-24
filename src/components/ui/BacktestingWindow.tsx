@@ -559,20 +559,13 @@ export function BacktestingWindow() {
 
               <div
                 className="sunken-panel win98-scrollbar"
-                style={{ maxHeight: '100px', overflowY: 'auto', padding: '2px' }}
+                style={{ maxHeight: '130px', overflowY: 'auto', padding: '2px' }}
               >
                 {agents.map(agent => {
                   const selected = selectedAgents.has(agent.key);
                   const inputId = `bt-agent-${agent.key}`;
                   return (
-                    <div
-                      key={agent.key}
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        padding: '1px 2px',
-                      }}
-                    >
+                    <div className="field-row" key={agent.key} style={{ padding: '1px 2px' }}>
                       <input
                         id={inputId}
                         type="checkbox"
@@ -582,21 +575,16 @@ export function BacktestingWindow() {
                       />
                       <label
                         htmlFor={inputId}
+                        title={agent.description}
                         style={{
-                          ...FONT,
-                          flex: 1,
-                          padding: '2px 4px',
+                          padding: '1px 3px',
                           cursor: 'inherit',
                           ...(selected
                             ? { backgroundColor: '#000080', color: '#ffffff' }
                             : {}),
                         }}
                       >
-                        <strong>{agent.display_name}</strong>
-                        <span style={{ color: selected ? '#c0c0c0' : COLOR_SECONDARY }}>
-                          {' '}
-                          — {agent.description}
-                        </span>
+                        {agent.display_name}
                       </label>
                     </div>
                   );
