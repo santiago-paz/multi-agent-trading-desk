@@ -72,13 +72,11 @@ export default function TradingDashboard() {
   const [perfil, setPerfil] = useState<DatosPerfil | null>(null);
   const [estadoCuenta, setEstadoCuenta] = useState<EstadoCuenta | null>(null);
 
-  const {
-    generalNews,
-    specificNews,
-    isLoading: isLoadingNews,
-    fetchNews,
-    lastUpdated,
-  } = useNewsStore();
+  const generalNews = useNewsStore((s) => s.generalNews);
+  const specificNews = useNewsStore((s) => s.specificNews);
+  const isLoadingNews = useNewsStore((s) => s.isLoading);
+  const fetchNews = useNewsStore((s) => s.fetchNews);
+  const lastUpdated = useNewsStore((s) => s.lastUpdated);
 
   const {
     windows,
@@ -314,9 +312,9 @@ export default function TradingDashboard() {
   const marketDataFetched = useRef(false);
   const operationsFetched = useRef(false);
 
-  const { fetchMepRate } = useMepStore();
+  const fetchMepRate = useMepStore((s) => s.fetchMepRate);
 
-  const fetchPortfolio = async () => {
+  const fetchPortfolio = useCallback(async () => {
     setIsLoadingPortfolio(true);
     const result = await getPortfolioSummary();
     if (result.success && result.data) {
@@ -326,16 +324,16 @@ export default function TradingDashboard() {
       if (result.data.perfil) setPerfil(result.data.perfil as DatosPerfil);
     }
     setIsLoadingPortfolio(false);
-  };
+  }, []);
 
-  const fetchMarketData = async () => {
+  const fetchMarketData = useCallback(async () => {
     setIsLoadingMarketData(true);
     const result = await getMarketData();
     if (result.success && result.data) {
       setMarketData(result.data as { marketData: { symbol: string; data: HistoricalRow[] }[]; ownedSymbols: string[]; companyNames: Record<string, string> });
     }
     setIsLoadingMarketData(false);
-  };
+  }, []);
 
   useEffect(() => {
     fetchNews();
@@ -346,26 +344,29 @@ export default function TradingDashboard() {
     }, 10 * 60 * 1000);
 
     return () => clearInterval(interval);
-  }, []);
+  }, [fetchNews, fetchMepRate]);
 
   useEffect(() => {
     fetchPortfolio();
-  }, []);
+  }, [fetchPortfolio]);
+
+  // Lazy-load market data and operations only when their windows first open
+  const marketDataOpen = !!windows['marketdata'] && !windows['marketdata'].minimized;
+  const movementsOpen = !!windows['movements'] && !windows['movements'].minimized;
 
   useEffect(() => {
-    const marketDataOpen = windows['marketdata'] && !windows['marketdata'].minimized;
     if (marketDataOpen && !marketDataFetched.current) {
       marketDataFetched.current = true;
       fetchMarketData();
     }
+  }, [marketDataOpen, fetchMarketData]);
 
-    const movementsOpen = windows['movements'] && !windows['movements'].minimized;
+  useEffect(() => {
     if (movementsOpen && !operationsFetched.current) {
       operationsFetched.current = true;
       fetchOperationsData();
     }
-
-  }, [windows]);
+  }, [movementsOpen]);
 
   return (
     <div ref={desktopRef} className="desktop relative w-full h-full overflow-hidden">

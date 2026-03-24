@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useMemo, useRef } from 'react';
 import { WindowState } from '@/components/ui/DraggableResizableWindow';
 
 export const APP_IDS = ['portfolio', 'news', 'marketdata', 'movements', 'aihedgefund', 'backtesting'] as const;
@@ -37,29 +37,22 @@ function createWindowState(id: AppId, zIndex: number, minimized = false): Window
 
 export function useWindowManager() {
   const [windows, setWindows] = useState<Record<string, WindowState>>({});
-  const [, setNextZIndex] = useState(100);
+  const zIndexRef = useRef(100);
   const [focusedId, setFocusedId] = useState<string | null>(null);
 
+  const nextZ = useCallback(() => ++zIndexRef.current, []);
+
   const openOrFocusWindow = useCallback((id: AppId) => {
+    const newZ = nextZ();
     setFocusedId(id);
-    setNextZIndex((z) => {
-      const newZ = z + 1;
-      setWindows((prev) => {
-        const current = prev[id];
-        if (current) {
-          return {
-            ...prev,
-            [id]: { ...current, minimized: false, zIndex: newZ },
-          };
-        }
-        return {
-          ...prev,
-          [id]: { ...createWindowState(id, newZ, false), zIndex: newZ },
-        };
-      });
-      return newZ;
+    setWindows((prev) => {
+      const current = prev[id];
+      if (current) {
+        return { ...prev, [id]: { ...current, minimized: false, zIndex: newZ } };
+      }
+      return { ...prev, [id]: createWindowState(id, newZ, false) };
     });
-  }, []);
+  }, [nextZ]);
 
   const updateWindow = useCallback((id: string, updates: Partial<WindowState>) => {
     setWindows((prev) => {
@@ -88,44 +81,30 @@ export function useWindowManager() {
   }, []);
 
   const focusWindow = useCallback((id: string) => {
+    const newZ = nextZ();
     setFocusedId(id);
-    setNextZIndex((z) => {
-      const newZ = z + 1;
-      setWindows((prev) => {
-        const w = prev[id];
-        if (!w) return prev;
-        return { ...prev, [id]: { ...w, zIndex: newZ, minimized: false } };
-      });
-      return newZ;
+    setWindows((prev) => {
+      const w = prev[id];
+      if (!w) return prev;
+      return { ...prev, [id]: { ...w, zIndex: newZ, minimized: false } };
     });
-  }, []);
+  }, [nextZ]);
 
   const toggleMinimize = useCallback((id: string) => {
     setWindows((prev) => {
       const w = prev[id];
       if (!w) return prev;
-      
-      const newMinimized = !w.minimized;
-      
-      if (!newMinimized) {
-        setFocusedId(id);
-        setNextZIndex((z) => {
-          const newZ = z + 1;
-          setTimeout(() => { // slight delay to avoid state batching conflict if any
-              setWindows(p => {
-                  const curr = p[id];
-                  return curr ? { ...p, [id]: { ...curr, zIndex: newZ } } : p;
-              })
-          }, 0)
-          return newZ;
-        });
-      } else {
+
+      if (!w.minimized) {
         setFocusedId((prevFocused) => (prevFocused === id ? null : prevFocused));
+        return { ...prev, [id]: { ...w, minimized: true } };
       }
 
-      return { ...prev, [id]: { ...w, minimized: newMinimized } };
+      const newZ = nextZ();
+      setFocusedId(id);
+      return { ...prev, [id]: { ...w, minimized: false, zIndex: newZ } };
     });
-  }, []);
+  }, [nextZ]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -140,8 +119,7 @@ export function useWindowManager() {
     };
   }, [focusedId, closeWindow]);
 
-
-  const allOpenWindows = Object.entries(windows);
+  const allOpenWindows = useMemo(() => Object.entries(windows), [windows]);
 
   return {
     windows,
