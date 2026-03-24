@@ -105,7 +105,7 @@ const ListView: React.FC<ListViewProps> = ({ items, companyNames, sortCol, sortD
   return (
     <div
       className="sunken-panel win98-scrollbar"
-      style={{ overflow: 'auto', padding: 0 }}
+      style={{ overflow: 'auto', padding: 0, flex: 1, minHeight: 0 }}
     >
       <table
         style={{
@@ -263,13 +263,14 @@ export const MarketDataWindow: React.FC<MarketDataWindowProps> = ({
         className="win98-scrollbar"
         style={{
           flex: 1,
-          overflowY: 'auto',
-          overflowX: 'hidden',
+          overflow: 'hidden',
+          display: 'flex',
+          flexDirection: 'column',
           padding: '6px',
           background: '#c0c0c0',
         }}
       >
-        <fieldset>
+        <fieldset style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', minHeight: 0 }}>
           <legend>
             {activeTab === 'mine' ? 'Mis CEDEARs' : 'Todos los CEDEARs'}
             {activeItems.length > 0 ? ` (${activeItems.length})` : ''}

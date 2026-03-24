@@ -49,10 +49,10 @@ export function filterAffordableCedears(
   for (const t of titulos) {
     if (t.ultimoPrecio <= 0) continue;
 
-    const base = stripCurrencySuffix(t.simbolo);
+    // Skip dollar-denominated instruments — we trade with peso balance
+    if (t.moneda === '2') continue;
 
-    // Skip D-suffix (dollar) variants when a C-variant exists — we trade in pesos
-    if (t.simbolo.endsWith('D') && titulos.some(x => x.simbolo === base + 'C')) continue;
+    const base = stripCurrencySuffix(t.simbolo);
 
     if (seen.has(base)) continue;
     seen.add(base);

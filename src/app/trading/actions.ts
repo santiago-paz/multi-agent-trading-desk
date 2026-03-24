@@ -244,7 +244,17 @@ export async function placeBuyOrder(params: {
       side: 'buy',
     });
 
-    return { success: true as const, data: result };
+    // Normalize: IOL may return messages as empty or in unexpected shapes
+    const data = {
+      ok: result.ok ?? false,
+      messages: Array.isArray(result.messages) ? result.messages : [],
+    };
+
+    if (!data.ok) {
+      console.warn('placeBuyOrder: IOL rejected order:', JSON.stringify(result));
+    }
+
+    return { success: true as const, data };
   } catch (error) {
     console.error('placeBuyOrder failed:', error);
     const msg = error instanceof Error ? error.message : 'Error al enviar la orden';

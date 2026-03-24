@@ -32,6 +32,9 @@ export const COL_HEADER_BASE: React.CSSProperties = {
   whiteSpace: 'nowrap',
   cursor: 'default',
   userSelect: 'none',
+  position: 'sticky',
+  top: 0,
+  zIndex: 1,
 };
 
 /* Raised look (default / inactive) */

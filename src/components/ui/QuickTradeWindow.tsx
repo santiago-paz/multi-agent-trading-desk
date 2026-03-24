@@ -68,7 +68,7 @@ export const QuickTradeWindow: React.FC<QuickTradeWindowProps> = ({
   const [cantidad, setCantidad] = useState(1);
   const [tipoOrden, setTipoOrden] = useState<'precioLimite' | 'precioMercado'>('precioLimite');
   const [plazo, setPlazo] = useState<'t0' | 't1' | 't2'>('t1');
-  const [orderStatus, setOrderStatus] = useState<{ type: 'success' | 'error'; msg: string } | null>(null);
+  const [orderStatus, setOrderStatus] = useState<{ type: 'success' | 'error' | 'warning'; msg: string } | null>(null);
   const [isSending, setIsSending] = useState(false);
 
   const toggleSort = (key: SortKey) => {
@@ -113,13 +113,19 @@ export const QuickTradeWindow: React.FC<QuickTradeWindowProps> = ({
     });
 
     if (result.success && result.data) {
+      // Extract the best available message from IOL response
+      const msgs = result.data.messages ?? [];
+      const detail = msgs.map(m => m.description || m.title).filter(Boolean).join('. ');
+
       if (result.data.ok) {
-        const detail = result.data.messages?.[0]?.description || 'Orden enviada correctamente';
-        setOrderStatus({ type: 'success', msg: detail });
+        setOrderStatus({ type: 'success', msg: detail || 'Orden enviada correctamente' });
         setSelected(null);
-      } else {
-        const detail = result.data.messages?.[0]?.description || 'La orden no fue aceptada';
+      } else if (detail) {
+        // IOL explicitly rejected with a reason
         setOrderStatus({ type: 'error', msg: detail });
+      } else {
+        // IOL returned ok:false without explanation — order may still have gone through
+        setOrderStatus({ type: 'warning', msg: 'IOL no confirmó la orden. Verificá en Movimientos si fue enviada.' });
       }
     } else {
       setOrderStatus({ type: 'error', msg: result.error || 'Error al enviar orden' });
@@ -301,10 +307,10 @@ export const QuickTradeWindow: React.FC<QuickTradeWindowProps> = ({
           ...FONT,
           padding: '4px 8px',
           margin: '0 6px 4px',
-          background: orderStatus.type === 'success' ? '#e0ffe0' : '#ffe0e0',
+          background: orderStatus.type === 'success' ? '#e0ffe0' : orderStatus.type === 'warning' ? '#fff8e0' : '#ffe0e0',
           border: '1px solid',
-          borderColor: orderStatus.type === 'success' ? COLOR_POSITIVE : COLOR_NEGATIVE,
-          color: orderStatus.type === 'success' ? COLOR_POSITIVE : COLOR_NEGATIVE,
+          borderColor: orderStatus.type === 'success' ? COLOR_POSITIVE : orderStatus.type === 'warning' ? '#b8860b' : COLOR_NEGATIVE,
+          color: orderStatus.type === 'success' ? COLOR_POSITIVE : orderStatus.type === 'warning' ? '#b8860b' : COLOR_NEGATIVE,
         }}>
           {orderStatus.msg}
         </div>

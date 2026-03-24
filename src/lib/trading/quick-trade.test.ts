@@ -136,24 +136,15 @@ describe('filterAffordableCedears', () => {
     expect(result[0].maxCantidad).toBe(3);
   });
 
-  it('skips D-suffix variants when C-variant exists', () => {
+  it('skips dollar-denominated instruments (moneda === "2")', () => {
     const titulos = [
-      makeQuote({ simbolo: 'AAPLC', ultimoPrecio: 500, volumen: 1000 }),
-      makeQuote({ simbolo: 'AAPLD', ultimoPrecio: 0.5, volumen: 500 }),
+      makeQuote({ simbolo: 'AAPLC', ultimoPrecio: 500, volumen: 1000, moneda: '1' }),
+      makeQuote({ simbolo: 'AAPLD', ultimoPrecio: 0.5, volumen: 500, moneda: '2' }),
+      makeQuote({ simbolo: 'BB.', ultimoPrecio: 1, volumen: 200, moneda: '2' }),
     ];
     const result = filterAffordableCedears(titulos, 10000);
     expect(result).toHaveLength(1);
     expect(result[0].simbolo).toBe('AAPLC');
-  });
-
-  it('keeps D-suffix variant when no C-variant exists', () => {
-    const titulos = [
-      makeQuote({ simbolo: 'AAPLD', ultimoPrecio: 0.5, volumen: 500 }),
-    ];
-    const result = filterAffordableCedears(titulos, 10000);
-    expect(result).toHaveLength(1);
-    expect(result[0].simbolo).toBe('AAPLD');
-    expect(result[0].base).toBe('AAPL');
   });
 
   it('deduplicates by base symbol (first occurrence wins)', () => {
