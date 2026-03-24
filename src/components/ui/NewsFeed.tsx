@@ -4,6 +4,7 @@ import {
   FONT, COLOR_LINK, COLOR_SECONDARY, COLOR_DISABLED,
   WINDOW_CONTAINER, REFRESH_FOOTER, STATUS_BAR_STYLE,
 } from '@/lib/theme/win98';
+import Image from 'next/image';
 
 interface NewsFeedProps {
   generalNews: NewsItem[];
@@ -136,10 +137,13 @@ const NewsCard = ({ news, badge }: { news: NewsItem & { symbol?: string }; badge
   >
     { }
     {news.image && (
-      <img
+      <Image
+        width={64}
+        height={64}
         src={news.image}
         alt=""
         style={{ width: 64, height: 64, objectFit: 'cover', flexShrink: 0, border: '1px solid #808080' }}
+        className="object-cover flex-shrink-0 border border-[#808080]"
       />
     )}
     <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', minWidth: 0 }}>
