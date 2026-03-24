@@ -169,7 +169,7 @@ All data tables must follow the pattern established in `src/components/ui/Portfo
 - Import and use `COL_HEADER_BASE`, `COL_RAISED`, `COL_SUNKEN` from `@/lib/theme/win98`.
 - **Inactive** (non-sorted): `{ ...COL_HEADER_BASE, ...COL_RAISED }`. **Active** (sorted): `{ ...COL_HEADER_BASE, ...COL_SUNKEN }`.
 - Header text: Title Caps, brief, no trailing punctuation. Initial column width should reflect the average size of its data entries.
-- Sortable headers show `▲` / `▼` suffix — `▼` indicates descending order (e.g. most recent date first). Headers must be `position: sticky; top: 0; zIndex: 1`.
+- Sortable headers show `▲` / `▼` suffix — `▼` indicates descending order (e.g. most recent date first). Headers must be sticky — this is built into `COL_HEADER_BASE`. For sticky to work, the `sunken-panel` wrapper must be the scroll container (`overflow: auto` with a height constraint like `flex: 1; minHeight: 0` or `maxHeight`), not a parent div.
 - **Header alignment must match the data below:** left-align text columns, right-align numeric columns. Never mix alignment between a header and its cells. Always align numbers at the decimal point (or imaginary decimal point). If a column mixes whole numbers with text, force alignment to the right.
 - If a header uses only a graphic (no text), include a tooltip so the user can identify it on hover.
 

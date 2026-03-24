@@ -656,7 +656,7 @@ export function BacktestingWindow() {
         {metrics && (
           <fieldset style={{ marginBottom: '6px' }}>
             <legend>Métricas de Rendimiento</legend>
-            <div className="sunken-panel" style={{ padding: 0 }}>
+            <div className="sunken-panel win98-scrollbar" style={{ padding: 0, overflow: 'auto', maxHeight: '200px' }}>
               <table style={{ ...FONT, width: '100%', borderCollapse: 'collapse', borderSpacing: 0 }}>
                 <thead>
                   <tr>
@@ -730,7 +730,7 @@ export function BacktestingWindow() {
         {dayResults.length > 0 && (
           <fieldset>
             <legend>Resultados Diarios ({dayResults.length} días)</legend>
-            <div className="sunken-panel" style={{ padding: 0 }}>
+            <div className="sunken-panel win98-scrollbar" style={{ padding: 0, overflow: 'auto', maxHeight: '400px' }}>
               <table style={{ ...FONT, width: '100%', borderCollapse: 'collapse', borderSpacing: 0 }}>
                 <thead>
                   <tr>

@@ -347,7 +347,7 @@ All tables follow the pattern in `PortfolioSummary.tsx`. Key classes and constan
 - `COL_RAISED` / `COL_SUNKEN` handle the raised/sunken header button look — no manual border strings.
 - `CELL` / `CELL_RIGHT` handle font, padding, right-border separator — never hardcode these.
 - Last cell in each row: always add `borderRight: 'none'`.
-- Sticky headers: add `position: 'sticky', top: 0, zIndex: 1` to each `<th>`.
+- **Sticky headers** are built into `COL_HEADER_BASE` (`position: 'sticky', top: 0, zIndex: 1`). No extra inline styles needed on `<th>`. For sticky to work, the `sunken-panel` wrapper must be the actual scroll container — give it `overflow: auto` and a height constraint (e.g. `flex: 1; minHeight: 0` or `maxHeight`). If a parent div scrolls instead of the sunken-panel, sticky headers will not stick.
 
 For row selection highlight, add/remove the `highlighted` class on `<tr>` (handled by 98.css).
 
