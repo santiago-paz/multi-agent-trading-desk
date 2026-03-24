@@ -2,6 +2,7 @@
 
 import { tradingEngine } from '@/lib/trading/engine';
 import { iolClient } from '@/lib/iol/client';
+import { extractCashArs, effectiveCashAfterCommission, filterAffordableCedears, COMMISSION_RATE } from '@/lib/trading/quick-trade';
 
 import { getHistoricalData, getAllNews, getCompanyNames, HistoricalRow } from '@/lib/market-data';
 import { stripCurrencySuffix, toFmpTicker, deduplicateIolSymbols } from '@/lib/cedear-map';
@@ -187,8 +188,6 @@ export async function getProfileData() {
  * Includes price, max affordable quantity, and applies a commission margin.
  */
 export async function getAffordableCedearsForTrading() {
-  const COMMISSION_RATE = 0.015; // ~1.5% margin for commissions (0.5% fee + 21% IVA + buffer)
-
   try {
     const [cuenta, cedearsPanel] = await Promise.all([
       iolClient.getEstadoCuenta(),
@@ -199,65 +198,16 @@ export async function getAffordableCedearsForTrading() {
       return { success: false as const, error: 'No se pudo obtener el saldo de IOL' };
     }
 
-    // Get ARS disponible para operar (use t1 = 24hs as default plazo)
-    const cuentaArs = cuenta.cuentas.find((c) => c.moneda === 'peso_Argentino');
-    let cash = cuentaArs?.disponible || 0;
-    // Prefer disponibleOperar from the 24hs settlement (most common for CEDEARs)
-    const hrs24 = cuentaArs?.saldos?.find((s) => s.liquidacion === 'hrs24');
-    if (hrs24) cash = hrs24.disponibleOperar;
-
-    // Effective cash after commission margin
-    const effectiveCash = cash / (1 + COMMISSION_RATE);
-
-    const titulos = cedearsPanel.titulos || [];
-
-    // Only keep peso-denominated (C suffix or no suffix) CEDEARs with valid prices
-    // Deduplicate by base symbol, keeping the C variant (pesos)
-    const seen = new Set<string>();
-    const affordable: {
-      simbolo: string;       // IOL symbol to use for the order (e.g. "AAPLC")
-      base: string;          // base symbol for display (e.g. "AAPL")
-      descripcion: string;
-      ultimoPrecio: number;
-      variacionPorcentual: number;
-      maxCantidad: number;
-      volumen: number;
-    }[] = [];
-
-    for (const t of titulos) {
-      if (t.ultimoPrecio <= 0) continue;
-
-      const base = stripCurrencySuffix(t.simbolo);
-
-      // Skip D-suffix (dollar) variants — we trade in pesos
-      if (t.simbolo.endsWith('D') && titulos.some(x => x.simbolo === base + 'C')) continue;
-
-      if (seen.has(base)) continue;
-      seen.add(base);
-
-      const maxQty = Math.floor(effectiveCash / t.ultimoPrecio);
-      if (maxQty < 1) continue;
-
-      affordable.push({
-        simbolo: t.simbolo,
-        base,
-        descripcion: t.descripcion,
-        ultimoPrecio: t.ultimoPrecio,
-        variacionPorcentual: t.variacionPorcentual,
-        maxCantidad: maxQty,
-        volumen: t.volumen ?? 0,
-      });
-    }
-
-    // Sort by volume (most liquid first)
-    affordable.sort((a, b) => b.volumen - a.volumen);
+    const cash = extractCashArs(cuenta);
+    const effective = effectiveCashAfterCommission(cash);
+    const cedears = filterAffordableCedears(cedearsPanel.titulos || [], effective);
 
     return {
       success: true as const,
       data: {
-        cedears: affordable,
+        cedears,
         cash,
-        effectiveCash,
+        effectiveCash: effective,
         commissionRate: COMMISSION_RATE,
       },
     };
