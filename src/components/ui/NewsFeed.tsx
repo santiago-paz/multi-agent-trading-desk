@@ -134,7 +134,7 @@ const NewsCard = ({ news, badge }: { news: NewsItem & { symbol?: string }; badge
       borderBottom: '1px solid #dfdfdf',
     }}
   >
-    {/* eslint-disable-next-line @next/next/no-img-element */}
+    { }
     {news.image && (
       <img
         src={news.image}
