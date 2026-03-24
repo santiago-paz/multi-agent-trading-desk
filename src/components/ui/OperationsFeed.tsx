@@ -50,9 +50,9 @@ export function OperationsFeed({ operations, isLoading, onRefresh }: OperationsF
         case 'fechaOrden': av = a.fechaOrden; bv = b.fechaOrden; break;
         case 'simbolo':    av = a.simbolo;    bv = b.simbolo;    break;
         case 'tipo':       av = a.tipo;       bv = b.tipo;       break;
-        case 'cantidad':   av = a.cantidad;   bv = b.cantidad;   break;
-        case 'precio':     av = a.precio;     bv = b.precio;     break;
-        case 'monto':      av = a.monto;      bv = b.monto;      break;
+        case 'cantidad':   av = a.cantidadOperada || a.cantidad;   bv = b.cantidadOperada || b.cantidad;   break;
+        case 'precio':     av = a.precioOperado || a.precio;     bv = b.precioOperado || b.precio;     break;
+        case 'monto':      av = a.montoOperado || a.monto;      bv = b.montoOperado || b.monto;      break;
         case 'estado':     av = a.estado;     bv = b.estado;     break;
         default:           return 0;
       }
@@ -128,17 +128,23 @@ export function OperationsFeed({ operations, isLoading, onRefresh }: OperationsF
                           {op.tipo}
                         </td>
                         <td style={CELL_RIGHT}>
-                          {op.cantidad ?? '—'}
+                          {op.cantidadOperada || op.cantidad || '—'}
                         </td>
                         <td style={CELL_RIGHT}>
-                          {op.precio != null
-                            ? `U$D ${(op.precio / mepRate).toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
-                            : '—'}
+                          {(() => {
+                            const precio = op.precioOperado || op.precio;
+                            return precio
+                              ? `U$D ${(precio / mepRate).toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                              : '—';
+                          })()}
                         </td>
                         <td style={CELL_RIGHT}>
-                          {op.monto != null
-                            ? `U$D ${(op.monto / mepRate).toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
-                            : '—'}
+                          {(() => {
+                            const monto = op.montoOperado || op.monto;
+                            return monto
+                              ? `U$D ${(monto / mepRate).toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                              : '—';
+                          })()}
                         </td>
                         <td style={{ ...CELL, borderRight: 'none' }}>
                           {op.estado ?? '—'}

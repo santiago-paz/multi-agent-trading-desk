@@ -101,6 +101,35 @@ export interface Operation {
   monto: number;
   modalidad: string;
   precio: number;
+  fechaOperada?: string;
+  cantidadOperada?: number;
+  precioOperado?: number;
+  montoOperado?: number;
+  plazo?: string;
+}
+
+export interface OperationDetail {
+  numero: number;
+  mercado: string;
+  simbolo: string;
+  moneda: string;
+  tipo: string;
+  fechaAlta: string;
+  validez: string;
+  fechaOperado: string;
+  estadoActual: string;
+  estados: { detalle: string; fecha: string }[];
+  aranceles: { tipo: string; neto: number; iva: number; moneda: string }[];
+  operaciones: { fecha: string; cantidad: number; precio: number }[];
+  precio: number;
+  cantidad: number;
+  monto: number;
+  fondosParaOperacion: number;
+  montoOperacion: number;
+  modalidad: string;
+  arancelesARS: number;
+  arancelesUSD: number;
+  plazo: string;
 }
 
 export interface DatosPerfil {

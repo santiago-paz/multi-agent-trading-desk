@@ -1,4 +1,4 @@
-import { IOLToken, PortfolioResponse, Quote, OrderRequest, OrderResponse, Operation, EstadoCuenta, DatosPerfil, PanelResponse, PanelQuote } from './types';
+import { IOLToken, PortfolioResponse, Quote, OrderRequest, OrderResponse, Operation, OperationDetail, EstadoCuenta, DatosPerfil, PanelResponse, PanelQuote } from './types';
 import { readFileSync, writeFileSync, unlinkSync } from 'fs';
 import { join } from 'path';
 
@@ -289,6 +289,10 @@ export class IOLClient {
     }).toString();
 
     return this.fetchWithAuth<Operation[]>(`/api/v2/operaciones?${queryString}`);
+  }
+
+  async getOperationDetail(numero: number): Promise<OperationDetail> {
+    return this.fetchWithAuth<OperationDetail>(`/api/v2/operaciones/${numero}`);
   }
 
   async getEstadoCuenta(): Promise<EstadoCuenta> {
