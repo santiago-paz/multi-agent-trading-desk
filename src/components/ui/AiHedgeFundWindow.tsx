@@ -576,7 +576,7 @@ export function AiHedgeFundWindow() {
         </fieldset>
 
         {/* ── Agent selection ─────────────────────────────────────────────── */}
-        <fieldset style={{ marginBottom: '6px', display: 'flex', flexDirection: 'column', flex: phase === 'idle' ? 1 : undefined, minHeight: 0 }}>
+        <fieldset style={{ marginBottom: '6px' }}>
           <legend>Agentes de inversión</legend>
 
           {isLoadingAgents ? (
@@ -605,7 +605,7 @@ export function AiHedgeFundWindow() {
 
               <div
                 className="sunken-panel win98-scrollbar"
-                style={{ flex: 1, overflowY: 'auto', padding: '2px' }}
+                style={{ maxHeight: '130px', overflowY: 'auto', padding: '2px' }}
               >
                 {agents.map(agent => {
                   const selected = selectedAgents.has(agent.key);
@@ -621,9 +621,9 @@ export function AiHedgeFundWindow() {
                       />
                       <label
                         htmlFor={inputId}
+                        title={agent.description}
                         style={{
-                          flex: 1,
-                          padding: '2px 4px',
+                          padding: '1px 3px',
                           cursor: 'inherit',
                           ...(selected
                             ? { backgroundColor: '#000080', color: '#ffffff' }
@@ -631,9 +631,6 @@ export function AiHedgeFundWindow() {
                         }}
                       >
                         {agent.display_name}
-                        <span style={{ color: selected ? '#c0c0c0' : COLOR_SECONDARY }}>
-                          {' '}— {agent.description}
-                        </span>
                       </label>
                     </div>
                   );
