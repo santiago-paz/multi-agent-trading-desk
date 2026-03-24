@@ -76,18 +76,20 @@ export interface PanelResponse {
 }
 
 export interface OrderResponse {
-  numeroOperacion: number;
-  mensaje: string;
+  ok: boolean;
+  messages: { title: string; description: string }[];
 }
 
 export interface OrderRequest {
+  mercado: string;
   simbolo: string;
   cantidad: number;
-  precio?: number;
+  precio: number;
   plazo: 't0' | 't1' | 't2'; // t0 = CI, t1 = 24hs, t2 = 48hs
-  tipo: 'limit' | 'market';
-  validez?: string;
-  side: 'buy' | 'sell'; // added for internal logic
+  validez: string; // ISO date-time
+  tipoOrden?: 'precioLimite' | 'precioMercado';
+  monto?: number;
+  side: 'buy' | 'sell'; // internal — stripped before sending to API
 }
 
 export interface Operation {

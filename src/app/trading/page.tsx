@@ -7,13 +7,14 @@ import { MarketDataWindow } from '@/components/ui/MarketDataWindow';
 import { OperationsFeed } from '@/components/ui/OperationsFeed';
 import { AiHedgeFundWindow } from '@/components/ui/AiHedgeFundWindow';
 import { BacktestingWindow } from '@/components/ui/BacktestingWindow';
+import { QuickTradeWindow, TradableCedear } from '@/components/ui/QuickTradeWindow';
 import { DesktopIcon } from '@/components/ui/DesktopIcon';
 import {
   DraggableResizableWindow,
   WindowState,
 } from '@/components/ui/DraggableResizableWindow';
 import { useNewsStore } from '@/lib/store/news-store';
-import { getPortfolioSummary, getMarketData, getOperations } from './actions';
+import { getPortfolioSummary, getMarketData, getOperations, getAffordableCedearsForTrading, placeBuyOrder } from './actions';
 import { PortfolioResponse, Operation, DatosPerfil, EstadoCuenta } from '@/lib/iol/types';
 import { HistoricalRow } from '@/lib/market-data';
 import { DESKTOP_APP_ICONS } from '@/lib/win98se-icons';
@@ -26,6 +27,7 @@ const ICON_IDS = [
   'movements',
   'aihedgefund',
   'backtesting',
+  'quicktrade',
 ] as const;
 type IconId = (typeof ICON_IDS)[number];
 
@@ -36,6 +38,7 @@ const DEFAULT_ICON_POSITIONS: Record<IconId, { x: number; y: number }> = {
   movements: { x: 8, y: 200 },
   aihedgefund: { x: 8, y: 264 },
   backtesting: { x: 8, y: 328 },
+  quicktrade: { x: 8, y: 392 },
 };
 
 const DESKTOP_ICON_CONFIG: { id: IconId; label: string; emoji: string; iconKey: keyof typeof DESKTOP_APP_ICONS }[] = [
@@ -45,6 +48,7 @@ const DESKTOP_ICON_CONFIG: { id: IconId; label: string; emoji: string; iconKey: 
   { id: 'movements',  label: 'Movimientos',  emoji: '💸', iconKey: 'movements'  },
   { id: 'aihedgefund', label: 'AI Hedge Fund', emoji: '🤖', iconKey: 'aihedgefund' },
   { id: 'backtesting', label: 'Backtesting', emoji: '📉', iconKey: 'backtesting' },
+  { id: 'quicktrade', label: 'Comprar CEDEARs', emoji: '💰', iconKey: 'quicktrade' },
 ];
 
 // Grid cell size for "Alinear Iconos" — slightly larger than icon width (64px) for breathing room
@@ -68,6 +72,14 @@ export default function TradingDashboard() {
 
   const [operations, setOperations] = useState<Operation[]>([]);
   const [isLoadingOperations, setIsLoadingOperations] = useState(false);
+
+  const [quickTradeData, setQuickTradeData] = useState<{
+    cedears: TradableCedear[];
+    cash: number;
+    effectiveCash: number;
+    commissionRate: number;
+  } | null>(null);
+  const [isLoadingQuickTrade, setIsLoadingQuickTrade] = useState(false);
 
   const [perfil, setPerfil] = useState<DatosPerfil | null>(null);
   const [estadoCuenta, setEstadoCuenta] = useState<EstadoCuenta | null>(null);
@@ -309,8 +321,18 @@ export default function TradingDashboard() {
     setIsLoadingOperations(false);
   };
 
+  const fetchQuickTradeData = useCallback(async () => {
+    setIsLoadingQuickTrade(true);
+    const result = await getAffordableCedearsForTrading();
+    if (result.success && result.data) {
+      setQuickTradeData(result.data);
+    }
+    setIsLoadingQuickTrade(false);
+  }, []);
+
   const marketDataFetched = useRef(false);
   const operationsFetched = useRef(false);
+  const quickTradeFetched = useRef(false);
 
   const fetchMepRate = useMepStore((s) => s.fetchMepRate);
 
@@ -350,9 +372,10 @@ export default function TradingDashboard() {
     fetchPortfolio();
   }, [fetchPortfolio]);
 
-  // Lazy-load market data and operations only when their windows first open
+  // Lazy-load market data, operations, and quick trade only when their windows first open
   const marketDataOpen = !!windows['marketdata'] && !windows['marketdata'].minimized;
   const movementsOpen = !!windows['movements'] && !windows['movements'].minimized;
+  const quickTradeOpen = !!windows['quicktrade'] && !windows['quicktrade'].minimized;
 
   useEffect(() => {
     if (marketDataOpen && !marketDataFetched.current) {
@@ -367,6 +390,13 @@ export default function TradingDashboard() {
       fetchOperationsData();
     }
   }, [movementsOpen]);
+
+  useEffect(() => {
+    if (quickTradeOpen && !quickTradeFetched.current) {
+      quickTradeFetched.current = true;
+      fetchQuickTradeData();
+    }
+  }, [quickTradeOpen, fetchQuickTradeData]);
 
   return (
     <div ref={desktopRef} className="desktop relative w-full h-full overflow-hidden">
@@ -466,6 +496,17 @@ export default function TradingDashboard() {
             )}
             {appId === 'backtesting' && (
               <BacktestingWindow />
+            )}
+            {appId === 'quicktrade' && (
+              <QuickTradeWindow
+                cedears={quickTradeData?.cedears ?? []}
+                cash={quickTradeData?.cash ?? 0}
+                effectiveCash={quickTradeData?.effectiveCash ?? 0}
+                commissionRate={quickTradeData?.commissionRate ?? 0.015}
+                isLoading={isLoadingQuickTrade}
+                onRefresh={() => { quickTradeFetched.current = false; fetchQuickTradeData(); }}
+                onBuy={placeBuyOrder}
+              />
             )}
           </DraggableResizableWindow>
         );

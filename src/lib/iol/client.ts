@@ -264,14 +264,17 @@ export class IOLClient {
   }
 
   async placeOrder(order: OrderRequest): Promise<OrderResponse> {
-    const endpoint = order.side === 'buy' ? '/api/v2/Operar/Comprar' : '/api/v2/Operar/Vender';
+    const endpoint = order.side === 'buy' ? '/api/v2/operar/Comprar' : '/api/v2/operar/Vender';
+
+    // Strip internal `side` field before sending to IOL API
+    const { side: _, ...apiBody } = order;
 
     return this.fetchWithAuth<OrderResponse>(endpoint, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify(order),
+      body: JSON.stringify(apiBody),
     });
   }
 
