@@ -49,7 +49,7 @@ export function usePortfolioSort(
     }
   };
 
-  const activos = portfolio?.activos || [];
+  const activos = useMemo(() => portfolio?.activos || [], [portfolio?.activos]);
 
   // Use real USD prices (D-variant) when available, fallback to ARS/MEP
   let totalUSD = 0;

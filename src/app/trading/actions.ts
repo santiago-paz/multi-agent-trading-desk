@@ -2,6 +2,7 @@
 
 import { tradingEngine } from '@/lib/trading/engine';
 import { iolClient } from '@/lib/iol/client';
+import { PanelQuote } from '@/lib/iol/types';
 import { extractCashArs, effectiveCashAfterCommission, filterAffordableCedears, COMMISSION_RATE } from '@/lib/trading/quick-trade';
 
 import { getHistoricalData, getAllNews, getCompanyNames, HistoricalRow } from '@/lib/market-data';
@@ -12,7 +13,7 @@ export async function getMarketData() {
     // 1. Get portfolio to identify owned CEDEARs
     const portfolio = await iolClient.getPortfolio();
     if (!portfolio?.activos) {
-      const msg = (portfolio as any)?.message;
+      const msg = (portfolio as { message?: string })?.message;
       throw new Error(msg ?? 'Respuesta inesperada del servidor de IOL');
     }
     const ownedSymbols = portfolio.activos
@@ -227,6 +228,20 @@ export async function placeBuyOrder(params: {
   plazo: 't0' | 't1' | 't2';
   tipoOrden: 'precioLimite' | 'precioMercado';
 }) {
+  return placeOrder({ ...params, side: 'buy' });
+}
+
+/**
+ * Places a buy or sell order for a CEDEAR via IOL.
+ */
+export async function placeOrder(params: {
+  simbolo: string;
+  cantidad: number;
+  precio: number;
+  plazo: 't0' | 't1' | 't2';
+  tipoOrden: 'precioLimite' | 'precioMercado';
+  side: 'buy' | 'sell';
+}) {
   try {
     // Validez = end of today (IOL expects ISO date-time)
     const today = new Date();
@@ -241,7 +256,7 @@ export async function placeBuyOrder(params: {
       plazo: params.plazo,
       validez,
       tipoOrden: params.tipoOrden,
-      side: 'buy',
+      side: params.side,
     });
 
     // Normalize: IOL may return messages as empty or in unexpected shapes
@@ -251,12 +266,12 @@ export async function placeBuyOrder(params: {
     };
 
     if (!data.ok) {
-      console.warn('placeBuyOrder: IOL rejected order:', JSON.stringify(result));
+      console.warn(`placeOrder(${params.side}): IOL rejected order:`, JSON.stringify(result));
     }
 
     return { success: true as const, data };
   } catch (error) {
-    console.error('placeBuyOrder failed:', error);
+    console.error(`placeOrder(${params.side}) failed:`, error);
     const msg = error instanceof Error ? error.message : 'Error al enviar la orden';
     return { success: false as const, error: msg };
   }
@@ -273,32 +288,33 @@ export async function getAffordableCedears() {
     if (!cuenta?.cuentas) {
       return { success: false as const, error: 'No se pudo obtener el saldo de IOL' };
     }
-    const cuentaArs = cuenta.cuentas.find((c: any) => c.moneda === 'peso_Argentino');
+    const cuentaArs = cuenta.cuentas.find((c) => c.moneda === 'peso_Argentino');
     let cash = cuentaArs?.disponible || 0;
-    const inmediato = cuentaArs?.saldos?.find((s: any) => s.liquidacion === 'inmediato');
+    const inmediato = cuentaArs?.saldos?.find((s) => s.liquidacion === 'inmediato');
     if (inmediato) cash = inmediato.disponibleOperar;
 
-    // 2. Get CEDEARs panel and MEP rate
-    const [cedearsPanel, mepRate] = await Promise.all([
+    // 2. Get CEDEARs panel, MEP rate, and current portfolio holdings
+    const [cedearsPanel, mepRate, portfolio] = await Promise.all([
       iolClient.getPanelQuotes('cedears'),
       iolClient.getMEP(),
+      iolClient.getPortfolio().catch(() => null),
     ]);
     const titulos = cedearsPanel.titulos || [];
-    const priceInArs = (t: any) => t.moneda === '2' ? t.ultimoPrecio * mepRate : t.ultimoPrecio;
+    const priceInArs = (t: PanelQuote) => t.moneda === '2' ? t.ultimoPrecio * mepRate : t.ultimoPrecio;
 
     // 3. Filter affordable, score by liquidity, pick top 10
-    const affordable = titulos.filter((t: any) => t.ultimoPrecio > 0 && priceInArs(t) <= cash);
-    const hasVolume = affordable.some((t: any) => (t.volumen ?? 0) > 0);
-    const metric = (t: any) => hasVolume ? (t.volumen ?? 0) : (t.cantidadOperaciones ?? 0);
+    const affordable = titulos.filter((t) => t.ultimoPrecio > 0 && priceInArs(t) <= cash);
+    const hasVolume = affordable.some((t) => (t.volumen ?? 0) > 0);
+    const metric = (t: PanelQuote) => hasVolume ? (t.volumen ?? 0) : (t.cantidadOperaciones ?? 0);
     const maxVal = Math.max(...affordable.map(metric), 1);
     const sorted = affordable
-      .map((t: any) => ({ ...t, _score: metric(t) / maxVal }))
-      .sort((a: any, b: any) => b._score - a._score)
+      .map((t) => ({ ...t, _score: metric(t) / maxVal }))
+      .sort((a, b) => b._score - a._score)
       .slice(0, 10);
 
     // Deduplicate: IOL lists peso (C) and dollar (D) variants.
     // Strip suffix to produce base IOL symbols, then map to FMP tickers.
-    const rawSymbols: string[] = sorted.map((t: any) => t.simbolo as string);
+    const rawSymbols: string[] = sorted.map((t) => t.simbolo);
     const iolSymbols = deduplicateIolSymbols(rawSymbols);
 
     // Build FMP ticker list (excludes symbols with no US equivalent like CSNA3)
@@ -322,7 +338,26 @@ export async function getAffordableCedears() {
       }
     }
 
-    return { success: true as const, symbols: iolSymbols, fmpTickers, iolToFmp, cash, arsPrices };
+    // 5. Map current IOL holdings to backend PortfolioPosition format (FMP tickers, USD prices)
+    const portfolioPositions: Array<{ ticker: string; quantity: number; trade_price: number }> = [];
+    if (portfolio?.activos) {
+      for (const asset of portfolio.activos) {
+        if (asset.titulo.tipo !== 'CEDEARS' && asset.titulo.tipo !== 'cedears') continue;
+        if (asset.cantidad <= 0) continue;
+        const base = stripCurrencySuffix(asset.titulo.simbolo);
+        const fmp = toFmpTicker(base);
+        if (!fmp) continue;
+        const tradePriceArs = asset.ppc > 0 ? asset.ppc : asset.ultimoPrecio;
+        if (tradePriceArs <= 0) continue;
+        portfolioPositions.push({
+          ticker: fmp,
+          quantity: asset.cantidad,
+          trade_price: Math.round((tradePriceArs / mepRate) * 100) / 100,
+        });
+      }
+    }
+
+    return { success: true as const, symbols: iolSymbols, fmpTickers, iolToFmp, cash, arsPrices, mepRate, portfolioPositions };
   } catch (error) {
     console.error('getAffordableCedears failed:', error);
     return { success: false as const, error: 'No se pudo obtener CEDEARs disponibles' };

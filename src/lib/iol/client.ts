@@ -1,4 +1,4 @@
-import { IOLToken, PortfolioResponse, Quote, OrderRequest, OrderResponse, Operation, OperationDetail, EstadoCuenta, DatosPerfil, PanelResponse, PanelQuote } from './types';
+import { IOLToken, PortfolioResponse, Quote, OrderRequest, OrderResponse, Operation, OperationDetail, EstadoCuenta, DatosPerfil, PanelResponse } from './types';
 import { readFileSync, writeFileSync, unlinkSync } from 'fs';
 import { join } from 'path';
 
@@ -267,7 +267,8 @@ export class IOLClient {
     const endpoint = order.side === 'buy' ? '/api/v2/operar/Comprar' : '/api/v2/operar/Vender';
 
     // Strip internal `side` field before sending to IOL API
-    const { side: _, ...apiBody } = order;
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { side: _side, ...apiBody } = order;
 
     return this.fetchWithAuth<OrderResponse>(endpoint, {
       method: 'POST',

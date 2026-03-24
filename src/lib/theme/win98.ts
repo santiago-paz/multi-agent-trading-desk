@@ -5,7 +5,7 @@ export const FONT: React.CSSProperties = {
   fontFamily: '"Pixelated MS Sans Serif", Arial, sans-serif',
   fontSize: '11px',
   WebkitFontSmoothing: 'none',
-  // @ts-ignore – non-standard
+  // @ts-expect-error – non-standard
   MozOsxFontSmoothing: 'grayscale',
 };
 

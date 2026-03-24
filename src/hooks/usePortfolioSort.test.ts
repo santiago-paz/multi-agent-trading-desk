@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { getSortValue, getCashUSD, SortKey } from './usePortfolioSort';
+import { getSortValue, getCashUSD } from './usePortfolioSort';
 import { PortfolioAsset, EstadoCuenta } from '@/lib/iol/types';
 
 // ── Helper: minimal PortfolioAsset factory ──────────────────────────────────

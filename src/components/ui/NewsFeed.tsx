@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { NewsItem } from '@/lib/market-data';
 import {
-  FONT, COLOR_LINK, COLOR_SECONDARY, COLOR_DISABLED, BUTTON_PRESSED,
+  FONT, COLOR_LINK, COLOR_SECONDARY, COLOR_DISABLED,
   WINDOW_CONTAINER, REFRESH_FOOTER, STATUS_BAR_STYLE,
 } from '@/lib/theme/win98';
 
@@ -134,6 +134,7 @@ const NewsCard = ({ news, badge }: { news: NewsItem & { symbol?: string }; badge
       borderBottom: '1px solid #dfdfdf',
     }}
   >
+    {/* eslint-disable-next-line @next/next/no-img-element */}
     {news.image && (
       <img
         src={news.image}

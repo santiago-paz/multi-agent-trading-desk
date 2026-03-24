@@ -4,7 +4,6 @@ import React, { useCallback, useRef, useState } from 'react';
 
 const MIN_WIDTH = 200;
 const MIN_HEIGHT = 120;
-const RESIZE_HANDLE_SIZE = 8;
 
 export interface WindowState {
   id: string;

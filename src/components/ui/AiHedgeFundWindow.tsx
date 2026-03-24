@@ -6,7 +6,7 @@ import {
   WINDOW_CONTAINER, SCROLLABLE_BODY, REFRESH_FOOTER, STATUS_BAR_STYLE,
   COLOR_POSITIVE, COLOR_NEGATIVE, COLOR_SECONDARY, COLOR_DISABLED,
 } from '@/lib/theme/win98';
-import { getAffordableCedears } from '@/app/trading/actions';
+import { getAffordableCedears, placeOrder } from '@/app/trading/actions';
 import { useMepStore } from '@/lib/store/mep-store';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -112,6 +112,7 @@ function adjustDecisionsToARS(
   arsPrices: Record<string, number>,
   cashAfterCommission: number,
   fmpToIol: Record<string, string>,
+  holdings: Record<string, number>,
 ): Record<string, Decision> {
   // Remap FMP tickers to IOL symbols so arsPrices lookup works
   const decisions = remapToIol(rawDecisions, fmpToIol);
@@ -147,7 +148,13 @@ function adjustDecisionsToARS(
       continue;
     }
 
-    // hold or sell — keep as-is with quantity 0 (we have no position)
+    if (decision.action === 'sell') {
+      const owned = holdings[ticker] ?? 0;
+      adjusted[ticker] = { ...decision, quantity: owned };
+      continue;
+    }
+
+    // hold
     adjusted[ticker] = { ...decision, quantity: 0 };
   }
 
@@ -169,6 +176,8 @@ export function AiHedgeFundWindow() {
   const [iolToFmp, setIolToFmp] = useState<Record<string, string>>({}); // IOL→FMP mapping
   const [cash, setCash] = useState<number | null>(null);
   const [arsPrices, setArsPrices] = useState<Record<string, number>>({});
+  const [portfolioPositions, setPortfolioPositions] = useState<Array<{ ticker: string; quantity: number; trade_price: number }>>([]);
+  const [mepRateLocal, setMepRateLocal] = useState<number | null>(null);
   const [isLoadingCedears, setIsLoadingCedears] = useState(true);
 
   // Health check
@@ -183,6 +192,12 @@ export function AiHedgeFundWindow() {
   // Results
   const [analystSignals, setAnalystSignals] = useState<Record<string, Record<string, AgentSignal>> | null>(null);
   const [decisions, setDecisions] = useState<Record<string, Decision> | null>(null);
+
+  // Order execution
+  interface OrderResult { ticker: string; side: 'buy' | 'sell'; quantity: number; success: boolean; message: string }
+  const [isExecuting, setIsExecuting] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [orderResults, setOrderResults] = useState<OrderResult[]>([]);
 
   // API debug log
   const [apiLog, setApiLog] = useState<ApiLogEntry[]>([]);
@@ -243,6 +258,8 @@ export function AiHedgeFundWindow() {
           setIolToFmp(result.iolToFmp);
           setCash(result.cash);
           setArsPrices(result.arsPrices ?? {});
+          setPortfolioPositions(result.portfolioPositions ?? []);
+          setMepRateLocal(result.mepRate ?? null);
         }
       } catch (err) {
         console.error('Failed to fetch CEDEARs:', err);
@@ -282,7 +299,7 @@ export function AiHedgeFundWindow() {
       const res = await fetch(`${API_URL}/hedge-fund/health`);
       const data = await res.json();
       setHealthChecks(data.checks);
-    } catch (err) {
+    } catch {
       setHealthChecks([{ name: 'Backend', ok: false, status: 0, error: `No se pudo conectar a ${API_URL}` }]);
     } finally {
       setIsCheckingHealth(false);
@@ -304,6 +321,8 @@ export function AiHedgeFundWindow() {
     setProgress(0);
     setAnalystSignals(null);
     setDecisions(null);
+    setShowConfirm(false);
+    setOrderResults([]);
 
     const agentKeys = Array.from(selectedAgents);
 
@@ -318,8 +337,6 @@ export function AiHedgeFundWindow() {
       target: 'portfolio_manager',
     }));
 
-    // Send a standard portfolio size so the AI generates proper buy/sell signals.
-    // We recalculate quantities locally using ARS prices from IOL afterwards.
     const cashArs = cash ?? 0;
     const cashAfterCommission = cashArs * (1 - COMMISSION_RATE);
 
@@ -330,16 +347,33 @@ export function AiHedgeFundWindow() {
       fmpToIol[fmp] = iol;
     }
 
+    // Build IOL holdings map for adjustDecisionsToARS: IOL symbol → quantity
+    const iolHoldings: Record<string, number> = {};
+    for (const pos of portfolioPositions) {
+      const iolSym = fmpToIol[pos.ticker] ?? pos.ticker;
+      iolHoldings[iolSym] = pos.quantity;
+    }
+
+    // Real cash in USD for the backend (fallback to $100k if no MEP available)
+    const effectiveMep = mepRateLocal ?? mepRate ?? null;
+    const cashUsd = effectiveMep && effectiveMep > 0
+      ? cashAfterCommission / effectiveMep
+      : 100000;
+
     const body = {
       tickers: fmpTickers,
       model_name: 'claude-haiku-4-5-20251001',
       model_provider: 'Anthropic',
-      initial_cash: 100000,
+      initial_cash: Math.round(cashUsd * 100) / 100,
+      portfolio_positions: portfolioPositions.length > 0 ? portfolioPositions : undefined,
       graph_nodes: graphNodes,
       graph_edges: graphEdges,
     };
 
-    addLog('cash', `Saldo disponible: $${fmtARS(cashArs)} ARS (neto comisiones: $${fmtARS(cashAfterCommission)})`, 'ok');
+    addLog('cash', `Saldo: $${fmtARS(cashArs)} ARS → ~USD $${cashUsd.toFixed(0)} (MEP: ${effectiveMep?.toFixed(0) ?? '?'})`, 'ok');
+    if (portfolioPositions.length > 0) {
+      addLog('positions', `Posiciones: ${portfolioPositions.map(p => `${p.ticker}×${p.quantity}`).join(', ')}`, 'ok');
+    }
     const mappedNote = Object.entries(iolToFmp)
       .filter(([iol, fmp]) => iol !== fmp)
       .map(([iol, fmp]) => `${iol}→${fmp}`)
@@ -420,7 +454,7 @@ export function AiHedgeFundWindow() {
                 setAnalystSignals(remappedSignals);
                 // Recalculate quantities using ARS prices from IOL
                 const rawDecisions = completeData.decisions as Record<string, Decision>;
-                const adjustedDecisions = adjustDecisionsToARS(rawDecisions, arsPrices, cashAfterCommission, fmpToIol);
+                const adjustedDecisions = adjustDecisionsToARS(rawDecisions, arsPrices, cashAfterCommission, fmpToIol, iolHoldings);
                 setDecisions(adjustedDecisions);
               }
               addLog('complete', 'Análisis completado', 'ok');
@@ -446,7 +480,7 @@ export function AiHedgeFundWindow() {
               }
               setAnalystSignals(remappedSignals);
               const rawDecisions = completeData.decisions as Record<string, Decision>;
-              const adjustedDecisions = adjustDecisionsToARS(rawDecisions, arsPrices, cashAfterCommission, fmpToIol);
+              const adjustedDecisions = adjustDecisionsToARS(rawDecisions, arsPrices, cashAfterCommission, fmpToIol, iolHoldings);
               setDecisions(adjustedDecisions);
             }
             addLog('complete', 'Análisis completado', 'ok');
@@ -463,6 +497,67 @@ export function AiHedgeFundWindow() {
       addLog('error', `Error: ${(err as Error).message}`, 'error');
       setPhase('error');
     }
+  }
+
+  // ── Order execution ──────────────────────────────────────────────────────
+
+  const actionableOrders = decisions
+    ? Object.entries(decisions).filter(([, d]) => (d.action === 'buy' || d.action === 'sell') && d.quantity > 0)
+    : [];
+
+  async function handleExecuteOrders() {
+    if (actionableOrders.length === 0) return;
+    setIsExecuting(true);
+    setOrderResults([]);
+
+    const sells = actionableOrders.filter(([, d]) => d.action === 'sell');
+    const buys = actionableOrders.filter(([, d]) => d.action === 'buy');
+    const results: OrderResult[] = [];
+
+    // Process sells first to free up capital
+    for (const [ticker, dec] of sells) {
+      const price = arsPrices[ticker] ?? 0;
+      const res = await placeOrder({
+        simbolo: ticker,
+        cantidad: dec.quantity,
+        precio: price,
+        plazo: 't1',
+        tipoOrden: 'precioMercado',
+        side: 'sell',
+      });
+      results.push({
+        ticker, side: 'sell', quantity: dec.quantity,
+        success: res.success && res.data?.ok === true,
+        message: res.success
+          ? (res.data?.messages?.map(m => m.description || m.title).join('. ') || 'Orden enviada')
+          : (res.error || 'Error'),
+      });
+      setOrderResults([...results]);
+    }
+
+    // Then process buys
+    for (const [ticker, dec] of buys) {
+      const price = arsPrices[ticker] ?? 0;
+      const res = await placeOrder({
+        simbolo: ticker,
+        cantidad: dec.quantity,
+        precio: price,
+        plazo: 't1',
+        tipoOrden: 'precioMercado',
+        side: 'buy',
+      });
+      results.push({
+        ticker, side: 'buy', quantity: dec.quantity,
+        success: res.success && res.data?.ok === true,
+        message: res.success
+          ? (res.data?.messages?.map(m => m.description || m.title).join('. ') || 'Orden enviada')
+          : (res.error || 'Error'),
+      });
+      setOrderResults([...results]);
+    }
+
+    setIsExecuting(false);
+    setShowConfirm(false);
   }
 
   // ── Derived ────────────────────────────────────────────────────────────────
@@ -817,6 +912,60 @@ export function AiHedgeFundWindow() {
                 </tbody>
               </table>
             </div>
+
+            {/* Execute orders button */}
+            {actionableOrders.length > 0 && !showConfirm && orderResults.length === 0 && (
+              <div style={{ marginTop: '6px' }}>
+                <button className="default" onClick={() => setShowConfirm(true)} disabled={isExecuting}>
+                  Ejecutar órdenes ({actionableOrders.length})
+                </button>
+              </div>
+            )}
+
+            {/* Confirmation panel */}
+            {showConfirm && (
+              <div style={{ marginTop: '6px', padding: '6px', background: '#ffffcc', border: '1px solid #c0c000' }}>
+                <p style={{ ...FONT, margin: '0 0 4px', fontWeight: 'bold' }}>Confirmar ejecución de órdenes</p>
+                {actionableOrders.filter(([, d]) => d.action === 'sell').length > 0 && (
+                  <p style={{ ...FONT, margin: '0 0 2px', color: COLOR_NEGATIVE }}>
+                    Vender: {actionableOrders.filter(([, d]) => d.action === 'sell').map(([t, d]) => `${t} ×${d.quantity}`).join(', ')}
+                  </p>
+                )}
+                {actionableOrders.filter(([, d]) => d.action === 'buy').length > 0 && (
+                  <p style={{ ...FONT, margin: '0 0 2px', color: COLOR_POSITIVE }}>
+                    Comprar: {actionableOrders.filter(([, d]) => d.action === 'buy').map(([t, d]) => `${t} ×${d.quantity}`).join(', ')}
+                  </p>
+                )}
+                <p style={{ ...FONT, margin: '4px 0', color: COLOR_SECONDARY, fontSize: '11px' }}>
+                  Precio de mercado, plazo 24hs. Las ventas se procesan primero.
+                </p>
+                <div style={{ display: 'flex', gap: '6px' }}>
+                  <button className="default" onClick={handleExecuteOrders} disabled={isExecuting}>
+                    {isExecuting ? 'Enviando...' : 'Confirmar y enviar'}
+                  </button>
+                  <button onClick={() => setShowConfirm(false)} disabled={isExecuting}>Cancelar</button>
+                </div>
+              </div>
+            )}
+
+            {/* Order execution results */}
+            {orderResults.length > 0 && (
+              <div style={{ marginTop: '6px' }}>
+                <p style={{ ...FONT, margin: '0 0 4px', fontWeight: 'bold' }}>Resultado de órdenes</p>
+                {orderResults.map((r, i) => (
+                  <div key={i} style={{ ...FONT, display: 'flex', gap: '5px', lineHeight: '16px', padding: '1px 0' }}>
+                    <span style={{ color: r.success ? COLOR_POSITIVE : COLOR_NEGATIVE, flexShrink: 0 }}>
+                      {r.success ? '■' : '✕'}
+                    </span>
+                    <span style={{ color: r.side === 'buy' ? COLOR_POSITIVE : COLOR_NEGATIVE }}>
+                      {r.side === 'buy' ? 'COMPRA' : 'VENTA'}
+                    </span>
+                    <span>{r.ticker} ×{r.quantity}</span>
+                    <span style={{ color: r.success ? 'inherit' : COLOR_NEGATIVE }}>— {r.message}</span>
+                  </div>
+                ))}
+              </div>
+            )}
           </fieldset>
         )}
       </div>
@@ -826,7 +975,7 @@ export function AiHedgeFundWindow() {
         <button
           className={phase === 'idle' ? 'default' : undefined}
           onClick={handleRun}
-          disabled={isRunning || isLoading || selectedAgents.size === 0 || tickers.length === 0}
+          disabled={isRunning || isLoading || isExecuting || selectedAgents.size === 0 || tickers.length === 0}
         >
           {isRunning ? 'Analizando...' : 'Ejecutar análisis'}
         </button>

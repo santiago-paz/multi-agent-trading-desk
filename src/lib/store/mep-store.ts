@@ -30,8 +30,8 @@ export const useMepStore = create<MepStore>((set, get) => ({
       } else {
         set({ error: result.error || 'Failed to fetch MEP', isLoading: false });
       }
-    } catch (err: any) {
-      set({ error: err.message || 'Unknown error', isLoading: false });
+    } catch (err: unknown) {
+      set({ error: err instanceof Error ? err.message : 'Unknown error', isLoading: false });
     }
   },
 }));

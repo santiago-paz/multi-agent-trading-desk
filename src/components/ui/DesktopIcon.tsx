@@ -89,7 +89,7 @@ export const DesktopIcon: React.FC<DesktopIconProps> = ({
     };
   }, [id, isTracking, isDragging, onMove, onDragStart]);
 
-  const handleClick = (e: React.MouseEvent) => {
+  const handleClick = () => {
     if (!hasMoved) {
       onClick();
     }
@@ -114,7 +114,8 @@ export const DesktopIcon: React.FC<DesktopIconProps> = ({
         <div className="w-8 h-8 flex items-center justify-center shrink-0 overflow-hidden flex-shrink-0 pointer-events-none relative">
           {useImage ? (
             <>
-              <img
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
                 src={iconSrc}
                 alt=""
                 className="w-8 h-8 object-contain block"

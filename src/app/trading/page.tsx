@@ -11,7 +11,6 @@ import { QuickTradeWindow, TradableCedear } from '@/components/ui/QuickTradeWind
 import { DesktopIcon } from '@/components/ui/DesktopIcon';
 import {
   DraggableResizableWindow,
-  WindowState,
 } from '@/components/ui/DraggableResizableWindow';
 import { useNewsStore } from '@/lib/store/news-store';
 import { getPortfolioSummary, getMarketData, getOperations, getAffordableCedearsForTrading, placeBuyOrder } from './actions';
@@ -112,8 +111,8 @@ export default function TradingDashboard() {
   const rubberBandStartRef = useRef<{ x: number; y: number } | null>(null);
   const iconPositionsRef = useRef(iconPositions);
   const multiDragBaseRef = useRef<Record<string, { x: number; y: number }> | null>(null);
-  // Keep ref in sync with state (no useEffect — updated every render)
-  iconPositionsRef.current = iconPositions;
+  // Keep ref in sync with state
+  useEffect(() => { iconPositionsRef.current = iconPositions; });
 
   useEffect(() => {
     const savedPositions = localStorage.getItem('desktop-icon-positions');
@@ -121,7 +120,7 @@ export default function TradingDashboard() {
       try {
         const parsed = JSON.parse(savedPositions);
         if (typeof parsed === 'object' && parsed !== null) {
-          setIconPositions((prev) => ({ ...prev, ...parsed }));
+          setIconPositions((prev) => ({ ...prev, ...parsed })); // eslint-disable-line react-hooks/set-state-in-effect
         }
       } catch (e) {
         console.error('Failed to parse saved icon positions', e);
@@ -191,9 +190,10 @@ export default function TradingDashboard() {
         live.add(id);
       }
     });
-    liveSelectionRef.current = live;
     return live;
   }, [rubberBandRect, iconPositions, selectedIconIds]);
+
+  useEffect(() => { liveSelectionRef.current = effectiveSelectedIds; });
 
   // ── ESC clears selection / context menu ─────────────────────────────────────
   useEffect(() => {
@@ -234,7 +234,7 @@ export default function TradingDashboard() {
 
   // ── Multi-icon drag: called when an icon starts dragging ─────────────────────
   const effectiveSelectedRef = useRef(effectiveSelectedIds);
-  effectiveSelectedRef.current = effectiveSelectedIds;
+  useEffect(() => { effectiveSelectedRef.current = effectiveSelectedIds; });
 
   const handleIconDragStart = useCallback((id: string) => {
     const selected = effectiveSelectedRef.current;
@@ -369,7 +369,7 @@ export default function TradingDashboard() {
   }, [fetchNews, fetchMepRate]);
 
   useEffect(() => {
-    fetchPortfolio();
+    fetchPortfolio(); // eslint-disable-line react-hooks/set-state-in-effect
   }, [fetchPortfolio]);
 
   // Lazy-load market data, operations, and quick trade only when their windows first open
@@ -380,21 +380,21 @@ export default function TradingDashboard() {
   useEffect(() => {
     if (marketDataOpen && !marketDataFetched.current) {
       marketDataFetched.current = true;
-      fetchMarketData();
+      fetchMarketData(); // eslint-disable-line react-hooks/set-state-in-effect
     }
   }, [marketDataOpen, fetchMarketData]);
 
   useEffect(() => {
     if (movementsOpen && !operationsFetched.current) {
       operationsFetched.current = true;
-      fetchOperationsData();
+      fetchOperationsData(); // eslint-disable-line react-hooks/set-state-in-effect
     }
   }, [movementsOpen]);
 
   useEffect(() => {
     if (quickTradeOpen && !quickTradeFetched.current) {
       quickTradeFetched.current = true;
-      fetchQuickTradeData();
+      fetchQuickTradeData(); // eslint-disable-line react-hooks/set-state-in-effect
     }
   }, [quickTradeOpen, fetchQuickTradeData]);
 
