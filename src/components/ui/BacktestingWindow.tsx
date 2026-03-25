@@ -3,9 +3,10 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import {
   FONT, COL_HEADER, COL_HEADER_RIGHT, CELL, CELL_RIGHT,
-  WINDOW_CONTAINER, SCROLLABLE_BODY, STATUS_BAR_STYLE, HR98,
-  COLOR_POSITIVE, COLOR_NEGATIVE, COLOR_SECONDARY, COLOR_DISABLED,
+  WINDOW_CONTAINER, SCROLLABLE_BODY, STATUS_BAR_STYLE,
+  COLOR_POSITIVE, COLOR_NEGATIVE, COLOR_SECONDARY,
 } from '@/lib/theme/win98';
+import { AgentSelector } from '@/components/ui/AgentSelector';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -528,88 +529,32 @@ export function BacktestingWindow() {
         </fieldset>
 
         {/* ── Agent selection ─────────────────────────────────────────── */}
-        <fieldset style={{ marginBottom: '6px' }}>
-          <legend>Agentes de inversión</legend>
+        <AgentSelector
+          agents={agents}
+          selectedAgents={selectedAgents}
+          onToggle={toggleAgent}
+          onSelectAll={() => setSelectedAgents(new Set(agents.map(a => a.key)))}
+          onSelectNone={() => setSelectedAgents(new Set())}
+          isLoading={isLoadingAgents}
+          disabled={isRunning}
+          errorText={`No se pudo conectar al servidor AI Hedge Fund (${API_URL})`}
+          idPrefix="bt-agent"
+        />
 
-          {isLoadingAgents ? (
-            <p style={{ ...FONT, color: COLOR_DISABLED }}>Cargando agentes...</p>
-          ) : agents.length === 0 ? (
-            <p style={{ ...FONT, color: COLOR_NEGATIVE }}>No se pudo conectar al servidor AI Hedge Fund ({API_URL})</p>
-          ) : (
-            <>
-              <div style={{ marginBottom: '4px', display: 'flex', gap: '4px' }}>
-                <button
-                  style={FONT}
-                  onClick={() => setSelectedAgents(new Set(agents.map(a => a.key)))}
-                  disabled={isRunning}
-                >
-                  Todos
-                </button>
-                <button
-                  style={FONT}
-                  onClick={() => setSelectedAgents(new Set())}
-                  disabled={isRunning}
-                >
-                  Ninguno
-                </button>
-                <span style={{ ...FONT, color: COLOR_SECONDARY, marginLeft: '4px', alignSelf: 'center' }}>
-                  {selectedAgents.size} seleccionado{selectedAgents.size !== 1 ? 's' : ''}
-                </span>
-              </div>
-
-              <div
-                className="sunken-panel win98-scrollbar"
-                style={{ maxHeight: '130px', overflowY: 'auto', padding: '2px' }}
-              >
-                {agents.map(agent => {
-                  const selected = selectedAgents.has(agent.key);
-                  const inputId = `bt-agent-${agent.key}`;
-                  return (
-                    <div className="field-row" key={agent.key} style={{ padding: '1px 2px' }}>
-                      <input
-                        id={inputId}
-                        type="checkbox"
-                        checked={selected}
-                        onChange={() => toggleAgent(agent.key)}
-                        disabled={isRunning}
-                      />
-                      <label
-                        htmlFor={inputId}
-                        title={agent.description}
-                        style={{
-                          padding: '1px 3px',
-                          cursor: 'inherit',
-                          ...(selected
-                            ? { backgroundColor: '#000080', color: '#ffffff' }
-                            : {}),
-                        }}
-                      >
-                        {agent.display_name}
-                      </label>
-                    </div>
-                  );
-                })}
-              </div>
-            </>
-          )}
-
-          <hr style={HR98} />
-
-          <div style={{ display: 'flex', gap: '6px' }}>
-            <button
-              className={phase === 'idle' ? 'default' : undefined}
-              onClick={handleRun}
-              disabled={isRunning || isLoading || selectedAgents.size === 0 || parsedTickers.length === 0}
-            >
-              {isRunning ? 'Ejecutando...' : 'Ejecutar backtest'}
+        <div style={{ display: 'flex', gap: '6px', marginBottom: '6px' }}>
+          <button
+            className={phase === 'idle' ? 'default' : undefined}
+            onClick={handleRun}
+            disabled={isRunning || isLoading || selectedAgents.size === 0 || parsedTickers.length === 0}
+          >
+            {isRunning ? 'Ejecutando...' : 'Ejecutar backtest'}
+          </button>
+          {isRunning && (
+            <button onClick={handleAbort}>
+              Cancelar
             </button>
-            {isRunning && (
-              <button onClick={handleAbort}>
-                Cancelar
-              </button>
-            )}
-          </div>
-        </fieldset>
+          )}
+        </div>
 
         {/* ── Progress ──────────────────────────────────────────────────── */}
         {(isRunning || phase === 'done' || phase === 'error') && (

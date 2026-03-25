@@ -8,6 +8,7 @@ import { OperationsFeed } from '@/components/ui/OperationsFeed';
 import { AiHedgeFundWindow } from '@/components/ui/AiHedgeFundWindow';
 import { BacktestingWindow } from '@/components/ui/BacktestingWindow';
 import { QuickTradeWindow, TradableCedear } from '@/components/ui/QuickTradeWindow';
+import { AutoTraderWindow } from '@/components/ui/AutoTraderWindow';
 import { DesktopIcon } from '@/components/ui/DesktopIcon';
 import {
   DraggableResizableWindow,
@@ -27,6 +28,7 @@ const ICON_IDS = [
   'aihedgefund',
   'backtesting',
   'quicktrade',
+  'autotrader',
 ] as const;
 type IconId = (typeof ICON_IDS)[number];
 
@@ -38,6 +40,7 @@ const DEFAULT_ICON_POSITIONS: Record<IconId, { x: number; y: number }> = {
   aihedgefund: { x: 8, y: 264 },
   backtesting: { x: 8, y: 328 },
   quicktrade: { x: 8, y: 392 },
+  autotrader: { x: 8, y: 456 },
 };
 
 const DESKTOP_ICON_CONFIG: { id: IconId; label: string; emoji: string; iconKey: keyof typeof DESKTOP_APP_ICONS }[] = [
@@ -48,6 +51,7 @@ const DESKTOP_ICON_CONFIG: { id: IconId; label: string; emoji: string; iconKey: 
   { id: 'aihedgefund', label: 'AI Hedge Fund', emoji: '🤖', iconKey: 'aihedgefund' },
   { id: 'backtesting', label: 'Backtesting', emoji: '📉', iconKey: 'backtesting' },
   { id: 'quicktrade', label: 'Comprar CEDEARs', emoji: '💰', iconKey: 'quicktrade' },
+  { id: 'autotrader', label: 'Auto Trader', emoji: '🤖', iconKey: 'autotrader' },
 ];
 
 // Grid cell size for "Alinear Iconos" — slightly larger than icon width (64px) for breathing room
@@ -507,6 +511,9 @@ export default function TradingDashboard() {
                 onRefresh={() => { quickTradeFetched.current = false; fetchQuickTradeData(); }}
                 onBuy={placeBuyOrder}
               />
+            )}
+            {appId === 'autotrader' && (
+              <AutoTraderWindow />
             )}
           </DraggableResizableWindow>
         );

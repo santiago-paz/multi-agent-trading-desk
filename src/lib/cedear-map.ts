@@ -11,11 +11,65 @@
  *            no US-listed equivalent (e.g. Brazilian-only stocks)
  */
 const IOL_TO_FMP: Record<string, string | null> = {
-  // IOL "XROX" → NYSE "XRX" (Xerox Holdings)
-  XROX: 'XRX',
+  // ── BYMA code differs from US/FMP ticker ────────────────────────────────
+  // Source: official BYMA CEDEAR list (updated 3/2/2026)
 
-  // Brazilian tickers traded as CEDEARs but NOT listed in the US:
-  CSNA3: null, // Companhia Siderúrgica Nacional (Bovespa only)
+  XROX: 'XRX',     // Xerox Holdings (NYSE: XRX)
+  ADGO: 'AGRO',    // Adecoagro S.A. (NYSE: AGRO)
+  AOCA: 'ACH',     // Aluminum Corp of China (NYSE: ACH)
+  'BA.C': 'BAC',   // Bank of America (NYSE: BAC) — BYMA uses BA.C to avoid clash with Boeing (BA)
+  B: 'GOLD',       // Barrick Gold (NYSE: GOLD) — BYMA uses just "B"
+  BRKB: 'BRK-B',   // Berkshire Hathaway (NYSE: BRK-B)
+  BNG: 'BG',       // Bunge Limited (NYSE: BG)
+  DISN: 'DIS',     // Walt Disney Co. (NYSE: DIS)
+  DTEA: 'DTEGY',   // Deutsche Telekom (OTC: DTEGY)
+  KOFM: 'KOF',     // Coca-Cola Femsa (NYSE: KOF)
+  NOKA: 'NOK',     // Nokia Corporation (NYSE: NOK)
+  PKS: 'PKX',      // Posco Holdings (NYSE: PKX)
+  TEFO: 'TEF',     // Telefonica S.A. (NYSE: TEF)
+  TRVV: 'TRV',     // Travelers Cos. (NYSE: TRV)
+  TXR: 'TX',       // Ternium S.A. (NYSE: TX)
+  UN: 'NU',        // Nu Holdings (NYSE: NU)
+  WBO: 'WB',       // Weibo Corporation (NASDAQ: WB)
+  YZCA: 'YZC',     // Yanzhou Coal Mining (OTC: YZC)
+
+  // ── Brazilian B3 tickers → NYSE/NASDAQ ADR ──────────────────────────────
+  ABEV3: 'ABEV',   // Ambev S.A. (NASDAQ: ABEV)
+  BBDC3: 'BBD',    // Banco Bradesco (NYSE: BBD)
+  BPA11: null,      // Banco BTG Pactual — no US ADR
+  BBAS3: null,      // Banco do Brasil — no US ADR
+  ITUB3: 'ITUB',   // Itaú Unibanco (NYSE: ITUB)
+  CSNA3: null,      // Companhia Siderúrgica Nacional — no US ADR (use SID for the ADR version)
+  HAPV3: null,      // Hapvida — no US ADR
+  LREN3: null,      // Lojas Renner — no US ADR
+  MGLU3: null,      // Magazine Luiza — no US ADR
+  NTCO3: 'NTCO',   // Natura & Co (NYSE: NTCO)
+  PETR3: 'PBR',    // Petrobras (NYSE: PBR)
+  PRIO3: null,      // PetroRio — no US ADR
+  RENT3: null,      // Localiza Rent a Car — no US ADR
+  SBSP3: null,      // Cia Saneamento Básico de SP — no US ADR (use SBS for the ADR version)
+  SUZB3: 'SUZ',    // Suzano (NYSE: SUZ)
+  TIMS3: 'TIMB',   // TIM S.A. (NYSE: TIMB)
+  VALE3: 'VALE',   // Vale S.A. (NYSE: VALE)
+  VIVT3: 'VIV',    // Telefônica Brasil (NYSE: VIV)
+  WEGE3: null,      // Weg S.A. — no US ADR
+  RCTB4: null,      // Telebras — no liquid US equivalent
+
+  // ── Non-US exchanges (London, Frankfurt, etc.) ──────────────────────────
+  ADS: null,        // Adidas (XETRA only — no US ADR)
+  BAS: null,        // BASF (Frankfurt only)
+  BAYN: null,       // Bayer (Frankfurt only)
+  BSN: null,        // Danone (Frankfurt only)
+  EOAN: null,       // E.On (Frankfurt only)
+  MBG: null,        // Mercedes-Benz (Frankfurt only)
+  NEC1: null,       // NEC Corporation (Frankfurt only)
+  HHPD: null,       // Hon Hai Precision (London only)
+  SMSN: null,       // Samsung Electronics (London only)
+  NLM: null,        // Novolipetsk Steel (London only)
+  OGZD: null,       // Gazprom (London only)
+  LKOD: null,       // Lukoil (London only)
+  ATAD: null,       // Tatneft (London only)
+  IWDA: null,       // iShares Core MSCI World UCITS (London only)
 };
 
 /**
@@ -27,7 +81,9 @@ const IOL_TO_FMP: Record<string, string | null> = {
  * we produce a single base symbol.
  */
 export function stripCurrencySuffix(symbol: string): string {
-  if (symbol.length > 1 && /[CD]$/.test(symbol)) {
+  // Only strip C/D suffix when preceded by an alphanumeric char (not a dot).
+  // This avoids mangling tickers like "BA.C" (Bank of America on BYMA).
+  if (symbol.length > 1 && /[A-Za-z0-9][CD]$/.test(symbol)) {
     return symbol.slice(0, -1);
   }
   return symbol;
@@ -44,6 +100,8 @@ export function stripCurrencySuffix(symbol: string): string {
  *   toFmpTicker('CSNA3') → null      (no US equivalent)
  */
 export function toFmpTicker(iolSymbol: string): string | null {
+  // Check raw symbol first (handles tickers like "BA.C" that are map keys as-is)
+  if (iolSymbol in IOL_TO_FMP) return IOL_TO_FMP[iolSymbol];
   const base = stripCurrencySuffix(iolSymbol);
   if (base in IOL_TO_FMP) return IOL_TO_FMP[base];
   return base;

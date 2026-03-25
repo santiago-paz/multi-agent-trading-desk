@@ -278,6 +278,155 @@ export async function placeOrder(params: {
 }
 
 /**
+ * Returns full portfolio context for the Auto Trader window.
+ * Unlike getAffordableCedears(), this does NOT filter by affordability.
+ * Returns ALL CEDEARs in the panel + all current holdings.
+ */
+export async function getFullPortfolioContext() {
+  try {
+    const [portfolio, cuenta, mepRate, cedearsPanel] = await Promise.all([
+      iolClient.getPortfolio(),
+      iolClient.getEstadoCuenta(),
+      iolClient.getMEP(),
+      iolClient.getPanelQuotes('cedears'),
+    ]);
+
+    const cashArs = extractCashArs(cuenta);
+    const titulos = cedearsPanel.titulos || [];
+
+    // Build price map for ALL CEDEARs (deduplicated by base symbol, prefer peso/C variant)
+    const arsPrices: Record<string, number> = {};
+    const liquidityMap: Record<string, number> = {};
+    const seen = new Set<string>();
+    for (const t of titulos) {
+      if (t.ultimoPrecio <= 0) continue;
+      if (t.moneda === '2') continue; // skip dollar-denominated
+      const base = stripCurrencySuffix(t.simbolo);
+      if (seen.has(base)) continue;
+      seen.add(base);
+      arsPrices[base] = t.ultimoPrecio;
+      // Use volume as primary liquidity metric; fall back to cantidadOperaciones
+      liquidityMap[base] = (t.volumen ?? 0) || (t.cantidadOperaciones ?? 0);
+    }
+
+    // Current holdings from portfolio
+    const holdings: Record<string, number> = {};
+    const holdingTickers: string[] = [];
+    const portfolioPositions: Array<{ ticker: string; quantity: number; trade_price: number }> = [];
+
+    if (portfolio?.activos) {
+      for (const asset of portfolio.activos) {
+        if (asset.titulo.tipo !== 'CEDEARS' && asset.titulo.tipo !== 'cedears') continue;
+        if (asset.cantidad <= 0) continue;
+        const base = stripCurrencySuffix(asset.titulo.simbolo);
+        holdings[base] = (holdings[base] || 0) + asset.cantidad;
+        if (!holdingTickers.includes(base)) holdingTickers.push(base);
+
+        // Also build backend-compatible positions
+        const fmp = toFmpTicker(base);
+        if (!fmp) continue;
+        const tradePriceArs = asset.ppc > 0 ? asset.ppc : asset.ultimoPrecio;
+        if (tradePriceArs <= 0) continue;
+        portfolioPositions.push({
+          ticker: fmp,
+          quantity: asset.cantidad,
+          trade_price: Math.round((tradePriceArs / mepRate) * 100) / 100,
+        });
+      }
+    }
+
+    // Top 10 most liquid CEDEARs (by volume/operations), excluding those already in portfolio
+    const panelSymbols = Object.keys(liquidityMap)
+      .filter(s => !holdingTickers.includes(s))
+      .sort((a, b) => (liquidityMap[b] || 0) - (liquidityMap[a] || 0))
+      .slice(0, 10);
+
+    // Combined tickers: portfolio first, then top liquid
+    const allIolSymbols = [...holdingTickers, ...panelSymbols];
+
+    // Build IOL→FMP and FMP→IOL mappings
+    const fmpTickers: string[] = [];
+    const iolToFmp: Record<string, string> = {};
+    const fmpToIol: Record<string, string> = {};
+    for (const sym of allIolSymbols) {
+      const fmp = toFmpTicker(sym);
+      if (fmp) {
+        fmpTickers.push(fmp);
+        iolToFmp[sym] = fmp;
+        fmpToIol[fmp] = sym;
+      }
+    }
+
+    // ── Verbose logging ────────────────────────────────────────────────────
+    console.log('\n╔══════════════════════════════════════════════════════════════╗');
+    console.log('║              AUTO TRADER — PORTFOLIO CONTEXT                ║');
+    console.log('╚══════════════════════════════════════════════════════════════╝');
+    console.log(`  Cash ARS:      $${cashArs.toLocaleString('es-AR')} ARS`);
+    console.log(`  MEP rate:      ${mepRate.toFixed(2)}`);
+    console.log(`  Cash USD:      ~$${(cashArs / mepRate).toFixed(0)} USD`);
+    console.log(`  Panel total:   ${titulos.length} instrumentos en panel CEDEARs`);
+    console.log(`  Con precio >0: ${seen.size} símbolos base (dedup, solo pesos)`);
+    console.log('');
+    console.log('  ── Holdings (%d posiciones) ──', holdingTickers.length);
+    if (holdingTickers.length > 0) {
+      for (const t of holdingTickers) {
+        const fmpT = toFmpTicker(t);
+        const qty = holdings[t];
+        const price = arsPrices[t] ?? 0;
+        const val = qty * price;
+        console.log(`    ${t.padEnd(8)} → FMP: ${(fmpT ?? '(null)').padEnd(8)} | ${qty} units @ $${price.toFixed(0)} = $${val.toLocaleString('es-AR')} ARS`);
+      }
+    } else {
+      console.log('    (sin posiciones en CEDEARs)');
+    }
+    console.log('');
+    console.log('  ── Candidatos líquidos (top 10, excl. portfolio) ──');
+    for (const s of panelSymbols) {
+      const fmpS = toFmpTicker(s);
+      const liq = liquidityMap[s] ?? 0;
+      const price = arsPrices[s] ?? 0;
+      console.log(`    ${s.padEnd(8)} → FMP: ${(fmpS ?? '(null — skipped)').padEnd(8)} | vol/ops: ${liq.toLocaleString('es-AR').padStart(12)} | $${price.toFixed(0)} ARS`);
+    }
+    console.log('');
+    console.log('  ── Tickers a enviar al AI (%d) ──', fmpTickers.length);
+    console.log(`    ${fmpTickers.join(', ')}`);
+    const mappedDiff = Object.entries(iolToFmp).filter(([iol, fmp]) => iol !== fmp);
+    if (mappedDiff.length > 0) {
+      console.log('  ── Mappings IOL→FMP (solo diferencias) ──');
+      for (const [iol, fmp] of mappedDiff) {
+        console.log(`    ${iol} → ${fmp}`);
+      }
+    }
+    const skippedNull = allIolSymbols.filter(s => toFmpTicker(s) === null);
+    if (skippedNull.length > 0) {
+      console.log('  ── Skipped (no FMP equivalent) ──');
+      console.log(`    ${skippedNull.join(', ')}`);
+    }
+    console.log('──────────────────────────────────────────────────────────────\n');
+
+    return {
+      success: true as const,
+      holdings,
+      holdingTickers,
+      panelSymbols,
+      allIolSymbols,
+      fmpTickers,
+      iolToFmp,
+      fmpToIol,
+      cashArs,
+      arsPrices,
+      mepRate,
+      portfolioPositions,
+    };
+  } catch (error) {
+    const msg = error instanceof Error ? error.message : String(error);
+    console.error('\n[AutoTrader] ❌ getFullPortfolioContext FAILED:', msg);
+    console.error('[AutoTrader] Stack:', error instanceof Error ? error.stack : '(no stack)');
+    return { success: false as const, error: `Error IOL: ${msg}` };
+  }
+}
+
+/**
  * Returns the CEDEAR symbols that the user can afford based on IOL balance.
  * Used by the AI Hedge Fund window to know which tickers to analyze.
  */

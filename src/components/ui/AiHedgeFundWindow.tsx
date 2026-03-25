@@ -8,6 +8,7 @@ import {
 } from '@/lib/theme/win98';
 import { getAffordableCedears, placeOrder } from '@/app/trading/actions';
 import { useMepStore } from '@/lib/store/mep-store';
+import { AgentSelector } from '@/components/ui/AgentSelector';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -671,69 +672,17 @@ export function AiHedgeFundWindow() {
         </fieldset>
 
         {/* ── Agent selection ─────────────────────────────────────────────── */}
-        <fieldset style={{ marginBottom: '6px' }}>
-          <legend>Agentes de inversión</legend>
-
-          {isLoadingAgents ? (
-            <p style={{ color: COLOR_DISABLED, margin: 0 }}>Cargando agentes...</p>
-          ) : agents.length === 0 ? (
-            <p style={{ color: COLOR_NEGATIVE, margin: 0 }}>No se pudo conectar al servidor AI Hedge Fund ({API_URL})</p>
-          ) : (
-            <>
-              <div style={{ marginBottom: '4px', display: 'flex', gap: '4px', alignItems: 'center' }}>
-                <button
-                  onClick={() => setSelectedAgents(new Set(agents.map(a => a.key)))}
-                  disabled={isRunning}
-                >
-                  Todos
-                </button>
-                <button
-                  onClick={() => setSelectedAgents(new Set())}
-                  disabled={isRunning}
-                >
-                  Ninguno
-                </button>
-                <span style={{ color: COLOR_SECONDARY, marginLeft: '4px' }}>
-                  {selectedAgents.size} seleccionado{selectedAgents.size !== 1 ? 's' : ''}
-                </span>
-              </div>
-
-              <div
-                className="sunken-panel win98-scrollbar"
-                style={{ maxHeight: '130px', overflowY: 'auto', padding: '2px' }}
-              >
-                {agents.map(agent => {
-                  const selected = selectedAgents.has(agent.key);
-                  const inputId = `aihf-agent-${agent.key}`;
-                  return (
-                    <div className="field-row" key={agent.key} style={{ padding: '1px 2px' }}>
-                      <input
-                        id={inputId}
-                        type="checkbox"
-                        checked={selected}
-                        onChange={() => toggleAgent(agent.key)}
-                        disabled={isRunning}
-                      />
-                      <label
-                        htmlFor={inputId}
-                        title={agent.description}
-                        style={{
-                          padding: '1px 3px',
-                          cursor: 'inherit',
-                          ...(selected
-                            ? { backgroundColor: '#000080', color: '#ffffff' }
-                            : {}),
-                        }}
-                      >
-                        {agent.display_name}
-                      </label>
-                    </div>
-                  );
-                })}
-              </div>
-            </>
-          )}
-        </fieldset>
+        <AgentSelector
+          agents={agents}
+          selectedAgents={selectedAgents}
+          onToggle={toggleAgent}
+          onSelectAll={() => setSelectedAgents(new Set(agents.map(a => a.key)))}
+          onSelectNone={() => setSelectedAgents(new Set())}
+          isLoading={isLoadingAgents}
+          disabled={isRunning}
+          errorText={`No se pudo conectar al servidor AI Hedge Fund (${API_URL})`}
+          idPrefix="aihf-agent"
+        />
 
         {/* ── Progress ─────────────────────────────────────────────────────── */}
         {(isRunning || phase === 'done' || phase === 'error') && (
