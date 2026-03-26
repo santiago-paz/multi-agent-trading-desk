@@ -18,7 +18,7 @@ const IOL_TO_FMP: Record<string, string | null> = {
   ADGO: 'AGRO',    // Adecoagro S.A. (NYSE: AGRO)
   AOCA: 'ACH',     // Aluminum Corp of China (NYSE: ACH)
   'BA.C': 'BAC',   // Bank of America (NYSE: BAC) — BYMA uses BA.C to avoid clash with Boeing (BA)
-  B: 'GOLD',       // Barrick Gold (NYSE: GOLD) — BYMA uses just "B"
+  // B maps to itself on FMP — Barrick Mining Corporation (ex Barrick Gold) trades as "B" on NYSE
   BRKB: 'BRK-B',   // Berkshire Hathaway (NYSE: BRK-B)
   BNG: 'BG',       // Bunge Limited (NYSE: BG)
   DISN: 'DIS',     // Walt Disney Co. (NYSE: DIS)
@@ -54,6 +54,59 @@ const IOL_TO_FMP: Record<string, string | null> = {
   VIVT3: 'VIV',    // Telefônica Brasil (NYSE: VIV)
   WEGE3: null,      // Weg S.A. — no US ADR
   RCTB4: null,      // Telebras — no liquid US equivalent
+
+  // ── ETFs / ETNs / Funds — no financial statements on FMP ────────────────
+  ACWI: null,       // iShares MSCI ACWI ETF
+  ARKK: null,       // ARK Innovation ETF
+  CIBR: null,       // First Trust NASDAQ Cybersecurity ETF
+  COPX: null,       // Global X Copper Miners ETF
+  DIA: null,        // SPDR Dow Jones Industrial Average ETF Trust
+  EEM: null,        // iShares MSCI Emerging Markets ETF
+  EFA: null,        // iShares MSCI EAFE ETF
+  ESGU: null,       // iShares ESG Aware MSCI USA ETF
+  ETHA: null,       // iShares Ethereum Trust ETF
+  EWJ: null,        // iShares MSCI Japan ETF
+  EWZ: null,        // iShares MSCI Brazil ETF
+  FXI: null,        // iShares China Large-Cap ETF
+  GDX: null,        // VanEck Gold Miners ETF
+  GLD: null,        // SPDR Gold Shares
+  IBB: null,        // iShares Biotechnology ETF
+  IBIT: null,       // iShares Bitcoin Trust ETF
+  IEMG: null,       // iShares Core MSCI Emerging Markets ETF
+  IEUR: null,       // iShares Core MSCI Europe ETF
+  IJH: null,        // iShares Core S&P Mid-Cap ETF
+  ILF: null,        // iShares Latin America 40 ETF
+  ITA: null,        // iShares U.S. Aerospace & Defense ETF
+  IVE: null,        // iShares S&P 500 Value ETF
+  IVV: null,        // iShares Core S&P 500 ETF
+  IVW: null,        // iShares S&P 500 Growth ETF
+  IWM: null,        // iShares Russell 2000 ETF
+  PSQ: null,        // ProShares Short QQQ
+  QQQ: null,        // Invesco QQQ Trust
+  SH: null,         // ProShares Short S&P500
+  SLV: null,        // iShares Silver Trust
+  SMH: null,        // VanEck Semiconductor ETF
+  SPHQ: null,       // Invesco S&P 500 Quality ETF
+  SPXL: null,       // Direxion Daily S&P500 Bull 3X Shares
+  SPY: null,        // SPDR S&P 500 ETF Trust
+  TQQQ: null,       // ProShares UltraPro QQQ
+  URA: null,        // Global X Uranium ETF
+  USO: null,        // United States Oil Fund
+  VEA: null,        // Vanguard FTSE Developed Markets ETF
+  VIG: null,        // Vanguard Dividend Appreciation ETF
+  VO: null,         // Vanguard Mid-Cap ETF
+  VXX: null,        // iPath S&P 500 VIX Short-Term Futures ETN
+  XLB: null,        // Materials Select Sector SPDR ETF
+  XLC: null,        // Communication Services Select Sector SPDR ETF
+  XLE: null,        // Energy Select Sector SPDR ETF
+  XLF: null,        // Financial Select Sector SPDR ETF
+  XLI: null,        // Industrial Select Sector SPDR ETF
+  XLK: null,        // Technology Select Sector SPDR ETF
+  XLP: null,        // Consumer Staples Select Sector SPDR ETF
+  XLRE: null,       // Real Estate Select Sector SPDR ETF
+  XLU: null,        // Utilities Select Sector SPDR ETF
+  XLV: null,        // Health Care Select Sector SPDR ETF
+  XLY: null,        // Consumer Discretionary Select Sector SPDR ETF
 
   // ── Non-US exchanges (London, Frankfurt, etc.) ──────────────────────────
   ADS: null,        // Adidas (XETRA only — no US ADR)
