@@ -2,8 +2,8 @@
 
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import {
-  FONT, COL_HEADER, COL_HEADER_RIGHT, CELL, CELL_RIGHT,
-  WINDOW_CONTAINER, SCROLLABLE_BODY, STATUS_BAR_STYLE,
+  FONT, COL_HEADER, COL_HEADER_RIGHT, COL_HEADER_BASE, COL_RAISED, COL_SUNKEN,
+  CELL, CELL_RIGHT, WINDOW_CONTAINER, SCROLLABLE_BODY, STATUS_BAR_STYLE,
   COLOR_POSITIVE, COLOR_NEGATIVE, COLOR_SECONDARY, COLOR_DISABLED,
 } from '@/lib/theme/win98';
 import { getFullPortfolioContext, placeOrder } from '@/app/trading/actions';
@@ -11,6 +11,8 @@ import { computeRebalancePlan, RebalancePlan, RebalanceOrder } from '@/lib/tradi
 import { COMMISSION_RATE } from '@/lib/trading/quick-trade';
 import { useMepStore } from '@/lib/store/mep-store';
 import { AgentSelector } from '@/components/ui/AgentSelector';
+
+type PortfolioSortKey = 'ticker' | 'qty' | 'price' | 'priceUsd' | 'valuation';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -130,6 +132,10 @@ export function AutoTraderWindow() {
 
   // Order execution
   const [orderResults, setOrderResults] = useState<OrderResult[]>([]);
+
+  // Portfolio table sort
+  const [pSortKey, setPSortKey] = useState<PortfolioSortKey>('ticker');
+  const [pSortDir, setPSortDir] = useState<'asc' | 'desc'>('asc');
 
   const logBodyRef = useRef<HTMLDivElement>(null);
   const abortRef = useRef<AbortController | null>(null);
@@ -481,21 +487,59 @@ export function AutoTraderWindow() {
               <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                 <thead>
                   <tr>
-                    <th style={COL_HEADER}>Ticker</th>
-                    <th style={COL_HEADER_RIGHT}>Cant</th>
-                    <th style={COL_HEADER_RIGHT}>Precio</th>
-                    <th style={COL_HEADER_RIGHT}>Valuación</th>
+                    {([
+                      { key: 'ticker' as PortfolioSortKey, label: 'Ticker', align: 'left' as const },
+                      { key: 'qty' as PortfolioSortKey, label: 'Cant', align: 'right' as const },
+                      { key: 'price' as PortfolioSortKey, label: 'Precio', align: 'right' as const },
+                      { key: 'priceUsd' as PortfolioSortKey, label: 'USD', align: 'right' as const },
+                      { key: 'valuation' as PortfolioSortKey, label: 'Valuación', align: 'right' as const },
+                    ]).map(col => {
+                      const isActive = pSortKey === col.key;
+                      const arrow = isActive ? (pSortDir === 'asc' ? ' ▲' : ' ▼') : '';
+                      return (
+                        <th
+                          key={col.key}
+                          onClick={() => {
+                            if (pSortKey === col.key) setPSortDir(d => d === 'asc' ? 'desc' : 'asc');
+                            else { setPSortKey(col.key); setPSortDir('asc'); }
+                          }}
+                          style={{
+                            ...COL_HEADER_BASE,
+                            textAlign: col.align,
+                            ...(isActive ? COL_SUNKEN : COL_RAISED),
+                            cursor: 'pointer',
+                          }}
+                        >
+                          {col.label}{arrow}
+                        </th>
+                      );
+                    })}
                   </tr>
                 </thead>
                 <tbody>
-                  {holdingTickers.map(ticker => {
+                  {[...holdingTickers].sort((a, b) => {
+                    let va: string | number, vb: string | number;
+                    const qtyA = holdings[a] ?? 0, qtyB = holdings[b] ?? 0;
+                    const priceA = arsPrices[a] ?? 0, priceB = arsPrices[b] ?? 0;
+                    switch (pSortKey) {
+                      case 'ticker': va = a; vb = b; break;
+                      case 'qty': va = qtyA; vb = qtyB; break;
+                      case 'price': va = priceA; vb = priceB; break;
+                      case 'priceUsd': va = priceA / effectiveMep; vb = priceB / effectiveMep; break;
+                      case 'valuation': va = qtyA * priceA; vb = qtyB * priceB; break;
+                    }
+                    const cmp = typeof va === 'string' ? va.localeCompare(vb as string) : (va as number) - (vb as number);
+                    return pSortDir === 'asc' ? cmp : -cmp;
+                  }).map(ticker => {
                     const qty = holdings[ticker] ?? 0;
                     const price = arsPrices[ticker] ?? 0;
+                    const priceUsd = price / effectiveMep;
                     return (
                       <tr key={ticker}>
                         <td style={CELL}>{ticker}</td>
                         <td style={CELL_RIGHT}>{qty}</td>
                         <td style={CELL_RIGHT}>${fmtARS2(price)}</td>
+                        <td style={CELL_RIGHT}>${fmtARS2(priceUsd)}</td>
                         <td style={CELL_RIGHT}>${fmtARS(qty * price)}</td>
                       </tr>
                     );
