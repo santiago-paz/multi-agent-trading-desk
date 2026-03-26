@@ -55,58 +55,58 @@ const IOL_TO_FMP: Record<string, string | null> = {
   WEGE3: null,      // Weg S.A. — no US ADR
   RCTB4: null,      // Telebras — no liquid US equivalent
 
-  // ── ETFs / ETNs / Funds — no financial statements on FMP ────────────────
-  ACWI: null,       // iShares MSCI ACWI ETF
-  ARKK: null,       // ARK Innovation ETF
-  CIBR: null,       // First Trust NASDAQ Cybersecurity ETF
-  COPX: null,       // Global X Copper Miners ETF
-  DIA: null,        // SPDR Dow Jones Industrial Average ETF Trust
-  EEM: null,        // iShares MSCI Emerging Markets ETF
-  EFA: null,        // iShares MSCI EAFE ETF
-  ESGU: null,       // iShares ESG Aware MSCI USA ETF
-  ETHA: null,       // iShares Ethereum Trust ETF
-  EWJ: null,        // iShares MSCI Japan ETF
-  EWZ: null,        // iShares MSCI Brazil ETF
-  FXI: null,        // iShares China Large-Cap ETF
-  GDX: null,        // VanEck Gold Miners ETF
-  GLD: null,        // SPDR Gold Shares
-  IBB: null,        // iShares Biotechnology ETF
-  IBIT: null,       // iShares Bitcoin Trust ETF
-  IEMG: null,       // iShares Core MSCI Emerging Markets ETF
-  IEUR: null,       // iShares Core MSCI Europe ETF
-  IJH: null,        // iShares Core S&P Mid-Cap ETF
-  ILF: null,        // iShares Latin America 40 ETF
-  ITA: null,        // iShares U.S. Aerospace & Defense ETF
-  IVE: null,        // iShares S&P 500 Value ETF
-  IVV: null,        // iShares Core S&P 500 ETF
-  IVW: null,        // iShares S&P 500 Growth ETF
-  IWM: null,        // iShares Russell 2000 ETF
-  PSQ: null,        // ProShares Short QQQ
-  QQQ: null,        // Invesco QQQ Trust
-  SH: null,         // ProShares Short S&P500
-  SLV: null,        // iShares Silver Trust
-  SMH: null,        // VanEck Semiconductor ETF
-  SPHQ: null,       // Invesco S&P 500 Quality ETF
-  SPXL: null,       // Direxion Daily S&P500 Bull 3X Shares
-  SPY: null,        // SPDR S&P 500 ETF Trust
-  TQQQ: null,       // ProShares UltraPro QQQ
-  URA: null,        // Global X Uranium ETF
-  USO: null,        // United States Oil Fund
-  VEA: null,        // Vanguard FTSE Developed Markets ETF
-  VIG: null,        // Vanguard Dividend Appreciation ETF
-  VO: null,         // Vanguard Mid-Cap ETF
-  VXX: null,        // iPath S&P 500 VIX Short-Term Futures ETN
-  XLB: null,        // Materials Select Sector SPDR ETF
-  XLC: null,        // Communication Services Select Sector SPDR ETF
-  XLE: null,        // Energy Select Sector SPDR ETF
-  XLF: null,        // Financial Select Sector SPDR ETF
-  XLI: null,        // Industrial Select Sector SPDR ETF
-  XLK: null,        // Technology Select Sector SPDR ETF
-  XLP: null,        // Consumer Staples Select Sector SPDR ETF
-  XLRE: null,       // Real Estate Select Sector SPDR ETF
-  XLU: null,        // Utilities Select Sector SPDR ETF
-  XLV: null,        // Health Care Select Sector SPDR ETF
-  XLY: null,        // Consumer Discretionary Select Sector SPDR ETF
+  // ── ETFs / ETNs / Funds — same ticker on FMP (identity mapping) ─────────
+  ACWI: 'ACWI',     // iShares MSCI ACWI ETF
+  ARKK: 'ARKK',     // ARK Innovation ETF
+  CIBR: 'CIBR',     // First Trust NASDAQ Cybersecurity ETF
+  COPX: 'COPX',     // Global X Copper Miners ETF
+  DIA: 'DIA',       // SPDR Dow Jones Industrial Average ETF Trust
+  EEM: 'EEM',       // iShares MSCI Emerging Markets ETF
+  EFA: 'EFA',       // iShares MSCI EAFE ETF
+  ESGU: 'ESGU',     // iShares ESG Aware MSCI USA ETF
+  ETHA: 'ETHA',     // iShares Ethereum Trust ETF
+  EWJ: 'EWJ',       // iShares MSCI Japan ETF
+  EWZ: 'EWZ',       // iShares MSCI Brazil ETF
+  FXI: 'FXI',       // iShares China Large-Cap ETF
+  GDX: 'GDX',       // VanEck Gold Miners ETF
+  GLD: 'GLD',       // SPDR Gold Shares
+  IBB: 'IBB',       // iShares Biotechnology ETF
+  IBIT: 'IBIT',     // iShares Bitcoin Trust ETF
+  IEMG: 'IEMG',     // iShares Core MSCI Emerging Markets ETF
+  IEUR: 'IEUR',     // iShares Core MSCI Europe ETF
+  IJH: 'IJH',       // iShares Core S&P Mid-Cap ETF
+  ILF: 'ILF',       // iShares Latin America 40 ETF
+  ITA: 'ITA',       // iShares U.S. Aerospace & Defense ETF
+  IVE: 'IVE',       // iShares S&P 500 Value ETF
+  IVV: 'IVV',       // iShares Core S&P 500 ETF
+  IVW: 'IVW',       // iShares S&P 500 Growth ETF
+  IWM: 'IWM',       // iShares Russell 2000 ETF
+  PSQ: 'PSQ',       // ProShares Short QQQ
+  QQQ: 'QQQ',       // Invesco QQQ Trust
+  SH: 'SH',         // ProShares Short S&P500
+  SLV: 'SLV',       // iShares Silver Trust
+  SMH: 'SMH',       // VanEck Semiconductor ETF
+  SPHQ: 'SPHQ',     // Invesco S&P 500 Quality ETF
+  SPXL: 'SPXL',     // Direxion Daily S&P500 Bull 3X Shares
+  SPY: 'SPY',       // SPDR S&P 500 ETF Trust
+  TQQQ: 'TQQQ',     // ProShares UltraPro QQQ
+  URA: 'URA',       // Global X Uranium ETF
+  USO: 'USO',       // United States Oil Fund
+  VEA: 'VEA',       // Vanguard FTSE Developed Markets ETF
+  VIG: 'VIG',       // Vanguard Dividend Appreciation ETF
+  VO: 'VO',         // Vanguard Mid-Cap ETF
+  VXX: 'VXX',       // iPath S&P 500 VIX Short-Term Futures ETN
+  XLB: 'XLB',       // Materials Select Sector SPDR ETF
+  XLC: 'XLC',       // Communication Services Select Sector SPDR ETF
+  XLE: 'XLE',       // Energy Select Sector SPDR ETF
+  XLF: 'XLF',       // Financial Select Sector SPDR ETF
+  XLI: 'XLI',       // Industrial Select Sector SPDR ETF
+  XLK: 'XLK',       // Technology Select Sector SPDR ETF
+  XLP: 'XLP',       // Consumer Staples Select Sector SPDR ETF
+  XLRE: 'XLRE',     // Real Estate Select Sector SPDR ETF
+  XLU: 'XLU',       // Utilities Select Sector SPDR ETF
+  XLV: 'XLV',       // Health Care Select Sector SPDR ETF
+  XLY: 'XLY',       // Consumer Discretionary Select Sector SPDR ETF
 
   // ── Non-US exchanges (London, Frankfurt, etc.) ──────────────────────────
   ADS: null,        // Adidas (XETRA only — no US ADR)

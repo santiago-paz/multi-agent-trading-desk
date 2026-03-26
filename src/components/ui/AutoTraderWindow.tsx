@@ -273,6 +273,28 @@ export function AutoTraderWindow() {
       graph_edges: graphEdges,
     };
 
+    console.log('='.repeat(80));
+    console.log('INICIO LOG FRONTEND');
+    console.log('='.repeat(80));
+    console.log('\n[FRONTEND][1/5] PREPARING REQUEST');
+    console.log('  cashArs:', cashArs);
+    console.log('  dailyLimit:', dailyLimit);
+    console.log('  holdingsValueArs:', holdingsValueArs);
+    console.log('  budgetArs (cash + limit + holdings):', budgetArs);
+    console.log('  effectiveMep:', effectiveMep);
+    console.log('  budgetUsd (sent as initial_cash):', budgetUsd);
+    console.log('  cashUsd (real):', cashUsd);
+    console.log('  holdingTickers:', holdingTickers);
+    console.log('  panelSymbols (candidates):', panelSymbols);
+    console.log('  fmpTickers (sent to backend):', fmpTickers);
+    console.log('  agents:', agentKeys);
+    console.log('  arsPrices:', JSON.stringify(arsPrices, null, 2));
+    console.log('  holdings:', JSON.stringify(holdings));
+    console.log('  portfolioPositions:', JSON.stringify(portfolioPositions));
+    console.log('  graphNodes:', JSON.stringify(graphNodes));
+    console.log('  graphEdges:', JSON.stringify(graphEdges));
+    console.log('  full body:', JSON.stringify(body, null, 2));
+
     addLog('cash', `Saldo disponible: $${fmtARS(cashArs)} ARS (~USD $${cashUsd.toFixed(0)}, MEP: ${effectiveMep?.toFixed(0) ?? '?'})`, 'ok');
     addLog('limit', `Límite plata nueva: $${fmtARS(dailyLimit)} ARS (~USD $${(dailyLimit / (effectiveMep ?? 1)).toFixed(0)})`, 'ok');
     addLog('portfolio-tickers', `Holdings actuales (${holdingTickers.length}): ${holdingTickers.join(', ') || '(sin posiciones)'}`, 'ok');
@@ -307,6 +329,10 @@ export function AutoTraderWindow() {
         const completeData = d.data as Record<string, unknown> | undefined;
         if (!completeData) return;
 
+        console.log('\n[FRONTEND][2/5] COMPLETE EVENT RECEIVED FROM BACKEND');
+        console.log('  raw decisions:', JSON.stringify(completeData.decisions, null, 2));
+        console.log('  current_prices (USD):', JSON.stringify(completeData.current_prices, null, 2));
+
         // Remap FMP → IOL in analyst signals
         const rawSignals = completeData.analyst_signals as Record<string, Record<string, AgentSignal>>;
         const remappedSignals: Record<string, Record<string, AgentSignal>> = {};
@@ -320,6 +346,10 @@ export function AutoTraderWindow() {
         const iolDecisions = remapToIol(rawDec, fmpToIol);
         setRawDecisions(iolDecisions);
 
+        console.log('\n[FRONTEND][3/5] FMP→IOL REMAPPING');
+        console.log('  fmpToIol map:', JSON.stringify(fmpToIol));
+        console.log('  iolDecisions (after remap):', JSON.stringify(iolDecisions, null, 2));
+
         // Separate decisions for tickers NOT in portfolio (candidates)
         const candidates: Record<string, Decision> = {};
         for (const [ticker, dec] of Object.entries(iolDecisions)) {
@@ -329,7 +359,26 @@ export function AutoTraderWindow() {
         }
         setCandidateDecisions(candidates);
 
+        console.log('\n[FRONTEND][3b/5] DECISION SPLIT');
+        console.log('  holdingTickers:', holdingTickers);
+        const portfolioDecs: Record<string, Decision> = {};
+        for (const [ticker, dec] of Object.entries(iolDecisions)) {
+          if (holdingTickers.includes(ticker)) {
+            portfolioDecs[ticker] = dec;
+          }
+        }
+        console.log('  portfolio decisions:', JSON.stringify(portfolioDecs, null, 2));
+        console.log('  candidate decisions (not in portfolio):', JSON.stringify(candidates, null, 2));
+
         // Compute rebalance plan
+        console.log('\n[FRONTEND][4/5] COMPUTING REBALANCE PLAN');
+        console.log('  inputs:');
+        console.log('    cashArs:', cashArs);
+        console.log('    dailyLimitArs:', dailyLimit);
+        console.log('    holdings:', JSON.stringify(holdings));
+        console.log('    arsPrices:', JSON.stringify(arsPrices));
+        console.log('    commissionRate:', COMMISSION_RATE);
+
         const rebalancePlan = computeRebalancePlan({
           decisions: iolDecisions,
           holdings,
@@ -339,6 +388,19 @@ export function AutoTraderWindow() {
           commissionRate: COMMISSION_RATE,
         });
         setPlan(rebalancePlan);
+
+        console.log('\n[FRONTEND][5/5] REBALANCE PLAN OUTPUT');
+        console.log('  sells:', rebalancePlan.sells.map(o => `${o.ticker} qty=${o.quantity} vol=$${o.volumeArs.toFixed(0)}`));
+        console.log('  buys:', rebalancePlan.buys.map(o => `${o.ticker} qty=${o.quantity} vol=$${o.volumeArs.toFixed(0)}`));
+        console.log('  totalSellVolume:', rebalancePlan.totalSellVolume);
+        console.log('  totalBuyVolume:', rebalancePlan.totalBuyVolume);
+        console.log('  estimatedSellProceeds:', rebalancePlan.estimatedSellProceeds);
+        console.log('  newCashUsed:', rebalancePlan.newCashUsed);
+        console.log('  remainingLimit:', rebalancePlan.remainingLimit);
+        console.log('  warnings:', rebalancePlan.warnings);
+        console.log('='.repeat(80));
+        console.log('FIN LOG FRONTEND');
+        console.log('='.repeat(80));
 
         const nSells = rebalancePlan.sells.length;
         const nBuys = rebalancePlan.buys.length;

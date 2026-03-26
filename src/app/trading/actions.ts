@@ -344,16 +344,21 @@ export async function getFullPortfolioContext() {
     // Combined tickers: portfolio first, then top liquid
     const allIolSymbols = [...holdingTickers, ...panelSymbols];
 
-    // Build IOL→FMP and FMP→IOL mappings
+    // Build IOL→FMP and FMP→IOL mappings (deduplicate FMP tickers)
     const fmpTickers: string[] = [];
+    const fmpTickerSet = new Set<string>();
     const iolToFmp: Record<string, string> = {};
     const fmpToIol: Record<string, string> = {};
     for (const sym of allIolSymbols) {
       const fmp = toFmpTicker(sym);
       if (fmp) {
-        fmpTickers.push(fmp);
         iolToFmp[sym] = fmp;
-        fmpToIol[fmp] = sym;
+        // Only add to fmpTickers once; prefer the first mapping (portfolio over candidates)
+        if (!fmpTickerSet.has(fmp)) {
+          fmpTickerSet.add(fmp);
+          fmpTickers.push(fmp);
+          fmpToIol[fmp] = sym;
+        }
       }
     }
 
