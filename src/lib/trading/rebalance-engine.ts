@@ -142,7 +142,11 @@ export function computeRebalancePlan(input: RebalanceInput): RebalancePlan {
     }
 
     const effectiveBudget = availableBudget / (1 + commissionRate);
-    const quantity = Math.floor(effectiveBudget / price);
+    const maxByBudget = Math.floor(effectiveBudget / price);
+    // Respect the AI's recommended quantity as a cap
+    const quantity = decision.quantity > 0
+      ? Math.min(decision.quantity, maxByBudget)
+      : maxByBudget;
 
     if (quantity <= 0) {
       warnings.push(`${ticker}: saldo insuficiente (precio: ${fmtARS(price)}, disponible: ${fmtARS(availableBudget)})`);
