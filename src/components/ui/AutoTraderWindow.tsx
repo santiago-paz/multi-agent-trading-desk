@@ -251,11 +251,23 @@ export function AutoTraderWindow() {
       ? cashArs / effectiveMep
       : 100000;
 
+    // Send a generous budget to the backend so the portfolio manager doesn't
+    // prematurely discard buy actions. Include: real cash + daily limit +
+    // estimated value of holdings (which could become sell proceeds).
+    // The frontend rebalance engine enforces the real budget constraints.
+    const holdingsValueArs = portfolioPositions.reduce(
+      (sum, p) => sum + (arsPrices[p.ticker] ?? p.trade_price) * p.quantity, 0
+    );
+    const budgetArs = cashArs + dailyLimit + holdingsValueArs;
+    const budgetUsd = effectiveMep && effectiveMep > 0
+      ? budgetArs / effectiveMep
+      : 100000;
+
     const body = {
       tickers: fmpTickers,
       model_name: 'claude-haiku-4-5-20251001',
       model_provider: 'Anthropic',
-      initial_cash: Math.round(cashUsd * 100) / 100,
+      initial_cash: Math.round(budgetUsd * 100) / 100,
       portfolio_positions: portfolioPositions.length > 0 ? portfolioPositions : undefined,
       graph_nodes: graphNodes,
       graph_edges: graphEdges,

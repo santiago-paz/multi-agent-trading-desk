@@ -1,9 +1,12 @@
 'use client';
 
 import React, { useCallback, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 
 const MIN_WIDTH = 200;
 const MIN_HEIGHT = 120;
+const SNAP_THRESHOLD = 20;
+const TASKBAR_HEIGHT = 32;
 
 export interface WindowState {
   id: string;
@@ -14,6 +17,8 @@ export interface WindowState {
   zIndex: number;
   minimized: boolean;
 }
+
+type SnapZone = 'left' | 'right' | null;
 
 interface DraggableResizableWindowProps {
   state: WindowState;
@@ -37,15 +42,42 @@ export const DraggableResizableWindow: React.FC<DraggableResizableWindowProps> =
   children,
 }) => {
   const [isMaximized, setIsMaximized] = useState(false);
+  const [snapZone, setSnapZone] = useState<SnapZone>(null);
+  const [isSnapped, setIsSnapped] = useState(false);
   const prevStateRef = useRef({ x: state.x, y: state.y, width: state.width, height: state.height });
   const dragStartRef = useRef<{ startX: number; startY: number; startLeft: number; startTop: number } | null>(null);
   const resizeStartRef = useRef<{ startX: number; startY: number; startW: number; startH: number; edge: string } | null>(null);
+
+  const detectSnapZone = useCallback((clientX: number): SnapZone => {
+    if (clientX <= SNAP_THRESHOLD) return 'left';
+    if (clientX >= window.innerWidth - SNAP_THRESHOLD) return 'right';
+    return null;
+  }, []);
+
+  const applySnap = useCallback((zone: SnapZone) => {
+    if (!zone) return;
+    const screenW = window.innerWidth;
+    const screenH = window.innerHeight - TASKBAR_HEIGHT;
+    const halfW = Math.floor(screenW / 2);
+    if (zone === 'left') {
+      onMove(0, 0);
+      onResize(halfW, screenH);
+    } else {
+      onMove(halfW, 0);
+      onResize(screenW - halfW, screenH);
+    }
+    setIsSnapped(true);
+    setIsMaximized(false);
+  }, [onMove, onResize]);
 
   const handleTitleBarMouseDown = useCallback(
     (e: React.MouseEvent) => {
       if ((e.target as HTMLElement).closest('button')) return;
       e.preventDefault();
       onFocus();
+      if (isSnapped) {
+        prevStateRef.current = { x: state.x, y: state.y, width: prevStateRef.current.width, height: prevStateRef.current.height };
+      }
       dragStartRef.current = {
         startX: e.clientX,
         startY: e.clientY,
@@ -53,7 +85,7 @@ export const DraggableResizableWindow: React.FC<DraggableResizableWindowProps> =
         startTop: state.y,
       };
     },
-    [state.x, state.y, onFocus]
+    [state.x, state.y, onFocus, isSnapped]
   );
 
   const handleResizeMouseDown = useCallback(
@@ -77,7 +109,30 @@ export const DraggableResizableWindow: React.FC<DraggableResizableWindowProps> =
       if (dragStartRef.current) {
         const dx = e.clientX - dragStartRef.current.startX;
         const dy = e.clientY - dragStartRef.current.startY;
-        onMove(dragStartRef.current.startLeft + dx, dragStartRef.current.startTop + dy);
+
+        if (isSnapped && (Math.abs(dx) > 10 || Math.abs(dy) > 10)) {
+          const prevW = prevStateRef.current.width;
+          const prevH = prevStateRef.current.height;
+          const ratioX = (e.clientX - dragStartRef.current.startLeft) / state.width;
+          const newX = e.clientX - prevW * ratioX;
+          const newY = e.clientY - (dragStartRef.current.startY - dragStartRef.current.startTop);
+          onResize(prevW, prevH);
+          onMove(newX, newY);
+          dragStartRef.current = {
+            startX: e.clientX,
+            startY: e.clientY,
+            startLeft: newX,
+            startTop: newY,
+          };
+          setIsSnapped(false);
+          setSnapZone(null);
+          return;
+        }
+
+        if (!isSnapped) {
+          onMove(dragStartRef.current.startLeft + dx, dragStartRef.current.startTop + dy);
+          setSnapZone(detectSnapZone(e.clientX));
+        }
       }
       if (resizeStartRef.current) {
         const { startX, startY, startW, startH, edge } = resizeStartRef.current;
@@ -90,11 +145,25 @@ export const DraggableResizableWindow: React.FC<DraggableResizableWindowProps> =
         if (edge.includes('s')) h = Math.max(MIN_HEIGHT, startH + dy);
         if (edge.includes('n')) h = Math.max(MIN_HEIGHT, startH - dy);
         onResize(w, h);
+        if (isSnapped) setIsSnapped(false);
       }
     };
-    const onMouseUp = () => {
+    const onMouseUp = (e: MouseEvent) => {
+      if (dragStartRef.current && !isSnapped) {
+        const zone = detectSnapZone(e.clientX);
+        if (zone) {
+          prevStateRef.current = {
+            x: dragStartRef.current.startLeft,
+            y: dragStartRef.current.startTop,
+            width: state.width,
+            height: state.height,
+          };
+          applySnap(zone);
+        }
+      }
       dragStartRef.current = null;
       resizeStartRef.current = null;
+      setSnapZone(null);
     };
     window.addEventListener('mousemove', onMouseMove);
     window.addEventListener('mouseup', onMouseUp);
@@ -102,7 +171,7 @@ export const DraggableResizableWindow: React.FC<DraggableResizableWindowProps> =
       window.removeEventListener('mousemove', onMouseMove);
       window.removeEventListener('mouseup', onMouseUp);
     };
-  }, [onMove, onResize]);
+  }, [onMove, onResize, detectSnapZone, applySnap, isSnapped, state.width, state.height]);
 
   const handleMinimizeClick = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -119,10 +188,11 @@ export const DraggableResizableWindow: React.FC<DraggableResizableWindowProps> =
     if (isMaximized) {
       onResize(prevStateRef.current.width, prevStateRef.current.height);
       onMove(prevStateRef.current.x, prevStateRef.current.y);
+      setIsSnapped(false);
     } else {
       prevStateRef.current = { x: state.x, y: state.y, width: state.width, height: state.height };
       onMove(0, 0);
-      onResize(typeof window !== 'undefined' ? window.innerWidth : 800, typeof window !== 'undefined' ? window.innerHeight - 32 : 600);
+      onResize(typeof window !== 'undefined' ? window.innerWidth : 800, typeof window !== 'undefined' ? window.innerHeight - TASKBAR_HEIGHT : 600);
     }
     setIsMaximized(!isMaximized);
   };
@@ -192,6 +262,24 @@ export const DraggableResizableWindow: React.FC<DraggableResizableWindowProps> =
         style={{ bottom: 0, left: 0, height: 8, width: 'calc(100% - 16px)', zIndex: 1 }}
         onMouseDown={(e) => handleResizeMouseDown(e, 's')}
       />
+      {/* Snap preview overlay */}
+      {snapZone && typeof document !== 'undefined' && createPortal(
+        <div
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: snapZone === 'left' ? 0 : '50%',
+            width: '50%',
+            height: `calc(100vh - ${TASKBAR_HEIGHT}px)`,
+            background: 'rgba(0, 0, 128, 0.15)',
+            border: '3px solid rgba(0, 0, 128, 0.5)',
+            zIndex: 99999,
+            pointerEvents: 'none',
+            transition: 'left 0.15s ease, opacity 0.15s ease',
+          }}
+        />,
+        document.body
+      )}
     </div>
   );
 }

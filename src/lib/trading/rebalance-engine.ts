@@ -14,7 +14,7 @@ export interface RebalanceInput {
   holdings: Record<string, number>;     // IOL symbol → quantity owned
   arsPrices: Record<string, number>;    // IOL symbol → current ARS price
   cashArs: number;                      // available cash
-  dailyLimitArs: number;               // max NEW cash to deploy beyond sell proceeds
+  dailyLimitArs: number;               // max volume to sell/rotate; also caps new cash for buys
   commissionRate?: number;              // defaults to COMMISSION_RATE
 }
 
@@ -46,11 +46,11 @@ export interface RebalancePlan {
 /**
  * Computes a rebalance plan.
  *
- * Limit semantics (Option C):
- * - Sells have NO limit — if the AI says sell, sell the full position.
- * - Sell proceeds are recycled into buys automatically (no limit consumed).
- * - The daily limit only caps NEW cash spent on buys beyond sell proceeds.
- *   i.e. limit = max(0, totalBuyCost - sellProceeds)
+ * Limit semantics:
+ * - dailyLimitArs caps TOTAL SELL volume — the AI can't liquidate the whole portfolio.
+ * - Sell proceeds are 100% recycled into buys (no free cash left over).
+ * - New cash (beyond sell proceeds) is also capped by dailyLimitArs.
+ * - Each buy respects the AI's recommended quantity as a maximum.
  */
 export function computeRebalancePlan(input: RebalanceInput): RebalancePlan {
   const {
@@ -86,7 +86,9 @@ export function computeRebalancePlan(input: RebalanceInput): RebalancePlan {
   sellDecisions.sort(([, a], [, b]) => b.confidence - a.confidence);
   buyDecisions.sort(([, a], [, b]) => b.confidence - a.confidence);
 
-  // ── 2. Process sells (no limit) ───────────────────────────────────────────
+  // ── 2. Process sells (capped at dailyLimitArs) ─────────────────────────────
+
+  let remainingSellBudget = dailyLimitArs;
 
   for (const [ticker, decision] of sellDecisions) {
     const price = arsPrices[ticker];
@@ -100,8 +102,20 @@ export function computeRebalancePlan(input: RebalanceInput): RebalancePlan {
       warnings.push(`${ticker}: AI sugiere vender pero no tenés posición`);
       continue;
     }
+    if (remainingSellBudget <= 0) {
+      warnings.push(`${ticker}: límite de venta alcanzado, venta omitida`);
+      continue;
+    }
 
-    const quantity = owned; // sell full position
+    // Cap sell quantity to stay within daily limit
+    const maxByBudget = Math.floor(remainingSellBudget / price);
+    const quantity = Math.min(owned, maxByBudget);
+
+    if (quantity <= 0) {
+      warnings.push(`${ticker}: límite restante insuficiente para 1 unidad (precio: ${fmtARS(price)}, restante: ${fmtARS(remainingSellBudget)})`);
+      continue;
+    }
+
     const volume = quantity * price;
     const commission = volume * commissionRate;
     const netProceeds = volume - commission;
@@ -118,16 +132,15 @@ export function computeRebalancePlan(input: RebalanceInput): RebalancePlan {
     });
 
     sellProceeds += netProceeds;
+    remainingSellBudget -= volume;
   }
 
   // ── 3. Process buys ─────────────────────────────────────────────────────────
 
-  // Total available = existing cash + sell proceeds
-  // But new cash (beyond sell proceeds) is capped by dailyLimitArs
-  // maxBuyBudget = sellProceeds + min(cashArs, dailyLimitArs)
+  // Buy budget = sell proceeds (recycled, all must be reinvested)
+  //            + new cash capped at dailyLimitArs
   const maxNewCash = Math.min(cashArs, dailyLimitArs);
   let availableBudget = sellProceeds + maxNewCash;
-  let newCashUsed = 0;
 
   for (const [ticker, decision] of buyDecisions) {
     const price = arsPrices[ticker];
@@ -169,17 +182,10 @@ export function computeRebalancePlan(input: RebalanceInput): RebalancePlan {
     });
 
     availableBudget -= totalCost;
-
-    // Track how much of the daily limit (new cash) we've used
-    // New cash is used only after sell proceeds are exhausted
-    const proceedsRemaining = Math.max(0, sellProceeds - buys.slice(0, -1).reduce((s, b) => s + b.estimatedCostArs, 0));
-    const thisOrderFromProceeds = Math.min(totalCost, proceedsRemaining);
-    newCashUsed += totalCost - thisOrderFromProceeds;
   }
 
-  // Simpler newCashUsed calculation: total buy cost minus sell proceeds, floored at 0
   const totalBuyCost = buys.reduce((sum, o) => sum + o.estimatedCostArs, 0);
-  newCashUsed = Math.max(0, totalBuyCost - sellProceeds);
+  const newCashUsed = Math.max(0, totalBuyCost - sellProceeds);
 
   // ── 4. Compute totals ──────────────────────────────────────────────────────
 
