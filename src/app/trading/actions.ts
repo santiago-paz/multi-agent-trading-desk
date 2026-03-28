@@ -2,11 +2,10 @@
 
 import { tradingEngine } from '@/lib/trading/engine';
 import { iolClient } from '@/lib/iol/client';
-import { PanelQuote } from '@/lib/iol/types';
 import { extractCashArs, effectiveCashAfterCommission, filterAffordableCedears, COMMISSION_RATE } from '@/lib/trading/quick-trade';
 
 import { getHistoricalData, getAllNews, getCompanyNames, getCompanyProfile, getIncomeStatements, getKeyMetrics, getCashFlowStatements, getBalanceSheetStatements, getFinancialScores, getDCFValue, getTickerNews, HistoricalRow, CompanyProfile, IncomeStatementRow, KeyMetricsRow, CashFlowRow, BalanceSheetRow, FinancialScores, DCFValue, NewsItem } from '@/lib/market-data';
-import { stripCurrencySuffix, toFmpTicker, deduplicateIolSymbols, isEtf } from '@/lib/cedear-map';
+import { stripCurrencySuffix, toFmpTicker, isEtf } from '@/lib/cedear-map';
 
 export async function getMarketData() {
   try {
@@ -161,26 +160,6 @@ export async function getOperations() {
         console.error('Failed to fetch operations:', error);
         return { success: false, error: 'Failed to fetch operations' };
     }
-}
-
-export async function getAccountStatement() {
-  try {
-    const estadoCuenta = await iolClient.getEstadoCuenta();
-    return { success: true, data: estadoCuenta };
-  } catch (error) {
-    console.error('Failed to fetch account statement:', error);
-    return { success: false, error: 'Failed to fetch account statement' };
-  }
-}
-
-export async function getProfileData() {
-  try {
-    const perfil = await iolClient.getDatosPerfil();
-    return { success: true, data: perfil };
-  } catch (error) {
-    console.error('Failed to fetch profile data:', error);
-    return { success: false, error: 'Failed to fetch profile data' };
-  }
 }
 
 
@@ -431,94 +410,7 @@ export async function getFullPortfolioContext() {
   }
 }
 
-/**
- * Returns the CEDEAR symbols that the user can afford based on IOL balance.
- * Used by the AI Hedge Fund window to know which tickers to analyze.
- */
-export async function getAffordableCedears() {
-  try {
-    // 1. Get cash
-    const cuenta = await iolClient.getEstadoCuenta();
-    if (!cuenta?.cuentas) {
-      return { success: false as const, error: 'No se pudo obtener el saldo de IOL' };
-    }
-    const cuentaArs = cuenta.cuentas.find((c) => c.moneda === 'peso_Argentino');
-    let cash = cuentaArs?.disponible || 0;
-    const inmediato = cuentaArs?.saldos?.find((s) => s.liquidacion === 'inmediato');
-    if (inmediato) cash = inmediato.disponibleOperar;
-
-    // 2. Get CEDEARs panel, MEP rate, and current portfolio holdings
-    const [cedearsPanel, mepRate, portfolio] = await Promise.all([
-      iolClient.getPanelQuotes('cedears'),
-      iolClient.getMEP(),
-      iolClient.getPortfolio().catch(() => null),
-    ]);
-    const titulos = cedearsPanel.titulos || [];
-    const priceInArs = (t: PanelQuote) => t.moneda === '2' ? t.ultimoPrecio * mepRate : t.ultimoPrecio;
-
-    // 3. Filter affordable, score by liquidity, pick top 10
-    const affordable = titulos.filter((t) => t.ultimoPrecio > 0 && priceInArs(t) <= cash);
-    const hasVolume = affordable.some((t) => (t.volumen ?? 0) > 0);
-    const metric = (t: PanelQuote) => hasVolume ? (t.volumen ?? 0) : (t.cantidadOperaciones ?? 0);
-    const maxVal = Math.max(...affordable.map(metric), 1);
-    const sorted = affordable
-      .map((t) => ({ ...t, _score: metric(t) / maxVal }))
-      .sort((a, b) => b._score - a._score)
-      .slice(0, 10);
-
-    // Deduplicate: IOL lists peso (C) and dollar (D) variants.
-    // Strip suffix to produce base IOL symbols, then map to FMP tickers.
-    const rawSymbols: string[] = sorted.map((t) => t.simbolo);
-    const iolSymbols = deduplicateIolSymbols(rawSymbols);
-
-    // Build FMP ticker list (excludes symbols with no US equivalent like CSNA3)
-    const fmpTickers: string[] = [];
-    const iolToFmp: Record<string, string> = {};
-    for (const sym of iolSymbols) {
-      const fmp = toFmpTicker(sym);
-      if (fmp) {
-        fmpTickers.push(fmp);
-        iolToFmp[sym] = fmp;
-      }
-    }
-
-    const arsPrices: Record<string, number> = {};
-    for (const t of sorted) {
-      const key = stripCurrencySuffix(t.simbolo as string);
-      // Keep the lowest ARS price for the base symbol (most affordable)
-      const price = priceInArs(t);
-      if (!(key in arsPrices) || price < arsPrices[key]) {
-        arsPrices[key] = price;
-      }
-    }
-
-    // 5. Map current IOL holdings to backend PortfolioPosition format (FMP tickers, USD prices)
-    const portfolioPositions: Array<{ ticker: string; quantity: number; trade_price: number }> = [];
-    if (portfolio?.activos) {
-      for (const asset of portfolio.activos) {
-        if (asset.titulo.tipo !== 'CEDEARS' && asset.titulo.tipo !== 'cedears') continue;
-        if (asset.cantidad <= 0) continue;
-        const base = stripCurrencySuffix(asset.titulo.simbolo);
-        const fmp = toFmpTicker(base);
-        if (!fmp) continue;
-        const tradePriceArs = asset.ppc > 0 ? asset.ppc : asset.ultimoPrecio;
-        if (tradePriceArs <= 0) continue;
-        portfolioPositions.push({
-          ticker: fmp,
-          quantity: asset.cantidad,
-          trade_price: Math.round((tradePriceArs / mepRate) * 100) / 100,
-        });
-      }
-    }
-
-    return { success: true as const, symbols: iolSymbols, fmpTickers, iolToFmp, cash, arsPrices, mepRate, portfolioPositions };
-  } catch (error) {
-    console.error('getAffordableCedears failed:', error);
-    return { success: false as const, error: 'No se pudo obtener CEDEARs disponibles' };
-  }
-}
-
-export interface CompanyDetailResult {
+interface CompanyDetailResult {
   fmpTicker: string | null;
   profile: CompanyProfile | null;
   isEtf: boolean;
