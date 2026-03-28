@@ -5,7 +5,7 @@ import { iolClient } from '@/lib/iol/client';
 import { PanelQuote } from '@/lib/iol/types';
 import { extractCashArs, effectiveCashAfterCommission, filterAffordableCedears, COMMISSION_RATE } from '@/lib/trading/quick-trade';
 
-import { getHistoricalData, getAllNews, getCompanyNames, getCompanyProfile, getIncomeStatements, HistoricalRow, CompanyProfile, IncomeStatementRow } from '@/lib/market-data';
+import { getHistoricalData, getAllNews, getCompanyNames, getCompanyProfile, getIncomeStatements, getKeyMetrics, getCashFlowStatements, getBalanceSheetStatements, getFinancialScores, getDCFValue, getTickerNews, HistoricalRow, CompanyProfile, IncomeStatementRow, KeyMetricsRow, CashFlowRow, BalanceSheetRow, FinancialScores, DCFValue, NewsItem } from '@/lib/market-data';
 import { stripCurrencySuffix, toFmpTicker, deduplicateIolSymbols, isEtf } from '@/lib/cedear-map';
 
 export async function getMarketData() {
@@ -564,5 +564,49 @@ export async function getCompanyDetail(iolBaseSymbol: string): Promise<{ success
   } catch (error) {
     console.error('getCompanyDetail failed:', error);
     return { success: false, error: 'No se pudo obtener información de la compañía' };
+  }
+}
+
+export interface AdvancedDetailResult {
+  keyMetrics: KeyMetricsRow[];
+  cashFlow: CashFlowRow[];
+  balanceSheet: BalanceSheetRow[];
+  scores: FinancialScores | null;
+  dcf: DCFValue | null;
+}
+
+export async function getCompanyAdvancedData(fmpTicker: string): Promise<{ success: true; data: AdvancedDetailResult } | { success: false; error: string }> {
+  try {
+    const [metrics, cashFlow, balanceSheet, scores, dcf] = await Promise.allSettled([
+      getKeyMetrics(fmpTicker, 'annual'),
+      getCashFlowStatements(fmpTicker, 'annual'),
+      getBalanceSheetStatements(fmpTicker, 'annual'),
+      getFinancialScores(fmpTicker),
+      getDCFValue(fmpTicker),
+    ]);
+
+    return {
+      success: true,
+      data: {
+        keyMetrics: metrics.status === 'fulfilled' ? metrics.value : [],
+        cashFlow: cashFlow.status === 'fulfilled' ? cashFlow.value : [],
+        balanceSheet: balanceSheet.status === 'fulfilled' ? balanceSheet.value : [],
+        scores: scores.status === 'fulfilled' ? scores.value : null,
+        dcf: dcf.status === 'fulfilled' ? dcf.value : null,
+      },
+    };
+  } catch (error) {
+    console.error('getCompanyAdvancedData failed:', error);
+    return { success: false, error: 'No se pudo obtener datos avanzados' };
+  }
+}
+
+export async function getCompanyNews(fmpTicker: string): Promise<{ success: true; data: NewsItem[] } | { success: false; error: string }> {
+  try {
+    const news = await getTickerNews(fmpTicker, 20);
+    return { success: true, data: news };
+  } catch (error) {
+    console.error('getCompanyNews failed:', error);
+    return { success: false, error: 'No se pudieron obtener noticias' };
   }
 }

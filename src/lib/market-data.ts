@@ -312,6 +312,151 @@ export async function getGeneralMarketNews(count: number = 5): Promise<NewsItem[
   }
 }
 
+// ── Advanced Financial Data ────────────────────────────────────────────────
+
+export interface KeyMetricsRow {
+  date: string;
+  peRatio: number;
+  pbRatio: number;
+  roe: number;
+  roa: number;
+  debtToEquity: number;
+  currentRatio: number;
+  dividendYield: number;
+  enterpriseValue: number;
+  evToEbitda: number;
+}
+
+export interface CashFlowRow {
+  date: string;
+  operatingCashFlow: number;
+  capitalExpenditure: number;
+  freeCashFlow: number;
+  dividendsPaid: number;
+}
+
+export interface BalanceSheetRow {
+  date: string;
+  totalAssets: number;
+  totalLiabilities: number;
+  totalStockholdersEquity: number;
+  netDebt: number;
+  totalDebt: number;
+  cashAndShortTermInvestments: number;
+}
+
+export interface FinancialScores {
+  symbol: string;
+  altmanZScore: number;
+  piotroskiScore: number;
+}
+
+export interface DCFValue {
+  symbol: string;
+  dcf: number;
+  price: number;
+}
+
+export async function getKeyMetrics(fmpTicker: string, period: 'annual' | 'quarter' = 'annual'): Promise<KeyMetricsRow[]> {
+  const apiKey = getFMPApiKey();
+  const url = `https://financialmodelingprep.com/stable/key-metrics?symbol=${encodeURIComponent(fmpTicker)}&period=${period}&apikey=${apiKey}`;
+  const res = await fetch(url);
+  if (!res.ok) return [];
+  const data = await res.json();
+  if (!Array.isArray(data)) return [];
+  return data.map((row: Record<string, unknown>) => ({
+    date: row.date as string,
+    peRatio: (row.peRatio as number) ?? 0,
+    pbRatio: (row.pbRatio as number) ?? 0,
+    roe: (row.returnOnEquity as number) ?? 0,
+    roa: (row.returnOnAssets as number) ?? 0,
+    debtToEquity: (row.debtToEquity as number) ?? 0,
+    currentRatio: (row.currentRatio as number) ?? 0,
+    dividendYield: (row.dividendYield as number) ?? 0,
+    enterpriseValue: (row.enterpriseValue as number) ?? 0,
+    evToEbitda: (row.evToEbitda as number) ?? 0,
+  })).reverse();
+}
+
+export async function getCashFlowStatements(fmpTicker: string, period: 'annual' | 'quarter' = 'annual'): Promise<CashFlowRow[]> {
+  const apiKey = getFMPApiKey();
+  const url = `https://financialmodelingprep.com/stable/cash-flow-statement?symbol=${encodeURIComponent(fmpTicker)}&period=${period}&apikey=${apiKey}`;
+  const res = await fetch(url);
+  if (!res.ok) return [];
+  const data = await res.json();
+  if (!Array.isArray(data)) return [];
+  return data.map((row: Record<string, unknown>) => ({
+    date: row.date as string,
+    operatingCashFlow: (row.operatingCashFlow as number) ?? 0,
+    capitalExpenditure: (row.capitalExpenditure as number) ?? 0,
+    freeCashFlow: (row.freeCashFlow as number) ?? 0,
+    dividendsPaid: (row.dividendsPaid as number) ?? 0,
+  })).reverse();
+}
+
+export async function getBalanceSheetStatements(fmpTicker: string, period: 'annual' | 'quarter' = 'annual'): Promise<BalanceSheetRow[]> {
+  const apiKey = getFMPApiKey();
+  const url = `https://financialmodelingprep.com/stable/balance-sheet-statement?symbol=${encodeURIComponent(fmpTicker)}&period=${period}&apikey=${apiKey}`;
+  const res = await fetch(url);
+  if (!res.ok) return [];
+  const data = await res.json();
+  if (!Array.isArray(data)) return [];
+  return data.map((row: Record<string, unknown>) => ({
+    date: row.date as string,
+    totalAssets: (row.totalAssets as number) ?? 0,
+    totalLiabilities: (row.totalLiabilities as number) ?? 0,
+    totalStockholdersEquity: (row.totalStockholdersEquity as number) ?? 0,
+    netDebt: (row.netDebt as number) ?? 0,
+    totalDebt: (row.totalDebt as number) ?? 0,
+    cashAndShortTermInvestments: (row.cashAndShortTermInvestments as number) ?? 0,
+  })).reverse();
+}
+
+export async function getFinancialScores(fmpTicker: string): Promise<FinancialScores | null> {
+  const apiKey = getFMPApiKey();
+  const url = `https://financialmodelingprep.com/stable/financial-scores?symbol=${encodeURIComponent(fmpTicker)}&apikey=${apiKey}`;
+  const res = await fetch(url);
+  if (!res.ok) return null;
+  const data = await res.json();
+  if (Array.isArray(data) && data.length > 0) {
+    const row = data[0];
+    return {
+      symbol: row.symbol as string,
+      altmanZScore: (row.altmanZScore as number) ?? 0,
+      piotroskiScore: (row.piotroskiScore as number) ?? 0,
+    };
+  }
+  return null;
+}
+
+export async function getDCFValue(fmpTicker: string): Promise<DCFValue | null> {
+  const apiKey = getFMPApiKey();
+  const url = `https://financialmodelingprep.com/stable/discounted-cash-flow?symbol=${encodeURIComponent(fmpTicker)}&apikey=${apiKey}`;
+  const res = await fetch(url);
+  if (!res.ok) return null;
+  const data = await res.json();
+  if (Array.isArray(data) && data.length > 0) {
+    const row = data[0];
+    return {
+      symbol: row.symbol as string,
+      dcf: (row.dcf as number) ?? 0,
+      price: (row.stockPrice as number) ?? 0,
+    };
+  }
+  return null;
+}
+
+/** Fetch news for a specific ticker directly (lightweight, no bulk fetch). */
+export async function getTickerNews(fmpTicker: string, limit: number = 20): Promise<NewsItem[]> {
+  const apiKey = getFMPApiKey();
+  const url = `https://financialmodelingprep.com/stable/news/stock?symbols=${encodeURIComponent(fmpTicker)}&limit=${limit}&apikey=${apiKey}`;
+  const res = await fetch(url);
+  if (!res.ok) return [];
+  const data: unknown = await res.json();
+  if (!Array.isArray(data)) return [];
+  return data.map((a: FMPNewsArticle) => mapFMPToNewsItem(a));
+}
+
 // --- Technical Indicators Math ---
 
 export function calculateSMA(data: number[], period: number): number | null {

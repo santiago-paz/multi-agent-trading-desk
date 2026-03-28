@@ -21,7 +21,8 @@ import {
   COLOR_NEGATIVE,
   BUTTON_PRESSED,
 } from '@/lib/theme/win98';
-import { CompanyProfile, IncomeStatementRow } from '@/lib/market-data';
+import { CompanyProfile, IncomeStatementRow, KeyMetricsRow, CashFlowRow, BalanceSheetRow, FinancialScores, DCFValue, NewsItem } from '@/lib/market-data';
+import { getCompanyAdvancedData, getCompanyNews, AdvancedDetailResult } from '@/app/trading/actions';
 
 export interface CompanyDetailData {
   fmpTicker: string | null;
@@ -40,7 +41,7 @@ interface CompanyDetailWindowProps {
   onSearch?: (symbol: string) => void;
 }
 
-type Tab = 'info' | 'charts';
+type Tab = 'info' | 'charts' | 'advanced' | 'news';
 
 const fmtMktCap = (n: number): string => {
   if (n >= 1e12) return `$${(n / 1e12).toFixed(2)}T`;
@@ -302,6 +303,207 @@ const EPSChart: React.FC<{ data: IncomeStatementRow[] }> = ({ data }) => {
   );
 };
 
+// ── Advanced tab components ─────────────────────────────────────
+
+const ScoresSummary: React.FC<{ scores: FinancialScores | null; dcf: DCFValue | null }> = ({ scores, dcf }) => {
+  if (!scores && !dcf) return <p style={{ ...FONT, color: COLOR_SECONDARY }}>Sin datos de scores disponibles.</p>;
+
+  const zColor = (z: number) => z >= 2.99 ? COLOR_POSITIVE : z >= 1.81 ? '#808000' : COLOR_NEGATIVE;
+  const pColor = (p: number) => p >= 7 ? COLOR_POSITIVE : p >= 4 ? '#808000' : COLOR_NEGATIVE;
+
+  return (
+    <fieldset style={{ margin: '0 0 6px', padding: '4px' }}>
+      <legend style={FONT}>Scores & Valuación <InfoTip text="Altman Z-Score: riesgo de quiebra (>2.99 seguro, 1.81-2.99 zona gris, <1.81 peligro). Piotroski F-Score: calidad del valor (0-9, ≥7 fuerte). DCF: valor intrínseco estimado por flujo de caja descontado." /></legend>
+      <table style={{ borderCollapse: 'collapse', width: '100%' }}>
+        <tbody>
+          {scores && (
+            <>
+              <StatRow
+                label="Altman Z-Score"
+                value={<span style={{ fontWeight: 'bold', color: zColor(scores.altmanZScore) }}>{scores.altmanZScore.toFixed(2)}</span>}
+              />
+              <StatRow
+                label="Piotroski F-Score"
+                value={<span style={{ fontWeight: 'bold', color: pColor(scores.piotroskiScore) }}>{scores.piotroskiScore.toFixed(0)}/9</span>}
+              />
+            </>
+          )}
+          {dcf && dcf.dcf > 0 && dcf.price > 0 && (
+            <>
+              <StatRow label="DCF (valor justo)" value={`$${dcf.dcf.toFixed(2)}`} />
+              <StatRow label="Precio actual" value={`$${dcf.price.toFixed(2)}`} />
+              <StatRow
+                label="Señal"
+                value={
+                  <span style={{ fontWeight: 'bold', color: dcf.dcf > dcf.price ? COLOR_POSITIVE : COLOR_NEGATIVE }}>
+                    {dcf.dcf > dcf.price ? 'Subvaluada' : 'Sobrevaluada'} ({((dcf.dcf / dcf.price - 1) * 100).toFixed(1)}%)
+                  </span>
+                }
+              />
+            </>
+          )}
+        </tbody>
+      </table>
+    </fieldset>
+  );
+};
+
+const ValuationChart: React.FC<{ data: KeyMetricsRow[] }> = ({ data }) => {
+  if (data.length === 0) return null;
+  const chartData = data.map(r => ({ year: r.date.slice(0, 4), pe: r.peRatio, pb: r.pbRatio }));
+  return (
+    <fieldset style={{ margin: '0 0 6px', padding: '4px' }}>
+      <legend style={FONT}>Valuación (P/E & P/B) <InfoTip text="P/E (barras): precio dividido ganancias — cuántos años de ganancias se pagan. P/B (línea): precio vs valor contable. Valores bajos pueden indicar subvaluación." /></legend>
+      <ResponsiveContainer width="100%" height={160}>
+        <ComposedChart data={chartData} margin={{ top: 4, right: 8, bottom: 0, left: 0 }}>
+          <CartesianGrid strokeDasharray="3 3" stroke="#c0c0c0" />
+          <XAxis dataKey="year" tick={CHART_FONT} />
+          <YAxis yAxisId="left" tick={CHART_FONT} tickFormatter={(v: number) => v.toFixed(0)} width={36} />
+          <YAxis yAxisId="right" orientation="right" tick={CHART_FONT} tickFormatter={(v: number) => v.toFixed(1)} width={36} />
+          <Tooltip
+            contentStyle={{ ...FONT, background: '#ffffcc', border: '1px solid #000', padding: '2px 6px' }}
+            formatter={(value, name) => [Number(value).toFixed(2), name === 'pe' ? 'P/E' : 'P/B']}
+          />
+          <Bar yAxisId="left" dataKey="pe" fill="#000080" opacity={0.5} name="pe" />
+          <Line yAxisId="right" type="monotone" dataKey="pb" stroke="#808000" strokeWidth={2} dot={{ r: 2 }} name="pb" />
+        </ComposedChart>
+      </ResponsiveContainer>
+      <div style={{ ...FONT, display: 'flex', gap: '12px', justifyContent: 'center', marginTop: '2px' }}>
+        <span><span style={{ color: '#000080' }}>■</span> P/E</span>
+        <span><span style={{ color: '#808000' }}>--</span> P/B</span>
+      </div>
+    </fieldset>
+  );
+};
+
+const ProfitabilityChart: React.FC<{ data: KeyMetricsRow[] }> = ({ data }) => {
+  if (data.length === 0) return null;
+  const chartData = data.map(r => ({ year: r.date.slice(0, 4), roe: r.roe * 100, roa: r.roa * 100 }));
+  return (
+    <fieldset style={{ margin: '0 0 6px', padding: '4px' }}>
+      <legend style={FONT}>Rentabilidad (ROE & ROA) <InfoTip text="ROE: retorno sobre patrimonio — cuánto genera por cada peso invertido por accionistas. ROA: retorno sobre activos totales. Valores más altos indican mejor eficiencia." /></legend>
+      <ResponsiveContainer width="100%" height={140}>
+        <AreaChart data={chartData} margin={{ top: 4, right: 8, bottom: 0, left: 0 }}>
+          <CartesianGrid strokeDasharray="3 3" stroke="#c0c0c0" />
+          <XAxis dataKey="year" tick={CHART_FONT} />
+          <YAxis tick={CHART_FONT} tickFormatter={(v: number) => `${v.toFixed(0)}%`} width={40} />
+          <Tooltip
+            contentStyle={{ ...FONT, background: '#ffffcc', border: '1px solid #000', padding: '2px 6px' }}
+            formatter={(value, name) => [`${Number(value).toFixed(1)}%`, name === 'roe' ? 'ROE' : 'ROA']}
+          />
+          <Area type="monotone" dataKey="roe" stroke="#000080" fill="#000080" fillOpacity={0.15} strokeWidth={1.5} dot={false} />
+          <Area type="monotone" dataKey="roa" stroke={COLOR_POSITIVE} fill={COLOR_POSITIVE} fillOpacity={0.1} strokeWidth={1.5} dot={false} />
+        </AreaChart>
+      </ResponsiveContainer>
+      <div style={{ ...FONT, display: 'flex', gap: '12px', justifyContent: 'center', marginTop: '2px' }}>
+        <span><span style={{ color: '#000080' }}>--</span> ROE</span>
+        <span><span style={{ color: COLOR_POSITIVE }}>--</span> ROA</span>
+      </div>
+    </fieldset>
+  );
+};
+
+const CashFlowChart: React.FC<{ data: CashFlowRow[] }> = ({ data }) => {
+  if (data.length === 0) return null;
+  const chartData = data.map(r => ({
+    year: r.date.slice(0, 4),
+    operatingCF: r.operatingCashFlow,
+    freeCF: r.freeCashFlow,
+  }));
+  return (
+    <fieldset style={{ margin: '0 0 6px', padding: '4px' }}>
+      <legend style={FONT}>Flujo de Caja <InfoTip text="Operating CF (barras): efectivo generado por operaciones. Free CF (línea): efectivo disponible después de inversiones en capital. FCF positivo y creciente es señal de solidez financiera." /></legend>
+      <ResponsiveContainer width="100%" height={160}>
+        <ComposedChart data={chartData} margin={{ top: 4, right: 8, bottom: 0, left: 0 }}>
+          <CartesianGrid strokeDasharray="3 3" stroke="#c0c0c0" />
+          <XAxis dataKey="year" tick={CHART_FONT} />
+          <YAxis tick={CHART_FONT} tickFormatter={(v: number) => `$${fmtCompact(v)}`} width={52} />
+          <Tooltip
+            contentStyle={{ ...FONT, background: '#ffffcc', border: '1px solid #000', padding: '2px 6px' }}
+            formatter={(value, name) => [`$${fmtCompact(Number(value))}`, name === 'operatingCF' ? 'Operating CF' : 'Free CF']}
+          />
+          <Bar dataKey="operatingCF" fill="#000080" opacity={0.5} name="operatingCF" />
+          <Line type="monotone" dataKey="freeCF" stroke={COLOR_POSITIVE} strokeWidth={2} dot={{ r: 2 }} name="freeCF" />
+        </ComposedChart>
+      </ResponsiveContainer>
+      <div style={{ ...FONT, display: 'flex', gap: '12px', justifyContent: 'center', marginTop: '2px' }}>
+        <span><span style={{ color: '#000080' }}>■</span> Operating CF</span>
+        <span><span style={{ color: COLOR_POSITIVE }}>--</span> Free CF</span>
+      </div>
+    </fieldset>
+  );
+};
+
+const BalanceSheetChart: React.FC<{ data: BalanceSheetRow[] }> = ({ data }) => {
+  if (data.length === 0) return null;
+  const chartData = data.map(r => ({
+    year: r.date.slice(0, 4),
+    equity: r.totalStockholdersEquity,
+    liabilities: r.totalLiabilities,
+    netDebt: r.netDebt,
+  }));
+  return (
+    <fieldset style={{ margin: '0 0 6px', padding: '4px' }}>
+      <legend style={FONT}>Estructura de Capital <InfoTip text="Equity (verde) + Liabilities (azul) = Total Assets. Net Debt (línea): deuda total menos efectivo. Una proporción creciente de equity indica mayor solidez." /></legend>
+      <ResponsiveContainer width="100%" height={160}>
+        <ComposedChart data={chartData} margin={{ top: 4, right: 8, bottom: 0, left: 0 }}>
+          <CartesianGrid strokeDasharray="3 3" stroke="#c0c0c0" />
+          <XAxis dataKey="year" tick={CHART_FONT} />
+          <YAxis yAxisId="left" tick={CHART_FONT} tickFormatter={(v: number) => `$${fmtCompact(v)}`} width={52} />
+          <YAxis yAxisId="right" orientation="right" tick={CHART_FONT} tickFormatter={(v: number) => `$${fmtCompact(v)}`} width={52} />
+          <Tooltip
+            contentStyle={{ ...FONT, background: '#ffffcc', border: '1px solid #000', padding: '2px 6px' }}
+            formatter={(value, name) => {
+              const labels: Record<string, string> = { equity: 'Patrimonio', liabilities: 'Pasivos', netDebt: 'Deuda Neta' };
+              return [`$${fmtCompact(Number(value))}`, labels[String(name)] ?? name];
+            }}
+          />
+          <Bar yAxisId="left" dataKey="equity" stackId="a" fill={COLOR_POSITIVE} opacity={0.5} name="equity" />
+          <Bar yAxisId="left" dataKey="liabilities" stackId="a" fill="#000080" opacity={0.4} name="liabilities" />
+          <Line yAxisId="right" type="monotone" dataKey="netDebt" stroke={COLOR_NEGATIVE} strokeWidth={2} dot={{ r: 2 }} name="netDebt" />
+        </ComposedChart>
+      </ResponsiveContainer>
+      <div style={{ ...FONT, display: 'flex', gap: '12px', justifyContent: 'center', marginTop: '2px' }}>
+        <span><span style={{ color: COLOR_POSITIVE }}>■</span> Patrimonio</span>
+        <span><span style={{ color: '#000080' }}>■</span> Pasivos</span>
+        <span><span style={{ color: COLOR_NEGATIVE }}>--</span> Deuda Neta</span>
+      </div>
+    </fieldset>
+  );
+};
+
+const LeverageChart: React.FC<{ data: KeyMetricsRow[] }> = ({ data }) => {
+  if (data.length === 0) return null;
+  const chartData = data.map(r => ({
+    year: r.date.slice(0, 4),
+    debtToEquity: r.debtToEquity,
+    currentRatio: r.currentRatio,
+  }));
+  return (
+    <fieldset style={{ margin: '0 0 6px', padding: '4px' }}>
+      <legend style={FONT}>Apalancamiento <InfoTip text="Debt/Equity (barras): cuánta deuda por cada peso de patrimonio. Current Ratio (línea): activos corrientes / pasivos corrientes — >1 indica solvencia a corto plazo." /></legend>
+      <ResponsiveContainer width="100%" height={140}>
+        <ComposedChart data={chartData} margin={{ top: 4, right: 8, bottom: 0, left: 0 }}>
+          <CartesianGrid strokeDasharray="3 3" stroke="#c0c0c0" />
+          <XAxis dataKey="year" tick={CHART_FONT} />
+          <YAxis yAxisId="left" tick={CHART_FONT} tickFormatter={(v: number) => v.toFixed(1)} width={36} />
+          <YAxis yAxisId="right" orientation="right" tick={CHART_FONT} tickFormatter={(v: number) => v.toFixed(1)} width={36} />
+          <Tooltip
+            contentStyle={{ ...FONT, background: '#ffffcc', border: '1px solid #000', padding: '2px 6px' }}
+            formatter={(value, name) => [Number(value).toFixed(2), name === 'debtToEquity' ? 'D/E' : 'Current Ratio']}
+          />
+          <Bar yAxisId="left" dataKey="debtToEquity" fill="#000080" opacity={0.5} name="debtToEquity" />
+          <Line yAxisId="right" type="monotone" dataKey="currentRatio" stroke="#808000" strokeWidth={2} dot={{ r: 2 }} name="currentRatio" />
+        </ComposedChart>
+      </ResponsiveContainer>
+      <div style={{ ...FONT, display: 'flex', gap: '12px', justifyContent: 'center', marginTop: '2px' }}>
+        <span><span style={{ color: '#000080' }}>■</span> D/E</span>
+        <span><span style={{ color: '#808000' }}>--</span> Current Ratio</span>
+      </div>
+    </fieldset>
+  );
+};
+
 // ── Main component ──────────────────────────────────────────────
 
 export const CompanyDetailWindow: React.FC<CompanyDetailWindowProps> = ({
@@ -314,6 +516,60 @@ export const CompanyDetailWindow: React.FC<CompanyDetailWindowProps> = ({
   const [imgFailed, setImgFailed] = useState(false);
   const [tab, setTab] = useState<Tab>('info');
   const [searchValue, setSearchValue] = useState('');
+  const [advData, setAdvData] = useState<AdvancedDetailResult | null>(null);
+  const [advLoading, setAdvLoading] = useState(false);
+  const advFetchedRef = useRef<string | null>(null);
+  const [newsData, setNewsData] = useState<NewsItem[] | null>(null);
+  const [newsLoading, setNewsLoading] = useState(false);
+  const newsFetchedRef = useRef<string | null>(null);
+
+  // Reset lazy data when company changes
+  useEffect(() => {
+    if (data?.fmpTicker !== advFetchedRef.current) {
+      setAdvData(null);
+      advFetchedRef.current = null;
+    }
+    if (data?.fmpTicker !== newsFetchedRef.current) {
+      setNewsData(null);
+      newsFetchedRef.current = null;
+    }
+  }, [data?.fmpTicker]);
+
+  // Lazy-load advanced data when tab is selected
+  useEffect(() => {
+    if (tab !== 'advanced' || !data?.fmpTicker || data.isEtf) return;
+    if (advFetchedRef.current === data.fmpTicker) return;
+
+    let cancelled = false;
+    setAdvLoading(true);
+    advFetchedRef.current = data.fmpTicker;
+
+    getCompanyAdvancedData(data.fmpTicker).then((result) => {
+      if (cancelled) return;
+      if (result.success) setAdvData(result.data);
+      setAdvLoading(false);
+    });
+
+    return () => { cancelled = true; };
+  }, [tab, data?.fmpTicker, data?.isEtf]);
+
+  // Lazy-load news when tab is selected
+  useEffect(() => {
+    if (tab !== 'news' || !data?.fmpTicker) return;
+    if (newsFetchedRef.current === data.fmpTicker) return;
+
+    let cancelled = false;
+    setNewsLoading(true);
+    newsFetchedRef.current = data.fmpTicker;
+
+    getCompanyNews(data.fmpTicker).then((result) => {
+      if (cancelled) return;
+      if (result.success) setNewsData(result.data);
+      setNewsLoading(false);
+    });
+
+    return () => { cancelled = true; };
+  }, [tab, data?.fmpTicker]);
 
   const handleSearch = () => {
     const trimmed = searchValue.trim().toUpperCase();
@@ -467,6 +723,52 @@ export const CompanyDetailWindow: React.FC<CompanyDetailWindowProps> = ({
             Charts
           </button>
         )}
+        {!data.isEtf && data.fmpTicker && (
+          <button
+            role="tab"
+            type="button"
+            onClick={() => setTab('advanced')}
+            style={{
+              ...FONT,
+              paddingTop: '2px',
+              paddingBottom: '2px',
+              paddingLeft: '12px',
+              paddingRight: '12px',
+              border: '1px solid #808080',
+              borderBottom: tab === 'advanced' ? '1px solid #c0c0c0' : undefined,
+              background: tab === 'advanced' ? '#c0c0c0' : '#d4d0c8',
+              marginBottom: tab === 'advanced' ? '-1px' : '0',
+              zIndex: tab === 'advanced' ? 1 : 0,
+              position: 'relative',
+              ...(tab === 'advanced' ? BUTTON_PRESSED : {}),
+            }}
+          >
+            Avanzado
+          </button>
+        )}
+        {data.fmpTicker && (
+          <button
+            role="tab"
+            type="button"
+            onClick={() => setTab('news')}
+            style={{
+              ...FONT,
+              paddingTop: '2px',
+              paddingBottom: '2px',
+              paddingLeft: '12px',
+              paddingRight: '12px',
+              border: '1px solid #808080',
+              borderBottom: tab === 'news' ? '1px solid #c0c0c0' : undefined,
+              background: tab === 'news' ? '#c0c0c0' : '#d4d0c8',
+              marginBottom: tab === 'news' ? '-1px' : '0',
+              zIndex: tab === 'news' ? 1 : 0,
+              position: 'relative',
+              ...(tab === 'news' ? BUTTON_PRESSED : {}),
+            }}
+          >
+            Noticias
+          </button>
+        )}
       </div>
 
       {/* Tab content */}
@@ -525,6 +827,88 @@ export const CompanyDetailWindow: React.FC<CompanyDetailWindowProps> = ({
                 <MarginsChart data={data.incomeStatements} />
                 <EPSChart data={data.incomeStatements} />
               </>
+            )}
+          </>
+        )}
+
+        {tab === 'advanced' && (
+          <>
+            {advLoading && (
+              <p style={{ ...FONT, padding: '8px', color: COLOR_SECONDARY }}>Cargando datos avanzados...</p>
+            )}
+            {!advLoading && advData && (
+              <>
+                <ScoresSummary scores={advData.scores} dcf={advData.dcf} />
+                <ValuationChart data={advData.keyMetrics} />
+                <ProfitabilityChart data={advData.keyMetrics} />
+                <CashFlowChart data={advData.cashFlow} />
+                <BalanceSheetChart data={advData.balanceSheet} />
+                <LeverageChart data={advData.keyMetrics} />
+              </>
+            )}
+            {!advLoading && !advData && (
+              <p style={{ ...FONT, padding: '8px', color: COLOR_SECONDARY }}>No se pudieron obtener datos avanzados.</p>
+            )}
+          </>
+        )}
+
+        {tab === 'news' && (
+          <>
+            {newsLoading && (
+              <p style={{ ...FONT, padding: '8px', color: COLOR_SECONDARY }}>Cargando noticias...</p>
+            )}
+            {!newsLoading && newsData && newsData.length > 0 && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', padding: '4px' }}>
+                {newsData.map((news, i) => (
+                  <div
+                    key={i}
+                    style={{
+                      display: 'flex',
+                      gap: '8px',
+                      paddingBottom: '6px',
+                      borderBottom: i < newsData.length - 1 ? '1px solid #dfdfdf' : undefined,
+                    }}
+                  >
+                    {news.image && (
+                      /* eslint-disable-next-line @next/next/no-img-element */
+                      <img
+                        src={news.image}
+                        alt=""
+                        style={{ width: 56, height: 56, objectFit: 'cover', flexShrink: 0, border: '1px solid #808080' }}
+                      />
+                    )}
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', minWidth: 0 }}>
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', alignItems: 'center' }}>
+                        <span style={{ ...FONT, color: COLOR_SECONDARY }}>{news.publisher}</span>
+                        {news.providerPublishTime && (
+                          <span style={{ ...FONT, color: COLOR_SECONDARY }}>
+                            {new Date(news.providerPublishTime).toLocaleDateString()}
+                          </span>
+                        )}
+                      </div>
+                      <a
+                        href={news.link}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{ ...FONT, color: COLOR_LINK, textDecoration: 'underline', cursor: 'pointer' }}
+                      >
+                        {news.title}
+                      </a>
+                      {news.text && (
+                        <p style={{ ...FONT, margin: 0, lineHeight: '1.3' }}>
+                          {news.text.length > 180 ? news.text.slice(0, 180) + '...' : news.text}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+            {!newsLoading && newsData && newsData.length === 0 && (
+              <p style={{ ...FONT, padding: '8px', color: COLOR_SECONDARY }}>No hay noticias disponibles para {data.fmpTicker}.</p>
+            )}
+            {!newsLoading && !newsData && (
+              <p style={{ ...FONT, padding: '8px', color: COLOR_SECONDARY }}>No se pudieron obtener noticias.</p>
             )}
           </>
         )}
