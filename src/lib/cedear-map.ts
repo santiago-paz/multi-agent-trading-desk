@@ -125,6 +125,19 @@ const IOL_TO_FMP: Record<string, string | null> = {
   IWDA: null,       // iShares Core MSCI World UCITS (London only)
 };
 
+/** Set of base symbols that are ETFs/ETNs/Funds (extracted from IOL_TO_FMP). */
+const ETF_SYMBOLS = new Set([
+  'ACWI','ARKK','CIBR','COPX','DIA','EEM','EFA','ESGU','ETHA','EWJ','EWZ','FXI',
+  'GDX','GLD','IBB','IBIT','IEMG','IEUR','IJH','ILF','ITA','IVE','IVV','IVW','IWM',
+  'PSQ','QQQ','SH','SLV','SMH','SPHQ','SPXL','SPY','TQQQ','URA','USO','VEA','VIG',
+  'VO','VXX','XLB','XLC','XLE','XLF','XLI','XLK','XLP','XLRE','XLU','XLV','XLY',
+]);
+
+/** Check if a base IOL symbol is an ETF/ETN/Fund. */
+export function isEtf(baseSymbol: string): boolean {
+  return ETF_SYMBOLS.has(stripCurrencySuffix(baseSymbol));
+}
+
 /**
  * Strip the IOL currency suffix (C = pesos, D = dollars) from a CEDEAR symbol.
  *

@@ -5,8 +5,8 @@ import { iolClient } from '@/lib/iol/client';
 import { PanelQuote } from '@/lib/iol/types';
 import { extractCashArs, effectiveCashAfterCommission, filterAffordableCedears, COMMISSION_RATE } from '@/lib/trading/quick-trade';
 
-import { getHistoricalData, getAllNews, getCompanyNames, HistoricalRow } from '@/lib/market-data';
-import { stripCurrencySuffix, toFmpTicker, deduplicateIolSymbols } from '@/lib/cedear-map';
+import { getHistoricalData, getAllNews, getCompanyNames, getCompanyProfile, getIncomeStatements, HistoricalRow, CompanyProfile, IncomeStatementRow } from '@/lib/market-data';
+import { stripCurrencySuffix, toFmpTicker, deduplicateIolSymbols, isEtf } from '@/lib/cedear-map';
 
 export async function getMarketData() {
   try {
@@ -518,4 +518,51 @@ export async function getAffordableCedears() {
   }
 }
 
+export interface CompanyDetailResult {
+  fmpTicker: string | null;
+  profile: CompanyProfile | null;
+  isEtf: boolean;
+  noUsEquivalent: boolean;
+  priceHistory: { date: string; close: number; volume: number }[];
+  incomeStatements: IncomeStatementRow[];
+}
 
+export async function getCompanyDetail(iolBaseSymbol: string): Promise<{ success: true; data: CompanyDetailResult } | { success: false; error: string }> {
+  try {
+    const etf = isEtf(iolBaseSymbol);
+    const fmpTicker = toFmpTicker(iolBaseSymbol);
+
+    if (!fmpTicker) {
+      return { success: true, data: { fmpTicker: null, profile: null, isEtf: etf, noUsEquivalent: true, priceHistory: [], incomeStatements: [] } };
+    }
+
+    const [profile, history, income] = await Promise.allSettled([
+      getCompanyProfile(fmpTicker),
+      getHistoricalData(fmpTicker, 365),
+      getIncomeStatements(fmpTicker, 'annual'),
+    ]);
+
+    const profileData = profile.status === 'fulfilled' ? profile.value : null;
+    const historyData = history.status === 'fulfilled' ? history.value : [];
+    const incomeData = income.status === 'fulfilled' ? income.value : [];
+
+    return {
+      success: true,
+      data: {
+        fmpTicker,
+        profile: profileData,
+        isEtf: etf || (profileData?.isEtf ?? false),
+        noUsEquivalent: false,
+        priceHistory: historyData.map(r => ({
+          date: r.date.toISOString().split('T')[0],
+          close: r.close,
+          volume: r.volume,
+        })),
+        incomeStatements: incomeData,
+      },
+    };
+  } catch (error) {
+    console.error('getCompanyDetail failed:', error);
+    return { success: false, error: 'No se pudo obtener información de la compañía' };
+  }
+}

@@ -5,16 +5,17 @@ import { PortfolioWindow } from '@/components/ui/PortfolioWindow';
 import { NewsFeed } from '@/components/ui/NewsFeed';
 import { MarketDataWindow } from '@/components/ui/MarketDataWindow';
 import { OperationsFeed } from '@/components/ui/OperationsFeed';
-import { AiHedgeFundWindow } from '@/components/ui/AiHedgeFundWindow';
+
 import { BacktestingWindow } from '@/components/ui/BacktestingWindow';
 import { QuickTradeWindow, TradableCedear } from '@/components/ui/QuickTradeWindow';
 import { AutoTraderWindow } from '@/components/ui/AutoTraderWindow';
+import { CompanyDetailWindow, CompanyDetailData } from '@/components/ui/CompanyDetailWindow';
 import { DesktopIcon } from '@/components/ui/DesktopIcon';
 import {
   DraggableResizableWindow,
 } from '@/components/ui/DraggableResizableWindow';
 import { useNewsStore } from '@/lib/store/news-store';
-import { getPortfolioSummary, getMarketData, getOperations, getAffordableCedearsForTrading, placeBuyOrder } from './actions';
+import { getPortfolioSummary, getMarketData, getOperations, getAffordableCedearsForTrading, placeBuyOrder, getCompanyDetail } from './actions';
 import { PortfolioResponse, Operation, DatosPerfil, EstadoCuenta } from '@/lib/iol/types';
 import { HistoricalRow } from '@/lib/market-data';
 import { DESKTOP_APP_ICONS } from '@/lib/win98se-icons';
@@ -25,7 +26,7 @@ const ICON_IDS = [
   'news',
   'marketdata',
   'movements',
-  'aihedgefund',
+
   'backtesting',
   'quicktrade',
   'autotrader',
@@ -37,10 +38,10 @@ const DEFAULT_ICON_POSITIONS: Record<IconId, { x: number; y: number }> = {
   news: { x: 8, y: 72 },
   marketdata: { x: 8, y: 136 },
   movements: { x: 8, y: 200 },
-  aihedgefund: { x: 8, y: 264 },
-  backtesting: { x: 8, y: 328 },
-  quicktrade: { x: 8, y: 392 },
-  autotrader: { x: 8, y: 456 },
+
+  backtesting: { x: 8, y: 264 },
+  quicktrade: { x: 8, y: 328 },
+  autotrader: { x: 8, y: 392 },
 };
 
 const DESKTOP_ICON_CONFIG: { id: IconId; label: string; emoji: string; iconKey: keyof typeof DESKTOP_APP_ICONS }[] = [
@@ -48,7 +49,7 @@ const DESKTOP_ICON_CONFIG: { id: IconId; label: string; emoji: string; iconKey: 
   { id: 'news',       label: 'News',         emoji: '📰', iconKey: 'news'       },
   { id: 'marketdata', label: 'Market Data',  emoji: '📈', iconKey: 'marketdata' },
   { id: 'movements',  label: 'Movimientos',  emoji: '💸', iconKey: 'movements'  },
-  { id: 'aihedgefund', label: 'AI Hedge Fund', emoji: '🤖', iconKey: 'aihedgefund' },
+
   { id: 'backtesting', label: 'Backtesting', emoji: '📉', iconKey: 'backtesting' },
   { id: 'quicktrade', label: 'Comprar CEDEARs', emoji: '💰', iconKey: 'quicktrade' },
   { id: 'autotrader', label: 'Auto Trader', emoji: '🤖', iconKey: 'autotrader' },
@@ -83,6 +84,12 @@ export default function TradingDashboard() {
     commissionRate: number;
   } | null>(null);
   const [isLoadingQuickTrade, setIsLoadingQuickTrade] = useState(false);
+
+  const [companyDetailSymbol, setCompanyDetailSymbol] = useState<string | null>(null);
+  const [companyDetailData, setCompanyDetailData] = useState<CompanyDetailData | null>(null);
+  const [isLoadingCompanyDetail, setIsLoadingCompanyDetail] = useState(false);
+  const [companyDetailError, setCompanyDetailError] = useState<string | null>(null);
+  const companyDetailRequestRef = useRef<string | null>(null);
 
   const [perfil, setPerfil] = useState<DatosPerfil | null>(null);
   const [estadoCuenta, setEstadoCuenta] = useState<EstadoCuenta | null>(null);
@@ -334,6 +341,25 @@ export default function TradingDashboard() {
     setIsLoadingQuickTrade(false);
   }, []);
 
+  const openCompanyDetail = useCallback(async (symbol: string) => {
+    openOrFocusWindow('companydetail');
+    if (symbol === companyDetailRequestRef.current) return;
+    companyDetailRequestRef.current = symbol;
+    setCompanyDetailSymbol(symbol);
+    setCompanyDetailData(null);
+    setCompanyDetailError(null);
+    setIsLoadingCompanyDetail(true);
+
+    const result = await getCompanyDetail(symbol);
+    if (companyDetailRequestRef.current !== symbol) return; // stale
+    if (result.success) {
+      setCompanyDetailData(result.data);
+    } else {
+      setCompanyDetailError(result.error);
+    }
+    setIsLoadingCompanyDetail(false);
+  }, [openOrFocusWindow]);
+
   const marketDataFetched = useRef(false);
   const operationsFetched = useRef(false);
   const quickTradeFetched = useRef(false);
@@ -453,7 +479,7 @@ export default function TradingDashboard() {
           <DraggableResizableWindow
             key={id}
             state={state}
-            title={APP_LABELS[appId]}
+            title={appId === 'companydetail' && companyDetailSymbol ? `${companyDetailSymbol} — Company Detail` : APP_LABELS[appId]}
             onMove={(x, y) => updateWindow(id, { x, y })}
             onResize={(width, height) => updateWindow(id, { width, height })}
             onMinimize={() => minimizeWindow(id)}
@@ -468,6 +494,7 @@ export default function TradingDashboard() {
                 onRefresh={fetchPortfolio}
                 perfil={perfil}
                 estadoCuenta={estadoCuenta}
+                onCompanyDetail={openCompanyDetail}
               />
             )}
             {appId === 'news' && (
@@ -495,9 +522,7 @@ export default function TradingDashboard() {
                 onRefresh={fetchOperationsData}
               />
             )}
-            {appId === 'aihedgefund' && (
-              <AiHedgeFundWindow />
-            )}
+
             {appId === 'backtesting' && (
               <BacktestingWindow />
             )}
@@ -510,6 +535,16 @@ export default function TradingDashboard() {
                 isLoading={isLoadingQuickTrade}
                 onRefresh={() => { quickTradeFetched.current = false; fetchQuickTradeData(); }}
                 onBuy={placeBuyOrder}
+                onCompanyDetail={openCompanyDetail}
+              />
+            )}
+            {appId === 'companydetail' && companyDetailSymbol && (
+              <CompanyDetailWindow
+                iolSymbol={companyDetailSymbol}
+                isLoading={isLoadingCompanyDetail}
+                error={companyDetailError}
+                data={companyDetailData}
+                onSearch={openCompanyDetail}
               />
             )}
             {appId === 'autotrader' && (

@@ -11,6 +11,7 @@ interface PortfolioWindowProps {
   onRefresh: () => void;
   perfil: DatosPerfil | null;
   estadoCuenta: EstadoCuenta | null;
+  onCompanyDetail?: (symbol: string) => void;
 }
 
 export const PortfolioWindow: React.FC<PortfolioWindowProps> = ({
@@ -20,6 +21,7 @@ export const PortfolioWindow: React.FC<PortfolioWindowProps> = ({
   onRefresh,
   perfil,
   estadoCuenta,
+  onCompanyDetail,
 }) => {
   const [activeTab, setActiveTab] = useState<'portfolio' | 'account'>('portfolio');
 
@@ -45,6 +47,7 @@ export const PortfolioWindow: React.FC<PortfolioWindowProps> = ({
                 estadoCuenta={estadoCuenta}
                 isLoading={isLoading}
                 onRefresh={onRefresh}
+                onCompanyDetail={onCompanyDetail}
               />
             ) : (
               <p style={{ ...FONT, margin: 0, padding: '4px', color: COLOR_NEGATIVE }}>No se pudo cargar el portafolio.</p>

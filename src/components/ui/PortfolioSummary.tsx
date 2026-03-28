@@ -1,6 +1,7 @@
 import React from 'react';
 import { PortfolioResponse, EstadoCuenta } from '@/lib/iol/types';
 import { usePortfolioSort, SortKey, UsdPriceEntry } from '@/hooks/usePortfolioSort';
+import { stripCurrencySuffix } from '@/lib/cedear-map';
 
 import { useMepStore } from '@/lib/store/mep-store';
 
@@ -10,6 +11,7 @@ interface PortfolioSummaryProps {
   estadoCuenta?: EstadoCuenta | null;
   isLoading?: boolean;
   onRefresh?: () => void;
+  onCompanyDetail?: (symbol: string) => void;
 }
 
 import {
@@ -44,6 +46,7 @@ export const PortfolioSummary: React.FC<PortfolioSummaryProps> = ({
   estadoCuenta,
   isLoading,
   onRefresh,
+  onCompanyDetail,
 }) => {
   const { mepRate, fetchMepRate } = useMepStore();
   const {
@@ -152,10 +155,12 @@ export const PortfolioSummary: React.FC<PortfolioSummaryProps> = ({
                   return (
                     <tr
                       key={sym}
+                      onDoubleClick={() => onCompanyDetail?.(stripCurrencySuffix(sym))}
                       style={{
                         backgroundColor: idx % 2 === 0 ? '#ffffff' : '#f0f0f0',
                         borderBottom: '1px solid #c0c0c0',
                         cursor: 'default',
+                        userSelect: 'none',
                       }}
                     >
                       <td style={CELL}>

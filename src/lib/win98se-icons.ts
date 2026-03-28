@@ -19,7 +19,7 @@ export const DESKTOP_APP_ICONS = {
   marketdata: url('mimes/32/x-office-spreadsheet.png'),
   account: url('apps/32/system-users.png'),
   movements: url('places/32/folder-recent.png'),
-  aihedgefund: url('apps/32/system-search.png'),
+
   backtesting: url('apps/32/accessories-calculator.png'),
   quicktrade: url('actions/32/document-new.png'),
   autotrader: url('apps/32/utilities-system-monitor.png'),

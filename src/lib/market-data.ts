@@ -55,6 +55,64 @@ export async function getCompanyNames(symbols: string[]): Promise<Record<string,
   return Object.fromEntries(symbols.map(s => [s, cache[s] ?? s]));
 }
 
+export interface CompanyProfile {
+  symbol: string;
+  companyName: string;
+  sector: string;
+  industry: string;
+  description: string;
+  mktCap: number;
+  price: number;
+  beta: number;
+  volAvg: number;
+  website: string;
+  country: string;
+  exchange: string;
+  currency: string;
+  image: string;
+  ipoDate: string;
+  isEtf: boolean;
+  isActivelyTrading: boolean;
+}
+
+export async function getCompanyProfile(fmpTicker: string): Promise<CompanyProfile | null> {
+  const apiKey = getFMPApiKey();
+  const url = `https://financialmodelingprep.com/stable/profile?symbol=${encodeURIComponent(fmpTicker)}&apikey=${apiKey}`;
+  const res = await fetch(url);
+  if (!res.ok) return null;
+  const data = await res.json();
+  if (Array.isArray(data) && data.length > 0) {
+    return data[0] as CompanyProfile;
+  }
+  return null;
+}
+
+export interface IncomeStatementRow {
+  date: string;
+  revenue: number;
+  netIncome: number;
+  grossProfit: number;
+  operatingIncome: number;
+  eps: number;
+}
+
+export async function getIncomeStatements(fmpTicker: string, period: 'annual' | 'quarter' = 'annual'): Promise<IncomeStatementRow[]> {
+  const apiKey = getFMPApiKey();
+  const url = `https://financialmodelingprep.com/stable/income-statement?symbol=${encodeURIComponent(fmpTicker)}&period=${period}&apikey=${apiKey}`;
+  const res = await fetch(url);
+  if (!res.ok) return [];
+  const data = await res.json();
+  if (!Array.isArray(data)) return [];
+  return data.map((row: Record<string, unknown>) => ({
+    date: row.date as string,
+    revenue: (row.revenue as number) ?? 0,
+    netIncome: (row.netIncome as number) ?? 0,
+    grossProfit: (row.grossProfit as number) ?? 0,
+    operatingIncome: (row.operatingIncome as number) ?? 0,
+    eps: (row.eps as number) ?? 0,
+  })).reverse(); // chronological order
+}
+
 export interface HistoricalRow {
   date: Date;
   open: number;

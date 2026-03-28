@@ -40,6 +40,7 @@ interface QuickTradeWindowProps {
     plazo: 't0' | 't1' | 't2';
     tipoOrden: 'precioLimite' | 'precioMercado';
   }) => Promise<{ success: boolean; data?: { ok: boolean; messages: { title: string; description: string }[] }; error?: string }>;
+  onCompanyDetail?: (symbol: string) => void;
 }
 
 type SortKey = 'base' | 'ultimoPrecio' | 'variacionPorcentual' | 'maxCantidad' | 'volumen';
@@ -58,6 +59,7 @@ export const QuickTradeWindow: React.FC<QuickTradeWindowProps> = ({
   isLoading,
   onRefresh,
   onBuy,
+  onCompanyDetail,
 }) => {
   const [sortKey, setSortKey] = useState<SortKey>('volumen');
   const [sortDir, setSortDir] = useState<SortDir>('desc');
@@ -195,8 +197,10 @@ export const QuickTradeWindow: React.FC<QuickTradeWindowProps> = ({
                 <tr
                   key={c.simbolo}
                   onClick={() => handleSelect(c)}
+                  onDoubleClick={() => onCompanyDetail?.(c.base)}
                   style={{
                     cursor: 'default',
+                    userSelect: 'none',
                     background: isSelected ? '#000080' : undefined,
                     color: isSelected ? '#ffffff' : undefined,
                   }}
@@ -243,6 +247,14 @@ export const QuickTradeWindow: React.FC<QuickTradeWindowProps> = ({
                 style={{ ...FONT, width: '70px', marginLeft: '4px', padding: '1px 4px' }}
               />
               <span style={{ ...FONT, color: '#808080', marginLeft: '4px' }}>/ {fmtInt(selected.maxCantidad)}</span>
+              <button
+                type="button"
+                onClick={() => setCantidad(selected.maxCantidad)}
+                disabled={selected.maxCantidad < 1}
+                style={{ ...FONT, marginLeft: '4px', padding: '1px 6px' }}
+              >
+                Max
+              </button>
             </label>
 
             <label style={FONT}>
