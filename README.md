@@ -1,36 +1,64 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Windows Money
+
+A Win98-themed AI hedge fund dashboard for trading CEDEARs (Argentine depository receipts for international stocks like AAPL, KO, TSLA) via the [InvertirOnline](https://www.invertironline.com/) broker API.
+
+Built with Next.js 16, React 19, and [98.css](https://jdan.github.io/98.css/) for authentic Windows 98 aesthetics.
+
+![Windows 98 Desktop](https://img.shields.io/badge/theme-Windows%2098-008080)
+
+## Features
+
+### Desktop Environment
+The main trading interface is a full Win98-style desktop with draggable, resizable windows and desktop icons:
+
+- **Portfolio** — Real-time holdings, account balances, and portfolio summary from IOL
+- **Market Data** — OHLCV charts with sparklines for CEDEAR prices
+- **News Feed** — Market intelligence with sentiment analysis
+- **Movimientos** — Recent broker operations and movements
+- **Company Detail** — Deep-dive into individual companies with financials, key metrics, and news
+- **Quick Trade** — Fast order entry with order review confirmation
+- **Auto Trader** — AI-driven automated trading with rebalance engine
+- **AI Hedge Fund** — Integration with a Python backend running multiple AI analyst agents (Warren Buffett, Charlie Munger, Cathie Wood, etc.)
+- **Backtesting** — Strategy backtesting engine
+
+### Integrations
+- **InvertirOnline (IOL)** — Full broker API integration with token management and auto-refresh
+- **Financial Modeling Prep (FMP)** — Historical market data, company profiles, financials, and news
+- **AI Hedge Fund Backend** — Separate Python service with LangGraph-based analyst agents for AI-driven investment decisions
 
 ## Getting Started
 
-First, run the development server:
+### Prerequisites
+- Node.js 18+
+- An [InvertirOnline](https://www.invertironline.com/) broker account
+- An [FMP](https://financialmodelingprep.com/) API key
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+### Environment Variables
+
+```env
+IOL_USERNAME=           # InvertirOnline broker login
+IOL_PASSWORD=
+IOL_REFRESH_TOKEN=
+FMP_API_KEY=            # Financial Modeling Prep API key
+BASIC_AUTH_USER=        # Optional HTTP basic auth
+BASIC_AUTH_PASSWORD=
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### Run
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+npm install
+npm run dev
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Open [http://localhost:3000](http://localhost:3000) and click "Enter Dashboard".
 
-## Learn More
+## Tech Stack
 
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- **Framework** — Next.js 16 (App Router)
+- **UI** — React 19, 98.css, Tailwind CSS
+- **State** — Zustand (persisted stores)
+- **Charts** — Recharts
+- **AI** — Vercel AI SDK, LangChain
+- **Broker API** — InvertirOnline REST API
+- **Market Data** — Financial Modeling Prep API

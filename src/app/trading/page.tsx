@@ -19,7 +19,16 @@ import { getPortfolioSummary, getMarketData, getOperations, getAffordableCedears
 import { PortfolioResponse, Operation, DatosPerfil, EstadoCuenta } from '@/lib/iol/types';
 import { HistoricalRow } from '@/lib/market-data';
 import { DESKTOP_APP_ICONS } from '@/lib/win98se-icons';
-import { useWindowManager, AppId, APP_LABELS } from '@/hooks/useWindowManager';
+import { useWindowManager, AppId, APP_LABELS, COMPANY_DETAIL_DEFAULTS } from '@/hooks/useWindowManager';
+
+interface CompanyDetailInstance {
+  symbol: string;
+  data: CompanyDetailData | null;
+  isLoading: boolean;
+  error: string | null;
+}
+
+const COMPANY_DETAIL_PREFIX = 'companydetail-';
 
 const ICON_IDS = [
   'portfolio',
@@ -85,11 +94,9 @@ export default function TradingDashboard() {
   } | null>(null);
   const [isLoadingQuickTrade, setIsLoadingQuickTrade] = useState(false);
 
-  const [companyDetailSymbol, setCompanyDetailSymbol] = useState<string | null>(null);
-  const [companyDetailData, setCompanyDetailData] = useState<CompanyDetailData | null>(null);
-  const [isLoadingCompanyDetail, setIsLoadingCompanyDetail] = useState(false);
-  const [companyDetailError, setCompanyDetailError] = useState<string | null>(null);
-  const companyDetailRequestRef = useRef<string | null>(null);
+  const [companyDetailInstances, setCompanyDetailInstances] = useState<Record<string, CompanyDetailInstance>>({});
+  /** Counter for staggering new window positions */
+  const companyDetailCountRef = useRef(0);
 
   const [perfil, setPerfil] = useState<DatosPerfil | null>(null);
   const [estadoCuenta, setEstadoCuenta] = useState<EstadoCuenta | null>(null);
@@ -105,12 +112,24 @@ export default function TradingDashboard() {
     focusedId,
     allOpenWindows,
     openOrFocusWindow,
+    openDynamicWindow,
     updateWindow,
-    closeWindow,
+    closeWindow: rawCloseWindow,
     minimizeWindow,
     focusWindow,
     toggleMinimize
   } = useWindowManager();
+
+  const closeWindow = useCallback((id: string) => {
+    rawCloseWindow(id);
+    if (id.startsWith(COMPANY_DETAIL_PREFIX)) {
+      setCompanyDetailInstances((prev) => {
+        const next = { ...prev };
+        delete next[id];
+        return next;
+      });
+    }
+  }, [rawCloseWindow]);
 
   const [iconPositions, setIconPositions] = useState<Record<IconId, { x: number; y: number }>>(DEFAULT_ICON_POSITIONS);
   const [selectedIconIds, setSelectedIconIds] = useState<Set<string>>(new Set());
@@ -342,23 +361,37 @@ export default function TradingDashboard() {
   }, []);
 
   const openCompanyDetail = useCallback(async (symbol: string) => {
-    openOrFocusWindow('companydetail');
-    if (symbol === companyDetailRequestRef.current) return;
-    companyDetailRequestRef.current = symbol;
-    setCompanyDetailSymbol(symbol);
-    setCompanyDetailData(null);
-    setCompanyDetailError(null);
-    setIsLoadingCompanyDetail(true);
+    const windowId = `${COMPANY_DETAIL_PREFIX}${symbol}`;
+
+    // If already open, just focus it
+    if (companyDetailInstances[windowId]) {
+      openDynamicWindow(windowId, COMPANY_DETAIL_DEFAULTS);
+      return;
+    }
+
+    // Stagger position so overlapping windows are offset
+    const offset = (companyDetailCountRef.current % 6) * 28;
+    companyDetailCountRef.current++;
+    openDynamicWindow(windowId, {
+      ...COMPANY_DETAIL_DEFAULTS,
+      x: COMPANY_DETAIL_DEFAULTS.x + offset,
+      y: COMPANY_DETAIL_DEFAULTS.y + offset,
+    });
+
+    setCompanyDetailInstances((prev) => ({
+      ...prev,
+      [windowId]: { symbol, data: null, isLoading: true, error: null },
+    }));
 
     const result = await getCompanyDetail(symbol);
-    if (companyDetailRequestRef.current !== symbol) return; // stale
-    if (result.success) {
-      setCompanyDetailData(result.data);
-    } else {
-      setCompanyDetailError(result.error);
-    }
-    setIsLoadingCompanyDetail(false);
-  }, [openOrFocusWindow]);
+    setCompanyDetailInstances((prev) => {
+      if (!prev[windowId]) return prev; // window was closed while loading
+      if (result.success) {
+        return { ...prev, [windowId]: { ...prev[windowId], data: result.data, isLoading: false } };
+      }
+      return { ...prev, [windowId]: { ...prev[windowId], error: result.error, isLoading: false } };
+    });
+  }, [openDynamicWindow, companyDetailInstances]);
 
   const marketDataFetched = useRef(false);
   const operationsFetched = useRef(false);
@@ -474,12 +507,17 @@ export default function TradingDashboard() {
 
       {Object.entries(windows).map(([id, state]) => {
         if (state.minimized) return null;
-        const appId = id as AppId;
+        const isCompanyDetail = id.startsWith(COMPANY_DETAIL_PREFIX);
+        const appId = isCompanyDetail ? null : (id as AppId);
+        const cdInstance = isCompanyDetail ? companyDetailInstances[id] : null;
+        const title = isCompanyDetail && cdInstance
+          ? `${cdInstance.symbol} — Company Detail`
+          : appId ? APP_LABELS[appId] : id;
         return (
           <DraggableResizableWindow
             key={id}
             state={state}
-            title={appId === 'companydetail' && companyDetailSymbol ? `${companyDetailSymbol} — Company Detail` : APP_LABELS[appId]}
+            title={title}
             onMove={(x, y) => updateWindow(id, { x, y })}
             onResize={(width, height) => updateWindow(id, { width, height })}
             onMinimize={() => minimizeWindow(id)}
@@ -538,12 +576,12 @@ export default function TradingDashboard() {
                 onCompanyDetail={openCompanyDetail}
               />
             )}
-            {appId === 'companydetail' && companyDetailSymbol && (
+            {isCompanyDetail && cdInstance && (
               <CompanyDetailWindow
-                iolSymbol={companyDetailSymbol}
-                isLoading={isLoadingCompanyDetail}
-                error={companyDetailError}
-                data={companyDetailData}
+                iolSymbol={cdInstance.symbol}
+                isLoading={cdInstance.isLoading}
+                error={cdInstance.error}
+                data={cdInstance.data}
                 onSearch={openCompanyDetail}
               />
             )}
@@ -562,16 +600,22 @@ export default function TradingDashboard() {
         >
           Start
         </button>
-        {allOpenWindows.map(([id]) => (
-          <button
-            key={id}
-            type="button"
-            className={`taskbar-button ${focusedId === id ? 'active' : ''}`}
-            onClick={() => toggleMinimize(id)}
-          >
-            {APP_LABELS[id as AppId]}
-          </button>
-        ))}
+        {allOpenWindows.map(([id]) => {
+          const isCd = id.startsWith(COMPANY_DETAIL_PREFIX);
+          const label = isCd
+            ? `${id.slice(COMPANY_DETAIL_PREFIX.length)} — Detail`
+            : APP_LABELS[id as AppId];
+          return (
+            <button
+              key={id}
+              type="button"
+              className={`taskbar-button ${focusedId === id ? 'active' : ''}`}
+              onClick={() => toggleMinimize(id)}
+            >
+              {label}
+            </button>
+          );
+        })}
       </div>
 
       {/* Win98-style desktop context menu */}
