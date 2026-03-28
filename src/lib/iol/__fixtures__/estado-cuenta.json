@@ -1,0 +1,101 @@
+{
+  "cuentas": [
+    {
+      "numero": "100000",
+      "tipo": "inversion_Argentina_Pesos",
+      "moneda": "peso_Argentino",
+      "disponible": 635.86,
+      "comprometido": 16.36,
+      "saldo": 652.22,
+      "titulosValorizados": 3635809.5,
+      "total": 3636461.72,
+      "margenDescubierto": 0.0,
+      "saldos": [
+        {
+          "liquidacion": "inmediato",
+          "saldo": 652.22,
+          "comprometido": 16.36,
+          "disponible": 635.86,
+          "disponibleOperar": 635.86
+        },
+        {
+          "liquidacion": "hrs24",
+          "saldo": 0.0,
+          "comprometido": 0.0,
+          "disponible": 0.0,
+          "disponibleOperar": 635.86
+        },
+        {
+          "liquidacion": "hrs48",
+          "saldo": 0.0,
+          "comprometido": 0.0,
+          "disponible": 0.0,
+          "disponibleOperar": 635.86
+        },
+        {
+          "liquidacion": "hrs72",
+          "saldo": 0.0,
+          "comprometido": 0.0,
+          "disponible": 0.0,
+          "disponibleOperar": 635.86
+        },
+        {
+          "liquidacion": "masHrs72",
+          "saldo": 0.0,
+          "comprometido": 0.0,
+          "disponible": 0.0,
+          "disponibleOperar": 0.0
+        }
+      ],
+      "estado": "operable"
+    },
+    {
+      "numero": "100000",
+      "tipo": "inversion_Argentina_Dolares",
+      "moneda": "dolar_Estadounidense",
+      "disponible": 3.27,
+      "comprometido": 0.0,
+      "saldo": 3.27,
+      "titulosValorizados": 0.0,
+      "total": 3.27,
+      "margenDescubierto": 0.0,
+      "saldos": [
+        {
+          "liquidacion": "inmediato",
+          "saldo": 3.27,
+          "comprometido": 0.0,
+          "disponible": 3.27,
+          "disponibleOperar": 3.27
+        },
+        {
+          "liquidacion": "hrs24",
+          "saldo": 0.0,
+          "comprometido": 0.0,
+          "disponible": 0.0,
+          "disponibleOperar": 3.27
+        },
+        {
+          "liquidacion": "hrs48",
+          "saldo": 0.0,
+          "comprometido": 0.0,
+          "disponible": 0.0,
+          "disponibleOperar": 3.27
+        }
+      ],
+      "estado": "operable"
+    }
+  ],
+  "estadisticas": [
+    {
+      "descripcion": "Anterior",
+      "cantidad": 0,
+      "volumen": 0
+    },
+    {
+      "descripcion": "Actual",
+      "cantidad": 5,
+      "volumen": 150000
+    }
+  ],
+  "totalEnPesos": 3636461.72
+}

@@ -1,4 +1,4 @@
-import { IOLToken, PortfolioResponse, Quote, OrderRequest, OrderResponse, Operation, OperationDetail, EstadoCuenta, DatosPerfil, PanelResponse } from './types';
+import { IOLToken, PortfolioResponse, Quote, CotizacionResponse, OrderRequest, OrderResponse, Operation, OperationDetail, EstadoCuenta, DatosPerfil, PanelResponse } from './types';
 import { readFileSync, writeFileSync, unlinkSync } from 'fs';
 import { join } from 'path';
 
@@ -255,8 +255,8 @@ export class IOLClient {
     return this.fetchWithAuth<PortfolioResponse>('/api/v2/Portafolio/Argentina');
   }
 
-  async getQuote(symbol: string, market: string = 'bcba'): Promise<Quote> {
-    return this.fetchWithAuth<Quote>(`/api/v2/${market}/Titulos/${symbol}/Cotizacion`);
+  async getQuote(symbol: string, market: string = 'bcba'): Promise<CotizacionResponse> {
+    return this.fetchWithAuth<CotizacionResponse>(`/api/v2/${market}/Titulos/${symbol}/Cotizacion`);
   }
 
   async getPanelQuotes(instrumento: string, pais: string = 'argentina'): Promise<PanelResponse> {    

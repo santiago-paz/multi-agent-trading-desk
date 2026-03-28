@@ -1,0 +1,68 @@
+{
+  "pais": "argentina",
+  "activos": [
+    {
+      "cantidad": 1.0,
+      "comprometido": 0.0,
+      "puntosVariacion": 0.0,
+      "variacionDiaria": 1.32,
+      "ultimoPrecio": 38340.0,
+      "ppc": 41750.0,
+      "gananciaPorcentaje": -8.16,
+      "gananciaDinero": -3410.0,
+      "valorizado": 38340.0,
+      "titulo": {
+        "simbolo": "ABT",
+        "descripcion": "Cedear Abbott Laboratories",
+        "pais": "argentina",
+        "mercado": "bcba",
+        "tipo": "CEDEARS",
+        "plazo": "t1",
+        "moneda": "peso_Argentino"
+      },
+      "parking": null
+    },
+    {
+      "cantidad": 21.0,
+      "comprometido": 0.0,
+      "puntosVariacion": 0.0,
+      "variacionDiaria": 5.32,
+      "ultimoPrecio": 28480.0,
+      "ppc": 20277.619,
+      "gananciaPorcentaje": 40.45,
+      "gananciaDinero": 172250.0,
+      "valorizado": 598080.0,
+      "titulo": {
+        "simbolo": "B",
+        "descripcion": "Cedear Barrick Mining Corporation",
+        "pais": "argentina",
+        "mercado": "bcba",
+        "tipo": "CEDEARS",
+        "plazo": "t1",
+        "moneda": "peso_Argentino"
+      },
+      "parking": null
+    },
+    {
+      "cantidad": 1.0,
+      "comprometido": 0.0,
+      "puntosVariacion": 0.0,
+      "variacionDiaria": -0.06,
+      "ultimoPrecio": 1550.0,
+      "ppc": 1581.842,
+      "gananciaPorcentaje": -2.01,
+      "gananciaDinero": -31.84,
+      "valorizado": 1550.0,
+      "titulo": {
+        "simbolo": "BB",
+        "descripcion": "Cedear Blackberry",
+        "pais": "argentina",
+        "mercado": "bcba",
+        "tipo": "CEDEARS",
+        "plazo": "t1",
+        "moneda": "peso_Argentino"
+      },
+      "parking": null
+    }
+  ]
+}

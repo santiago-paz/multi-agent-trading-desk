@@ -1,0 +1,53 @@
+[
+  {
+    "numero": 168655400,
+    "fechaOrden": "2026-03-27T20:59:58.39",
+    "tipo": "Compra",
+    "estado": "iniciada",
+    "mercado": "BCBA",
+    "simbolo": "BKC*",
+    "cantidad": 1.0,
+    "monto": 16.25,
+    "modalidad": "precio_Limite",
+    "precio": 16.25,
+    "fechaOperada": null,
+    "cantidadOperada": null,
+    "precioOperado": null,
+    "montoOperado": null,
+    "plazo": "a24horas"
+  },
+  {
+    "numero": 168145777,
+    "fechaOrden": "2026-03-24T00:44:40.3",
+    "tipo": "Compra",
+    "estado": "terminada",
+    "mercado": "BCBA",
+    "simbolo": "IVV",
+    "cantidad": 1.0,
+    "monto": 1403.0,
+    "modalidad": "precio_Limite",
+    "precio": 1403.0,
+    "fechaOperada": "2026-03-25T10:34:22",
+    "cantidadOperada": 1.0,
+    "precioOperado": 1403.0,
+    "montoOperado": 1403.0,
+    "plazo": "a24horas"
+  },
+  {
+    "numero": 168145782,
+    "fechaOrden": "2026-03-24T00:46:30.837",
+    "tipo": "Compra",
+    "estado": "cancelada",
+    "mercado": "BCBA",
+    "simbolo": "BKC*",
+    "cantidad": 1.0,
+    "monto": 16.25,
+    "modalidad": "precio_Limite",
+    "precio": 16.25,
+    "fechaOperada": null,
+    "cantidadOperada": null,
+    "precioOperado": null,
+    "montoOperado": null,
+    "plazo": "a24horas"
+  }
+]

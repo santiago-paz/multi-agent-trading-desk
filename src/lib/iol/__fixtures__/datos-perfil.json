@@ -1,0 +1,16 @@
+{
+  "nombre": "Juan Carlos",
+  "apellido": "PEREZ",
+  "numeroCuenta": "100000",
+  "dni": "30.000.000",
+  "cuitCuil": "20300000005",
+  "sexo": "Masculino",
+  "perfilInversor": "Moderado",
+  "actualizarDDJJ": true,
+  "actualizarTestInversor": true,
+  "esBajaArrepentimiento": false,
+  "email": "juan@example.com",
+  "cuentaAbierta": true,
+  "actualizarTyC": false,
+  "actualizarTyCApp": false
+}

@@ -1,0 +1,85 @@
+{
+  "titulos": [
+    {
+      "simbolo": "AAL",
+      "puntas": {
+        "cantidadCompra": 1.0,
+        "precioCompra": 9.49,
+        "precioVenta": 8500.0,
+        "cantidadVenta": 41.0
+      },
+      "ultimoPrecio": 7625.0,
+      "variacionPorcentual": -1.42,
+      "apertura": 7705.0,
+      "maximo": 7705.0,
+      "minimo": 7545.0,
+      "ultimoCierre": 7625.0,
+      "volumen": 0.0,
+      "cantidadOperaciones": 320.0,
+      "fecha": "2026-03-27T16:57:53.927",
+      "tipoOpcion": null,
+      "precioEjercicio": null,
+      "fechaVencimiento": null,
+      "mercado": "1",
+      "moneda": "1",
+      "descripcion": "Cedear American Airlines Group",
+      "plazo": "T1",
+      "laminaMinima": 1,
+      "lote": 1
+    },
+    {
+      "simbolo": "AALC",
+      "puntas": {
+        "cantidadCompra": 98.0,
+        "precioCompra": 5.06,
+        "precioVenta": 5.45,
+        "cantidadVenta": 98.0
+      },
+      "ultimoPrecio": 5.45,
+      "variacionPorcentual": 1.48,
+      "apertura": 5.45,
+      "maximo": 5.45,
+      "minimo": 5.45,
+      "ultimoCierre": 5.45,
+      "volumen": 0.0,
+      "cantidadOperaciones": 1.0,
+      "fecha": "2026-03-27T13:03:21.137",
+      "tipoOpcion": null,
+      "precioEjercicio": null,
+      "fechaVencimiento": null,
+      "mercado": "1",
+      "moneda": "2",
+      "descripcion": "Cedear American Airlines Group",
+      "plazo": "T1",
+      "laminaMinima": 1,
+      "lote": 1
+    },
+    {
+      "simbolo": "AAPL",
+      "puntas": {
+        "cantidadCompra": 50.0,
+        "precioCompra": 18300.0,
+        "precioVenta": 18400.0,
+        "cantidadVenta": 25.0
+      },
+      "ultimoPrecio": 18350.0,
+      "variacionPorcentual": 0.38,
+      "apertura": 18300.0,
+      "maximo": 18550.0,
+      "minimo": 18280.0,
+      "ultimoCierre": 18280.0,
+      "volumen": 0.0,
+      "cantidadOperaciones": 1446.0,
+      "fecha": "2026-03-27T16:59:31.903",
+      "tipoOpcion": null,
+      "precioEjercicio": null,
+      "fechaVencimiento": null,
+      "mercado": "1",
+      "moneda": "1",
+      "descripcion": "Cedear Apple Inc.",
+      "plazo": "T1",
+      "laminaMinima": 1,
+      "lote": 1
+    }
+  ]
+}

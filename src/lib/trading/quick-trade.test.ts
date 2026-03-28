@@ -11,7 +11,7 @@ function makeQuote(overrides: Partial<PanelQuote> & { simbolo: string }): PanelQ
     apertura: 99,
     maximo: 101,
     minimo: 98,
-    cierreAnterior: 99,
+    ultimoCierre: 99,
     volumen: 5000,
     cantidadOperaciones: 200,
     fecha: '2026-03-24T00:00:00',

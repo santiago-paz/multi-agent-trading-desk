@@ -3,8 +3,9 @@ export interface IOLToken {
   refresh_token: string;
   expires_in: number;
   token_type: string;
-  issued: string;
-  expires: string;
+  '.issued': string;
+  '.expires': string;
+  '.refreshexpires'?: string;
 }
 
 export interface PortfolioTitulo {
@@ -36,6 +37,37 @@ export interface PortfolioResponse {
   activos: PortfolioAsset[];
 }
 
+export interface Puntas {
+  cantidadCompra: number;
+  precioCompra: number;
+  precioVenta: number;
+  cantidadVenta: number;
+}
+
+export interface CotizacionResponse {
+  ultimoPrecio: number;
+  variacion: number;
+  apertura: number;
+  maximo: number;
+  minimo: number;
+  fechaHora: string;
+  tendencia: string;
+  cierreAnterior: number;
+  montoOperado: number;
+  volumenNominal: number;
+  precioPromedio: number;
+  moneda: string;
+  precioAjuste: number;
+  interesesAbiertos: number;
+  puntas: Puntas[];
+  cantidadOperaciones: number;
+  descripcionTitulo: string;
+  plazo: string;
+  laminaMinima: number;
+  lote: number;
+}
+
+/** @deprecated Use CotizacionResponse for individual quote endpoint. Kept for mock/simulation compatibility. */
 export interface Quote {
   simbolo: string;
   ultimoPrecio: number;
@@ -53,12 +85,13 @@ export interface Quote {
 
 export interface PanelQuote {
   simbolo: string;
+  puntas?: Puntas;
   ultimoPrecio: number;
   variacionPorcentual: number;
   apertura: number;
   maximo: number;
   minimo: number;
-  cierreAnterior: number;
+  ultimoCierre: number;
   volumen: number;
   cantidadOperaciones: number;
   fecha: string;
@@ -69,6 +102,8 @@ export interface PanelQuote {
   moneda: string;
   descripcion: string;
   plazo: string;
+  laminaMinima?: number;
+  lote?: number;
 }
 
 export interface PanelResponse {
@@ -103,10 +138,10 @@ export interface Operation {
   monto: number;
   modalidad: string;
   precio: number;
-  fechaOperada?: string;
-  cantidadOperada?: number;
-  precioOperado?: number;
-  montoOperado?: number;
+  fechaOperada?: string | null;
+  cantidadOperada?: number | null;
+  precioOperado?: number | null;
+  montoOperado?: number | null;
   plazo?: string;
 }
 
@@ -135,12 +170,20 @@ export interface OperationDetail {
 }
 
 export interface DatosPerfil {
-  numeroCuenta: string;
-  email: string;
   nombre: string;
   apellido: string;
-  tipoInversor: string;
+  numeroCuenta: string;
+  dni?: string;
+  cuitCuil?: string;
+  sexo?: string;
   perfilInversor: string;
+  actualizarDDJJ?: boolean;
+  actualizarTestInversor?: boolean;
+  esBajaArrepentimiento?: boolean;
+  email: string;
+  cuentaAbierta?: boolean;
+  actualizarTyC?: boolean;
+  actualizarTyCApp?: boolean;
 }
 
 export interface SaldoLiquidacion {

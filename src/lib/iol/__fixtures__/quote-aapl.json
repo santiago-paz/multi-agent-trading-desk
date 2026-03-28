@@ -1,0 +1,22 @@
+{
+  "ultimoPrecio": 18350.0,
+  "variacion": 0.38,
+  "apertura": 18300.0,
+  "maximo": 18550.0,
+  "minimo": 18280.0,
+  "fechaHora": "2026-03-27T16:59:31.903",
+  "tendencia": "mantiene",
+  "cierreAnterior": 18350.0,
+  "montoOperado": 802458070.0,
+  "volumenNominal": 0.0,
+  "precioPromedio": 0.0,
+  "moneda": "peso_Argentino",
+  "precioAjuste": 0.0,
+  "interesesAbiertos": 0.0,
+  "puntas": [],
+  "cantidadOperaciones": 1446,
+  "descripcionTitulo": "Cedear Apple Inc.",
+  "plazo": "T1",
+  "laminaMinima": 1,
+  "lote": 1
+}
