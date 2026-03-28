@@ -6,6 +6,17 @@ Built with Next.js 16, React 19, and [98.css](https://jdan.github.io/98.css/) fo
 
 ![Windows 98 Desktop](https://img.shields.io/badge/theme-Windows%2098-008080)
 
+## Architecture
+
+The system is composed of two repos that work together:
+
+| Repo | Stack | Role |
+|------|-------|------|
+| **windows-money** (this repo) | Next.js, React 19, 98.css | Win98 desktop UI, broker integration, market data |
+| **ai-hedge-fund** | Python, FastAPI, LangGraph | AI analyst agents, portfolio management, backtesting engine |
+
+The frontend calls the AI backend via `NEXT_PUBLIC_AI_HEDGE_FUND_API_URL` (defaults to `http://localhost:8000`).
+
 ## Features
 
 ### Desktop Environment
@@ -18,13 +29,13 @@ The main trading interface is a full Win98-style desktop with draggable, resizab
 - **Company Detail** — Deep-dive into individual companies with financials, key metrics, and news
 - **Quick Trade** — Fast order entry with order review confirmation
 - **Auto Trader** — AI-driven automated trading with rebalance engine
-- **AI Hedge Fund** — Integration with a Python backend running multiple AI analyst agents (Warren Buffett, Charlie Munger, Cathie Wood, etc.)
+- **AI Hedge Fund** — Integration with the Python backend running 12 AI analyst agents
 - **Backtesting** — Strategy backtesting engine
 
 ### Integrations
-- **InvertirOnline (IOL)** — Full broker API integration with token management and auto-refresh
+- **InvertirOnline (IOL)** — Full broker API integration with token caching and auto-refresh
 - **Financial Modeling Prep (FMP)** — Historical market data, company profiles, financials, and news
-- **AI Hedge Fund Backend** — Separate Python service with LangGraph-based analyst agents for AI-driven investment decisions
+- **AI Hedge Fund Backend** — FastAPI service with SSE streaming for real-time agent progress
 
 ## Getting Started
 
