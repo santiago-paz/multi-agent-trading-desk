@@ -7,8 +7,17 @@ import {
   getNews,
   getGeneralMarketNews,
   getHistoricalData,
+  getHistoricalPrices,
   getComprehensiveAssetData,
   getCompanyNames,
+  getCompanyProfile,
+  getIncomeStatements,
+  getKeyMetrics,
+  getCashFlowStatements,
+  getBalanceSheetStatements,
+  getFinancialScores,
+  getDCFValue,
+  getTickerNews,
 } from './market-data';
 
 // ── calculateSMA ────────────────────────────────────────────────────────────
@@ -704,5 +713,372 @@ describe('getCompanyNames', () => {
 
     const result = await getCompanyNames(['AAPL']);
     expect(result).toEqual({ AAPL: 'Apple Inc.' });
+  });
+});
+
+// ── getCompanyProfile ────────────────────────────────────────────────────────
+
+describe('getCompanyProfile', () => {
+  setupFetchEnv();
+
+  it('returns profile from first element of array response', async () => {
+    mockFetch([{ symbol: 'AAPL', companyName: 'Apple Inc.', sector: 'Technology' }]);
+
+    const result = await getCompanyProfile('AAPL');
+    expect(result).not.toBeNull();
+    expect(result!.symbol).toBe('AAPL');
+    expect(result!.companyName).toBe('Apple Inc.');
+  });
+
+  it('returns null on HTTP error', async () => {
+    mockFetch(null, false, 500);
+    expect(await getCompanyProfile('AAPL')).toBeNull();
+  });
+
+  it('returns null when API returns empty array', async () => {
+    mockFetch([]);
+    expect(await getCompanyProfile('INVALID')).toBeNull();
+  });
+
+  it('returns null when API returns non-array', async () => {
+    mockFetch({ error: 'not found' });
+    expect(await getCompanyProfile('INVALID')).toBeNull();
+  });
+
+  it('builds correct URL', async () => {
+    mockFetch([{ symbol: 'TSLA' }]);
+    await getCompanyProfile('TSLA');
+
+    const url = (globalThis.fetch as ReturnType<typeof vi.fn>).mock.calls[0][0] as string;
+    expect(url).toContain('symbol=TSLA');
+    expect(url).toContain('apikey=test-key');
+    expect(url).toContain('/stable/profile');
+  });
+});
+
+// ── getIncomeStatements ──────────────────────────────────────────────────────
+
+describe('getIncomeStatements', () => {
+  setupFetchEnv();
+
+  it('maps fields and returns in chronological order', async () => {
+    mockFetch([
+      { date: '2024-12-31', revenue: 200, netIncome: 50, grossProfit: 100, operatingIncome: 70, eps: 3.5 },
+      { date: '2023-12-31', revenue: 180, netIncome: 40, grossProfit: 90, operatingIncome: 60, eps: 3.0 },
+    ]);
+
+    const rows = await getIncomeStatements('AAPL');
+    expect(rows).toHaveLength(2);
+    expect(rows[0].date).toBe('2023-12-31');
+    expect(rows[1].date).toBe('2024-12-31');
+    expect(rows[1].revenue).toBe(200);
+    expect(rows[1].eps).toBe(3.5);
+  });
+
+  it('defaults missing numeric fields to 0', async () => {
+    mockFetch([{ date: '2024-01-01' }]);
+
+    const rows = await getIncomeStatements('AAPL');
+    expect(rows[0].revenue).toBe(0);
+    expect(rows[0].netIncome).toBe(0);
+    expect(rows[0].eps).toBe(0);
+  });
+
+  it('returns empty array on HTTP error', async () => {
+    mockFetch(null, false, 500);
+    expect(await getIncomeStatements('AAPL')).toEqual([]);
+  });
+
+  it('returns empty array when API returns non-array', async () => {
+    mockFetch({ error: 'bad' });
+    expect(await getIncomeStatements('AAPL')).toEqual([]);
+  });
+
+  it('passes period parameter in URL', async () => {
+    mockFetch([]);
+    await getIncomeStatements('AAPL', 'quarter');
+
+    const url = (globalThis.fetch as ReturnType<typeof vi.fn>).mock.calls[0][0] as string;
+    expect(url).toContain('period=quarter');
+  });
+
+  it('defaults to annual period', async () => {
+    mockFetch([]);
+    await getIncomeStatements('AAPL');
+
+    const url = (globalThis.fetch as ReturnType<typeof vi.fn>).mock.calls[0][0] as string;
+    expect(url).toContain('period=annual');
+  });
+});
+
+// ── getKeyMetrics ────────────────────────────────────────────────────────────
+
+describe('getKeyMetrics', () => {
+  setupFetchEnv();
+
+  it('maps fields and returns in chronological order', async () => {
+    mockFetch([
+      { date: '2024-12-31', peRatio: 30, pbRatio: 40, returnOnEquity: 1.5, returnOnAssets: 0.3, debtToEquity: 1.8, currentRatio: 1.1, dividendYield: 0.006, enterpriseValue: 3e12, evToEbitda: 25 },
+      { date: '2023-12-31', peRatio: 28, pbRatio: 35, returnOnEquity: 1.4, returnOnAssets: 0.28, debtToEquity: 1.7, currentRatio: 1.0, dividendYield: 0.007, enterpriseValue: 2.8e12, evToEbitda: 23 },
+    ]);
+
+    const rows = await getKeyMetrics('AAPL');
+    expect(rows).toHaveLength(2);
+    expect(rows[0].date).toBe('2023-12-31');
+    expect(rows[1].peRatio).toBe(30);
+    expect(rows[1].roe).toBe(1.5);
+    expect(rows[1].roa).toBe(0.3);
+  });
+
+  it('defaults missing fields to 0', async () => {
+    mockFetch([{ date: '2024-01-01' }]);
+
+    const rows = await getKeyMetrics('AAPL');
+    expect(rows[0].peRatio).toBe(0);
+    expect(rows[0].dividendYield).toBe(0);
+    expect(rows[0].evToEbitda).toBe(0);
+  });
+
+  it('returns empty array on HTTP error', async () => {
+    mockFetch(null, false, 500);
+    expect(await getKeyMetrics('AAPL')).toEqual([]);
+  });
+
+  it('returns empty array when API returns non-array', async () => {
+    mockFetch({ error: 'bad' });
+    expect(await getKeyMetrics('AAPL')).toEqual([]);
+  });
+});
+
+// ── getCashFlowStatements ────────────────────────────────────────────────────
+
+describe('getCashFlowStatements', () => {
+  setupFetchEnv();
+
+  it('maps fields and returns in chronological order', async () => {
+    mockFetch([
+      { date: '2024-12-31', operatingCashFlow: 100, capitalExpenditure: -20, freeCashFlow: 80, dividendsPaid: -15 },
+      { date: '2023-12-31', operatingCashFlow: 90, capitalExpenditure: -18, freeCashFlow: 72, dividendsPaid: -12 },
+    ]);
+
+    const rows = await getCashFlowStatements('AAPL');
+    expect(rows).toHaveLength(2);
+    expect(rows[0].date).toBe('2023-12-31');
+    expect(rows[1].operatingCashFlow).toBe(100);
+    expect(rows[1].freeCashFlow).toBe(80);
+  });
+
+  it('defaults missing fields to 0', async () => {
+    mockFetch([{ date: '2024-01-01' }]);
+
+    const rows = await getCashFlowStatements('AAPL');
+    expect(rows[0].operatingCashFlow).toBe(0);
+    expect(rows[0].capitalExpenditure).toBe(0);
+    expect(rows[0].freeCashFlow).toBe(0);
+    expect(rows[0].dividendsPaid).toBe(0);
+  });
+
+  it('returns empty array on HTTP error', async () => {
+    mockFetch(null, false, 500);
+    expect(await getCashFlowStatements('AAPL')).toEqual([]);
+  });
+
+  it('returns empty array when API returns non-array', async () => {
+    mockFetch({ error: 'bad' });
+    expect(await getCashFlowStatements('AAPL')).toEqual([]);
+  });
+});
+
+// ── getBalanceSheetStatements ────────────────────────────────────────────────
+
+describe('getBalanceSheetStatements', () => {
+  setupFetchEnv();
+
+  it('maps fields and returns in chronological order', async () => {
+    mockFetch([
+      { date: '2024-12-31', totalAssets: 400, totalLiabilities: 250, totalStockholdersEquity: 150, netDebt: 80, totalDebt: 120, cashAndShortTermInvestments: 40 },
+      { date: '2023-12-31', totalAssets: 380, totalLiabilities: 240, totalStockholdersEquity: 140, netDebt: 75, totalDebt: 110, cashAndShortTermInvestments: 35 },
+    ]);
+
+    const rows = await getBalanceSheetStatements('AAPL');
+    expect(rows).toHaveLength(2);
+    expect(rows[0].date).toBe('2023-12-31');
+    expect(rows[1].totalAssets).toBe(400);
+    expect(rows[1].totalStockholdersEquity).toBe(150);
+    expect(rows[1].cashAndShortTermInvestments).toBe(40);
+  });
+
+  it('defaults missing fields to 0', async () => {
+    mockFetch([{ date: '2024-01-01' }]);
+
+    const rows = await getBalanceSheetStatements('AAPL');
+    expect(rows[0].totalAssets).toBe(0);
+    expect(rows[0].totalLiabilities).toBe(0);
+    expect(rows[0].netDebt).toBe(0);
+  });
+
+  it('returns empty array on HTTP error', async () => {
+    mockFetch(null, false, 500);
+    expect(await getBalanceSheetStatements('AAPL')).toEqual([]);
+  });
+
+  it('returns empty array when API returns non-array', async () => {
+    mockFetch({ error: 'bad' });
+    expect(await getBalanceSheetStatements('AAPL')).toEqual([]);
+  });
+});
+
+// ── getFinancialScores ───────────────────────────────────────────────────────
+
+describe('getFinancialScores', () => {
+  setupFetchEnv();
+
+  it('returns scores from first element of array response', async () => {
+    mockFetch([{ symbol: 'AAPL', altmanZScore: 5.2, piotroskiScore: 7 }]);
+
+    const result = await getFinancialScores('AAPL');
+    expect(result).not.toBeNull();
+    expect(result!.symbol).toBe('AAPL');
+    expect(result!.altmanZScore).toBe(5.2);
+    expect(result!.piotroskiScore).toBe(7);
+  });
+
+  it('defaults missing numeric fields to 0', async () => {
+    mockFetch([{ symbol: 'AAPL' }]);
+
+    const result = await getFinancialScores('AAPL');
+    expect(result).not.toBeNull();
+    expect(result!.altmanZScore).toBe(0);
+    expect(result!.piotroskiScore).toBe(0);
+  });
+
+  it('returns null on HTTP error', async () => {
+    mockFetch(null, false, 500);
+    expect(await getFinancialScores('AAPL')).toBeNull();
+  });
+
+  it('returns null when API returns empty array', async () => {
+    mockFetch([]);
+    expect(await getFinancialScores('INVALID')).toBeNull();
+  });
+
+  it('returns null when API returns non-array', async () => {
+    mockFetch({ error: 'bad' });
+    expect(await getFinancialScores('AAPL')).toBeNull();
+  });
+});
+
+// ── getDCFValue ──────────────────────────────────────────────────────────────
+
+describe('getDCFValue', () => {
+  setupFetchEnv();
+
+  it('returns DCF data from first element of array response', async () => {
+    mockFetch([{ symbol: 'AAPL', dcf: 185.5, stockPrice: 175.0 }]);
+
+    const result = await getDCFValue('AAPL');
+    expect(result).not.toBeNull();
+    expect(result!.symbol).toBe('AAPL');
+    expect(result!.dcf).toBe(185.5);
+    expect(result!.price).toBe(175.0);
+  });
+
+  it('defaults missing numeric fields to 0', async () => {
+    mockFetch([{ symbol: 'AAPL' }]);
+
+    const result = await getDCFValue('AAPL');
+    expect(result).not.toBeNull();
+    expect(result!.dcf).toBe(0);
+    expect(result!.price).toBe(0);
+  });
+
+  it('returns null on HTTP error', async () => {
+    mockFetch(null, false, 500);
+    expect(await getDCFValue('AAPL')).toBeNull();
+  });
+
+  it('returns null when API returns empty array', async () => {
+    mockFetch([]);
+    expect(await getDCFValue('INVALID')).toBeNull();
+  });
+
+  it('returns null when API returns non-array', async () => {
+    mockFetch({ error: 'bad' });
+    expect(await getDCFValue('AAPL')).toBeNull();
+  });
+});
+
+// ── getHistoricalPrices ──────────────────────────────────────────────────────
+
+describe('getHistoricalPrices', () => {
+  setupFetchEnv();
+
+  it('returns formatted price string', async () => {
+    mockFetch([
+      { date: '2025-03-03', open: 10, high: 12, low: 9, close: 11.5, volume: 100 },
+      { date: '2025-03-02', open: 9, high: 11, low: 8, close: 10.25, volume: 90 },
+    ]);
+
+    const result = await getHistoricalPrices('AAPL', 5);
+    expect(result).toBe('Price trend for last 5 days: 10.25, 11.50');
+  });
+
+  it('returns error message on failure', async () => {
+    mockFetch(null, false, 500);
+
+    const result = await getHistoricalPrices('AAPL', 30);
+    expect(result).toContain('Error fetching data for AAPL');
+  });
+});
+
+// ── getTickerNews ────────────────────────────────────────────────────────────
+
+describe('getTickerNews', () => {
+  setupFetchEnv();
+
+  it('maps FMP articles to NewsItem shape', async () => {
+    mockFetch([
+      { symbol: 'AAPL', title: 'Apple Q1', publishedDate: '2025-03-01T10:00:00Z', image: 'img.png', site: 'Reuters', text: 'body', url: 'https://r.com/1' },
+      { symbol: 'AAPL', title: 'Apple Q2', publishedDate: '2025-03-02T10:00:00Z', image: '', site: 'Bloomberg', text: 'text', url: 'https://b.com/2' },
+    ]);
+
+    const result = await getTickerNews('AAPL', 5);
+    expect(result).toHaveLength(2);
+    expect(result[0].title).toBe('Apple Q1');
+    expect(result[0].link).toBe('https://r.com/1');
+    expect(result[0].publisher).toBe('Reuters');
+    expect(result[0].providerPublishTime).toBeInstanceOf(Date);
+    expect(result[0].relatedTickers).toEqual(['AAPL']);
+  });
+
+  it('returns empty array on HTTP error', async () => {
+    mockFetch(null, false, 500);
+    expect(await getTickerNews('AAPL')).toEqual([]);
+  });
+
+  it('returns empty array when API returns non-array', async () => {
+    mockFetch({ error: 'bad' });
+    expect(await getTickerNews('AAPL')).toEqual([]);
+  });
+
+  it('builds correct URL with ticker and limit', async () => {
+    mockFetch([]);
+    await getTickerNews('TSLA', 10);
+
+    const url = (globalThis.fetch as ReturnType<typeof vi.fn>).mock.calls[0][0] as string;
+    expect(url).toContain('symbols=TSLA');
+    expect(url).toContain('limit=10');
+    expect(url).toContain('apikey=test-key');
+    expect(url).toContain('/stable/news/stock');
+  });
+
+  it('handles article without symbol gracefully', async () => {
+    mockFetch([
+      { symbol: null, title: 'No ticker', publishedDate: '2025-03-01T10:00:00Z', image: '', site: 'T', text: '', url: 'https://x.com' },
+    ]);
+
+    const result = await getTickerNews('AAPL');
+    expect(result).toHaveLength(1);
+    expect(result[0].relatedTickers).toBeUndefined();
   });
 });
