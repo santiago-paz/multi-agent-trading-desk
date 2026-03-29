@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { HistoricalRow } from '@/lib/market-data';
+import type { HistoricalRow } from '@/lib/fmp/types';
 import {
   FONT, COL_HEADER_BASE, COL_RAISED, COL_SUNKEN, CELL, CELL_RIGHT,
   WINDOW_CONTAINER, REFRESH_FOOTER, STATUS_BAR_STYLE,

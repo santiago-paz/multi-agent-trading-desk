@@ -4,7 +4,7 @@
  * These tests hit live endpoints with a real API key.
  * All endpoints are read-only — nothing mutates state.
  *
- * Run manually:   FMP_INTEGRATION=1 FMP_API_KEY=<key> npx vitest run src/lib/market-data.integration.test.ts
+ * Run manually:   FMP_INTEGRATION=1 FMP_API_KEY=<key> npx vitest run src/lib/fmp/market-data.integration.test.ts
  * Skip (default): npx vitest run  (skipped unless FMP_INTEGRATION is set)
  */
 import { beforeAll, describe, expect, it } from 'vitest';
@@ -20,7 +20,7 @@ import type {
   IncomeStatementRow,
   KeyMetricsRow,
   NewsItem,
-} from './market-data';
+} from './types';
 import {
   calculateRSI,
   calculateSMA,
@@ -521,12 +521,12 @@ describe.skipIf(SKIP)('FMP Market Data integration', () => {
 
     it('profile matches fmp-profile-aapl.json fixture shape', async () => {
       const live = await fetchFMPRaw('profile', { symbol: TICKER });
-      assertNoSchemaDrift(live, 'fmp-profile-aapl.json');
+      assertNoSchemaDrift(live, 'profile-aapl.json');
     });
 
     it('income-statement matches fmp-income-statement.json fixture shape', async () => {
       const live = await fetchFMPRaw('income-statement', { symbol: TICKER, period: 'annual' });
-      assertNoSchemaDrift(live, 'fmp-income-statement.json');
+      assertNoSchemaDrift(live, 'income-statement.json');
     });
 
     it('historical-price-eod matches fmp-historical-eod.json fixture shape', async () => {
@@ -534,47 +534,47 @@ describe.skipIf(SKIP)('FMP Market Data integration', () => {
       const from = new Date(today.getTime() - 30 * 86400000).toISOString().split('T')[0];
       const to = today.toISOString().split('T')[0];
       const live = await fetchFMPRaw('historical-price-eod/full', { symbol: TICKER, from, to });
-      assertNoSchemaDrift(live, 'fmp-historical-eod.json');
+      assertNoSchemaDrift(live, 'historical-eod.json');
     });
 
     it('key-metrics matches fmp-key-metrics.json fixture shape', async () => {
       const live = await fetchFMPRaw('key-metrics', { symbol: TICKER, period: 'annual' });
-      assertNoSchemaDrift(live, 'fmp-key-metrics.json');
+      assertNoSchemaDrift(live, 'key-metrics.json');
     });
 
     it('cash-flow-statement matches fmp-cash-flow.json fixture shape', async () => {
       const live = await fetchFMPRaw('cash-flow-statement', { symbol: TICKER, period: 'annual' });
-      assertNoSchemaDrift(live, 'fmp-cash-flow.json');
+      assertNoSchemaDrift(live, 'cash-flow.json');
     });
 
     it('balance-sheet-statement matches fmp-balance-sheet.json fixture shape', async () => {
       const live = await fetchFMPRaw('balance-sheet-statement', { symbol: TICKER, period: 'annual' });
-      assertNoSchemaDrift(live, 'fmp-balance-sheet.json');
+      assertNoSchemaDrift(live, 'balance-sheet.json');
     });
 
     it('financial-scores matches fmp-financial-scores.json fixture shape', async () => {
       const live = await fetchFMPRaw('financial-scores', { symbol: TICKER });
-      assertNoSchemaDrift(live, 'fmp-financial-scores.json');
+      assertNoSchemaDrift(live, 'financial-scores.json');
     });
 
     it('discounted-cash-flow matches fmp-dcf.json fixture shape', async () => {
       const live = await fetchFMPRaw('discounted-cash-flow', { symbol: TICKER });
-      assertNoSchemaDrift(live, 'fmp-dcf.json');
+      assertNoSchemaDrift(live, 'dcf.json');
     });
 
     it('news/stock matches fmp-ticker-news.json fixture shape', async () => {
       const live = await fetchFMPRaw('news/stock', { symbols: TICKER, limit: '2' });
-      assertNoSchemaDrift(live, 'fmp-ticker-news.json');
+      assertNoSchemaDrift(live, 'ticker-news.json');
     });
 
     it('news/stock-latest matches fmp-stock-latest-news.json fixture shape', async () => {
       const live = await fetchFMPRaw('news/stock-latest', { limit: '2' });
-      assertNoSchemaDrift(live, 'fmp-stock-latest-news.json');
+      assertNoSchemaDrift(live, 'stock-latest-news.json');
     });
 
     it('news/general-latest matches fmp-general-latest-news.json fixture shape', async () => {
       const live = await fetchFMPRaw('news/general-latest', { limit: '2' });
-      assertNoSchemaDrift(live, 'fmp-general-latest-news.json');
+      assertNoSchemaDrift(live, 'general-latest-news.json');
     });
   });
 });

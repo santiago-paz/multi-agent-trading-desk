@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { NewsItem } from '@/lib/market-data';
+import type { NewsItem } from '@/lib/fmp/types';
 import {
   FONT, COLOR_LINK, COLOR_SECONDARY, COLOR_DISABLED,
   WINDOW_CONTAINER, REFRESH_FOOTER, STATUS_BAR_STYLE,

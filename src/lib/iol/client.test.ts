@@ -36,7 +36,15 @@ function mockFetchSequence(responses: Array<{ status: number; body: unknown; ok?
 }
 
 function tokenResponse() {
-  return { status: 200, body: tokenFixture };
+  return {
+    status: 200,
+    body: {
+      ...tokenFixture,
+      '.issued': new Date().toUTCString(),
+      '.expires': new Date(Date.now() + 1200_000).toUTCString(),
+      '.refreshexpires': new Date(Date.now() + 1500_000).toUTCString(),
+    },
+  };
 }
 
 async function createClientWithMockedFs(cachedToken: unknown = null) {

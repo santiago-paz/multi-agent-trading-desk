@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { NewsItem } from '@/lib/market-data';
+import type { NewsItem } from '@/lib/fmp/types';
 import { getNewsMetadata } from '@/app/trading/actions';
 
 interface NewsState {

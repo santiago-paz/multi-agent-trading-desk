@@ -17,7 +17,7 @@ import {
 import { useNewsStore } from '@/lib/store/news-store';
 import { getPortfolioSummary, getMarketData, getOperations, getAffordableCedearsForTrading, placeBuyOrder, getCompanyDetail } from './actions';
 import { PortfolioResponse, Operation, DatosPerfil, EstadoCuenta } from '@/lib/iol/types';
-import { HistoricalRow } from '@/lib/market-data';
+import type { HistoricalRow } from '@/lib/fmp/types';
 import { DESKTOP_APP_ICONS } from '@/lib/win98se-icons';
 import { useWindowManager, AppId, APP_LABELS, COMPANY_DETAIL_DEFAULTS } from '@/hooks/useWindowManager';
 

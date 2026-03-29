@@ -4,7 +4,8 @@ import { tradingEngine } from '@/lib/trading/engine';
 import { iolClient } from '@/lib/iol/client';
 import { extractCashArs, effectiveCashAfterCommission, filterAffordableCedears, COMMISSION_RATE } from '@/lib/trading/quick-trade';
 
-import { getHistoricalData, getAllNews, getCompanyNames, getCompanyProfile, getIncomeStatements, getKeyMetrics, getCashFlowStatements, getBalanceSheetStatements, getFinancialScores, getDCFValue, getTickerNews, HistoricalRow, CompanyProfile, IncomeStatementRow, KeyMetricsRow, CashFlowRow, BalanceSheetRow, FinancialScores, DCFValue, NewsItem } from '@/lib/market-data';
+import type { HistoricalRow, CompanyProfile, IncomeStatementRow, KeyMetricsRow, CashFlowRow, BalanceSheetRow, FinancialScores, DCFValue, NewsItem } from '@/lib/fmp/types';
+import { getHistoricalData, getAllNews, getCompanyNames, getCompanyProfile, getIncomeStatements, getKeyMetrics, getCashFlowStatements, getBalanceSheetStatements, getFinancialScores, getDCFValue, getTickerNews } from '@/lib/fmp/market-data';
 import { stripCurrencySuffix, toFmpTicker, isEtf } from '@/lib/cedear-map';
 
 export async function getMarketData() {

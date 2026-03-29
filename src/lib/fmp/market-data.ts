@@ -1,5 +1,30 @@
 import fs from 'fs';
 import path from 'path';
+import type {
+  CompanyProfile,
+  IncomeStatementRow,
+  HistoricalRow,
+  NewsItem,
+  ComprehensiveAssetData,
+  KeyMetricsRow,
+  CashFlowRow,
+  BalanceSheetRow,
+  FinancialScores,
+  DCFValue,
+} from './types';
+
+export type {
+  CompanyProfile,
+  IncomeStatementRow,
+  HistoricalRow,
+  NewsItem,
+  ComprehensiveAssetData,
+  KeyMetricsRow,
+  CashFlowRow,
+  BalanceSheetRow,
+  FinancialScores,
+  DCFValue,
+};
 
 const COMPANY_NAMES_CACHE_PATH = path.join(process.cwd(), '.company-names-cache.json');
 
@@ -55,26 +80,6 @@ export async function getCompanyNames(symbols: string[]): Promise<Record<string,
   return Object.fromEntries(symbols.map(s => [s, cache[s] ?? s]));
 }
 
-export interface CompanyProfile {
-  symbol: string;
-  companyName: string;
-  sector: string;
-  industry: string;
-  description: string;
-  mktCap: number;
-  price: number;
-  beta: number;
-  volAvg: number;
-  website: string;
-  country: string;
-  exchange: string;
-  currency: string;
-  image: string;
-  ipoDate: string;
-  isEtf: boolean;
-  isActivelyTrading: boolean;
-}
-
 export async function getCompanyProfile(fmpTicker: string): Promise<CompanyProfile | null> {
   const apiKey = getFMPApiKey();
   const url = `https://financialmodelingprep.com/stable/profile?symbol=${encodeURIComponent(fmpTicker)}&apikey=${apiKey}`;
@@ -85,15 +90,6 @@ export async function getCompanyProfile(fmpTicker: string): Promise<CompanyProfi
     return data[0] as CompanyProfile;
   }
   return null;
-}
-
-export interface IncomeStatementRow {
-  date: string;
-  revenue: number;
-  netIncome: number;
-  grossProfit: number;
-  operatingIncome: number;
-  eps: number;
 }
 
 export async function getIncomeStatements(fmpTicker: string, period: 'annual' | 'quarter' = 'annual'): Promise<IncomeStatementRow[]> {
@@ -111,40 +107,6 @@ export async function getIncomeStatements(fmpTicker: string, period: 'annual' | 
     operatingIncome: (row.operatingIncome as number) ?? 0,
     eps: (row.eps as number) ?? 0,
   })).reverse(); // chronological order
-}
-
-export interface HistoricalRow {
-  date: Date;
-  open: number;
-  high: number;
-  low: number;
-  close: number;
-  adjClose?: number;
-  volume: number;
-}
-
-export interface NewsItem {
-  title: string;
-  link: string;
-  publisher: string;
-  providerPublishTime?: Date;
-  relatedTickers?: string[];
-  text?: string;
-  image?: string;
-}
-
-// Emulating Comprehensive data that the AI Hedge Fund Python agents consume
-export interface ComprehensiveAssetData {
-  symbol: string;
-  currentPrice: number;
-  historicalPrices: HistoricalRow[];
-  technicals: {
-    sma20: number | null;
-    sma50: number | null;
-    rsi14: number | null;
-    priceToSMA20Ratio: number | null;
-  };
-  recentNews: NewsItem[];
 }
 
 export async function getHistoricalData(symbol: string, days: number = 30): Promise<HistoricalRow[]> {
@@ -313,49 +275,6 @@ export async function getGeneralMarketNews(count: number = 5): Promise<NewsItem[
 }
 
 // ── Advanced Financial Data ────────────────────────────────────────────────
-
-export interface KeyMetricsRow {
-  date: string;
-  peRatio: number;
-  pbRatio: number;
-  roe: number;
-  roa: number;
-  debtToEquity: number;
-  currentRatio: number;
-  dividendYield: number;
-  enterpriseValue: number;
-  evToEbitda: number;
-}
-
-export interface CashFlowRow {
-  date: string;
-  operatingCashFlow: number;
-  capitalExpenditure: number;
-  freeCashFlow: number;
-  dividendsPaid: number;
-}
-
-export interface BalanceSheetRow {
-  date: string;
-  totalAssets: number;
-  totalLiabilities: number;
-  totalStockholdersEquity: number;
-  netDebt: number;
-  totalDebt: number;
-  cashAndShortTermInvestments: number;
-}
-
-export interface FinancialScores {
-  symbol: string;
-  altmanZScore: number;
-  piotroskiScore: number;
-}
-
-export interface DCFValue {
-  symbol: string;
-  dcf: number;
-  price: number;
-}
 
 export async function getKeyMetrics(fmpTicker: string, period: 'annual' | 'quarter' = 'annual'): Promise<KeyMetricsRow[]> {
   const apiKey = getFMPApiKey();

@@ -21,7 +21,7 @@ import {
   COLOR_NEGATIVE,
   BUTTON_PRESSED,
 } from '@/lib/theme/win98';
-import { CompanyProfile, IncomeStatementRow, KeyMetricsRow, CashFlowRow, BalanceSheetRow, FinancialScores, DCFValue, NewsItem } from '@/lib/market-data';
+import type { CompanyProfile, IncomeStatementRow, KeyMetricsRow, CashFlowRow, BalanceSheetRow, FinancialScores, DCFValue, NewsItem } from '@/lib/fmp/types';
 import { getCompanyAdvancedData, getCompanyNews, AdvancedDetailResult } from '@/app/trading/actions';
 
 export interface CompanyDetailData {
