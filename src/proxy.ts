@@ -13,7 +13,7 @@ export const config = {
   ],
 };
 
-export function middleware(req: NextRequest) {
+export function proxy(req: NextRequest) {
   // If Basic Auth is not configured, skip
   if (!process.env.BASIC_AUTH_USER || !process.env.BASIC_AUTH_PASSWORD) {
     return NextResponse.next();

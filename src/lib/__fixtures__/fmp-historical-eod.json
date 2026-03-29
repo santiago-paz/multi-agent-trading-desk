@@ -1,0 +1,26 @@
+[
+  {
+    "symbol": "AAPL",
+    "date": "2026-03-27",
+    "open": 253.9,
+    "high": 255.49,
+    "low": 248.07,
+    "close": 248.8,
+    "volume": 47899998,
+    "change": -5.1,
+    "changePercent": -2.01,
+    "vwap": 251.565
+  },
+  {
+    "symbol": "AAPL",
+    "date": "2026-03-26",
+    "open": 252.12,
+    "high": 257,
+    "low": 250.77,
+    "close": 252.89,
+    "volume": 41796700,
+    "change": 0.775,
+    "changePercent": 0.30541,
+    "vwap": 253.195
+  }
+]

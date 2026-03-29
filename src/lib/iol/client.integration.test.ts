@@ -8,6 +8,8 @@
  * Skip (default): npx vitest run  (skipped unless IOL_INTEGRATION is set)
  */
 import { describe, it, expect, beforeAll } from 'vitest';
+import fs from 'fs';
+import path from 'path';
 import { IOLClient } from './client';
 import type {
   PortfolioResponse,
@@ -19,6 +21,39 @@ import type {
   DatosPerfil,
   Puntas,
 } from './types';
+
+/**
+ * Recursively extract the "shape" of a JSON value as a sorted set of dot-separated
+ * key paths.  Arrays are represented with `[]` and their first element is inspected.
+ *
+ * Example output for { pais: "ar", activos: [{ cantidad: 1, titulo: { simbolo: "X" } }] }:
+ *   ["activos[].cantidad", "activos[].titulo.simbolo", "pais"]
+ */
+function extractShape(value: unknown, prefix = ''): string[] {
+  if (Array.isArray(value)) {
+    if (value.length === 0) return [prefix + '[]'];
+    return extractShape(value[0], prefix + '[].');
+  }
+  if (value !== null && typeof value === 'object') {
+    const keys: string[] = [];
+    for (const key of Object.keys(value as Record<string, unknown>)) {
+      const child = (value as Record<string, unknown>)[key];
+      const childPath = prefix + key;
+      if (child !== null && typeof child === 'object') {
+        keys.push(...extractShape(child, childPath + (Array.isArray(child) ? '' : '.')));
+      } else {
+        keys.push(childPath);
+      }
+    }
+    return keys.sort();
+  }
+  return prefix ? [prefix.replace(/\.$/, '')] : [];
+}
+
+function loadFixture(name: string): unknown {
+  const fixturePath = path.join(__dirname, '__fixtures__', name);
+  return JSON.parse(fs.readFileSync(fixturePath, 'utf-8'));
+}
 
 const SKIP = !process.env.IOL_INTEGRATION;
 
@@ -370,4 +405,77 @@ describe.skipIf(SKIP)('IOL API integration', () => {
   // ── placeOrder ─────────────────────────────────────────────────────────
   // Intentionally NOT tested here — it mutates account state (buy/sell).
   // Covered by unit tests in client.test.ts (URL routing, side stripping).
+
+  // ── Schema drift detection ────────────────────────────────────────────
+  // Compare the key structure of live API responses against fixtures to
+  // detect fields that the API added or removed since we last captured them.
+
+  describe('Schema drift detection', () => {
+    it('getPortfolio matches portfolio.json fixture shape', async () => {
+      const live = await client.getPortfolio();
+      const fixture = loadFixture('portfolio.json');
+      const liveShape = new Set(extractShape(live));
+      const fixtureShape = new Set(extractShape(fixture));
+      const added = [...liveShape].filter(k => !fixtureShape.has(k));
+      const removed = [...fixtureShape].filter(k => !liveShape.has(k));
+      expect(added, `New fields in live API not in fixture: ${added.join(', ')}`).toEqual([]);
+      expect(removed, `Fields in fixture missing from live API: ${removed.join(', ')}`).toEqual([]);
+    });
+
+    it('getQuote matches quote-aapl.json fixture shape', async () => {
+      const live = await client.getQuote('AAPL');
+      const fixture = loadFixture('quote-aapl.json');
+      const liveShape = new Set(extractShape(live));
+      const fixtureShape = new Set(extractShape(fixture));
+      const added = [...liveShape].filter(k => !fixtureShape.has(k));
+      const removed = [...fixtureShape].filter(k => !liveShape.has(k));
+      expect(added, `New fields in live API not in fixture: ${added.join(', ')}`).toEqual([]);
+      expect(removed, `Fields in fixture missing from live API: ${removed.join(', ')}`).toEqual([]);
+    });
+
+    it('getPanelQuotes matches panel-cedears.json fixture shape', async () => {
+      const live = await client.getPanelQuotes('cedears');
+      const fixture = loadFixture('panel-cedears.json');
+      const liveShape = new Set(extractShape(live));
+      const fixtureShape = new Set(extractShape(fixture));
+      const added = [...liveShape].filter(k => !fixtureShape.has(k));
+      const removed = [...fixtureShape].filter(k => !liveShape.has(k));
+      expect(added, `New fields in live API not in fixture: ${added.join(', ')}`).toEqual([]);
+      expect(removed, `Fields in fixture missing from live API: ${removed.join(', ')}`).toEqual([]);
+    });
+
+    it('getOperations matches operations.json fixture shape', async () => {
+      const live = await client.getOperations(90);
+      const fixture = loadFixture('operations.json');
+      if (live.length === 0) return; // can't compare if no operations
+      const liveShape = new Set(extractShape(live));
+      const fixtureShape = new Set(extractShape(fixture));
+      const added = [...liveShape].filter(k => !fixtureShape.has(k));
+      const removed = [...fixtureShape].filter(k => !liveShape.has(k));
+      expect(added, `New fields in live API not in fixture: ${added.join(', ')}`).toEqual([]);
+      expect(removed, `Fields in fixture missing from live API: ${removed.join(', ')}`).toEqual([]);
+    });
+
+    it('getEstadoCuenta matches estado-cuenta.json fixture shape', async () => {
+      const live = await client.getEstadoCuenta();
+      const fixture = loadFixture('estado-cuenta.json');
+      const liveShape = new Set(extractShape(live));
+      const fixtureShape = new Set(extractShape(fixture));
+      const added = [...liveShape].filter(k => !fixtureShape.has(k));
+      const removed = [...fixtureShape].filter(k => !liveShape.has(k));
+      expect(added, `New fields in live API not in fixture: ${added.join(', ')}`).toEqual([]);
+      expect(removed, `Fields in fixture missing from live API: ${removed.join(', ')}`).toEqual([]);
+    });
+
+    it('getDatosPerfil matches datos-perfil.json fixture shape', async () => {
+      const live = await client.getDatosPerfil();
+      const fixture = loadFixture('datos-perfil.json');
+      const liveShape = new Set(extractShape(live));
+      const fixtureShape = new Set(extractShape(fixture));
+      const added = [...liveShape].filter(k => !fixtureShape.has(k));
+      const removed = [...fixtureShape].filter(k => !liveShape.has(k));
+      expect(added, `New fields in live API not in fixture: ${added.join(', ')}`).toEqual([]);
+      expect(removed, `Fields in fixture missing from live API: ${removed.join(', ')}`).toEqual([]);
+    });
+  });
 });
