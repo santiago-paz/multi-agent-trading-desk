@@ -1,3 +1,10 @@
+/** Single row from FMP `search-symbol` (used for ticker autocomplete). */
+export interface SymbolSearchHit {
+  symbol: string;
+  name: string;
+  exchange: string;
+}
+
 export interface CompanyProfile {
   symbol: string;
   companyName: string;

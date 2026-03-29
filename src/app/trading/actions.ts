@@ -4,8 +4,8 @@ import { tradingEngine } from '@/lib/trading/engine';
 import { iolClient } from '@/lib/iol/client';
 import { extractCashArs, effectiveCashAfterCommission, filterAffordableCedears, COMMISSION_RATE } from '@/lib/trading/quick-trade';
 
-import type { HistoricalRow, CompanyProfile, IncomeStatementRow, KeyMetricsRow, CashFlowRow, BalanceSheetRow, FinancialScores, DCFValue, NewsItem } from '@/lib/fmp/types';
-import { getHistoricalData, getAllNews, getCompanyNames, getCompanyProfile, getIncomeStatements, getKeyMetrics, getCashFlowStatements, getBalanceSheetStatements, getFinancialScores, getDCFValue, getTickerNews } from '@/lib/fmp/market-data';
+import type { HistoricalRow, CompanyProfile, IncomeStatementRow, KeyMetricsRow, CashFlowRow, BalanceSheetRow, FinancialScores, DCFValue, NewsItem, SymbolSearchHit } from '@/lib/fmp/types';
+import { getHistoricalData, getAllNews, getCompanyNames, getCompanyProfile, getIncomeStatements, getKeyMetrics, getCashFlowStatements, getBalanceSheetStatements, getFinancialScores, getDCFValue, getTickerNews, searchSymbolHits } from '@/lib/fmp/market-data';
 import { stripCurrencySuffix, toFmpTicker, isEtf } from '@/lib/cedear-map';
 
 export async function getMarketData() {
@@ -418,6 +418,18 @@ interface CompanyDetailResult {
   noUsEquivalent: boolean;
   priceHistory: { date: string; close: number; volume: number }[];
   incomeStatements: IncomeStatementRow[];
+}
+
+export async function searchTickerSymbols(
+  query: string,
+): Promise<{ success: true; data: SymbolSearchHit[] } | { success: false; error: string }> {
+  try {
+    const data = await searchSymbolHits(query, 15);
+    return { success: true, data };
+  } catch (error) {
+    console.error('searchTickerSymbols:', error);
+    return { success: false, error: 'No se pudo buscar símbolos' };
+  }
 }
 
 export async function getCompanyDetail(iolBaseSymbol: string): Promise<{ success: true; data: CompanyDetailResult } | { success: false; error: string }> {

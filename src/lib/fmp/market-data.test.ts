@@ -1,5 +1,5 @@
-import { describe, it, expect } from 'vitest';
-import { calculateSMA, calculateRSI } from './market-data';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { calculateSMA, calculateRSI, searchSymbolHits } from './market-data';
 
 // ── calculateSMA ────────────────────────────────────────────────────────────
 
@@ -108,5 +108,151 @@ describe('calculateRSI', () => {
     const data = Array.from({ length: 16 }, (_, i) => 100 + i);
     // Should work without specifying period (defaults to 14)
     expect(calculateRSI(data)).toBe(100);
+  });
+});
+
+// ── searchSymbolHits ─────────────────────────────────────────────────────────
+
+describe('searchSymbolHits', () => {
+  const originalEnv = process.env;
+
+  beforeEach(() => {
+    process.env = { ...originalEnv, FMP_API_KEY: 'test-key' };
+    vi.stubGlobal('fetch', vi.fn());
+  });
+
+  afterEach(() => {
+    process.env = originalEnv;
+    vi.restoreAllMocks();
+  });
+
+  function mockFetch(data: unknown, ok = true, status = 200) {
+    (globalThis.fetch as ReturnType<typeof vi.fn>).mockResolvedValue({
+      ok,
+      status,
+      json: async () => data,
+    });
+  }
+
+  it('returns empty array for empty/whitespace query', async () => {
+    expect(await searchSymbolHits('')).toEqual([]);
+    expect(await searchSymbolHits('   ')).toEqual([]);
+    expect(globalThis.fetch).not.toHaveBeenCalled();
+  });
+
+  it('parses valid FMP response and returns mapped hits', async () => {
+    mockFetch([
+      { symbol: 'AAPL', name: 'Apple Inc.', exchangeShortName: 'NASDAQ', stockExchange: 'NASDAQ Global Select' },
+      { symbol: 'AAPL.L', name: 'Apple Inc.', exchangeShortName: 'LSE', stockExchange: 'London Stock Exchange' },
+    ]);
+
+    const result = await searchSymbolHits('AAPL');
+    expect(result).toEqual([
+      { symbol: 'AAPL', name: 'Apple Inc.', exchange: 'NASDAQ' },
+      { symbol: 'AAPL.L', name: 'Apple Inc.', exchange: 'LSE' },
+    ]);
+  });
+
+  it('prioritizes US exchanges over non-US while preserving order within groups', async () => {
+    mockFetch([
+      { symbol: 'KO.F', name: 'Coca-Cola', exchangeShortName: 'XETRA' },
+      { symbol: 'KO', name: 'The Coca-Cola Company', exchangeShortName: 'NYSE' },
+      { symbol: 'KO.MX', name: 'Coca-Cola MX', exchangeShortName: 'BMV' },
+      { symbol: 'KOD.L', name: 'Kodal Minerals', exchangeShortName: 'LSE' },
+      { symbol: 'KOS', name: 'Kosmos Energy', exchangeShortName: 'NYSE' },
+    ]);
+
+    const result = await searchSymbolHits('KO');
+    expect(result[0].symbol).toBe('KO');
+    expect(result[1].symbol).toBe('KOS');
+    expect(result[2].symbol).toBe('KO.F');
+    expect(result[3].symbol).toBe('KO.MX');
+    expect(result[4].symbol).toBe('KOD.L');
+  });
+
+  it('respects the limit parameter', async () => {
+    const data = Array.from({ length: 20 }, (_, i) => ({
+      symbol: `SYM${i}`,
+      name: `Company ${i}`,
+      exchangeShortName: 'NYSE',
+    }));
+    mockFetch(data);
+
+    const result = await searchSymbolHits('SYM', 5);
+    expect(result).toHaveLength(5);
+  });
+
+  it('skips entries without a symbol', async () => {
+    mockFetch([
+      { symbol: '', name: 'No Symbol', exchangeShortName: 'NYSE' },
+      { symbol: null, name: 'Null Symbol', exchangeShortName: 'NYSE' },
+      { symbol: 'VALID', name: 'Valid Co', exchangeShortName: 'NASDAQ' },
+    ]);
+
+    const result = await searchSymbolHits('test');
+    expect(result).toHaveLength(1);
+    expect(result[0].symbol).toBe('VALID');
+  });
+
+  it('handles missing name and exchange fields gracefully', async () => {
+    mockFetch([
+      { symbol: 'XYZ' },
+    ]);
+
+    const result = await searchSymbolHits('XYZ');
+    expect(result).toEqual([
+      { symbol: 'XYZ', name: '', exchange: '' },
+    ]);
+  });
+
+  it('falls back to stockExchange when exchangeShortName is missing', async () => {
+    mockFetch([
+      { symbol: 'TEST', name: 'Test Corp', stockExchange: 'New York Stock Exchange' },
+    ]);
+
+    const result = await searchSymbolHits('TEST');
+    expect(result[0].exchange).toBe('New York Stock Exchange');
+  });
+
+  it('returns empty array on HTTP error', async () => {
+    mockFetch(null, false, 500);
+
+    const result = await searchSymbolHits('AAPL');
+    expect(result).toEqual([]);
+  });
+
+  it('returns empty array when API returns non-array', async () => {
+    mockFetch({ error: 'something went wrong' });
+
+    const result = await searchSymbolHits('AAPL');
+    expect(result).toEqual([]);
+  });
+
+  it('skips malformed entries (null, primitives)', async () => {
+    mockFetch([
+      null,
+      42,
+      'string',
+      { symbol: 'OK', name: 'Good', exchangeShortName: 'AMEX' },
+    ]);
+
+    const result = await searchSymbolHits('test');
+    expect(result).toHaveLength(1);
+    expect(result[0].symbol).toBe('OK');
+  });
+
+  it('includes the query and limit in the FMP URL', async () => {
+    mockFetch([]);
+    await searchSymbolHits('Apple', 10);
+
+    const url = (globalThis.fetch as ReturnType<typeof vi.fn>).mock.calls[0][0] as string;
+    expect(url).toContain('query=Apple');
+    expect(url).toContain('limit=30');
+    expect(url).toContain('apikey=test-key');
+  });
+
+  it('throws when FMP_API_KEY is not set', async () => {
+    delete process.env.FMP_API_KEY;
+    await expect(searchSymbolHits('AAPL')).rejects.toThrow('FMP_API_KEY not set');
   });
 });

@@ -11,6 +11,7 @@ import type {
   BalanceSheetRow,
   FinancialScores,
   DCFValue,
+  SymbolSearchHit,
 } from './types';
 
 export type {
@@ -24,6 +25,7 @@ export type {
   BalanceSheetRow,
   FinancialScores,
   DCFValue,
+  SymbolSearchHit,
 };
 
 const COMPANY_NAMES_CACHE_PATH = path.join(process.cwd(), '.company-names-cache.json');
@@ -49,6 +51,51 @@ function getFMPApiKey(): string {
   const key = process.env.FMP_API_KEY;
   if (!key) throw new Error('FMP_API_KEY not set');
   return key;
+}
+
+const US_PRIMARY_EXCHANGES = new Set(['NASDAQ', 'NYSE', 'AMEX', 'NYSEARCA', 'BATS']);
+
+/**
+ * FMP stock symbol search (by ticker or company name fragment).
+ * Prioritizes major US listings so CEDEAR lookups stay on the usual venues.
+ */
+export async function searchSymbolHits(query: string, limit = 15): Promise<SymbolSearchHit[]> {
+  const q = query.trim();
+  if (!q.length) return [];
+
+  const apiKey = getFMPApiKey();
+  const url = `https://financialmodelingprep.com/stable/search-symbol?query=${encodeURIComponent(q)}&limit=${limit * 3}&apikey=${apiKey}`;
+  const res = await fetch(url);
+  if (!res.ok) {
+    console.warn('FMP search-symbol HTTP', res.status);
+    return [];
+  }
+
+  const data: unknown = await res.json();
+  if (!Array.isArray(data)) return [];
+
+  const mapped: SymbolSearchHit[] = [];
+  for (const row of data) {
+    if (!row || typeof row !== 'object') continue;
+    const r = row as Record<string, unknown>;
+    const symbol = typeof r.symbol === 'string' ? r.symbol.trim() : '';
+    const name = typeof r.name === 'string' ? r.name.trim() : '';
+    const exchange =
+      (typeof r.exchangeShortName === 'string' && r.exchangeShortName.trim()) ||
+      (typeof r.stockExchange === 'string' && r.stockExchange.trim()) ||
+      '';
+    if (!symbol) continue;
+    mapped.push({ symbol, name, exchange });
+  }
+
+  const withIdx = mapped.map((h, i) => ({
+    ...h,
+    _order: i,
+    _us: US_PRIMARY_EXCHANGES.has(h.exchange.toUpperCase()) ? 1 : 0,
+  }));
+  withIdx.sort((a, b) => (b._us - a._us) || (a._order - b._order));
+
+  return withIdx.slice(0, limit).map(({ symbol, name, exchange }) => ({ symbol, name, exchange }));
 }
 
 export async function getCompanyNames(symbols: string[]): Promise<Record<string, string>> {
