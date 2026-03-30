@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { PortfolioResponse, EstadoCuenta } from '@/lib/iol/types';
 import { usePortfolioSort, SortKey, UsdPriceEntry } from '@/hooks/usePortfolioSort';
 import { stripCurrencySuffix } from '@/lib/cedear-map';
@@ -35,6 +35,7 @@ const COLUMNS: ColumnDef[] = [
   { key: 'valorizado',      label: 'Valorizado',  align: 'right', width: '75px'  },
   { key: 'variacionDiaria', label: 'Var %',        align: 'right', width: '50px'  },
   { key: 'gananciaDinero',  label: 'Ganancia',     align: 'right', width: '65px'  },
+  { key: 'gananciaPorcentaje', label: 'Rend. %', align: 'right', width: '55px' },
 ];
 
 
@@ -58,8 +59,21 @@ export const PortfolioSummary: React.FC<PortfolioSummaryProps> = ({
     cashUSD,
     comprometidoUSD,
     totalGananciaUSD,
+    totalARS,
+    cashARS,
+    comprometidoARS,
+    totalGananciaARS,
     totalActivosEnCartera,
   } = usePortfolioSort(portfolio, mepRate, estadoCuenta, usdPrices);
+
+  const [displayCurrency, setDisplayCurrency] = useState<'USD' | 'ARS'>('USD');
+
+  const isUSD = displayCurrency === 'USD';
+  const displayTotal = isUSD ? totalUSD : totalARS;
+  const displayGanancia = isUSD ? totalGananciaUSD : totalGananciaARS;
+  const displayCash = isUSD ? cashUSD : cashARS;
+  const displayComprometido = isUSD ? comprometidoUSD : comprometidoARS;
+  const currencySymbol = isUSD ? 'U$D' : 'AR$';
 
   return (
     <div style={WINDOW_CONTAINER}>
@@ -67,13 +81,24 @@ export const PortfolioSummary: React.FC<PortfolioSummaryProps> = ({
       <div className="win98-scrollbar" style={SCROLLABLE_BODY}>
         {/* ─── Resumen de Valuación ─── */}
         <fieldset>
-          <legend>Valuación (USD)</legend>
+          <legend>Valuación</legend>
+          <div className="field-row" style={{ marginBottom: '6px' }}>
+            <label style={LABEL}>Moneda:</label>
+            <select 
+              value={displayCurrency} 
+              onChange={(e) => setDisplayCurrency(e.target.value as 'USD' | 'ARS')}
+              style={{ ...FONT, flex: 1 }}
+            >
+              <option value="USD">Dólar MEP (U$D)</option>
+              <option value="ARS">Pesos (AR$)</option>
+            </select>
+          </div>
           <div className="field-row" style={{ marginBottom: '2px' }}>
-            <label style={LABEL}>Total USD:</label>
+            <label style={LABEL}>Total:</label>
             <input
               type="text"
               readOnly
-              value={`U$D ${totalUSD.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} (AR$ ${(totalUSD * mepRate).toLocaleString('es-AR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })})`}
+              value={`${currencySymbol} ${displayTotal.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
               style={{ ...FONT, flex: 1, cursor: 'default' }}
             />
           </div>
@@ -82,33 +107,33 @@ export const PortfolioSummary: React.FC<PortfolioSummaryProps> = ({
             <input
               type="text"
               readOnly
-              value={`U$D ${totalGananciaUSD >= 0 ? '+' : ''}${totalGananciaUSD.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} (AR$ ${totalGananciaUSD >= 0 ? '+' : ''}${(totalGananciaUSD * mepRate).toLocaleString('es-AR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })})`}
+              value={`${currencySymbol} ${displayGanancia >= 0 ? '+' : ''}${displayGanancia.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
               style={{
                 ...FONT,
                 flex: 1,
                 cursor: 'default',
-                color: totalGananciaUSD >= 0 ? COLOR_POSITIVE : COLOR_NEGATIVE,
+                color: displayGanancia >= 0 ? COLOR_POSITIVE : COLOR_NEGATIVE,
               }}
             />
           </div>
-          {cashUSD > 0 && (
+          {displayCash > 0 && (
             <div className="field-row" style={{ marginBottom: '2px' }}>
               <label style={LABEL}>Efectivo:</label>
               <input
                 type="text"
                 readOnly
-                value={`U$D ${cashUSD.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} (AR$ ${(cashUSD * mepRate).toLocaleString('es-AR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })})`}
+                value={`${currencySymbol} ${displayCash.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
                 style={{ ...FONT, flex: 1, cursor: 'default', color: COLOR_SECONDARY }}
               />
             </div>
           )}
-          {comprometidoUSD > 0 && (
+          {displayComprometido > 0 && (
             <div className="field-row">
               <label style={LABEL}>Comprometido:</label>
               <input
                 type="text"
                 readOnly
-                value={`U$D ${comprometidoUSD.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} (AR$ ${(comprometidoUSD * mepRate).toLocaleString('es-AR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })})`}
+                value={`${currencySymbol} ${displayComprometido.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
                 style={{ ...FONT, flex: 1, cursor: 'default', color: COLOR_NEGATIVE }}
               />
             </div>
@@ -164,6 +189,11 @@ export const PortfolioSummary: React.FC<PortfolioSummaryProps> = ({
                   const valorizadoUSD = dPrice ? dPrice.price * asset.cantidad : asset.valorizado / mepRate;
                   const variacion = dPrice ? dPrice.pct : asset.variacionDiaria;
                   const gananciaUSD = asset.gananciaDinero / mepRate;
+                  
+                  const displayPrice = isUSD ? priceUSD : asset.ultimoPrecio;
+                  const displayValorizado = isUSD ? valorizadoUSD : asset.valorizado;
+                  const displayGananciaDinero = isUSD ? gananciaUSD : asset.gananciaDinero;
+                  
                   return (
                     <tr
                       key={sym}
@@ -189,10 +219,10 @@ export const PortfolioSummary: React.FC<PortfolioSummaryProps> = ({
                       </td>
                       <td style={CELL_RIGHT}>{asset.cantidad}</td>
                       <td style={CELL_RIGHT}>
-                        {priceUSD.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        {displayPrice.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                       </td>
                       <td style={CELL_RIGHT}>
-                        {valorizadoUSD.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        {displayValorizado.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                       </td>
                       <td
                         style={{
@@ -205,11 +235,19 @@ export const PortfolioSummary: React.FC<PortfolioSummaryProps> = ({
                       <td
                         style={{
                           ...CELL_RIGHT,
-                          color: gananciaUSD >= 0 ? COLOR_POSITIVE : COLOR_NEGATIVE,
+                          color: displayGananciaDinero >= 0 ? COLOR_POSITIVE : COLOR_NEGATIVE,
+                        }}
+                      >
+                        {displayGananciaDinero >= 0 ? '+' : ''}{displayGananciaDinero.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      </td>
+                      <td
+                        style={{
+                          ...CELL_RIGHT,
+                          color: asset.gananciaPorcentaje >= 0 ? COLOR_POSITIVE : COLOR_NEGATIVE,
                           borderRight: 'none',
                         }}
                       >
-                        {gananciaUSD >= 0 ? '+' : ''}{gananciaUSD.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        {asset.gananciaPorcentaje >= 0 ? '+' : ''}{asset.gananciaPorcentaje.toFixed(2)}%
                       </td>
                     </tr>
                   );
@@ -238,9 +276,9 @@ export const PortfolioSummary: React.FC<PortfolioSummaryProps> = ({
           MEP: ${mepRate.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
         </p>
         <p className="status-bar-field" style={{
-          color: totalGananciaUSD >= 0 ? COLOR_POSITIVE : COLOR_NEGATIVE,
+          color: displayGanancia >= 0 ? COLOR_POSITIVE : COLOR_NEGATIVE,
         }}>
-          F&L: {totalGananciaUSD >= 0 ? '+' : ''}U$D {totalGananciaUSD.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+          F&L: {displayGanancia >= 0 ? '+' : ''}{currencySymbol} {displayGanancia.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
         </p>
       </div>
     </div>
