@@ -43,7 +43,7 @@ interface Decision {
 }
 
 type LogStatus = 'running' | 'ok' | 'error';
-interface LogEntry { id: string; text: string; status: LogStatus }
+interface LogEntry { id: string; text: string; status: LogStatus; agent?: string; ticker?: string; detail?: string; }
 
 interface OrderResult {
   ticker: string;
@@ -118,6 +118,9 @@ export function AutoTraderWindow() {
 
   // Config
   const [dailyLimit, setDailyLimit] = useState(100000);
+
+  // Tabs
+  const [activeTab, setActiveTab] = useState<'config' | 'ai' | 'plan'>('config');
 
   // Analysis
   const [phase, setPhase] = useState<Phase>('idle');
@@ -203,12 +206,12 @@ export function AutoTraderWindow() {
 
   // ── Log helpers ─────────────────────────────────────────────────────────────
 
-  const addLog = useCallback((id: string, text: string, status: LogStatus = 'running') => {
-    setLogs(prev => [...prev, { id, text, status }]);
+  const addLog = useCallback((id: string, text: string, status: LogStatus = 'running', agent?: string, ticker?: string, detail?: string) => {
+    setLogs(prev => [...prev, { id, text, status, agent, ticker, detail }]);
   }, []);
 
-  const updateLog = useCallback((id: string, text: string, status: LogStatus) => {
-    setLogs(prev => prev.map(l => l.id === id ? { ...l, text, status } : l));
+  const updateLog = useCallback((id: string, text: string, status: LogStatus, agent?: string, ticker?: string, detail?: string) => {
+    setLogs(prev => prev.map(l => l.id === id ? { ...l, text, status, agent, ticker, detail } : l));
   }, []);
 
   const toggleAgent = useCallback((key: string) => {
@@ -228,6 +231,7 @@ export function AutoTraderWindow() {
     abortRef.current = new AbortController();
 
     setPhase('analyzing');
+    setActiveTab('ai');
     setLogs([]);
     setProgress(0);
     setAnalystSignals(null);
@@ -415,6 +419,7 @@ export function AutoTraderWindow() {
         ].filter(Boolean).join(' '), 'ok');
         setProgress(100);
         setPhase('planned');
+        setActiveTab('plan');
       };
 
       while (true) {
@@ -440,8 +445,14 @@ export function AutoTraderWindow() {
               const analysis = (d.analysis as string) || '';
               const logId = `progress-${progressCount}`;
 
-              addLog(logId, `${agent}${ticker ? ` [${ticker}]` : ''}: ${analysis || status}`,
-                analysis ? 'ok' : 'running');
+              addLog(
+                logId,
+                `${agent}${ticker ? ` [${ticker}]` : ''}: ${analysis || status}`,
+                analysis ? 'ok' : 'running',
+                agent,
+                ticker,
+                analysis || status
+              );
               setProgress(Math.min(95, Math.round((progressCount / totalEstimate) * 100)));
             } else if (evt.event === 'error') {
               addLog('error', `Error: ${(d.message as string) || 'Error desconocido'}`, 'error');
@@ -545,375 +556,458 @@ export function AutoTraderWindow() {
   // ── Render ──────────────────────────────────────────────────────────────────
 
   return (
-    <div style={WINDOW_CONTAINER}>
-      <div className="win98-scrollbar" style={SCROLLABLE_BODY}>
+    <div style={{ ...WINDOW_CONTAINER, padding: '6px 6px 0 6px', boxSizing: 'border-box' }}>
+      <menu role="tablist">
+        <li role="tab" aria-selected={activeTab === 'config'}>
+          <a href="#config" onClick={(e) => { e.preventDefault(); setActiveTab('config'); }}>1. Configuración</a>
+        </li>
+        <li role="tab" aria-selected={activeTab === 'ai'}>
+          <a href="#ai" onClick={(e) => { e.preventDefault(); setActiveTab('ai'); }}>2. Inteligencia AI</a>
+        </li>
+        <li role="tab" aria-selected={activeTab === 'plan'}>
+          <a href="#plan" onClick={(e) => { e.preventDefault(); setActiveTab('plan'); }}>3. Plan de Trading</a>
+        </li>
+      </menu>
 
-        {/* ── Portfolio Actual ────────────────────────────────────────── */}
-        <fieldset>
-          <legend>Portafolio Actual</legend>
-          <div style={{ ...FONT, padding: '2px 0' }}>
-            <span>Cash disponible: </span>
-            <strong>${fmtARS(cashArs)} ARS</strong>
-            {comprometidoArs > 0 && (
-              <span style={{ color: COLOR_NEGATIVE, marginLeft: 8 }}>
-                (Comprometido: ${fmtARS(comprometidoArs)} ARS)
-              </span>
-            )}
-            <span style={{ color: COLOR_SECONDARY, marginLeft: 8 }}>
-              (~USD ${fmtARS(cashArs / effectiveMep)})
-            </span>
-          </div>
-          {holdingTickers.length > 0 ? (
-            <div className="sunken-panel" style={{ margin: '4px 0', maxHeight: 140, overflow: 'auto' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                <thead>
-                  <tr>
-                    {([
-                      { key: 'ticker' as PortfolioSortKey, label: 'Ticker', align: 'left' as const },
-                      { key: 'qty' as PortfolioSortKey, label: 'Cant', align: 'right' as const },
-                      { key: 'price' as PortfolioSortKey, label: 'Precio', align: 'right' as const },
-                      { key: 'priceUsd' as PortfolioSortKey, label: 'USD', align: 'right' as const },
-                      { key: 'valuation' as PortfolioSortKey, label: 'Valuación', align: 'right' as const },
-                    ]).map(col => {
-                      const isActive = pSortKey === col.key;
-                      const arrow = isActive ? (pSortDir === 'asc' ? ' ▲' : ' ▼') : '';
-                      return (
-                        <th
-                          key={col.key}
-                          onClick={() => {
-                            if (pSortKey === col.key) setPSortDir(d => d === 'asc' ? 'desc' : 'asc');
-                            else { setPSortKey(col.key); setPSortDir('asc'); }
-                          }}
-                          style={{
-                            ...COL_HEADER_BASE,
-                            textAlign: col.align,
-                            ...(isActive ? COL_SUNKEN : COL_RAISED),
-                            cursor: 'pointer',
-                          }}
-                        >
-                          {col.label}{arrow}
-                        </th>
-                      );
-                    })}
-                  </tr>
-                </thead>
-                <tbody>
-                  {[...holdingTickers].sort((a, b) => {
-                    let va: string | number, vb: string | number;
-                    const qtyA = holdings[a] ?? 0, qtyB = holdings[b] ?? 0;
-                    const priceA = arsPrices[a] ?? 0, priceB = arsPrices[b] ?? 0;
-                    switch (pSortKey) {
-                      case 'ticker': va = a; vb = b; break;
-                      case 'qty': va = qtyA; vb = qtyB; break;
-                      case 'price': va = priceA; vb = priceB; break;
-                      case 'priceUsd': va = priceA / effectiveMep; vb = priceB / effectiveMep; break;
-                      case 'valuation': va = qtyA * priceA; vb = qtyB * priceB; break;
-                    }
-                    const cmp = typeof va === 'string' ? va.localeCompare(vb as string) : (va as number) - (vb as number);
-                    return pSortDir === 'asc' ? cmp : -cmp;
-                  }).map(ticker => {
-                    const qty = holdings[ticker] ?? 0;
-                    const price = arsPrices[ticker] ?? 0;
-                    const priceUsd = price / effectiveMep;
-                    return (
-                      <tr key={ticker}>
-                        <td style={CELL}>{ticker}</td>
-                        <td style={CELL_RIGHT}>{qty}</td>
-                        <td style={CELL_RIGHT}>${fmtARS2(price)}</td>
-                        <td style={CELL_RIGHT}>${fmtARS2(priceUsd)}</td>
-                        <td style={CELL_RIGHT}>${fmtARS(qty * price)}</td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          ) : (
-            <div style={{ ...FONT, color: portfolioError ? COLOR_NEGATIVE : COLOR_DISABLED, padding: '4px 0' }}>
-              {isLoadingPortfolio ? 'Cargando...' : portfolioError ? portfolioError : 'Sin posiciones en CEDEARs'}
-            </div>
-          )}
-          <div style={{ ...FONT, padding: '2px 0', borderTop: '1px solid #808080' }}>
-            <span>Total portfolio: </span>
-            <strong>${fmtARS(totalPortfolioArs)} ARS</strong>
-            <span style={{ color: COLOR_SECONDARY, marginLeft: 8 }}>
-              (~USD ${fmtARS(totalPortfolioArs / effectiveMep)})
-            </span>
-          </div>
-        </fieldset>
-
-        {/* ── Configuración ──────────────────────────────────────────── */}
-        <fieldset style={{ marginTop: 6 }}>
-          <legend>Configuración</legend>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, ...FONT }}>
-            <label htmlFor="daily-limit">Límite plata nueva:</label>
-            <input
-              id="daily-limit"
-              type="number"
-              value={dailyLimit}
-              onChange={e => setDailyLimit(Math.max(0, Number(e.target.value)))}
-              style={{ width: 120, ...FONT }}
-              disabled={isAnalyzing}
-            />
-            <span>ARS</span>
-            <span style={{ color: COLOR_SECONDARY, marginLeft: 8 }}>
-              (~USD ${fmtARS(dailyLimit / effectiveMep)})
-            </span>
-          </div>
-          <div style={{ ...FONT, color: COLOR_SECONDARY, marginTop: 4 }}>
-            Comisión: {(COMMISSION_RATE * 100).toFixed(1)}% por operación
-          </div>
-        </fieldset>
-
-        {/* ── Agentes AI ─────────────────────────────────────────────── */}
-        <AgentSelector
-          agents={agents}
-          selectedAgents={selectedAgents}
-          onToggle={toggleAgent}
-          onSelectAll={() => setSelectedAgents(new Set(agents.map(a => a.key)))}
-          onSelectNone={() => setSelectedAgents(new Set())}
-          isLoading={isLoadingAgents}
-          disabled={isAnalyzing}
-          errorText={`No se pudo conectar al servidor AI Hedge Fund (${API_URL})`}
-          idPrefix="at-agent"
-        />
-
-        {/* ── Analyze button ─────────────────────────────────────────── */}
-        <div style={{ display: 'flex', gap: 6, margin: '8px 0' }}>
-          <button
-            onClick={handleAnalyze}
-            disabled={isLoading || isAnalyzing || selectedAgents.size === 0 || fmpTickers.length === 0}
-          >
-            {isAnalyzing ? 'Analizando...' : 'Analizar'}
-          </button>
-          <button onClick={loadPortfolio} disabled={isAnalyzing}>
-            Recargar Portfolio
-          </button>
-          {isAnalyzing && (
-            <button onClick={() => abortRef.current?.abort()}>Cancelar</button>
-          )}
-        </div>
-
-        {/* ── Progress ───────────────────────────────────────────────── */}
-        {logs.length > 0 && (
-          <fieldset style={{ marginTop: 2 }}>
-            <legend>Progreso {isAnalyzing && `(${progress}%)`}</legend>
-            <div ref={logBodyRef} className="sunken-panel" style={{ maxHeight: 120, overflow: 'auto', padding: 4 }}>
-              {logs.map(l => (
-                <div key={l.id} style={{ ...FONT, display: 'flex', gap: 4, lineHeight: '16px' }}>
-                  <LogIcon status={l.status} />
-                  <span>{l.text}</span>
-                </div>
-              ))}
-            </div>
-          </fieldset>
-        )}
-
-        {/* ── Analyst Signals ────────────────────────────────────────── */}
-        {analystSignals && (
-          <fieldset style={{ marginTop: 6 }}>
-            <legend>Señales de Analistas</legend>
-            <div className="sunken-panel" style={{ maxHeight: 160, overflow: 'auto' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                <thead>
-                  <tr>
-                    <th style={COL_HEADER}>Ticker</th>
-                    <th style={COL_HEADER}>Agente</th>
-                    <th style={COL_HEADER}>Señal</th>
-                    <th style={COL_HEADER_RIGHT}>Conf.</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {Object.entries(analystSignals)
-                    .filter(([agent]) => !agent.startsWith('risk_management'))
-                    .flatMap(([agent, tickers]) =>
-                      Object.entries(tickers).map(([ticker, sig]) => ({ agent, ticker, sig }))
-                    )
-                    .sort((a, b) => a.ticker.localeCompare(b.ticker) || a.agent.localeCompare(b.agent))
-                    .map(({ agent, ticker, sig }, i) => (
-                      <tr key={i}>
-                        <td style={CELL}>{ticker}</td>
-                        <td style={CELL}>{agent.replace(/_/g, ' ')}</td>
-                        <td style={{
-                          ...CELL,
-                          color: sig.signal === 'bullish' ? COLOR_POSITIVE
-                            : sig.signal === 'bearish' ? COLOR_NEGATIVE : COLOR_SECONDARY,
-                        }}>
-                          {sig.signal}
-                        </td>
-                        <td style={CELL_RIGHT}>{sig.confidence}%</td>
-                      </tr>
-                    ))}
-                </tbody>
-              </table>
-            </div>
-          </fieldset>
-        )}
-
-        {/* ── AI Suggestions for non-portfolio tickers ────────────────── */}
-        {candidateDecisions && Object.keys(candidateDecisions).length > 0 && (
-          <fieldset style={{ marginTop: 6 }}>
-            <legend>Sugerencias AI (fuera de portfolio)</legend>
-            <div className="sunken-panel" style={{ maxHeight: 140, overflow: 'auto' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                <thead>
-                  <tr>
-                    <th style={COL_HEADER}>Ticker</th>
-                    <th style={COL_HEADER}>Acción</th>
-                    <th style={COL_HEADER_RIGHT}>Conf.</th>
-                    <th style={COL_HEADER_RIGHT}>Precio</th>
-                    <th style={COL_HEADER}>Razón</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {Object.entries(candidateDecisions)
-                    .sort(([, a], [, b]) => b.confidence - a.confidence)
-                    .map(([ticker, dec]) => (
-                      <tr key={ticker}>
-                        <td style={CELL}>{ticker}</td>
-                        <td style={{
-                          ...CELL,
-                          color: dec.action === 'buy' ? COLOR_POSITIVE
-                            : dec.action === 'sell' ? COLOR_NEGATIVE : COLOR_SECONDARY,
-                          fontWeight: dec.action !== 'hold' ? 'bold' : 'normal',
-                        }}>
-                          {dec.action.toUpperCase()}
-                        </td>
-                        <td style={CELL_RIGHT}>{dec.confidence}%</td>
-                        <td style={CELL_RIGHT}>
-                          {arsPrices[ticker] ? `$${fmtARS2(arsPrices[ticker])}` : '—'}
-                        </td>
-                        <td style={{ ...CELL, maxWidth: 200, overflow: 'hidden', textOverflow: 'ellipsis' }}
-                            title={dec.reasoning}>
-                          {dec.reasoning}
-                        </td>
-                      </tr>
-                    ))}
-                </tbody>
-              </table>
-            </div>
-          </fieldset>
-        )}
-
-        {/* ── Trading Plan ───────────────────────────────────────────── */}
-        {plan && (
-          <fieldset style={{ marginTop: 6 }}>
-            <legend>Plan de Trading</legend>
-
-            {plan.sells.length > 0 && (
-              <>
-                <div style={{ ...FONT, fontWeight: 'bold', color: COLOR_NEGATIVE, margin: '4px 0 2px' }}>
-                  VENTAS
-                </div>
-                <OrderTable orders={plan.sells} />
-              </>
-            )}
-
-            {plan.buys.length > 0 && (
-              <>
-                <div style={{ ...FONT, fontWeight: 'bold', color: COLOR_POSITIVE, margin: '4px 0 2px' }}>
-                  COMPRAS
-                </div>
-                <OrderTable orders={plan.buys} />
-              </>
-            )}
-
-            {!hasOrders && (
-              <div style={{ ...FONT, color: COLOR_DISABLED, padding: '8px 0' }}>
-                El AI no recomienda operaciones hoy.
-              </div>
-            )}
-
-            {/* Summary */}
-            <div style={{
-              ...FONT, marginTop: 6, padding: '4px 6px',
-              borderTop: '1px solid #808080', borderBottom: '1px solid #ffffff',
-            }}>
-              <div>
-                Ventas: <strong>${fmtARS(plan.totalSellVolume)}</strong>
-                {' — '}
-                Compras: <strong>${fmtARS(plan.totalBuyVolume)}</strong>
-              </div>
-              <div style={{ color: COLOR_SECONDARY }}>
-                Proceeds de ventas: ${fmtARS(plan.estimatedSellProceeds)} (reciclados en compras)
-              </div>
-              <div style={{ color: COLOR_SECONDARY }}>
-                Plata nueva utilizada: ${fmtARS(plan.newCashUsed)} / ${fmtARS(dailyLimit)} límite
-              </div>
-              <div style={{ color: COLOR_SECONDARY }}>
-                Límite restante: ${fmtARS(plan.remainingLimit)}
-              </div>
-            </div>
-
-            {/* Warnings */}
-            {plan.warnings.length > 0 && (
-              <div style={{ marginTop: 4 }}>
-                {plan.warnings.map((w, i) => (
-                  <div key={i} style={{ ...FONT, color: '#808000', lineHeight: '16px' }}>
-                    ! {w}
+      <div className="window" role="tabpanel" style={{ flex: 1, display: 'flex', flexDirection: 'column', marginBottom: 12, minHeight: 0 }}>
+        <div className="window-body" style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 8, overflow: 'hidden', minHeight: 0, margin: 0 }}>
+          
+          {/* TAB 1: CONFIGURACIÓN */}
+          {activeTab === 'config' && (
+            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0, gap: 8 }}>
+              <div className="win98-scrollbar" style={{ flex: 1, overflowY: 'auto', padding: 2, display: 'flex', flexDirection: 'column', gap: 6 }}>
+                {/* ── Portfolio Actual ────────────────────────────────────────── */}
+                <fieldset style={{ margin: 0, flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
+                  <legend>Portafolio Actual</legend>
+                  <div style={{ ...FONT, padding: '2px 0 6px 0', display: 'flex', gap: 16, flexShrink: 0 }}>
+                    <div>
+                      <span>Cash disponible: </span>
+                      <strong>${fmtARS(cashArs)} ARS</strong>
+                      {comprometidoArs > 0 && (
+                        <span style={{ color: COLOR_NEGATIVE, marginLeft: 8 }}>
+                          (Comprometido: ${fmtARS(comprometidoArs)} ARS)
+                        </span>
+                      )}
+                      <span style={{ color: COLOR_SECONDARY, marginLeft: 8 }}>
+                        (~USD ${fmtARS(cashArs / effectiveMep)})
+                      </span>
+                    </div>
                   </div>
-                ))}
+                  <div style={{ ...FONT, padding: '2px 0', borderTop: '1px solid #808080', borderBottom: '1px solid #ffffff', marginTop: 4, paddingTop: 4, display: 'flex', gap: 16, flexShrink: 0 }}>
+                    <div>
+                      <span>Total portfolio: </span>
+                      <strong>${fmtARS(totalPortfolioArs)} ARS</strong>
+                      <span style={{ color: COLOR_SECONDARY, marginLeft: 8 }}>
+                        (~USD ${fmtARS(totalPortfolioArs / effectiveMep)})
+                      </span>
+                    </div>
+                  </div>
+                  {holdingTickers.length > 0 ? (
+                    <div className="sunken-panel win98-scrollbar" style={{ margin: 0, flex: 1, overflow: 'auto', minHeight: 0 }}>
+                      <table style={{ ...FONT, width: '100%', borderCollapse: 'collapse', borderSpacing: 0 }}>
+                        <thead>
+                          <tr>
+                            {([
+                              { key: 'ticker' as PortfolioSortKey, label: 'Ticker', align: 'left' as const },
+                              { key: 'qty' as PortfolioSortKey, label: 'Cant', align: 'right' as const },
+                              { key: 'price' as PortfolioSortKey, label: 'Precio', align: 'right' as const },
+                              { key: 'priceUsd' as PortfolioSortKey, label: 'USD', align: 'right' as const },
+                              { key: 'valuation' as PortfolioSortKey, label: 'Valuación', align: 'right' as const },
+                            ]).map((col) => {
+                              const isActive = pSortKey === col.key;
+                              const arrow = isActive ? (pSortDir === 'asc' ? ' ▲' : ' ▼') : '';
+                              return (
+                                <th
+                                  key={col.key}
+                                  onClick={() => {
+                                    if (pSortKey === col.key) setPSortDir(d => d === 'asc' ? 'desc' : 'asc');
+                                    else { setPSortKey(col.key); setPSortDir('asc'); }
+                                  }}
+                                  style={{
+                                    ...COL_HEADER_BASE,
+                                    textAlign: col.align,
+                                    ...(isActive ? COL_SUNKEN : COL_RAISED),
+                                    cursor: 'pointer',
+                                    position: 'sticky',
+                                    top: 0,
+                                    zIndex: 1,
+                                  }}
+                                >
+                                  {col.label}{arrow}
+                                </th>
+                              );
+                            })}
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {[...holdingTickers].sort((a, b) => {
+                            let va: string | number, vb: string | number;
+                            const qtyA = holdings[a] ?? 0, qtyB = holdings[b] ?? 0;
+                            const priceA = arsPrices[a] ?? 0, priceB = arsPrices[b] ?? 0;
+                            switch (pSortKey) {
+                              case 'ticker': va = a; vb = b; break;
+                              case 'qty': va = qtyA; vb = qtyB; break;
+                              case 'price': va = priceA; vb = priceB; break;
+                              case 'priceUsd': va = priceA / effectiveMep; vb = priceB / effectiveMep; break;
+                              case 'valuation': va = qtyA * priceA; vb = qtyB * priceB; break;
+                            }
+                            const cmp = typeof va === 'string' ? va.localeCompare(vb as string) : (va as number) - (vb as number);
+                            return pSortDir === 'asc' ? cmp : -cmp;
+                          }).map((ticker, idx) => {
+                            const qty = holdings[ticker] ?? 0;
+                            const price = arsPrices[ticker] ?? 0;
+                            const priceUsd = price / effectiveMep;
+                            return (
+                              <tr key={ticker} style={{
+                                backgroundColor: idx % 2 === 0 ? '#ffffff' : '#f0f0f0',
+                                borderBottom: '1px solid #c0c0c0',
+                                cursor: 'default',
+                              }}>
+                                <td style={CELL}>{ticker}</td>
+                                <td style={CELL_RIGHT}>{qty}</td>
+                                <td style={CELL_RIGHT}>${fmtARS2(price)}</td>
+                                <td style={CELL_RIGHT}>${fmtARS2(priceUsd)}</td>
+                                <td style={{ ...CELL_RIGHT, borderRight: 'none' }}>${fmtARS(qty * price)}</td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+                  ) : (
+                    <div style={{ ...FONT, color: portfolioError ? COLOR_NEGATIVE : COLOR_DISABLED, padding: '4px 0' }}>
+                      {isLoadingPortfolio ? 'Cargando...' : portfolioError ? portfolioError : 'Sin posiciones en CEDEARs'}
+                    </div>
+                  )}
+                </fieldset>
+
+                {/* ── Configuración ──────────────────────────────────────────── */}
+                <fieldset style={{ margin: 0, flexShrink: 0 }}>
+                  <legend>Configuración</legend>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, ...FONT }}>
+                    <div className="field-row">
+                      <label htmlFor="daily-limit">Límite plata nueva:</label>
+                      <input
+                        id="daily-limit"
+                        type="number"
+                        value={dailyLimit}
+                        onChange={e => setDailyLimit(Math.max(0, Number(e.target.value)))}
+                        style={{ width: 120, ...FONT }}
+                        disabled={isAnalyzing}
+                      />
+                    </div>
+                    <span>ARS</span>
+                    <span style={{ color: COLOR_SECONDARY, marginLeft: 8 }}>
+                      (~USD ${fmtARS(dailyLimit / effectiveMep)})
+                    </span>
+                    <span style={{ color: COLOR_SECONDARY, marginLeft: 16 }}>
+                      Comisión: {(COMMISSION_RATE * 100).toFixed(1)}% por operación
+                    </span>
+                  </div>
+                </fieldset>
+
+                {/* ── Agentes AI ─────────────────────────────────────────────── */}
+                <div style={{ margin: 0, flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
+                  <AgentSelector
+                    agents={agents}
+                    selectedAgents={selectedAgents}
+                    onToggle={toggleAgent}
+                    onSelectAll={() => setSelectedAgents(new Set(agents.map(a => a.key)))}
+                    onSelectNone={() => setSelectedAgents(new Set())}
+                    isLoading={isLoadingAgents}
+                    disabled={isAnalyzing}
+                    errorText={`No se pudo conectar al servidor AI Hedge Fund (${API_URL})`}
+                    idPrefix="at-agent"
+                  />
+                </div>
               </div>
-            )}
-          </fieldset>
-        )}
 
-        {/* ── Execute button ─────────────────────────────────────────── */}
-        {phase === 'planned' && hasOrders && (
-          <div style={{ margin: '8px 0' }}>
-            <button onClick={() => setPhase('confirming')}>
-              Ejecutar Órdenes
-            </button>
-          </div>
-        )}
-
-        {/* ── Confirmation ───────────────────────────────────────────── */}
-        {phase === 'confirming' && plan && (
-          <fieldset style={{ marginTop: 6, border: '2px solid #000080' }}>
-            <legend style={{ color: '#000080', fontWeight: 'bold' }}>Confirmar Ejecución</legend>
-            <div style={{ ...FONT, padding: '4px 0' }}>
-              Se ejecutarán las siguientes órdenes a precio de mercado, plazo 24hs:
+              {/* ── Analyze button ─────────────────────────────────────────── */}
+              <div style={{ display: 'flex', gap: 6, justifyContent: 'flex-end', flexShrink: 0, paddingTop: 6, borderTop: '1px solid #dfdfdf' }}>
+                {isAnalyzing && (
+                  <button onClick={() => abortRef.current?.abort()}>Cancelar</button>
+                )}
+                <button onClick={loadPortfolio} disabled={isAnalyzing}>
+                  Recargar Portfolio
+                </button>
+                <button
+                  className="default"
+                  onClick={handleAnalyze}
+                  disabled={isLoading || isAnalyzing || selectedAgents.size === 0 || fmpTickers.length === 0}
+                >
+                  {isAnalyzing ? 'Analizando...' : 'Analizar'}
+                </button>
+              </div>
             </div>
-            <div className="sunken-panel" style={{ padding: 4, margin: '4px 0' }}>
-              {plan.sells.map(o => (
-                <div key={`sell-${o.ticker}`} style={{ ...FONT, color: COLOR_NEGATIVE }}>
-                  VENDER {o.ticker} x{o.quantity} @ ${fmtARS2(o.priceArs)}
+          )}
+
+          {/* TAB 2: INTELIGENCIA AI */}
+          {activeTab === 'ai' && (
+            <div className="win98-scrollbar" style={{ flex: 1, overflowY: 'auto', padding: 2, display: 'flex', flexDirection: 'column', gap: 6 }}>
+              {phase === 'idle' && logs.length === 0 ? (
+                <div style={{ ...FONT, padding: 16, textAlign: 'center', color: COLOR_SECONDARY }}>
+                  No hay datos de análisis. Configure los parámetros y presione "Analizar" en la pestaña de Configuración.
                 </div>
-              ))}
-              {plan.buys.map(o => (
-                <div key={`buy-${o.ticker}`} style={{ ...FONT, color: COLOR_POSITIVE }}>
-                  COMPRAR {o.ticker} x{o.quantity} @ ${fmtARS2(o.priceArs)}
-                </div>
-              ))}
-            </div>
-            <div style={{ display: 'flex', gap: 6, marginTop: 4 }}>
-              <button onClick={handleExecuteOrders}>Confirmar y enviar</button>
-              <button onClick={() => setPhase('planned')}>Cancelar</button>
-            </div>
-          </fieldset>
-        )}
+              ) : (
+                <>
+                  {/* ── Progress ───────────────────────────────────────────────── */}
+                  {logs.length > 0 && (
+                    <fieldset style={{ margin: 0, flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
+                      <legend>Progreso {isAnalyzing && `(${progress}%)`}</legend>
+                      <div ref={logBodyRef} className="sunken-panel win98-scrollbar" style={{ flex: 1, overflow: 'auto', padding: 4, margin: 0 }}>
+                        {logs.map(l => (
+                          <div key={l.id} style={{ ...FONT, display: 'flex', gap: 4, lineHeight: '16px' }}>
+                            <LogIcon status={l.status} />
+                            {l.agent ? (
+                              <span>
+                                <strong style={{ color: '#000080' }}>{l.agent.replace(/_/g, ' ')}</strong>
+                                {l.ticker && <span style={{ color: '#800000', fontWeight: 'bold' }}> [{l.ticker}]</span>}
+                                <span>: {l.detail}</span>
+                              </span>
+                            ) : (
+                              <span>{l.text}</span>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </fieldset>
+                  )}
 
-        {/* ── Order results ──────────────────────────────────────────── */}
-        {orderResults.length > 0 && (
-          <fieldset style={{ marginTop: 6 }}>
-            <legend>Resultados</legend>
-            <div className="sunken-panel" style={{ padding: 4 }}>
-              {orderResults.map((r, i) => (
-                <div key={i} style={{ ...FONT, display: 'flex', gap: 4, lineHeight: '16px' }}>
-                  <span style={{ color: r.success ? COLOR_POSITIVE : COLOR_NEGATIVE }}>
-                    {r.success ? '\u25A0' : '\u2715'}
-                  </span>
-                  <span style={{ color: r.side === 'sell' ? COLOR_NEGATIVE : COLOR_POSITIVE }}>
-                    {r.side === 'sell' ? 'SELL' : 'BUY'}
-                  </span>
-                  <span>{r.ticker} x{r.quantity}</span>
-                  <span style={{ color: COLOR_SECONDARY }}>— {r.message}</span>
-                </div>
-              ))}
-            </div>
-          </fieldset>
-        )}
+                  {/* ── Analyst Signals ────────────────────────────────────────── */}
+                  {analystSignals && (
+                    <fieldset style={{ margin: 0, flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
+                      <legend>Señales de Analistas</legend>
+                      <div className="sunken-panel win98-scrollbar" style={{ flex: 1, overflow: 'auto', margin: 0 }}>
+                        <table style={{ ...FONT, width: '100%', borderCollapse: 'collapse', borderSpacing: 0 }}>
+                          <thead>
+                            <tr>
+                              <th style={{ ...COL_HEADER_BASE, ...COL_RAISED, textAlign: 'left', position: 'sticky', top: 0, zIndex: 1 }}>Ticker</th>
+                              <th style={{ ...COL_HEADER_BASE, ...COL_RAISED, textAlign: 'left', position: 'sticky', top: 0, zIndex: 1 }}>Agente</th>
+                              <th style={{ ...COL_HEADER_BASE, ...COL_RAISED, textAlign: 'left', position: 'sticky', top: 0, zIndex: 1 }}>Señal</th>
+                              <th style={{ ...COL_HEADER_BASE, ...COL_RAISED, textAlign: 'right', position: 'sticky', top: 0, zIndex: 1 }}>Conf.</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {Object.entries(analystSignals)
+                              .filter(([agent]) => !agent.startsWith('risk_management'))
+                              .flatMap(([agent, tickers]) =>
+                                Object.entries(tickers).map(([ticker, sig]) => ({ agent, ticker, sig }))
+                              )
+                              .sort((a, b) => a.ticker.localeCompare(b.ticker) || a.agent.localeCompare(b.agent))
+                              .map(({ agent, ticker, sig }, i) => (
+                                <tr key={i} style={{
+                                  backgroundColor: i % 2 === 0 ? '#ffffff' : '#f0f0f0',
+                                  borderBottom: '1px solid #c0c0c0',
+                                  cursor: 'default',
+                                }}>
+                                  <td style={CELL}>{ticker}</td>
+                                  <td style={CELL}>{agent.replace(/_/g, ' ')}</td>
+                                  <td style={{
+                                    ...CELL,
+                                    color: sig.signal === 'bullish' ? COLOR_POSITIVE
+                                      : sig.signal === 'bearish' ? COLOR_NEGATIVE : COLOR_SECONDARY,
+                                  }}>
+                                    {sig.signal}
+                                  </td>
+                                  <td style={{ ...CELL_RIGHT, borderRight: 'none' }}>{sig.confidence}%</td>
+                                </tr>
+                              ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </fieldset>
+                  )}
 
+                  {/* ── AI Suggestions for non-portfolio tickers ────────────────── */}
+                  {candidateDecisions && Object.keys(candidateDecisions).length > 0 && (
+                    <fieldset style={{ margin: 0, flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
+                      <legend>Sugerencias AI (fuera de portfolio)</legend>
+                      <div className="sunken-panel win98-scrollbar" style={{ flex: 1, overflow: 'auto', margin: 0 }}>
+                        <table style={{ ...FONT, width: '100%', borderCollapse: 'collapse', borderSpacing: 0 }}>
+                          <thead>
+                            <tr>
+                              <th style={{ ...COL_HEADER_BASE, ...COL_RAISED, textAlign: 'left', position: 'sticky', top: 0, zIndex: 1 }}>Ticker</th>
+                              <th style={{ ...COL_HEADER_BASE, ...COL_RAISED, textAlign: 'left', position: 'sticky', top: 0, zIndex: 1 }}>Acción</th>
+                              <th style={{ ...COL_HEADER_BASE, ...COL_RAISED, textAlign: 'right', position: 'sticky', top: 0, zIndex: 1 }}>Conf.</th>
+                              <th style={{ ...COL_HEADER_BASE, ...COL_RAISED, textAlign: 'right', position: 'sticky', top: 0, zIndex: 1 }}>Precio</th>
+                              <th style={{ ...COL_HEADER_BASE, ...COL_RAISED, textAlign: 'left', position: 'sticky', top: 0, zIndex: 1 }}>Razón</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {Object.entries(candidateDecisions)
+                              .sort(([, a], [, b]) => b.confidence - a.confidence)
+                              .map(([ticker, dec], i) => (
+                                <tr key={ticker} style={{
+                                  backgroundColor: i % 2 === 0 ? '#ffffff' : '#f0f0f0',
+                                  borderBottom: '1px solid #c0c0c0',
+                                  cursor: 'default',
+                                }}>
+                                  <td style={CELL}>{ticker}</td>
+                                  <td style={{
+                                    ...CELL,
+                                    color: dec.action === 'buy' ? COLOR_POSITIVE
+                                      : dec.action === 'sell' ? COLOR_NEGATIVE : COLOR_SECONDARY,
+                                    fontWeight: dec.action !== 'hold' ? 'bold' : 'normal',
+                                  }}>
+                                    {dec.action.toUpperCase()}
+                                  </td>
+                                  <td style={CELL_RIGHT}>{dec.confidence}%</td>
+                                  <td style={CELL_RIGHT}>
+                                    {arsPrices[ticker] ? `$${fmtARS2(arsPrices[ticker])}` : '—'}
+                                  </td>
+                                  <td style={{ ...CELL, maxWidth: 200, overflow: 'hidden', textOverflow: 'ellipsis', borderRight: 'none' }}
+                                      title={dec.reasoning}>
+                                    {dec.reasoning}
+                                  </td>
+                                </tr>
+                              ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </fieldset>
+                  )}
+                </>
+              )}
+            </div>
+          )}
+
+          {/* TAB 3: PLAN DE TRADING */}
+          {activeTab === 'plan' && (
+            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0, gap: 8 }}>
+              <div className="win98-scrollbar" style={{ flex: 1, overflowY: 'auto', padding: 2, display: 'flex', flexDirection: 'column', gap: 6 }}>
+                {!plan && phase !== 'executing' && phase !== 'done' ? (
+                  <div style={{ ...FONT, padding: 16, textAlign: 'center', color: COLOR_SECONDARY }}>
+                    El plan de trading se generará una vez que se complete el análisis AI.
+                  </div>
+                ) : (
+                  <>
+                    {/* ── Trading Plan ───────────────────────────────────────────── */}
+                    {plan && (
+                      <fieldset style={{ margin: 0, flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
+                        <legend>Plan de Trading</legend>
+                        <div className="win98-scrollbar" style={{ flex: 1, overflowY: 'auto', minHeight: 0, paddingRight: 4 }}>
+                          {plan.sells.length > 0 && (
+                            <>
+                              <div style={{ ...FONT, fontWeight: 'bold', color: COLOR_NEGATIVE, margin: '4px 0 2px', flexShrink: 0 }}>
+                                VENTAS
+                              </div>
+                              <OrderTable orders={plan.sells} />
+                            </>
+                          )}
+
+                          {plan.buys.length > 0 && (
+                            <>
+                              <div style={{ ...FONT, fontWeight: 'bold', color: COLOR_POSITIVE, margin: '4px 0 2px', marginTop: plan.sells.length > 0 ? 8 : 4, flexShrink: 0 }}>
+                                COMPRAS
+                              </div>
+                              <OrderTable orders={plan.buys} />
+                            </>
+                          )}
+
+                          {!hasOrders && (
+                            <div style={{ ...FONT, color: COLOR_DISABLED, padding: '8px 0' }}>
+                              El AI no recomienda operaciones hoy.
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Summary */}
+                        <div style={{
+                          ...FONT, marginTop: 6, padding: '4px 6px',
+                          borderTop: '1px solid #808080', borderBottom: '1px solid #ffffff',
+                          flexShrink: 0
+                        }}>
+                          <div>
+                            Ventas: <strong>${fmtARS(plan.totalSellVolume)}</strong>
+                            {' — '}
+                            Compras: <strong>${fmtARS(plan.totalBuyVolume)}</strong>
+                          </div>
+                          <div style={{ color: COLOR_SECONDARY }}>
+                            Proceeds de ventas: ${fmtARS(plan.estimatedSellProceeds)} (reciclados en compras)
+                          </div>
+                          <div style={{ color: COLOR_SECONDARY }}>
+                            Plata nueva utilizada: ${fmtARS(plan.newCashUsed)} / ${fmtARS(dailyLimit)} límite
+                          </div>
+                          <div style={{ color: COLOR_SECONDARY }}>
+                            Límite restante: ${fmtARS(plan.remainingLimit)}
+                          </div>
+                        </div>
+
+                        {/* Warnings */}
+                        {plan.warnings.length > 0 && (
+                          <div style={{ marginTop: 4, flexShrink: 0 }}>
+                            {plan.warnings.map((w, i) => (
+                              <div key={i} style={{ ...FONT, color: '#808000', lineHeight: '16px' }}>
+                                ! {w}
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </fieldset>
+                    )}
+
+                    {/* ── Confirmation ───────────────────────────────────────────── */}
+                    {phase === 'confirming' && plan && (
+                      <fieldset style={{ margin: 0, border: '2px solid #000080', flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
+                        <legend style={{ color: '#000080', fontWeight: 'bold' }}>Confirmar Ejecución</legend>
+                        <div style={{ ...FONT, padding: '4px 0', flexShrink: 0 }}>
+                          Se ejecutarán las siguientes órdenes a precio de mercado, plazo 24hs:
+                        </div>
+                        <div className="sunken-panel win98-scrollbar" style={{ padding: 4, margin: '4px 0', flex: 1, overflow: 'auto', minHeight: 0 }}>
+                          {plan.sells.map(o => (
+                            <div key={`sell-${o.ticker}`} style={{ ...FONT, color: COLOR_NEGATIVE }}>
+                              VENDER {o.ticker} x{o.quantity} @ ${fmtARS2(o.priceArs)}
+                            </div>
+                          ))}
+                          {plan.buys.map(o => (
+                            <div key={`buy-${o.ticker}`} style={{ ...FONT, color: COLOR_POSITIVE }}>
+                              COMPRAR {o.ticker} x{o.quantity} @ ${fmtARS2(o.priceArs)}
+                            </div>
+                          ))}
+                        </div>
+                        <div style={{ display: 'flex', gap: 6, marginTop: 4, flexShrink: 0 }}>
+                          <button onClick={handleExecuteOrders}>Confirmar y enviar</button>
+                          <button onClick={() => setPhase('planned')}>Cancelar</button>
+                        </div>
+                      </fieldset>
+                    )}
+
+                    {/* ── Order results ──────────────────────────────────────────── */}
+                    {orderResults.length > 0 && (
+                      <fieldset style={{ margin: 0, flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
+                        <legend>Resultados</legend>
+                        <div className="sunken-panel win98-scrollbar" style={{ padding: 4, margin: 0, flex: 1, overflow: 'auto', minHeight: 0 }}>
+                          {orderResults.map((r, i) => (
+                            <div key={i} style={{ ...FONT, display: 'flex', gap: 4, lineHeight: '16px' }}>
+                              <span style={{ color: r.success ? COLOR_POSITIVE : COLOR_NEGATIVE }}>
+                                {r.success ? '\u25A0' : '\u2715'}
+                              </span>
+                              <span style={{ color: r.side === 'sell' ? COLOR_NEGATIVE : COLOR_POSITIVE }}>
+                                {r.side === 'sell' ? 'SELL' : 'BUY'}
+                              </span>
+                              <span>{r.ticker} x{r.quantity}</span>
+                              <span style={{ color: COLOR_SECONDARY }}>— {r.message}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </fieldset>
+                    )}
+                  </>
+                )}
+              </div>
+
+              {/* ── Execute button (fixed at bottom of tab) ────────────────── */}
+              {phase === 'planned' && hasOrders && (
+                <div style={{ display: 'flex', justifyContent: 'flex-end', flexShrink: 0, paddingTop: 6, borderTop: '1px solid #dfdfdf' }}>
+                  <button className="default" onClick={() => setPhase('confirming')}>
+                    Ejecutar Órdenes
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+
+        </div>
       </div>
 
       {/* ── Status bar ───────────────────────────────────────────────── */}
@@ -928,27 +1022,31 @@ export function AutoTraderWindow() {
 
 function OrderTable({ orders }: { orders: RebalanceOrder[] }) {
   return (
-    <div className="sunken-panel" style={{ overflow: 'auto' }}>
-      <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+    <div className="sunken-panel win98-scrollbar" style={{ flex: 1, overflow: 'auto', margin: 0, minHeight: 0 }}>
+      <table style={{ ...FONT, width: '100%', borderCollapse: 'collapse', borderSpacing: 0 }}>
         <thead>
           <tr>
-            <th style={COL_HEADER}>Ticker</th>
-            <th style={COL_HEADER_RIGHT}>Cant</th>
-            <th style={COL_HEADER_RIGHT}>Precio</th>
-            <th style={COL_HEADER_RIGHT}>Volumen</th>
-            <th style={COL_HEADER_RIGHT}>Conf.</th>
-            <th style={COL_HEADER}>Razón</th>
+            <th style={{ ...COL_HEADER_BASE, ...COL_RAISED, textAlign: 'left', position: 'sticky', top: 0, zIndex: 1 }}>Ticker</th>
+            <th style={{ ...COL_HEADER_BASE, ...COL_RAISED, textAlign: 'right', position: 'sticky', top: 0, zIndex: 1 }}>Cant</th>
+            <th style={{ ...COL_HEADER_BASE, ...COL_RAISED, textAlign: 'right', position: 'sticky', top: 0, zIndex: 1 }}>Precio</th>
+            <th style={{ ...COL_HEADER_BASE, ...COL_RAISED, textAlign: 'right', position: 'sticky', top: 0, zIndex: 1 }}>Volumen</th>
+            <th style={{ ...COL_HEADER_BASE, ...COL_RAISED, textAlign: 'right', position: 'sticky', top: 0, zIndex: 1 }}>Conf.</th>
+            <th style={{ ...COL_HEADER_BASE, ...COL_RAISED, textAlign: 'left', position: 'sticky', top: 0, zIndex: 1 }}>Razón</th>
           </tr>
         </thead>
         <tbody>
-          {orders.map(o => (
-            <tr key={o.ticker}>
+          {orders.map((o, idx) => (
+            <tr key={o.ticker} style={{
+              backgroundColor: idx % 2 === 0 ? '#ffffff' : '#f0f0f0',
+              borderBottom: '1px solid #c0c0c0',
+              cursor: 'default',
+            }}>
               <td style={CELL}>{o.ticker}</td>
               <td style={CELL_RIGHT}>{o.quantity}</td>
               <td style={CELL_RIGHT}>${fmtARS2(o.priceArs)}</td>
               <td style={CELL_RIGHT}>${fmtARS(o.volumeArs)}</td>
               <td style={CELL_RIGHT}>{o.confidence}%</td>
-              <td style={{ ...CELL, maxWidth: 200, overflow: 'hidden', textOverflow: 'ellipsis' }}
+              <td style={{ ...CELL, maxWidth: 200, overflow: 'hidden', textOverflow: 'ellipsis', borderRight: 'none' }}
                   title={o.reasoning}>
                 {o.reasoning}
               </td>

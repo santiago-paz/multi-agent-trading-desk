@@ -53,10 +53,10 @@ export function AgentSelector({
   }
 
   return (
-    <fieldset style={{ marginBottom: '6px' }}>
+    <fieldset style={{ marginBottom: '6px', display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>
       <legend>Agentes de inversión</legend>
 
-      <div style={{ marginBottom: '4px', display: 'flex', gap: '4px', alignItems: 'center' }}>
+      <div style={{ marginBottom: '4px', display: 'flex', gap: '4px', alignItems: 'center', flexShrink: 0 }}>
         <button onClick={onSelectAll} disabled={disabled}>Todos</button>
         <button onClick={onSelectNone} disabled={disabled}>Ninguno</button>
         <span style={{ ...FONT, color: COLOR_SECONDARY, marginLeft: '4px' }}>
@@ -66,7 +66,7 @@ export function AgentSelector({
 
       <div
         className="sunken-panel win98-scrollbar"
-        style={{ maxHeight: '130px', overflowY: 'auto', padding: '2px' }}
+        style={{ flex: 1, overflowY: 'auto', padding: '2px', minHeight: 0 }}
       >
         {agents.map(agent => {
           const selected = selectedAgents.has(agent.key);
@@ -86,7 +86,7 @@ export function AgentSelector({
                 style={{
                   padding: '1px 3px',
                   cursor: 'inherit',
-                  ...(selected
+                  ...(selected && !disabled
                     ? { backgroundColor: '#000080', color: '#ffffff' }
                     : {}),
                 }}
