@@ -268,10 +268,10 @@ export async function getAllNews(): Promise<{ general: NewsItem[]; specific: Rec
     ]);
 
     if (stockSettled.status === 'rejected') {
-      console.error('FMP stock-latest failed:', stockSettled.reason);
+      console.error('FMP stock-latest failed:', stockSettled.reason instanceof Error ? stockSettled.reason.message : stockSettled.reason);
     }
     if (generalSettled.status === 'rejected') {
-      console.error('FMP general-latest failed:', generalSettled.reason);
+      console.error('FMP general-latest failed:', generalSettled.reason instanceof Error ? generalSettled.reason.message : generalSettled.reason);
     }
 
     const articles = stockSettled.status === 'fulfilled' ? stockSettled.value : [];
@@ -299,7 +299,7 @@ export async function getAllNews(): Promise<{ general: NewsItem[]; specific: Rec
 
     return { general, specific };
   } catch (error) {
-    console.error('Error fetching FMP news:', error);
+    console.error('Error fetching FMP news:', error instanceof Error ? error.message : error);
     return { general: [], specific: {} };
   }
 }
@@ -309,7 +309,7 @@ export async function getNews(ticker: string, count: number = 5): Promise<NewsIt
     const { specific } = await getAllNews();
     return (specific[ticker.toUpperCase()] ?? []).slice(0, count);
   } catch (error) {
-    console.error(`Error fetching FMP news for ${ticker}:`, error);
+    console.error(`Error fetching FMP news for ${ticker}:`, error instanceof Error ? error.message : error);
     return [];
   }
 }
@@ -319,7 +319,7 @@ export async function getGeneralMarketNews(count: number = 5): Promise<NewsItem[
     const { general } = await getAllNews();
     return general.slice(0, count);
   } catch (error) {
-    console.error('Error fetching FMP general news:', error);
+    console.error('Error fetching FMP general news:', error instanceof Error ? error.message : error);
     return [];
   }
 }
@@ -486,7 +486,7 @@ export async function getComprehensiveAssetData(symbol: string): Promise<Compreh
       recentNews
     };
   } catch (error) {
-    console.error(`Error building comprehensive data for ${symbol}:`, error);
+    console.error(`Error building comprehensive data for ${symbol}:`, error instanceof Error ? error.message : error);
     return null;
   }
 }

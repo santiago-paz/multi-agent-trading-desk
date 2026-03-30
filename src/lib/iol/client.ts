@@ -329,7 +329,7 @@ export class IOLClient {
       }
       return 1200;
     } catch (error) {
-      console.error('[IOL MEP] Error fetching MEP:', error);
+      console.error('[IOL MEP] Error fetching MEP:', error instanceof Error ? error.message : error);
       return 1200;
     }
   }
