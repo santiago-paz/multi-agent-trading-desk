@@ -667,7 +667,7 @@ export function BacktestingWindow() {
                             </thead>
                             <tbody>
                               {metrics.sharpe_ratio != null && (
-                                <tr style={{ background: '#ffffff', borderBottom: '1px solid #c0c0c0' }}>
+                                <tr style={{ background: '#ffffff' }}>
                                   <td style={CELL} title="Risk-adjusted return measure. > 1 is good, > 2 is very good">Sharpe Ratio</td>
                                   <td style={{ ...CELL_RIGHT, fontWeight: 'bold', color: metrics.sharpe_ratio >= 1 ? COLOR_POSITIVE : metrics.sharpe_ratio >= 0 ? COLOR_SECONDARY : COLOR_NEGATIVE, borderRight: 'none' }}>
                                     {metrics.sharpe_ratio.toFixed(3)}
@@ -675,7 +675,7 @@ export function BacktestingWindow() {
                                 </tr>
                               )}
                               {metrics.sortino_ratio != null && (
-                                <tr style={{ background: '#f0f0f0', borderBottom: '1px solid #c0c0c0' }}>
+                                <tr style={{ background: '#f0f0f0' }}>
                                   <td style={CELL} title="Like Sharpe but only penalizes downside volatility">Sortino Ratio</td>
                                   <td style={{ ...CELL_RIGHT, fontWeight: 'bold', color: metrics.sortino_ratio >= 1 ? COLOR_POSITIVE : metrics.sortino_ratio >= 0 ? COLOR_SECONDARY : COLOR_NEGATIVE, borderRight: 'none' }}>
                                     {metrics.sortino_ratio.toFixed(3)}
@@ -683,7 +683,7 @@ export function BacktestingWindow() {
                                 </tr>
                               )}
                               {metrics.max_drawdown != null && (
-                                <tr style={{ background: '#ffffff', borderBottom: '1px solid #c0c0c0' }}>
+                                <tr style={{ background: '#ffffff' }}>
                                   <td style={CELL} title="Largest peak-to-trough decline">Max Drawdown</td>
                                   <td style={{ ...CELL_RIGHT, fontWeight: 'bold', color: COLOR_NEGATIVE, borderRight: 'none' }}>
                                     {fmtPct(metrics.max_drawdown)}
@@ -692,7 +692,7 @@ export function BacktestingWindow() {
                                 </tr>
                               )}
                               {dayResults.length > 0 && (
-                                <tr style={{ background: '#f0f0f0', borderBottom: '1px solid #c0c0c0' }}>
+                                <tr style={{ background: '#f0f0f0' }}>
                                   <td style={CELL}>Retorno Total</td>
                                   <td style={{
                                     ...CELL_RIGHT,
@@ -705,19 +705,19 @@ export function BacktestingWindow() {
                                 </tr>
                               )}
                               {dayResults.length > 0 && (
-                                <tr style={{ background: '#ffffff', borderBottom: '1px solid #c0c0c0' }}>
+                                <tr style={{ background: '#ffffff' }}>
                                   <td style={CELL}>Valor Final del Portfolio</td>
                                   <td style={{ ...CELL_RIGHT, borderRight: 'none' }}>${fmtUSD(dayResults[dayResults.length - 1].portfolio_value)}</td>
                                 </tr>
                               )}
                               {metrics.gross_exposure != null && (
-                                <tr style={{ background: '#f0f0f0', borderBottom: '1px solid #c0c0c0' }}>
+                                <tr style={{ background: '#f0f0f0' }}>
                                   <td style={CELL}>Exposición Bruta</td>
                                   <td style={{ ...CELL_RIGHT, borderRight: 'none' }}>{fmtPct(metrics.gross_exposure)}</td>
                                 </tr>
                               )}
                               {metrics.net_exposure != null && (
-                                <tr style={{ background: '#ffffff', borderBottom: '1px solid #c0c0c0' }}>
+                                <tr style={{ background: '#ffffff' }}>
                                   <td style={CELL}>Exposición Neta</td>
                                   <td style={{ ...CELL_RIGHT, borderRight: 'none' }}>{fmtPct(metrics.net_exposure)}</td>
                                 </tr>
@@ -755,7 +755,6 @@ export function BacktestingWindow() {
                                     <tr
                                       style={{
                                         background: i % 2 === 0 ? '#ffffff' : '#f0f0f0',
-                                        borderBottom: '1px solid #c0c0c0',
                                         cursor: trades.length > 0 ? 'pointer' : 'default',
                                       }}
                                       onClick={() => {
@@ -785,7 +784,7 @@ export function BacktestingWindow() {
                                     </tr>
                                     {isExpanded && (
                                       <tr>
-                                        <td colSpan={5} style={{ padding: 0, background: '#ffffee', borderBottom: '1px solid #c0c0c0', boxShadow: 'inset 0 1px 3px rgba(0,0,0,0.1)' }}>
+                                        <td colSpan={5} style={{ padding: 0, background: '#ffffee', boxShadow: 'inset 0 1px 3px rgba(0,0,0,0.1)' }}>
                                           <div style={{ padding: '4px 12px' }}>
                                             {/* Decisions detail */}
                                             {Object.keys(day.decisions).length > 0 && (

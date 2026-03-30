@@ -660,7 +660,6 @@ export function AutoTraderWindow() {
                             return (
                               <tr key={ticker} style={{
                                 backgroundColor: idx % 2 === 0 ? '#ffffff' : '#f0f0f0',
-                                borderBottom: '1px solid #c0c0c0',
                                 cursor: 'default',
                               }}>
                                 <td style={CELL}>{ticker}</td>
@@ -797,7 +796,6 @@ export function AutoTraderWindow() {
                               .map(({ agent, ticker, sig }, i) => (
                                 <tr key={i} style={{
                                   backgroundColor: i % 2 === 0 ? '#ffffff' : '#f0f0f0',
-                                  borderBottom: '1px solid #c0c0c0',
                                   cursor: 'default',
                                 }}>
                                   <td style={CELL}>{ticker}</td>
@@ -839,7 +837,6 @@ export function AutoTraderWindow() {
                               .map(([ticker, dec], i) => (
                                 <tr key={ticker} style={{
                                   backgroundColor: i % 2 === 0 ? '#ffffff' : '#f0f0f0',
-                                  borderBottom: '1px solid #c0c0c0',
                                   cursor: 'default',
                                 }}>
                                   <td style={CELL}>{ticker}</td>
@@ -1038,7 +1035,6 @@ function OrderTable({ orders }: { orders: RebalanceOrder[] }) {
           {orders.map((o, idx) => (
             <tr key={o.ticker} style={{
               backgroundColor: idx % 2 === 0 ? '#ffffff' : '#f0f0f0',
-              borderBottom: '1px solid #c0c0c0',
               cursor: 'default',
             }}>
               <td style={CELL}>{o.ticker}</td>

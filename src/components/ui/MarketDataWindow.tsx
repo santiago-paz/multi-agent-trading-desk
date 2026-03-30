@@ -17,6 +17,7 @@ interface MarketDataWindowProps {
   companyNames: Record<string, string>;
   isLoading: boolean;
   onRefresh: () => void;
+  onCompanyDetail?: (symbol: string) => void;
 }
 
 type SortCol = 'symbol' | 'last' | 'pct';
@@ -83,9 +84,12 @@ interface ListViewProps {
   sortCol: SortCol;
   sortDir: SortDir;
   onSort: (col: SortCol) => void;
+  onCompanyDetail?: (symbol: string) => void;
 }
 
-const ListView: React.FC<ListViewProps> = ({ items, companyNames, sortCol, sortDir, onSort }) => {
+const ListView: React.FC<ListViewProps> = ({ items, companyNames, sortCol, sortDir, onSort, onCompanyDetail }) => {
+  const [selectedSymbol, setSelectedSymbol] = useState<string | null>(null);
+
   const enriched = items.map((item) => {
     const closes = item.data.map((d) => d.close);
     const last = closes[closes.length - 1] ?? 0;
@@ -153,56 +157,62 @@ const ListView: React.FC<ListViewProps> = ({ items, companyNames, sortCol, sortD
           </tr>
         </thead>
         <tbody>
-          {sorted.map(({ item, closes, last, pct, isUp }, idx) => (
-            <tr
-              key={item.symbol}
-              style={{
-                backgroundColor: idx % 2 === 0 ? '#ffffff' : '#f0f0f0',
-                borderBottom: '1px solid #c0c0c0',
-                cursor: 'default',
-              }}
-            >
-              <td style={{ ...CELL, fontWeight: 'bold', lineHeight: '1.2' }}>
-                {item.symbol}
-                {companyNames[item.symbol] && companyNames[item.symbol] !== item.symbol && (
-                  <div style={{
-                    ...FONT,
-                    fontWeight: 'normal',
-                    color: COLOR_SECONDARY,
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                    whiteSpace: 'nowrap',
-                  }}>
-                    {companyNames[item.symbol]}
-                  </div>
-                )}
-              </td>
-              <td style={{ ...CELL_RIGHT }}>
-                ${last.toFixed(2)}
-              </td>
-              <td
+          {sorted.map(({ item, closes, last, pct, isUp }, idx) => {
+            const isSelected = selectedSymbol === item.symbol;
+            return (
+              <tr
+                key={item.symbol}
+                onClick={() => setSelectedSymbol(item.symbol)}
+                onDoubleClick={() => onCompanyDetail?.(item.symbol)}
                 style={{
-                  ...CELL_RIGHT,
-                  color: isUp ? COLOR_POSITIVE : COLOR_NEGATIVE,
+                  backgroundColor: isSelected ? '#000080' : (idx % 2 === 0 ? '#ffffff' : '#f0f0f0'),
+                  color: isSelected ? '#ffffff' : 'inherit',
+                  cursor: 'default',
+                  userSelect: 'none',
                 }}
               >
-                {isUp ? '+' : ''}{pct.toFixed(2)}%
-              </td>
-              <td
-                style={{
-                  ...CELL,
-                  padding: '1px 2px',
-                  borderRight: 'none',
-                  width: 72,
-                  maxWidth: 72,
-                  textAlign: 'center',
-                  verticalAlign: 'middle',
-                }}
-              >
-                <Sparkline closes={closes} isUp={isUp} />
-              </td>
-            </tr>
-          ))}
+                <td style={{ ...CELL, fontWeight: 'bold', lineHeight: '1.2' }}>
+                  {item.symbol}
+                  {companyNames[item.symbol] && companyNames[item.symbol] !== item.symbol && (
+                    <div style={{
+                      ...FONT,
+                      fontWeight: 'normal',
+                      color: isSelected ? '#ffffff' : COLOR_SECONDARY,
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap',
+                    }}>
+                      {companyNames[item.symbol]}
+                    </div>
+                  )}
+                </td>
+                <td style={{ ...CELL_RIGHT }}>
+                  ${last.toFixed(2)}
+                </td>
+                <td
+                  style={{
+                    ...CELL_RIGHT,
+                    color: isSelected ? '#ffffff' : (isUp ? COLOR_POSITIVE : COLOR_NEGATIVE),
+                  }}
+                >
+                  {isUp ? '+' : ''}{pct.toFixed(2)}%
+                </td>
+                <td
+                  style={{
+                    ...CELL,
+                    padding: '1px 2px',
+                    borderRight: 'none',
+                    width: 72,
+                    maxWidth: 72,
+                    textAlign: 'center',
+                    verticalAlign: 'middle',
+                  }}
+                >
+                  <Sparkline closes={closes} isUp={isUp} />
+                </td>
+              </tr>
+            );
+          })}
         </tbody>
       </table>
     </div>
@@ -215,6 +225,7 @@ export const MarketDataWindow: React.FC<MarketDataWindowProps> = ({
   companyNames,
   isLoading,
   onRefresh,
+  onCompanyDetail,
 }) => {
   const [activeTab, setActiveTab] = useState<'mine' | 'all'>('mine');
   const [sortCol, setSortCol] = useState<SortCol>('symbol');
@@ -283,6 +294,7 @@ export const MarketDataWindow: React.FC<MarketDataWindowProps> = ({
                 sortCol={sortCol}
                 sortDir={sortDir}
                 onSort={handleSort}
+                onCompanyDetail={onCompanyDetail}
               />
             )}
           </fieldset>

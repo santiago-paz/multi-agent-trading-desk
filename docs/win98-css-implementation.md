@@ -319,23 +319,27 @@ All tables follow the pattern in `PortfolioSummary.tsx`. Key classes and constan
         </tr>
       </thead>
       <tbody>
-        {rows.map((row, i) => (
-          <tr
-            key={row.symbol}
-            style={{
-              background: i % 2 === 0 ? '#ffffff' : '#f0f0f0',
-              borderBottom: '1px solid #c0c0c0',
-              cursor: 'default',
-            }}
-          >
-            <td style={CELL}>{row.symbol}</td>
-            <td style={{ ...CELL_RIGHT, borderRight: 'none' }}>
-              <span style={{ color: row.change >= 0 ? COLOR_POSITIVE : COLOR_NEGATIVE }}>
-                {row.change >= 0 ? '+' : ''}{row.change}%
-              </span>
-            </td>
-          </tr>
-        ))}
+        {rows.map((row, i) => {
+          const isSelected = selectedRow === row.symbol;
+          return (
+            <tr
+              key={row.symbol}
+              onClick={() => setSelectedRow(row.symbol)}
+              style={{
+                background: isSelected ? '#000080' : (i % 2 === 0 ? '#ffffff' : '#f0f0f0'),
+                color: isSelected ? '#ffffff' : 'inherit',
+                cursor: 'default',
+              }}
+            >
+              <td style={CELL}>{row.symbol}</td>
+              <td style={{ ...CELL_RIGHT, borderRight: 'none' }}>
+                <span style={{ color: isSelected ? '#ffffff' : (row.change >= 0 ? COLOR_POSITIVE : COLOR_NEGATIVE) }}>
+                  {row.change >= 0 ? '+' : ''}{row.change}%
+                </span>
+              </td>
+            </tr>
+          );
+        })}
       </tbody>
     </table>
   </div>
@@ -347,9 +351,10 @@ All tables follow the pattern in `PortfolioSummary.tsx`. Key classes and constan
 - `COL_RAISED` / `COL_SUNKEN` handle the raised/sunken header button look — no manual border strings.
 - `CELL` / `CELL_RIGHT` handle font, padding, right-border separator — never hardcode these.
 - Last cell in each row: always add `borderRight: 'none'`.
+- **Rows:** Do not add `borderBottom` to rows; the table should rely only on vertical column borders (`borderRight` on cells) and alternating row backgrounds.
 - **Sticky headers** are built into `COL_HEADER_BASE` (`position: 'sticky', top: 0, zIndex: 1`). No extra inline styles needed on `<th>`. For sticky to work, the `sunken-panel` wrapper must be the actual scroll container — give it `overflow: auto` and a height constraint (e.g. `flex: 1; minHeight: 0` or `maxHeight`). If a parent div scrolls instead of the sunken-panel, sticky headers will not stick.
 
-For row selection highlight, add/remove the `highlighted` class on `<tr>` (handled by 98.css).
+For row selection highlight, apply inline styles dynamically: `background: '#000080'` and `color: '#ffffff'`. Ensure any custom semantic colors (like `COLOR_POSITIVE`) are overridden to `#ffffff` when the row is selected to maintain readability.
 
 ---
 
@@ -505,6 +510,6 @@ COLOR_DISABLED  = '#808080'
 | Tab strip | `<menu role="tablist">` + `<li role="tab">` | — |
 | Tab panel | `<div className="window" role="tabpanel">` + `<div className="window-body">` | — |
 | Progress bar | `.progress-indicator` + `.progress-indicator-bar` | — |
-| Row selection | `.highlighted` on `<tr>` | — |
+| Row selection | inline styles (`background: #000080`, `color: #fff`) | — |
 | Font | — | `FONT` |
 | Label (fixed-width right-aligned) | — | `LABEL` / `LABEL_ACCOUNT` |

@@ -125,12 +125,20 @@ export function OperationsFeed({ operations, isLoading, onRefresh }: OperationsF
                     const isCompra = op.tipo === 'Compra';
                     const isVenta = op.tipo === 'Venta';
                     const tipoColor = isCompra ? COLOR_POSITIVE : isVenta ? COLOR_NEGATIVE : '#000000';
+                    
+                    let estadoColor = '#000000';
+                    if (op.estado) {
+                      const est = op.estado.toLowerCase();
+                      if (est.includes('terminada')) estadoColor = COLOR_POSITIVE;
+                      else if (est.includes('cancelada') || est.includes('rechazada')) estadoColor = COLOR_NEGATIVE;
+                      else if (est.includes('iniciada') || est.includes('pendiente')) estadoColor = '#0000ff'; // Blue for pending/in-progress
+                    }
+
                     return (
                       <tr
                         key={op.numero || idx}
                         style={{
                           backgroundColor: idx % 2 === 0 ? '#ffffff' : '#f0f0f0',
-                          borderBottom: '1px solid #c0c0c0',
                           cursor: 'default',
                         }}
                       >
@@ -179,7 +187,7 @@ export function OperationsFeed({ operations, isLoading, onRefresh }: OperationsF
                             return `${prefix} ${displayVal.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
                           })()}
                         </td>
-                        <td style={{ ...CELL, borderRight: 'none' }}>
+                        <td style={{ ...CELL, borderRight: 'none', color: estadoColor }}>
                           {op.estado ?? '—'}
                         </td>
                       </tr>

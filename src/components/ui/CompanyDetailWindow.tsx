@@ -1008,101 +1008,31 @@ export const CompanyDetailWindow: React.FC<CompanyDetailWindowProps> = ({
       </div>
 
       {/* Tabs */}
-      <div role="tablist" style={{ display: 'flex', padding: '4px 8px 0', gap: '2px', flexShrink: 0 }}>
-        <button
-          role="tab"
-          type="button"
-          onClick={() => setTab('info')}
-          style={{
-            ...FONT,
-            paddingTop: '2px',
-            paddingBottom: '2px',
-            paddingLeft: '12px',
-            paddingRight: '12px',
-            border: '1px solid #808080',
-            borderBottom: tab === 'info' ? '1px solid #c0c0c0' : undefined,
-            background: tab === 'info' ? '#c0c0c0' : '#d4d0c8',
-            marginBottom: tab === 'info' ? '-1px' : '0',
-            zIndex: tab === 'info' ? 1 : 0,
-            position: 'relative',
-            ...(tab === 'info' ? BUTTON_PRESSED : {}),
-          }}
-        >
-          Info
-        </button>
-        {hasChartData && (
-          <button
-            role="tab"
-            type="button"
-            onClick={() => setTab('charts')}
-            style={{
-              ...FONT,
-              paddingTop: '2px',
-              paddingBottom: '2px',
-              paddingLeft: '12px',
-              paddingRight: '12px',
-              border: '1px solid #808080',
-              borderBottom: tab === 'charts' ? '1px solid #c0c0c0' : undefined,
-              background: tab === 'charts' ? '#c0c0c0' : '#d4d0c8',
-              marginBottom: tab === 'charts' ? '-1px' : '0',
-              zIndex: tab === 'charts' ? 1 : 0,
-              position: 'relative',
-              ...(tab === 'charts' ? BUTTON_PRESSED : {}),
-            }}
-          >
-            Charts
-          </button>
-        )}
-        {!data.isEtf && data.fmpTicker && (
-          <button
-            role="tab"
-            type="button"
-            onClick={() => setTab('advanced')}
-            style={{
-              ...FONT,
-              paddingTop: '2px',
-              paddingBottom: '2px',
-              paddingLeft: '12px',
-              paddingRight: '12px',
-              border: '1px solid #808080',
-              borderBottom: tab === 'advanced' ? '1px solid #c0c0c0' : undefined,
-              background: tab === 'advanced' ? '#c0c0c0' : '#d4d0c8',
-              marginBottom: tab === 'advanced' ? '-1px' : '0',
-              zIndex: tab === 'advanced' ? 1 : 0,
-              position: 'relative',
-              ...(tab === 'advanced' ? BUTTON_PRESSED : {}),
-            }}
-          >
-            Avanzado
-          </button>
-        )}
-        {data.fmpTicker && (
-          <button
-            role="tab"
-            type="button"
-            onClick={() => setTab('news')}
-            style={{
-              ...FONT,
-              paddingTop: '2px',
-              paddingBottom: '2px',
-              paddingLeft: '12px',
-              paddingRight: '12px',
-              border: '1px solid #808080',
-              borderBottom: tab === 'news' ? '1px solid #c0c0c0' : undefined,
-              background: tab === 'news' ? '#c0c0c0' : '#d4d0c8',
-              marginBottom: tab === 'news' ? '-1px' : '0',
-              zIndex: tab === 'news' ? 1 : 0,
-              position: 'relative',
-              ...(tab === 'news' ? BUTTON_PRESSED : {}),
-            }}
-          >
-            Noticias
-          </button>
-        )}
-      </div>
+      <div style={{ padding: '6px', display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>
+        <menu role="tablist" style={{ marginBottom: 0, zIndex: 1, position: 'relative' }}>
+          <li role="tab" aria-selected={tab === 'info'}>
+            <a href="#info" onClick={(e) => { e.preventDefault(); setTab('info'); }}>Info</a>
+          </li>
+          {hasChartData && (
+            <li role="tab" aria-selected={tab === 'charts'}>
+              <a href="#charts" onClick={(e) => { e.preventDefault(); setTab('charts'); }}>Charts</a>
+            </li>
+          )}
+          {!data.isEtf && data.fmpTicker && (
+            <li role="tab" aria-selected={tab === 'advanced'}>
+              <a href="#advanced" onClick={(e) => { e.preventDefault(); setTab('advanced'); }}>Avanzado</a>
+            </li>
+          )}
+          {data.fmpTicker && (
+            <li role="tab" aria-selected={tab === 'news'}>
+              <a href="#news" onClick={(e) => { e.preventDefault(); setTab('news'); }}>Noticias</a>
+            </li>
+          )}
+        </menu>
 
-      {/* Tab content */}
-      <div style={{ ...SCROLLABLE_BODY, borderTop: '1px solid #808080' }}>
+        {/* Tab content */}
+        <div className="window" role="tabpanel" style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0, margin: 0, marginTop: '-1px' }}>
+          <div className="window-body" style={{ flex: 1, display: 'flex', flexDirection: 'column', overflowY: 'auto', overflowX: 'hidden', minHeight: 0, margin: 0, padding: '6px' }}>
         {tab === 'info' && (
           <>
             {/* Stats */}
@@ -1242,6 +1172,8 @@ export const CompanyDetailWindow: React.FC<CompanyDetailWindowProps> = ({
             )}
           </>
         )}
+          </div>
+        </div>
       </div>
 
       <div className="status-bar" style={STATUS_BAR_STYLE}>

@@ -13,6 +13,8 @@ interface DonutChartProps {
   thickness?: number;
   centerText?: string;
   centerSubText?: string;
+  activeLabel?: string | null;
+  onHoverChange?: (label: string | null) => void;
 }
 
 interface SegmentGeometry {
@@ -97,9 +99,26 @@ export const DonutChart: React.FC<DonutChartProps> = ({
   thickness = 30,
   centerText,
   centerSubText,
+  activeLabel,
+  onHoverChange,
 }) => {
-  const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
+  const [internalHoveredIdx, setInternalHoveredIdx] = useState<number | null>(null);
   const [tooltipPos, setTooltipPos] = useState<{ x: number; y: number } | null>(null);
+
+  const hoveredIdx = useMemo(() => {
+    if (activeLabel !== undefined) {
+      const idx = data.findIndex(d => d.label === activeLabel);
+      return idx !== -1 ? idx : null;
+    }
+    return internalHoveredIdx;
+  }, [activeLabel, data, internalHoveredIdx]);
+
+  const handleHoverChange = useCallback((idx: number | null) => {
+    setInternalHoveredIdx(idx);
+    if (onHoverChange) {
+      onHoverChange(idx !== null ? data[idx].label : null);
+    }
+  }, [data, onHoverChange]);
 
   const padding = EXPLODE_PX + 1;
   const svgSize = size + padding * 2;
@@ -170,7 +189,7 @@ export const DonutChart: React.FC<DonutChartProps> = ({
         role="img"
         aria-label={`Distribution chart: ${chartLabel}`}
         onMouseMove={handleMouseMove}
-        onMouseLeave={() => { setHoveredIdx(null); setTooltipPos(null); }}
+        onMouseLeave={() => { handleHoverChange(null); setTooltipPos(null); }}
       >
         {orderedSegments.map((seg) => {
           const isHovered = hoveredIdx === seg.index;
@@ -182,7 +201,7 @@ export const DonutChart: React.FC<DonutChartProps> = ({
               key={seg.index}
               transform={`translate(${dx}, ${dy})`}
               style={{ transition: 'transform 100ms ease-out' }}
-              onMouseEnter={() => setHoveredIdx(seg.index)}
+              onMouseEnter={() => handleHoverChange(seg.index)}
             >
               <path
                 d={seg.pathData}
@@ -193,22 +212,7 @@ export const DonutChart: React.FC<DonutChartProps> = ({
                 <title>{`${seg.item.label}: ${seg.percentage.toFixed(1)}%`}</title>
               </path>
 
-              {seg.highlightPath && (
-                <path
-                  d={seg.highlightPath}
-                  fill="rgba(255,255,255,0.25)"
-                  stroke="none"
-                  pointerEvents="none"
-                />
-              )}
-              {seg.shadowPath && (
-                <path
-                  d={seg.shadowPath}
-                  fill="rgba(0,0,0,0.15)"
-                  stroke="none"
-                  pointerEvents="none"
-                />
-              )}
+              {/* Removed highlight and shadow paths for uniform color */}
 
               {isHovered && (
                 <path

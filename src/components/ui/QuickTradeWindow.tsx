@@ -209,7 +209,7 @@ export const QuickTradeWindow: React.FC<QuickTradeWindowProps> = ({
             </tr>
           </thead>
           <tbody>
-            {sorted.map((c) => {
+            {sorted.map((c, idx) => {
               const isSelected = selected?.simbolo === c.simbolo;
               return (
                 <tr
@@ -219,7 +219,7 @@ export const QuickTradeWindow: React.FC<QuickTradeWindowProps> = ({
                   style={{
                     cursor: 'default',
                     userSelect: 'none',
-                    background: isSelected ? '#000080' : undefined,
+                    background: isSelected ? '#000080' : (idx % 2 === 0 ? '#ffffff' : '#f0f0f0'),
                     color: isSelected ? '#ffffff' : undefined,
                   }}
                 >

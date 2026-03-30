@@ -587,6 +587,7 @@ export default function TradingDashboard() {
                 companyNames={marketData?.companyNames ?? {}}
                 isLoading={isLoadingMarketData}
                 onRefresh={fetchMarketData}
+                onCompanyDetail={openCompanyDetail}
               />
             )}
             {appId === 'movements' && (

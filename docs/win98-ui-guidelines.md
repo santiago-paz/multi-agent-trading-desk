@@ -184,9 +184,9 @@ All data tables must follow the pattern established in `src/components/ui/Portfo
 
 **Cells and Rows:**
 - **Cells:** Use `CELL` (left) and `CELL_RIGHT` (right) from `@/lib/theme/win98`. Never hardcode padding/fontSize/fontFamily. Last cell in row: `borderRight: 'none'`.
-- **Rows:** Even rows `#ffffff`, odd rows `#f0f0f0`. Each row: `borderBottom: '1px solid #c0c0c0'`, `cursor: 'default'`.
+- **Rows:** Even rows `#ffffff`, odd rows `#f0f0f0`. Each row: `cursor: 'default'` (no `borderBottom`, relying only on alternating colors and vertical column borders). When a row is selected, its background must change to `#000080` (Navy) and its text color to `#ffffff` (White). Ensure any custom colored text (like positive/negative values) also turns white when the row is selected to maintain readability.
 - **First column:** The leftmost column always carries the item's icon and its text label. Subsequent columns hold supplementary data.
-- **Row selection:** Users select an item by clicking its icon or label. Support extended selection for contiguous (range) and disjoint selections.
+- **Row selection:** Users select an item by clicking its row. Support extended selection for contiguous (range) and disjoint selections.
 - **Checkboxes in rows:** Optionally display checkboxes next to items to represent state or support multiple selections natively.
 
 **Keyboard Navigation:**

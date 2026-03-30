@@ -260,7 +260,6 @@ export const AccountData: React.FC<AccountDataProps> = ({
                               key={i}
                               style={{
                                 backgroundColor: i % 2 === 0 ? '#ffffff' : '#f0f0f0',
-                                borderBottom: '1px solid #c0c0c0',
                               }}
                             >
                               <td style={CELL}>{est.descripcion}</td>

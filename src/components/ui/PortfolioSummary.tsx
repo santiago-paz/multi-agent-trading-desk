@@ -96,6 +96,8 @@ export const PortfolioSummary: React.FC<PortfolioSummaryProps> = ({
 
   const [displayCurrency, setDisplayCurrency] = useState<'USD' | 'ARS'>('USD');
   const [activeTab, setActiveTab] = useState<string>('Todos');
+  const [hoveredChartLabel, setHoveredChartLabel] = useState<string | null>(null);
+  const [selectedSymbol, setSelectedSymbol] = useState<string | null>(null);
 
   const assetTypes = useMemo(() => {
     const types = new Set<string>();
@@ -233,6 +235,8 @@ export const PortfolioSummary: React.FC<PortfolioSummaryProps> = ({
                   thickness={35} 
                   centerText={`${currencySymbol}`}
                   centerSubText={displayTotal >= 1000000 ? `${(displayTotal / 1000000).toFixed(1)}M` : displayTotal >= 1000 ? `${(displayTotal / 1000).toFixed(1)}k` : displayTotal.toFixed(0)}
+                  activeLabel={hoveredChartLabel}
+                  onHoverChange={setHoveredChartLabel}
                 />
               </div>
               
@@ -249,7 +253,19 @@ export const PortfolioSummary: React.FC<PortfolioSummaryProps> = ({
                 }}
               >
                 {chartData.map((item) => (
-                  <div key={item.label} style={{ display: 'flex', alignItems: 'center', marginBottom: '6px' }}>
+                  <div 
+                    key={item.label} 
+                    style={{ 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      marginBottom: '6px',
+                      backgroundColor: hoveredChartLabel === item.label ? '#000080' : 'transparent',
+                      color: hoveredChartLabel === item.label ? '#fff' : 'inherit',
+                      cursor: 'default'
+                    }}
+                    onMouseEnter={() => setHoveredChartLabel(item.label)}
+                    onMouseLeave={() => setHoveredChartLabel(null)}
+                  >
                     <div 
                       style={{ 
                         width: '14px', 
@@ -342,13 +358,16 @@ export const PortfolioSummary: React.FC<PortfolioSummaryProps> = ({
                   const displayValorizado = isUSD ? valorizadoUSD : asset.valorizado;
                   const displayGananciaDinero = isUSD ? gananciaUSD : asset.gananciaDinero;
                   
+                  const isSelected = selectedSymbol === sym;
+
                   return (
                     <tr
                       key={sym}
+                      onClick={() => setSelectedSymbol(sym)}
                       onDoubleClick={() => onCompanyDetail?.(stripCurrencySuffix(sym))}
                       style={{
-                        backgroundColor: idx % 2 === 0 ? '#ffffff' : '#f0f0f0',
-                        borderBottom: '1px solid #c0c0c0',
+                        backgroundColor: isSelected ? '#000080' : (idx % 2 === 0 ? '#ffffff' : '#f0f0f0'),
+                        color: isSelected ? '#ffffff' : 'inherit',
                         cursor: 'default',
                         userSelect: 'none',
                       }}
@@ -375,7 +394,7 @@ export const PortfolioSummary: React.FC<PortfolioSummaryProps> = ({
                       <td
                         style={{
                           ...CELL_RIGHT,
-                          color: variacion >= 0 ? COLOR_POSITIVE : COLOR_NEGATIVE,
+                          color: isSelected ? '#ffffff' : (variacion >= 0 ? COLOR_POSITIVE : COLOR_NEGATIVE),
                         }}
                       >
                         {variacion >= 0 ? '+' : ''}{variacion.toFixed(2)}%
@@ -383,7 +402,7 @@ export const PortfolioSummary: React.FC<PortfolioSummaryProps> = ({
                       <td
                         style={{
                           ...CELL_RIGHT,
-                          color: displayGananciaDinero >= 0 ? COLOR_POSITIVE : COLOR_NEGATIVE,
+                          color: isSelected ? '#ffffff' : (displayGananciaDinero >= 0 ? COLOR_POSITIVE : COLOR_NEGATIVE),
                         }}
                       >
                         {displayGananciaDinero >= 0 ? '+' : ''}{displayGananciaDinero.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
@@ -391,7 +410,7 @@ export const PortfolioSummary: React.FC<PortfolioSummaryProps> = ({
                       <td
                         style={{
                           ...CELL_RIGHT,
-                          color: asset.gananciaPorcentaje >= 0 ? COLOR_POSITIVE : COLOR_NEGATIVE,
+                          color: isSelected ? '#ffffff' : (asset.gananciaPorcentaje >= 0 ? COLOR_POSITIVE : COLOR_NEGATIVE),
                           borderRight: 'none',
                         }}
                       >
