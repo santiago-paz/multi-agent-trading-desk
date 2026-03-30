@@ -206,7 +206,7 @@ All data tables must follow the pattern established in `src/components/ui/Portfo
 ### Window Layout Pattern
 Every panel window must use this structure (use constants from `@/lib/theme/win98`):
 1. Outer div: `WINDOW_CONTAINER` (flex column, full height, `background: #c0c0c0`)
-2. Optional tab strip: `<menu role="tablist">` immediately inside
+2. Optional tab strip: `<menu role="tablist">` immediately inside. If using tabs, the tab panel must be wrapped in `<div className="window" role="tabpanel">` and `<div className="window-body">` to get the correct 3D border that connects to the active tab. Also, ensure the `.window` wrapper has `marginBottom: '12px'` to simulate the space for action buttons, and that all flex containers involved have `minHeight: 0` so scrolling works without overflowing.
 3. Scrollable body: `SCROLLABLE_BODY` (flex: 1, overflow auto, padding 6px)
 4. Refresh footer: `REFRESH_FOOTER` (bottom-right button, border-top separator)
 5. Status bar: `<div className="status-bar">` with `STATUS_BAR_STYLE`

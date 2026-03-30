@@ -362,8 +362,11 @@ For row selection highlight, add/remove the `highlighted` class on `<tr>` (handl
   <li role="tab"><a href="#">Orders</a></li>
   <li role="tab"><a href="#">History</a></li>
 </menu>
-<div className="window" role="tabpanel">
-  <div className="window-body">
+
+{/* Tab panel MUST be wrapped in .window and .window-body to get the correct 3D border */}
+{/* Use minHeight: 0 on flex containers to allow scrolling, and marginBottom: '12px' for authentic spacing */}
+<div className="window" role="tabpanel" style={{ flex: 1, display: 'flex', flexDirection: 'column', marginBottom: '12px', minHeight: 0 }}>
+  <div className="window-body" style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '8px', overflow: 'hidden', minHeight: 0 }}>
     {/* active tab content */}
   </div>
 </div>
@@ -498,6 +501,7 @@ COLOR_DISABLED  = '#808080'
 | Status field border | `.status-field-border` | — |
 | Tree view | `<ul className="tree-view">` | — |
 | Tab strip | `<menu role="tablist">` + `<li role="tab">` | — |
+| Tab panel | `<div className="window" role="tabpanel">` + `<div className="window-body">` | — |
 | Progress bar | `.progress-indicator` + `.progress-indicator-bar` | — |
 | Row selection | `.highlighted` on `<tr>` | — |
 | Font | — | `FONT` |

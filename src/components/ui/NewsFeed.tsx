@@ -33,47 +33,45 @@ export const NewsFeed: React.FC<NewsFeedProps> = ({
       {/* Tab strip */}
       <menu role="tablist">
         <li role="tab" aria-selected={activeTab === 'general'}>
-          <a href="#general" onClick={(e) => { e.preventDefault(); setActiveTab('general'); }} style={{ textDecoration: 'none' }}>
+          <a href="#general" onClick={(e) => { e.preventDefault(); setActiveTab('general'); }}>
             General Market
           </a>
         </li>
         <li role="tab" aria-selected={activeTab === 'portfolio'}>
-          <a href="#portfolio" onClick={(e) => { e.preventDefault(); setActiveTab('portfolio'); }} style={{ textDecoration: 'none' }}>
+          <a href="#portfolio" onClick={(e) => { e.preventDefault(); setActiveTab('portfolio'); }}>
             Portfolio News
           </a>
         </li>
       </menu>
 
       {/* Tab panel */}
-      <div
-        role="tabpanel"
-        style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column', padding: '4px 0 0 0', gap: '4px' }}
-      >
-        {isLoading ? (
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 1 }}>
-            <p style={{ ...FONT, margin: 0 }}>Loading news...</p>
-          </div>
-        ) : (
-          <>
-            {activeTab === 'portfolio' && (
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <label style={{ ...FONT }}>Ticker:</label>
-                <select
-                  value={selectedSymbol}
-                  onChange={(e) => setSelectedSymbol(e.target.value as string | 'ALL')}
-                  style={{ ...FONT, flex: 1, maxWidth: 200 }}
-                >
-                  <option value="ALL">ALL ({symbols.length} tickers)</option>
-                  {symbols.map(symbol => (
-                    <option key={symbol} value={symbol}>
-                      {symbol} ({specificNews[symbol].length})
-                    </option>
-                  ))}
-                </select>
-              </div>
-            )}
+      <div className="window" role="tabpanel" style={{ flex: 1, display: 'flex', flexDirection: 'column', marginBottom: '12px', minHeight: 0 }}>
+        <div className="window-body" style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '8px', overflow: 'hidden', minHeight: 0 }}>
+          {isLoading ? (
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 1 }}>
+              <p style={{ ...FONT, margin: 0 }}>Loading news...</p>
+            </div>
+          ) : (
+            <>
+              {activeTab === 'portfolio' && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
+                  <label style={{ ...FONT }}>Ticker:</label>
+                  <select
+                    value={selectedSymbol}
+                    onChange={(e) => setSelectedSymbol(e.target.value as string | 'ALL')}
+                    style={{ ...FONT, flex: 1, maxWidth: 200 }}
+                  >
+                    <option value="ALL">ALL ({symbols.length} tickers)</option>
+                    {symbols.map(symbol => (
+                      <option key={symbol} value={symbol}>
+                        {symbol} ({specificNews[symbol].length})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
 
-            <div className="sunken-panel win98-scrollbar" style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', padding: '8px', background: '#ffffff' }}>
+              <div className="sunken-panel win98-scrollbar" style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', padding: '8px', background: '#ffffff', minHeight: 0 }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                 {activeTab === 'general' ? (
                   generalNews.length > 0 ? (
@@ -99,6 +97,7 @@ export const NewsFeed: React.FC<NewsFeedProps> = ({
             </div>
           </>
         )}
+        </div>
       </div>
 
       {/* Refresh footer — bottom-right */}
