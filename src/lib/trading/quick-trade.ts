@@ -77,7 +77,7 @@ export function filterAffordableCedears(
       ultimoPrecio: t.ultimoPrecio,
       variacionPorcentual: t.variacionPorcentual,
       maxCantidad: maxQty,
-      volumen: t.volumen || t.cantidadOperaciones || 0,
+      volumen: t.volumen ?? t.cantidadOperaciones ?? 0,
     });
   }
 

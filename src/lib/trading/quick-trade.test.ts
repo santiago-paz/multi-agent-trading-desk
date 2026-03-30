@@ -147,7 +147,7 @@ describe('filterAffordableCedears', () => {
 
   it('handles missing volumen gracefully', () => {
     const titulos = [
-      makeQuote({ simbolo: 'NOVOL', ultimoPrecio: 100, volumen: undefined as any }),
+      makeQuote({ simbolo: 'NOVOL', ultimoPrecio: 100, volumen: undefined as any, cantidadOperaciones: undefined as any }),
     ];
     const result = filterAffordableCedears(titulos, 1000);
     expect(result[0].volumen).toBe(0);
