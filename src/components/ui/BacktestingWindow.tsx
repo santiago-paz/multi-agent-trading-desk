@@ -51,6 +51,9 @@ interface LogEntry {
   id: string;
   text: string;
   status: LogStatus;
+  agent?: string;
+  ticker?: string;
+  detail?: string;
 }
 
 // ─── Presets ──────────────────────────────────────────────────────────────────
@@ -191,6 +194,7 @@ export function BacktestingWindow() {
   const [tickerInput, setTickerInput] = useState(DEFAULT_TICKERS.join(', '));
 
   // Run state
+  const [activeTab, setActiveTab] = useState<'config' | 'run' | 'results'>('config');
   const [phase, setPhase] = useState<'idle' | 'running' | 'done' | 'error'>('idle');
   const [logs, setLogs] = useState<LogEntry[]>([]);
   const [progress, setProgress] = useState(0);
@@ -234,8 +238,8 @@ export function BacktestingWindow() {
 
   // ── Log helpers ────────────────────────────────────────────────────────────
 
-  const addLog = useCallback((id: string, text: string, status: LogStatus = 'running') => {
-    setLogs(prev => [...prev, { id, text, status }]);
+  const addLog = useCallback((id: string, text: string, status: LogStatus = 'running', agent?: string, ticker?: string, detail?: string) => {
+    setLogs(prev => [...prev, { id, text, status, agent, ticker, detail }]);
   }, []);
 
   // ── Toggle agent selection ─────────────────────────────────────────────────
@@ -273,6 +277,7 @@ export function BacktestingWindow() {
     abortRef.current = new AbortController();
 
     setPhase('running');
+    setActiveTab('run');
     setLogs([]);
     logCounter.current = 0;
     setProgress(0);
@@ -363,10 +368,10 @@ export function BacktestingWindow() {
                     setProgress(Math.min(95, Math.round((current / total) * 100)));
                   }
 
-                  addLog(`day-${dayResult.date}`, `${dayResult.date}: $${fmtUSD(dayResult.portfolio_value)}`, 'ok');
+                  addLog(`day-${dayResult.date}`, `${dayResult.date}: $${fmtUSD(dayResult.portfolio_value)}`, 'ok', agent, '', `${dayResult.date}: $${fmtUSD(dayResult.portfolio_value)}`);
                 } catch {
                   // Not a day result JSON, just a status
-                  addLog(`progress-${++logCounter.current}`, `${agent}: ${status}`, 'running');
+                  addLog(`progress-${++logCounter.current}`, `${agent}: ${status}`, 'running', agent, '', status);
                 }
               } else if (agent === 'backtest') {
                 // Progress status (e.g., "Processing 2025-01-15 (42/250)")
@@ -378,11 +383,11 @@ export function BacktestingWindow() {
                   setTotalDays(total);
                   setProgress(Math.min(95, Math.round((current / total) * 100)));
                 }
-                addLog(`progress-${++logCounter.current}`, status, 'running');
+                addLog(`progress-${++logCounter.current}`, status, 'running', agent, '', status);
               } else {
                 // Agent-level progress
                 const ticker = (d.ticker as string) || '';
-                addLog(`agent-${++logCounter.current}`, `${agent}${ticker ? ` [${ticker}]` : ''}: ${status}`, 'running');
+                addLog(`agent-${++logCounter.current}`, `${agent}${ticker ? ` [${ticker}]` : ''}: ${status}`, 'running', agent, ticker, status);
               }
             } else if (evt.event === 'error') {
               const msg = (d.message as string) || 'Error desconocido';
@@ -399,6 +404,7 @@ export function BacktestingWindow() {
               addLog('complete', 'Backtest completado', 'ok');
               setProgress(100);
               setPhase('done');
+              setActiveTab('results');
             }
           }
         }
@@ -417,11 +423,15 @@ export function BacktestingWindow() {
             addLog('complete', 'Backtest completado', 'ok');
             setProgress(100);
             setPhase('done');
+            setActiveTab('results');
           }
         }
       }
 
-      if (phase !== 'error') setPhase('done');
+      if (phase !== 'error') {
+        setPhase('done');
+        setActiveTab('results');
+      }
     } catch (err: unknown) {
       if ((err as Error).name === 'AbortError') return;
       addLog('error', `Error: ${(err as Error).message}`, 'error');
@@ -455,341 +465,395 @@ export function BacktestingWindow() {
   // ── Render ─────────────────────────────────────────────────────────────────
 
   return (
-    <div style={WINDOW_CONTAINER}>
-      <div className="win98-scrollbar" style={SCROLLABLE_BODY}>
+    <div style={{ ...WINDOW_CONTAINER, padding: '6px 6px 0 6px', boxSizing: 'border-box' }}>
+      <menu role="tablist">
+        <li role="tab" aria-selected={activeTab === 'config'}>
+          <a href="#config" onClick={(e) => { e.preventDefault(); setActiveTab('config'); }}>1. Configuración</a>
+        </li>
+        <li role="tab" aria-selected={activeTab === 'run'}>
+          <a href="#run" onClick={(e) => { e.preventDefault(); setActiveTab('run'); }}>2. Ejecución</a>
+        </li>
+        <li role="tab" aria-selected={activeTab === 'results'}>
+          <a href="#results" onClick={(e) => { e.preventDefault(); setActiveTab('results'); }}>3. Resultados</a>
+        </li>
+      </menu>
 
-        {/* ── Date range ──────────────────────────────────────────────── */}
-        <fieldset style={{ marginBottom: '6px' }}>
-          <legend>Período de backtest</legend>
-          <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
-            <label style={FONT}>
-              Desde:{' '}
-              <input
-                type="date"
-                value={startDate}
-                onChange={e => setStartDate(e.target.value)}
-                disabled={isRunning}
-                style={{ ...FONT, width: '120px' }}
-              />
-            </label>
-            <label style={FONT}>
-              Hasta:{' '}
-              <input
-                type="date"
-                value={endDate}
-                onChange={e => setEndDate(e.target.value)}
-                disabled={isRunning}
-                style={{ ...FONT, width: '120px' }}
-              />
-            </label>
-            <span style={{ ...FONT, color: COLOR_SECONDARY }}>|</span>
-            {DATE_PRESETS.map(p => (
-              <button
-                key={p.months}
-                style={FONT}
-                onClick={() => applyPreset(p.months)}
-                disabled={isRunning}
-              >
-                {p.label}
-              </button>
-            ))}
-          </div>
-        </fieldset>
+      <div className="window" role="tabpanel" style={{ flex: 1, display: 'flex', flexDirection: 'column', marginBottom: 12, minHeight: 0 }}>
+        <div className="window-body" style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 8, overflow: 'hidden', minHeight: 0, margin: 0 }}>
+          
+          {/* TAB 1: CONFIGURACIÓN */}
+          {activeTab === 'config' && (
+            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0, gap: 8 }}>
+              <div className="win98-scrollbar" style={{ flex: 1, overflowY: 'auto', padding: 2, display: 'flex', flexDirection: 'column', gap: 6 }}>
+                {/* ── Date range ──────────────────────────────────────────────── */}
+                <fieldset style={{ margin: 0, flexShrink: 0 }}>
+                  <legend>Período de backtest</legend>
+                  <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
+                    <label style={FONT}>
+                      Desde:{' '}
+                      <input
+                        type="date"
+                        value={startDate}
+                        onChange={e => setStartDate(e.target.value)}
+                        disabled={isRunning}
+                        style={{ ...FONT, width: '120px' }}
+                      />
+                    </label>
+                    <label style={FONT}>
+                      Hasta:{' '}
+                      <input
+                        type="date"
+                        value={endDate}
+                        onChange={e => setEndDate(e.target.value)}
+                        disabled={isRunning}
+                        style={{ ...FONT, width: '120px' }}
+                      />
+                    </label>
+                    <span style={{ ...FONT, color: COLOR_SECONDARY }}>|</span>
+                    {DATE_PRESETS.map(p => (
+                      <button
+                        key={p.months}
+                        style={FONT}
+                        onClick={() => applyPreset(p.months)}
+                        disabled={isRunning}
+                      >
+                        {p.label}
+                      </button>
+                    ))}
+                  </div>
+                </fieldset>
 
-        {/* ── Tickers ─────────────────────────────────────────────────── */}
-        <fieldset style={{ marginBottom: '6px' }}>
-          <legend>Tickers</legend>
-          <div style={FONT}>
-            <input
-              type="text"
-              value={tickerInput}
-              onChange={e => setTickerInput(e.target.value)}
-              disabled={isRunning}
-              style={{ ...FONT, width: '100%', boxSizing: 'border-box' }}
-              placeholder="AAPL, GOOGL, MSFT..."
-            />
-            <p style={{ margin: '2px 0 0', color: COLOR_SECONDARY }}>
-              {parsedTickers.length} ticker{parsedTickers.length !== 1 ? 's' : ''}: {parsedTickers.join(', ')}
-            </p>
-          </div>
-        </fieldset>
+                {/* ── Tickers ─────────────────────────────────────────────────── */}
+                <fieldset style={{ margin: 0, flexShrink: 0 }}>
+                  <legend>Tickers</legend>
+                  <div style={FONT}>
+                    <input
+                      type="text"
+                      value={tickerInput}
+                      onChange={e => setTickerInput(e.target.value)}
+                      disabled={isRunning}
+                      style={{ ...FONT, width: '100%', boxSizing: 'border-box' }}
+                      placeholder="AAPL, GOOGL, MSFT..."
+                    />
+                    <p style={{ margin: '2px 0 0', color: COLOR_SECONDARY }}>
+                      {parsedTickers.length} ticker{parsedTickers.length !== 1 ? 's' : ''}: {parsedTickers.join(', ')}
+                    </p>
+                  </div>
+                </fieldset>
 
-        {/* ── Capital inicial ─────────────────────────────────────────── */}
-        <fieldset style={{ marginBottom: '6px' }}>
-          <legend>Capital inicial (USD)</legend>
-          <input
-            type="number"
-            value={initialCapital}
-            onChange={e => setInitialCapital(Math.max(1000, parseInt(e.target.value) || 100000))}
-            disabled={isRunning}
-            style={{ ...FONT, width: '140px' }}
-            min={1000}
-            step={10000}
-          />
-        </fieldset>
+                {/* ── Capital inicial ─────────────────────────────────────────── */}
+                <fieldset style={{ margin: 0, flexShrink: 0 }}>
+                  <legend>Capital inicial (USD)</legend>
+                  <input
+                    type="number"
+                    value={initialCapital}
+                    onChange={e => setInitialCapital(Math.max(1000, parseInt(e.target.value) || 100000))}
+                    disabled={isRunning}
+                    style={{ ...FONT, width: '140px' }}
+                    min={1000}
+                    step={10000}
+                  />
+                </fieldset>
 
-        {/* ── Agent selection ─────────────────────────────────────────── */}
-        <AgentSelector
-          agents={agents}
-          selectedAgents={selectedAgents}
-          onToggle={toggleAgent}
-          onSelectAll={() => setSelectedAgents(new Set(agents.map(a => a.key)))}
-          onSelectNone={() => setSelectedAgents(new Set())}
-          isLoading={isLoadingAgents}
-          disabled={isRunning}
-          errorText={`No se pudo conectar al servidor AI Hedge Fund (${API_URL})`}
-          idPrefix="bt-agent"
-        />
-
-        <div style={{ display: 'flex', gap: '6px', marginBottom: '6px' }}>
-          <button
-            className={phase === 'idle' ? 'default' : undefined}
-            onClick={handleRun}
-            disabled={isRunning || isLoading || selectedAgents.size === 0 || parsedTickers.length === 0}
-          >
-            {isRunning ? 'Ejecutando...' : 'Ejecutar backtest'}
-          </button>
-          {isRunning && (
-            <button onClick={handleAbort}>
-              Cancelar
-            </button>
-          )}
-        </div>
-
-        {/* ── Progress ──────────────────────────────────────────────────── */}
-        {(isRunning || phase === 'done' || phase === 'error') && (
-          <fieldset style={{ marginBottom: '6px' }}>
-            <legend>Progreso {totalDays > 0 ? `(${currentDay}/${totalDays} días)` : ''}</legend>
-
-            <div className="progress-indicator segmented" style={{ marginBottom: '6px' }}>
-              <span className="progress-indicator-bar" style={{ width: `${progress}%` }} />
-            </div>
-
-            <div
-              ref={logBodyRef}
-              className="sunken-panel win98-scrollbar"
-              style={{ maxHeight: '100px', overflowY: 'auto', padding: '3px 5px' }}
-            >
-              {logs.map(log => (
-                <div
-                  key={log.id}
-                  style={{
-                    ...FONT,
-                    display: 'flex',
-                    gap: '5px',
-                    lineHeight: '16px',
-                    color: log.status === 'error' ? COLOR_NEGATIVE : log.status === 'running' ? COLOR_SECONDARY : 'inherit',
-                  }}
-                >
-                  <LogIcon status={log.status} />
-                  <span style={{ wordBreak: 'break-word' }}>{log.text}</span>
+                {/* ── Agent selection ─────────────────────────────────────────── */}
+                <div style={{ margin: 0, flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
+                  <AgentSelector
+                    agents={agents}
+                    selectedAgents={selectedAgents}
+                    onToggle={toggleAgent}
+                    onSelectAll={() => setSelectedAgents(new Set(agents.map(a => a.key)))}
+                    onSelectNone={() => setSelectedAgents(new Set())}
+                    isLoading={isLoadingAgents}
+                    disabled={isRunning}
+                    errorText={`No se pudo conectar al servidor AI Hedge Fund (${API_URL})`}
+                    idPrefix="bt-agent"
+                  />
                 </div>
-              ))}
+              </div>
+
+              <div style={{ display: 'flex', gap: '6px', justifyContent: 'flex-end', flexShrink: 0, paddingTop: 6, borderTop: '1px solid #dfdfdf' }}>
+                {isRunning && (
+                  <button onClick={handleAbort}>
+                    Cancelar
+                  </button>
+                )}
+                <button
+                  className={phase === 'idle' ? 'default' : undefined}
+                  onClick={handleRun}
+                  disabled={isRunning || isLoading || selectedAgents.size === 0 || parsedTickers.length === 0}
+                >
+                  {isRunning ? 'Ejecutando...' : 'Ejecutar backtest'}
+                </button>
+              </div>
             </div>
-          </fieldset>
-        )}
+          )}
 
-        {/* ── Equity Curve ──────────────────────────────────────────────── */}
-        {dayResults.length >= 2 && (
-          <fieldset style={{ marginBottom: '6px' }}>
-            <legend>Curva de Equity</legend>
-            <EquityCurve results={dayResults} initialCapital={initialCapital} />
-          </fieldset>
-        )}
+          {/* TAB 2: EJECUCIÓN */}
+          {activeTab === 'run' && (
+            <div className="win98-scrollbar" style={{ flex: 1, overflowY: 'auto', padding: 2, display: 'flex', flexDirection: 'column', gap: 6 }}>
+              {phase === 'idle' && logs.length === 0 ? (
+                <div style={{ ...FONT, padding: 16, textAlign: 'center', color: COLOR_SECONDARY }}>
+                  No hay datos de ejecución. Configure los parámetros y presione "Ejecutar backtest" en la pestaña de Configuración.
+                </div>
+              ) : (
+                <fieldset style={{ margin: 0, flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
+                  <legend>Progreso {totalDays > 0 ? `(${currentDay}/${totalDays} días)` : ''}</legend>
 
-        {/* ── Performance Metrics ───────────────────────────────────────── */}
-        {metrics && (
-          <fieldset style={{ marginBottom: '6px' }}>
-            <legend>Métricas de Rendimiento</legend>
-            <div className="sunken-panel win98-scrollbar" style={{ padding: 0, overflow: 'auto', maxHeight: '200px' }}>
-              <table style={{ ...FONT, width: '100%', borderCollapse: 'collapse', borderSpacing: 0 }}>
-                <thead>
-                  <tr>
-                    <th style={COL_HEADER}>Métrica</th>
-                    <th style={COL_HEADER_RIGHT}>Valor</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {metrics.sharpe_ratio != null && (
-                    <tr style={{ background: '#ffffff', borderBottom: '1px solid #c0c0c0' }}>
-                      <td style={CELL} title="Risk-adjusted return measure. > 1 is good, > 2 is very good">Sharpe Ratio</td>
-                      <td style={{ ...CELL_RIGHT, fontWeight: 'bold', color: metrics.sharpe_ratio >= 1 ? COLOR_POSITIVE : metrics.sharpe_ratio >= 0 ? COLOR_SECONDARY : COLOR_NEGATIVE }}>
-                        {metrics.sharpe_ratio.toFixed(3)}
-                      </td>
-                    </tr>
-                  )}
-                  {metrics.sortino_ratio != null && (
-                    <tr style={{ background: '#f0f0f0', borderBottom: '1px solid #c0c0c0' }}>
-                      <td style={CELL} title="Like Sharpe but only penalizes downside volatility">Sortino Ratio</td>
-                      <td style={{ ...CELL_RIGHT, fontWeight: 'bold', color: metrics.sortino_ratio >= 1 ? COLOR_POSITIVE : metrics.sortino_ratio >= 0 ? COLOR_SECONDARY : COLOR_NEGATIVE }}>
-                        {metrics.sortino_ratio.toFixed(3)}
-                      </td>
-                    </tr>
-                  )}
-                  {metrics.max_drawdown != null && (
-                    <tr style={{ background: '#ffffff', borderBottom: '1px solid #c0c0c0' }}>
-                      <td style={CELL} title="Largest peak-to-trough decline">Max Drawdown</td>
-                      <td style={{ ...CELL_RIGHT, fontWeight: 'bold', color: COLOR_NEGATIVE }}>
-                        {fmtPct(metrics.max_drawdown)}
-                        {metrics.max_drawdown_date ? ` (${metrics.max_drawdown_date})` : ''}
-                      </td>
-                    </tr>
-                  )}
-                  {dayResults.length > 0 && (
-                    <tr style={{ background: '#f0f0f0', borderBottom: '1px solid #c0c0c0' }}>
-                      <td style={CELL}>Retorno Total</td>
-                      <td style={{
-                        ...CELL_RIGHT,
-                        fontWeight: 'bold',
-                        color: dayResults[dayResults.length - 1].portfolio_value >= initialCapital ? COLOR_POSITIVE : COLOR_NEGATIVE,
-                      }}>
-                        {fmtPct((dayResults[dayResults.length - 1].portfolio_value - initialCapital) / initialCapital)}
-                      </td>
-                    </tr>
-                  )}
-                  {dayResults.length > 0 && (
-                    <tr style={{ background: '#ffffff', borderBottom: '1px solid #c0c0c0' }}>
-                      <td style={CELL}>Valor Final del Portfolio</td>
-                      <td style={CELL_RIGHT}>${fmtUSD(dayResults[dayResults.length - 1].portfolio_value)}</td>
-                    </tr>
-                  )}
-                  {metrics.gross_exposure != null && (
-                    <tr style={{ background: '#f0f0f0', borderBottom: '1px solid #c0c0c0' }}>
-                      <td style={CELL}>Exposición Bruta</td>
-                      <td style={CELL_RIGHT}>{fmtPct(metrics.gross_exposure)}</td>
-                    </tr>
-                  )}
-                  {metrics.net_exposure != null && (
-                    <tr style={{ background: '#ffffff', borderBottom: '1px solid #c0c0c0' }}>
-                      <td style={CELL}>Exposición Neta</td>
-                      <td style={CELL_RIGHT}>{fmtPct(metrics.net_exposure)}</td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </fieldset>
-        )}
+                  <div className="progress-indicator segmented" style={{ marginBottom: '6px', flexShrink: 0 }}>
+                    <span className="progress-indicator-bar" style={{ width: `${progress}%` }} />
+                  </div>
 
-        {/* ── Daily Results Table ───────────────────────────────────────── */}
-        {dayResults.length > 0 && (
-          <fieldset>
-            <legend>Resultados Diarios ({dayResults.length} días)</legend>
-            <div className="sunken-panel win98-scrollbar" style={{ padding: 0, overflow: 'auto', maxHeight: '400px' }}>
-              <table style={{ ...FONT, width: '100%', borderCollapse: 'collapse', borderSpacing: 0 }}>
-                <thead>
-                  <tr>
-                    <th style={COL_HEADER}>Fecha</th>
-                    <th style={COL_HEADER_RIGHT}>Valor Portfolio</th>
-                    <th style={COL_HEADER_RIGHT}>Cambio</th>
-                    <th style={COL_HEADER_RIGHT}>Cash</th>
-                    <th style={COL_HEADER}>Trades</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {dayResults.map((day, i) => {
-                    const prevValue = i > 0 ? dayResults[i - 1].portfolio_value : initialCapital;
-                    const change = ((day.portfolio_value - prevValue) / prevValue) * 100;
-                    const trades = Object.entries(day.executed_trades).filter(([, qty]) => qty !== 0);
-                    const isExpanded = expandedDay === day.date;
-
-                    return (
-                      <React.Fragment key={day.date}>
-                        <tr
-                          style={{
-                            background: i % 2 === 0 ? '#ffffff' : '#f0f0f0',
-                            borderBottom: '1px solid #c0c0c0',
-                            cursor: trades.length > 0 ? 'pointer' : 'default',
-                          }}
-                          onClick={() => {
-                            if (trades.length > 0 || Object.keys(day.decisions).length > 0) {
-                              setExpandedDay(isExpanded ? null : day.date);
-                            }
-                          }}
-                        >
-                          <td style={{ ...CELL, fontWeight: 'bold' }}>
-                            {trades.length > 0 || Object.keys(day.decisions).length > 0 ? (isExpanded ? '▼ ' : '► ') : '  '}
-                            {day.date}
-                          </td>
-                          <td style={CELL_RIGHT}>${fmtUSD(day.portfolio_value)}</td>
-                          <td style={{
-                            ...CELL_RIGHT,
-                            color: change >= 0 ? COLOR_POSITIVE : COLOR_NEGATIVE,
-                            fontWeight: 'bold',
-                          }}>
-                            {change >= 0 ? '+' : ''}{change.toFixed(2)}%
-                          </td>
-                          <td style={CELL_RIGHT}>${fmtUSD(day.cash)}</td>
-                          <td style={{ ...CELL, borderRight: 'none' }}>
-                            {trades.length > 0
-                              ? trades.map(([t, q]) => `${t}: ${q > 0 ? '+' : ''}${q}`).join(', ')
-                              : '—'}
-                          </td>
-                        </tr>
-                        {isExpanded && (
-                          <tr>
-                            <td colSpan={5} style={{ padding: 0, background: '#ffffee', borderBottom: '2px solid #808080' }}>
-                              <div style={{ padding: '4px 12px' }}>
-                                {/* Decisions detail */}
-                                {Object.keys(day.decisions).length > 0 && (
-                                  <div style={{ marginBottom: '4px' }}>
-                                    <strong style={FONT}>Decisiones:</strong>
-                                    <table style={{ ...FONT, width: '100%', borderCollapse: 'collapse', marginTop: '2px' }}>
-                                      <thead>
-                                        <tr>
-                                          <th style={{ ...COL_HEADER, fontSize: '10px' }}>Ticker</th>
-                                          <th style={{ ...COL_HEADER, fontSize: '10px', textAlign: 'center' }}>Acción</th>
-                                          <th style={{ ...COL_HEADER_RIGHT, fontSize: '10px' }}>Cantidad</th>
-                                          <th style={{ ...COL_HEADER_RIGHT, fontSize: '10px' }}>Confianza</th>
-                                          <th style={{ ...COL_HEADER, fontSize: '10px' }}>Razonamiento</th>
-                                        </tr>
-                                      </thead>
-                                      <tbody>
-                                        {Object.entries(day.decisions).map(([ticker, dec]) => {
-                                          const decision = dec as { action: string; quantity: number; confidence: number; reasoning: string };
-                                          return (
-                                            <tr key={ticker}>
-                                              <td style={{ ...CELL, fontSize: '10px' }}>{ticker}</td>
-                                              <td style={{
-                                                ...CELL, fontSize: '10px', textAlign: 'center', fontWeight: 'bold',
-                                                color: decision.action === 'buy' || decision.action === 'long' ? COLOR_POSITIVE
-                                                  : decision.action === 'sell' || decision.action === 'short' ? COLOR_NEGATIVE
-                                                  : COLOR_SECONDARY,
-                                              }}>
-                                                {decision.action?.toUpperCase()}
-                                              </td>
-                                              <td style={{ ...CELL_RIGHT, fontSize: '10px' }}>{decision.quantity}</td>
-                                              <td style={{ ...CELL_RIGHT, fontSize: '10px' }}>{decision.confidence}%</td>
-                                              <td style={{ ...CELL, fontSize: '10px', borderRight: 'none', maxWidth: '300px', overflow: 'hidden', textOverflow: 'ellipsis' }}
-                                                  title={typeof decision.reasoning === 'string' ? decision.reasoning : JSON.stringify(decision.reasoning)}>
-                                                {typeof decision.reasoning === 'string' ? decision.reasoning : JSON.stringify(decision.reasoning)}
-                                              </td>
-                                            </tr>
-                                          );
-                                        })}
-                                      </tbody>
-                                    </table>
-                                  </div>
-                                )}
-                                {/* Prices */}
-                                {Object.keys(day.current_prices).length > 0 && (
-                                  <div style={{ ...FONT, fontSize: '10px', color: COLOR_SECONDARY }}>
-                                    <strong>Precios:</strong>{' '}
-                                    {Object.entries(day.current_prices).map(([t, p]) => `${t}: $${p.toFixed(2)}`).join(' | ')}
-                                  </div>
-                                )}
-                              </div>
-                            </td>
-                          </tr>
+                  <div
+                    ref={logBodyRef}
+                    className="sunken-panel win98-scrollbar"
+                    style={{ flex: 1, overflowY: 'auto', padding: '3px 5px', minHeight: 0 }}
+                  >
+                    {logs.map(log => (
+                      <div
+                        key={log.id}
+                        style={{
+                          ...FONT,
+                          display: 'flex',
+                          gap: '5px',
+                          lineHeight: '16px',
+                          color: log.status === 'error' ? COLOR_NEGATIVE : log.status === 'running' ? COLOR_SECONDARY : 'inherit',
+                        }}
+                      >
+                        <LogIcon status={log.status} />
+                        {log.agent && log.agent !== 'backtest' ? (
+                          <span style={{ wordBreak: 'break-word' }}>
+                            <strong style={{ color: '#000080' }}>{log.agent.replace(/_/g, ' ')}</strong>
+                            {log.ticker && <span style={{ color: '#800000', fontWeight: 'bold' }}> [{log.ticker}]</span>}
+                            <span>: {log.detail}</span>
+                          </span>
+                        ) : (
+                          <span style={{ wordBreak: 'break-word' }}>{log.text}</span>
                         )}
-                      </React.Fragment>
-                    );
-                  })}
-                </tbody>
-              </table>
+                      </div>
+                    ))}
+                  </div>
+                </fieldset>
+              )}
             </div>
-          </fieldset>
-        )}
+          )}
+
+          {/* TAB 3: RESULTADOS */}
+          {activeTab === 'results' && (
+            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0, gap: 8 }}>
+              <div className="win98-scrollbar" style={{ flex: 1, overflowY: 'auto', padding: 2, display: 'flex', flexDirection: 'column', gap: 6 }}>
+                {dayResults.length < 2 ? (
+                  <div style={{ ...FONT, padding: 16, textAlign: 'center', color: COLOR_SECONDARY }}>
+                    Los resultados aparecerán aquí cuando el backtest haya procesado al menos 2 días.
+                  </div>
+                ) : (
+                  <>
+                    {/* ── Equity Curve ──────────────────────────────────────────────── */}
+                    <fieldset style={{ margin: 0, flexShrink: 0 }}>
+                      <legend>Curva de Equity</legend>
+                      <EquityCurve results={dayResults} initialCapital={initialCapital} />
+                    </fieldset>
+
+                    {/* ── Performance Metrics ───────────────────────────────────────── */}
+                    {metrics && (
+                      <fieldset style={{ margin: 0, flexShrink: 0 }}>
+                        <legend>Métricas de Rendimiento</legend>
+                        <div className="sunken-panel win98-scrollbar" style={{ padding: 0, overflow: 'auto', maxHeight: '200px' }}>
+                          <table style={{ ...FONT, width: '100%', borderCollapse: 'collapse', borderSpacing: 0 }}>
+                            <thead>
+                              <tr>
+                                <th style={{ ...COL_HEADER_BASE, ...COL_RAISED, textAlign: 'left', position: 'sticky', top: 0, zIndex: 1 }}>Métrica</th>
+                                <th style={{ ...COL_HEADER_BASE, ...COL_RAISED, textAlign: 'right', position: 'sticky', top: 0, zIndex: 1 }}>Valor</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {metrics.sharpe_ratio != null && (
+                                <tr style={{ background: '#ffffff', borderBottom: '1px solid #c0c0c0' }}>
+                                  <td style={CELL} title="Risk-adjusted return measure. > 1 is good, > 2 is very good">Sharpe Ratio</td>
+                                  <td style={{ ...CELL_RIGHT, fontWeight: 'bold', color: metrics.sharpe_ratio >= 1 ? COLOR_POSITIVE : metrics.sharpe_ratio >= 0 ? COLOR_SECONDARY : COLOR_NEGATIVE, borderRight: 'none' }}>
+                                    {metrics.sharpe_ratio.toFixed(3)}
+                                  </td>
+                                </tr>
+                              )}
+                              {metrics.sortino_ratio != null && (
+                                <tr style={{ background: '#f0f0f0', borderBottom: '1px solid #c0c0c0' }}>
+                                  <td style={CELL} title="Like Sharpe but only penalizes downside volatility">Sortino Ratio</td>
+                                  <td style={{ ...CELL_RIGHT, fontWeight: 'bold', color: metrics.sortino_ratio >= 1 ? COLOR_POSITIVE : metrics.sortino_ratio >= 0 ? COLOR_SECONDARY : COLOR_NEGATIVE, borderRight: 'none' }}>
+                                    {metrics.sortino_ratio.toFixed(3)}
+                                  </td>
+                                </tr>
+                              )}
+                              {metrics.max_drawdown != null && (
+                                <tr style={{ background: '#ffffff', borderBottom: '1px solid #c0c0c0' }}>
+                                  <td style={CELL} title="Largest peak-to-trough decline">Max Drawdown</td>
+                                  <td style={{ ...CELL_RIGHT, fontWeight: 'bold', color: COLOR_NEGATIVE, borderRight: 'none' }}>
+                                    {fmtPct(metrics.max_drawdown)}
+                                    {metrics.max_drawdown_date ? ` (${metrics.max_drawdown_date})` : ''}
+                                  </td>
+                                </tr>
+                              )}
+                              {dayResults.length > 0 && (
+                                <tr style={{ background: '#f0f0f0', borderBottom: '1px solid #c0c0c0' }}>
+                                  <td style={CELL}>Retorno Total</td>
+                                  <td style={{
+                                    ...CELL_RIGHT,
+                                    fontWeight: 'bold',
+                                    color: dayResults[dayResults.length - 1].portfolio_value >= initialCapital ? COLOR_POSITIVE : COLOR_NEGATIVE,
+                                    borderRight: 'none'
+                                  }}>
+                                    {fmtPct((dayResults[dayResults.length - 1].portfolio_value - initialCapital) / initialCapital)}
+                                  </td>
+                                </tr>
+                              )}
+                              {dayResults.length > 0 && (
+                                <tr style={{ background: '#ffffff', borderBottom: '1px solid #c0c0c0' }}>
+                                  <td style={CELL}>Valor Final del Portfolio</td>
+                                  <td style={{ ...CELL_RIGHT, borderRight: 'none' }}>${fmtUSD(dayResults[dayResults.length - 1].portfolio_value)}</td>
+                                </tr>
+                              )}
+                              {metrics.gross_exposure != null && (
+                                <tr style={{ background: '#f0f0f0', borderBottom: '1px solid #c0c0c0' }}>
+                                  <td style={CELL}>Exposición Bruta</td>
+                                  <td style={{ ...CELL_RIGHT, borderRight: 'none' }}>{fmtPct(metrics.gross_exposure)}</td>
+                                </tr>
+                              )}
+                              {metrics.net_exposure != null && (
+                                <tr style={{ background: '#ffffff', borderBottom: '1px solid #c0c0c0' }}>
+                                  <td style={CELL}>Exposición Neta</td>
+                                  <td style={{ ...CELL_RIGHT, borderRight: 'none' }}>{fmtPct(metrics.net_exposure)}</td>
+                                </tr>
+                              )}
+                            </tbody>
+                          </table>
+                        </div>
+                      </fieldset>
+                    )}
+
+                    {/* ── Daily Results Table ───────────────────────────────────────── */}
+                    {dayResults.length > 0 && (
+                      <fieldset style={{ margin: 0, flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
+                        <legend>Resultados Diarios ({dayResults.length} días)</legend>
+                        <div className="sunken-panel win98-scrollbar" style={{ flex: 1, padding: 0, overflow: 'auto', minHeight: 0 }}>
+                          <table style={{ ...FONT, width: '100%', borderCollapse: 'collapse', borderSpacing: 0 }}>
+                            <thead>
+                              <tr>
+                                <th style={{ ...COL_HEADER_BASE, ...COL_RAISED, textAlign: 'left', position: 'sticky', top: 0, zIndex: 1 }}>Fecha</th>
+                                <th style={{ ...COL_HEADER_BASE, ...COL_RAISED, textAlign: 'right', position: 'sticky', top: 0, zIndex: 1 }}>Valor Portfolio</th>
+                                <th style={{ ...COL_HEADER_BASE, ...COL_RAISED, textAlign: 'right', position: 'sticky', top: 0, zIndex: 1 }}>Cambio</th>
+                                <th style={{ ...COL_HEADER_BASE, ...COL_RAISED, textAlign: 'right', position: 'sticky', top: 0, zIndex: 1 }}>Cash</th>
+                                <th style={{ ...COL_HEADER_BASE, ...COL_RAISED, textAlign: 'left', position: 'sticky', top: 0, zIndex: 1 }}>Trades</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {dayResults.map((day, i) => {
+                                const prevValue = i > 0 ? dayResults[i - 1].portfolio_value : initialCapital;
+                                const change = ((day.portfolio_value - prevValue) / prevValue) * 100;
+                                const trades = Object.entries(day.executed_trades).filter(([, qty]) => qty !== 0);
+                                const isExpanded = expandedDay === day.date;
+
+                                return (
+                                  <React.Fragment key={day.date}>
+                                    <tr
+                                      style={{
+                                        background: i % 2 === 0 ? '#ffffff' : '#f0f0f0',
+                                        borderBottom: '1px solid #c0c0c0',
+                                        cursor: trades.length > 0 ? 'pointer' : 'default',
+                                      }}
+                                      onClick={() => {
+                                        if (trades.length > 0 || Object.keys(day.decisions).length > 0) {
+                                          setExpandedDay(isExpanded ? null : day.date);
+                                        }
+                                      }}
+                                    >
+                                      <td style={{ ...CELL, fontWeight: 'bold' }}>
+                                        {trades.length > 0 || Object.keys(day.decisions).length > 0 ? (isExpanded ? '▼ ' : '► ') : '  '}
+                                        {day.date}
+                                      </td>
+                                      <td style={CELL_RIGHT}>${fmtUSD(day.portfolio_value)}</td>
+                                      <td style={{
+                                        ...CELL_RIGHT,
+                                        color: change >= 0 ? COLOR_POSITIVE : COLOR_NEGATIVE,
+                                        fontWeight: 'bold',
+                                      }}>
+                                        {change >= 0 ? '+' : ''}{change.toFixed(2)}%
+                                      </td>
+                                      <td style={CELL_RIGHT}>${fmtUSD(day.cash)}</td>
+                                      <td style={{ ...CELL, borderRight: 'none' }}>
+                                        {trades.length > 0
+                                          ? trades.map(([t, q]) => `${t}: ${q > 0 ? '+' : ''}${q}`).join(', ')
+                                          : '—'}
+                                      </td>
+                                    </tr>
+                                    {isExpanded && (
+                                      <tr>
+                                        <td colSpan={5} style={{ padding: 0, background: '#ffffee', borderBottom: '1px solid #c0c0c0', boxShadow: 'inset 0 1px 3px rgba(0,0,0,0.1)' }}>
+                                          <div style={{ padding: '4px 12px' }}>
+                                            {/* Decisions detail */}
+                                            {Object.keys(day.decisions).length > 0 && (
+                                              <div style={{ marginBottom: '4px' }}>
+                                                <strong style={FONT}>Decisiones:</strong>
+                                                <table style={{ ...FONT, width: '100%', borderCollapse: 'collapse', marginTop: '2px' }}>
+                                                  <thead>
+                                                    <tr>
+                                                      <th style={{ ...COL_HEADER_BASE, ...COL_RAISED, textAlign: 'left', fontSize: '10px' }}>Ticker</th>
+                                                      <th style={{ ...COL_HEADER_BASE, ...COL_RAISED, textAlign: 'center', fontSize: '10px' }}>Acción</th>
+                                                      <th style={{ ...COL_HEADER_BASE, ...COL_RAISED, textAlign: 'right', fontSize: '10px' }}>Cantidad</th>
+                                                      <th style={{ ...COL_HEADER_BASE, ...COL_RAISED, textAlign: 'right', fontSize: '10px' }}>Confianza</th>
+                                                      <th style={{ ...COL_HEADER_BASE, ...COL_RAISED, textAlign: 'left', fontSize: '10px' }}>Razonamiento</th>
+                                                    </tr>
+                                                  </thead>
+                                                  <tbody>
+                                                    {Object.entries(day.decisions).map(([ticker, dec]) => {
+                                                      const decision = dec as { action: string; quantity: number; confidence: number; reasoning: string };
+                                                      return (
+                                                        <tr key={ticker}>
+                                                          <td style={{ ...CELL, fontSize: '10px' }}>{ticker}</td>
+                                                          <td style={{
+                                                            ...CELL, fontSize: '10px', textAlign: 'center', fontWeight: 'bold',
+                                                            color: decision.action === 'buy' || decision.action === 'long' ? COLOR_POSITIVE
+                                                              : decision.action === 'sell' || decision.action === 'short' ? COLOR_NEGATIVE
+                                                              : COLOR_SECONDARY,
+                                                          }}>
+                                                            {decision.action?.toUpperCase()}
+                                                          </td>
+                                                          <td style={{ ...CELL_RIGHT, fontSize: '10px' }}>{decision.quantity}</td>
+                                                          <td style={{ ...CELL_RIGHT, fontSize: '10px' }}>{decision.confidence}%</td>
+                                                          <td style={{ ...CELL, fontSize: '10px', borderRight: 'none', maxWidth: '300px', overflow: 'hidden', textOverflow: 'ellipsis' }}
+                                                              title={typeof decision.reasoning === 'string' ? decision.reasoning : JSON.stringify(decision.reasoning)}>
+                                                            {typeof decision.reasoning === 'string' ? decision.reasoning : JSON.stringify(decision.reasoning)}
+                                                          </td>
+                                                        </tr>
+                                                      );
+                                                    })}
+                                                  </tbody>
+                                                </table>
+                                              </div>
+                                            )}
+                                            {/* Prices */}
+                                            {Object.keys(day.current_prices).length > 0 && (
+                                              <div style={{ ...FONT, fontSize: '10px', color: COLOR_SECONDARY }}>
+                                                <strong>Precios:</strong>{' '}
+                                                {Object.entries(day.current_prices).map(([t, p]) => `${t}: $${p.toFixed(2)}`).join(' | ')}
+                                              </div>
+                                            )}
+                                          </div>
+                                        </td>
+                                      </tr>
+                                    )}
+                                  </React.Fragment>
+                                );
+                              })}
+                            </tbody>
+                          </table>
+                        </div>
+                      </fieldset>
+                    )}
+                  </>
+                )}
+              </div>
+            </div>
+          )}
+
+        </div>
       </div>
 
       {/* ── Status bar ──────────────────────────────────────────────────────── */}

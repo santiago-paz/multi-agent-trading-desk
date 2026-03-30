@@ -2,8 +2,8 @@
 
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import {
-  FONT, COL_HEADER, COL_HEADER_RIGHT, COL_HEADER_BASE, COL_RAISED, COL_SUNKEN,
-  CELL, CELL_RIGHT, WINDOW_CONTAINER, SCROLLABLE_BODY, STATUS_BAR_STYLE,
+  FONT, COL_HEADER_BASE, COL_RAISED, COL_SUNKEN,
+  CELL, CELL_RIGHT, WINDOW_CONTAINER, STATUS_BAR_STYLE,
   COLOR_POSITIVE, COLOR_NEGATIVE, COLOR_SECONDARY, COLOR_DISABLED,
 } from '@/lib/theme/win98';
 import { getFullPortfolioContext, placeOrder } from '@/app/trading/actions';
@@ -746,7 +746,7 @@ export function AutoTraderWindow() {
             <div className="win98-scrollbar" style={{ flex: 1, overflowY: 'auto', padding: 2, display: 'flex', flexDirection: 'column', gap: 6 }}>
               {phase === 'idle' && logs.length === 0 ? (
                 <div style={{ ...FONT, padding: 16, textAlign: 'center', color: COLOR_SECONDARY }}>
-                  No hay datos de análisis. Configure los parámetros y presione "Analizar" en la pestaña de Configuración.
+                  No hay datos de análisis. Configure los parámetros y presione &quot;Analizar&quot; en la pestaña de Configuración.
                 </div>
               ) : (
                 <>
