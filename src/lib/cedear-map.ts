@@ -14,6 +14,8 @@ const IOL_TO_FMP: Record<string, string | null> = {
   // ── BYMA code differs from US/FMP ticker ────────────────────────────────
   // Source: official BYMA CEDEAR list (updated 3/2/2026)
 
+  'BKC*': 'BK',    // Bank of New York Mellon (NYSE: BK)
+  BKC: 'BK',       // Bank of New York Mellon (NYSE: BK)
   XROX: 'XRX',     // Xerox Holdings (NYSE: XRX)
   ADGO: 'AGRO',    // Adecoagro S.A. (NYSE: AGRO)
   AOCA: 'ACH',     // Aluminum Corp of China (NYSE: ACH)

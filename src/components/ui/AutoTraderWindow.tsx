@@ -104,6 +104,7 @@ export function AutoTraderWindow() {
   const [, setIolToFmp] = useState<Record<string, string>>({});
   const [fmpToIol, setFmpToIol] = useState<Record<string, string>>({});
   const [cashArs, setCashArs] = useState(0);
+  const [comprometidoArs, setComprometidoArs] = useState(0);
   const [arsPrices, setArsPrices] = useState<Record<string, number>>({});
   const [mepRateLocal, setMepRateLocal] = useState<number | null>(null);
   const [portfolioPositions, setPortfolioPositions] = useState<Array<{ ticker: string; quantity: number; trade_price: number }>>([]);
@@ -182,6 +183,7 @@ export function AutoTraderWindow() {
         setIolToFmp(result.iolToFmp);
         setFmpToIol(result.fmpToIol);
         setCashArs(result.cashArs);
+        setComprometidoArs(result.comprometidoArs);
         setArsPrices(result.arsPrices);
         setMepRateLocal(result.mepRate);
         setPortfolioPositions(result.portfolioPositions);
@@ -488,7 +490,7 @@ export function AutoTraderWindow() {
         ticker: order.ticker, side: 'sell', quantity: order.quantity,
         success: res.success && res.data?.ok === true,
         message: res.success
-          ? (res.data?.messages?.map(m => m.description || m.title).join('. ') || 'Orden enviada')
+          ? (res.data?.numeroOperacion ? `Operación #${res.data.numeroOperacion}` : (res.data?.messages?.map(m => m.description || m.title).join('. ') || 'Orden enviada'))
           : (res.error || 'Error'),
       });
       setOrderResults([...results]);
@@ -508,7 +510,7 @@ export function AutoTraderWindow() {
         ticker: order.ticker, side: 'buy', quantity: order.quantity,
         success: res.success && res.data?.ok === true,
         message: res.success
-          ? (res.data?.messages?.map(m => m.description || m.title).join('. ') || 'Orden enviada')
+          ? (res.data?.numeroOperacion ? `Operación #${res.data.numeroOperacion}` : (res.data?.messages?.map(m => m.description || m.title).join('. ') || 'Orden enviada'))
           : (res.error || 'Error'),
       });
       setOrderResults([...results]);
@@ -552,6 +554,11 @@ export function AutoTraderWindow() {
           <div style={{ ...FONT, padding: '2px 0' }}>
             <span>Cash disponible: </span>
             <strong>${fmtARS(cashArs)} ARS</strong>
+            {comprometidoArs > 0 && (
+              <span style={{ color: COLOR_NEGATIVE, marginLeft: 8 }}>
+                (Comprometido: ${fmtARS(comprometidoArs)} ARS)
+              </span>
+            )}
             <span style={{ color: COLOR_SECONDARY, marginLeft: 8 }}>
               (~USD ${fmtARS(cashArs / effectiveMep)})
             </span>

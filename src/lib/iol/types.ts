@@ -111,8 +111,9 @@ export interface PanelResponse {
 }
 
 export interface OrderResponse {
-  ok: boolean;
-  messages: { title: string; description: string }[];
+  numeroOperacion?: number;
+  ok?: boolean;
+  messages?: { title: string; description: string }[];
 }
 
 export interface OrderRequest {

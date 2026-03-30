@@ -95,8 +95,8 @@ export const AccountData: React.FC<AccountDataProps> = ({
               {estadoCuenta ? (
                 estadoCuenta.cuentas.map((cuenta, index) => {
                   const isPeso = cuenta.moneda === 'peso_Argentino';
-                  const monedaLabel = 'U$D';
-                  const divisor = isPeso ? mepRate : 1;
+                  const monedaLabel = isPeso ? 'AR$' : 'U$D';
+                  const divisor = 1; // Mostramos la moneda original de la cuenta
                   const saldoInmediato = cuenta.saldos?.find(s => s.liquidacion === 'inmediato');
                   const saldo24 = cuenta.saldos?.find(s => s.liquidacion === 'hrs24');
                   const saldo48 = cuenta.saldos?.find(s => s.liquidacion === 'hrs48');
@@ -129,6 +129,20 @@ export const AccountData: React.FC<AccountDataProps> = ({
                           flex: 1,
                           cursor: 'default',
                           color: (cuenta.disponible ?? 0) >= 0 ? COLOR_POSITIVE : COLOR_NEGATIVE,
+                        }}
+                      />
+                    </div>
+                    <div className="field-row" style={{ marginBottom: '2px' }}>
+                      <label style={LABEL}>Comprometido:</label>
+                      <input
+                        type="text"
+                        readOnly
+                        value={`${monedaLabel} ${((cuenta.comprometido ?? 0) / divisor).toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+                        style={{
+                          ...FONT,
+                          flex: 1,
+                          cursor: 'default',
+                          color: (cuenta.comprometido ?? 0) > 0 ? COLOR_NEGATIVE : 'inherit',
                         }}
                       />
                     </div>

@@ -3,6 +3,8 @@ export interface SymbolSearchHit {
   symbol: string;
   name: string;
   exchange: string;
+  currency?: string;
+  exchangeFullName?: string;
 }
 
 export interface CompanyProfile {

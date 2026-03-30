@@ -2,7 +2,7 @@
 
 import { tradingEngine } from '@/lib/trading/engine';
 import { iolClient } from '@/lib/iol/client';
-import { extractCashArs, effectiveCashAfterCommission, filterAffordableCedears, COMMISSION_RATE } from '@/lib/trading/quick-trade';
+import { extractCashArs, extractComprometidoArs, effectiveCashAfterCommission, filterAffordableCedears, COMMISSION_RATE } from '@/lib/trading/quick-trade';
 
 import type { HistoricalRow, CompanyProfile, IncomeStatementRow, KeyMetricsRow, CashFlowRow, BalanceSheetRow, FinancialScores, DCFValue, NewsItem, SymbolSearchHit } from '@/lib/fmp/types';
 import { getHistoricalData, getAllNews, getCompanyNames, getCompanyProfile, getIncomeStatements, getKeyMetrics, getCashFlowStatements, getBalanceSheetStatements, getFinancialScores, getDCFValue, getTickerNews, searchSymbolHits } from '@/lib/fmp/market-data';
@@ -180,6 +180,7 @@ export async function getAffordableCedearsForTrading() {
     }
 
     const cash = extractCashArs(cuenta);
+    const comprometido = extractComprometidoArs(cuenta);
     const effective = effectiveCashAfterCommission(cash);
     const cedears = filterAffordableCedears(cedearsPanel.titulos || [], effective);
 
@@ -188,6 +189,7 @@ export async function getAffordableCedearsForTrading() {
       data: {
         cedears,
         cash,
+        comprometido,
         effectiveCash: effective,
         commissionRate: COMMISSION_RATE,
       },
@@ -240,8 +242,11 @@ export async function placeOrder(params: {
     });
 
     // Normalize: IOL may return messages as empty or in unexpected shapes
+    // A successful order usually returns { numeroOperacion: 123456 }
+    const isSuccess = result.numeroOperacion !== undefined || result.ok === true;
     const data = {
-      ok: result.ok ?? false,
+      ok: isSuccess,
+      numeroOperacion: result.numeroOperacion,
       messages: Array.isArray(result.messages) ? result.messages : [],
     };
 
@@ -272,6 +277,7 @@ export async function getFullPortfolioContext() {
     ]);
 
     const cashArs = extractCashArs(cuenta);
+    const comprometidoArs = extractComprometidoArs(cuenta);
     const titulos = cedearsPanel.titulos || [];
 
     // Build price map for ALL CEDEARs (deduplicated by base symbol, prefer peso/C variant)
@@ -399,6 +405,7 @@ export async function getFullPortfolioContext() {
       iolToFmp,
       fmpToIol,
       cashArs,
+      comprometidoArs,
       arsPrices,
       mepRate,
       portfolioPositions,

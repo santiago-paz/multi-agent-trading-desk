@@ -89,6 +89,7 @@ export default function TradingDashboard() {
   const [quickTradeData, setQuickTradeData] = useState<{
     cedears: TradableCedear[];
     cash: number;
+    comprometido: number;
     effectiveCash: number;
     commissionRate: number;
   } | null>(null);
@@ -360,6 +361,41 @@ export default function TradingDashboard() {
     setIsLoadingQuickTrade(false);
   }, []);
 
+  const navigateCompanyDetail = useCallback(async (currentWindowId: string, newSymbol: string) => {
+    // 1. Fetch new data
+    setCompanyDetailInstances((prev) => ({
+      ...prev,
+      [currentWindowId]: { ...prev[currentWindowId], isLoading: true, error: null },
+    }));
+
+    const result = await getCompanyDetail(newSymbol);
+
+    // 2. Update instance with new symbol and data
+    setCompanyDetailInstances((prev) => {
+      if (!prev[currentWindowId]) return prev; // window closed
+      if (result.success) {
+        return {
+          ...prev,
+          [currentWindowId]: {
+            symbol: newSymbol,
+            data: result.data,
+            isLoading: false,
+            error: null,
+          }
+        };
+      }
+      return {
+        ...prev,
+        [currentWindowId]: {
+          symbol: newSymbol,
+          data: null,
+          isLoading: false,
+          error: result.error,
+        }
+      };
+    });
+  }, []);
+
   const openCompanyDetail = useCallback(async (symbol: string) => {
     const windowId = `${COMPANY_DETAIL_PREFIX}${symbol}`;
 
@@ -568,6 +604,7 @@ export default function TradingDashboard() {
               <QuickTradeWindow
                 cedears={quickTradeData?.cedears ?? []}
                 cash={quickTradeData?.cash ?? 0}
+                comprometido={quickTradeData?.comprometido ?? 0}
                 effectiveCash={quickTradeData?.effectiveCash ?? 0}
                 commissionRate={quickTradeData?.commissionRate ?? 0.015}
                 isLoading={isLoadingQuickTrade}
@@ -582,7 +619,7 @@ export default function TradingDashboard() {
                 isLoading={cdInstance.isLoading}
                 error={cdInstance.error}
                 data={cdInstance.data}
-                onSearch={openCompanyDetail}
+                onSearch={(sym) => navigateCompanyDetail(id, sym)}
               />
             )}
             {appId === 'autotrader' && (

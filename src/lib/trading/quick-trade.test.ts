@@ -136,6 +136,23 @@ describe('filterAffordableCedears', () => {
     expect(result[0].maxCantidad).toBe(3);
   });
 
+  it('allows purchase when effectiveCash exactly equals price', () => {
+    const titulos = [
+      makeQuote({ simbolo: 'EXACT', ultimoPrecio: 1000, volumen: 100 }),
+    ];
+    const result = filterAffordableCedears(titulos, 1000);
+    expect(result).toHaveLength(1);
+    expect(result[0].maxCantidad).toBe(1);
+  });
+
+  it('handles missing volumen gracefully', () => {
+    const titulos = [
+      makeQuote({ simbolo: 'NOVOL', ultimoPrecio: 100, volumen: undefined as any }),
+    ];
+    const result = filterAffordableCedears(titulos, 1000);
+    expect(result[0].volumen).toBe(0);
+  });
+
   it('skips dollar-denominated instruments (moneda === "2")', () => {
     const titulos = [
       makeQuote({ simbolo: 'AAPLC', ultimoPrecio: 500, volumen: 1000, moneda: '1' }),

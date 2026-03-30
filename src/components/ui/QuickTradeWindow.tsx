@@ -29,6 +29,7 @@ export interface TradableCedear {
 interface QuickTradeWindowProps {
   cedears: TradableCedear[];
   cash: number;
+  comprometido?: number;
   effectiveCash: number;
   commissionRate: number;
   isLoading: boolean;
@@ -39,7 +40,7 @@ interface QuickTradeWindowProps {
     precio: number;
     plazo: 't0' | 't1' | 't2';
     tipoOrden: 'precioLimite' | 'precioMercado';
-  }) => Promise<{ success: boolean; data?: { ok: boolean; messages: { title: string; description: string }[] }; error?: string }>;
+  }) => Promise<{ success: boolean; data?: { ok: boolean; numeroOperacion?: number; messages?: { title: string; description: string }[] }; error?: string }>;
   onCompanyDetail?: (symbol: string) => void;
 }
 
@@ -54,6 +55,7 @@ const fmtInt = (n: number) => n.toLocaleString('es-AR');
 export const QuickTradeWindow: React.FC<QuickTradeWindowProps> = ({
   cedears,
   cash,
+  comprometido = 0,
   effectiveCash,
   commissionRate,
   isLoading,
@@ -120,7 +122,10 @@ export const QuickTradeWindow: React.FC<QuickTradeWindowProps> = ({
       const detail = msgs.map(m => m.description || m.title).filter(Boolean).join('. ');
 
       if (result.data.ok) {
-        setOrderStatus({ type: 'success', msg: detail || 'Orden enviada correctamente' });
+        const successMsg = result.data.numeroOperacion 
+          ? `Orden enviada correctamente (Operación #${result.data.numeroOperacion})` 
+          : (detail || 'Orden enviada correctamente');
+        setOrderStatus({ type: 'success', msg: successMsg });
         setSelected(null);
       } else if (detail) {
         // IOL explicitly rejected with a reason
@@ -150,9 +155,12 @@ export const QuickTradeWindow: React.FC<QuickTradeWindowProps> = ({
     <div style={WINDOW_CONTAINER}>
       {/* Summary bar */}
       <div style={{ padding: '4px 6px', flexShrink: 0, borderBottom: '1px solid #808080' }}>
-        <div style={{ ...FONT, display: 'flex', gap: '12px' }}>
-          <span>Disponible: <b>${fmt(cash)}</b></span>
-          <span>Operable (neto com.): <b>${fmt(effectiveCash)}</b></span>
+        <div style={{ ...FONT, display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+          <span>Disponible: <b>AR$ {fmt(cash)}</b></span>
+          {comprometido > 0 && (
+            <span style={{ color: COLOR_NEGATIVE }}>Comprometido: <b>AR$ {fmt(comprometido)}</b></span>
+          )}
+          <span>Operable (neto com.): <b>AR$ {fmt(effectiveCash)}</b></span>
         </div>
       </div>
 

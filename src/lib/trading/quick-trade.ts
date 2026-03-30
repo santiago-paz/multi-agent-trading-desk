@@ -28,6 +28,15 @@ export function extractCashArs(cuenta: EstadoCuenta): number {
 }
 
 /**
+ * Extract committed ARS cash from an EstadoCuenta.
+ */
+export function extractComprometidoArs(cuenta: EstadoCuenta): number {
+  const cuentaArs = cuenta.cuentas?.find((c) => c.moneda === 'peso_Argentino');
+  if (!cuentaArs) return 0;
+  return cuentaArs.comprometido || 0;
+}
+
+/**
  * Compute effective cash after applying the commission margin.
  */
 export function effectiveCashAfterCommission(cash: number, commissionRate = COMMISSION_RATE): number {

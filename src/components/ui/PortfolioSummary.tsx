@@ -56,6 +56,7 @@ export const PortfolioSummary: React.FC<PortfolioSummaryProps> = ({
     sortedActivos,
     totalUSD,
     cashUSD,
+    comprometidoUSD,
     totalGananciaUSD,
     totalActivosEnCartera,
   } = usePortfolioSort(portfolio, mepRate, estadoCuenta, usdPrices);
@@ -72,7 +73,7 @@ export const PortfolioSummary: React.FC<PortfolioSummaryProps> = ({
             <input
               type="text"
               readOnly
-              value={`U$D ${totalUSD.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+              value={`U$D ${totalUSD.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} (AR$ ${(totalUSD * mepRate).toLocaleString('es-AR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })})`}
               style={{ ...FONT, flex: 1, cursor: 'default' }}
             />
           </div>
@@ -81,7 +82,7 @@ export const PortfolioSummary: React.FC<PortfolioSummaryProps> = ({
             <input
               type="text"
               readOnly
-              value={`U$D ${totalGananciaUSD >= 0 ? '+' : ''}${totalGananciaUSD.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+              value={`U$D ${totalGananciaUSD >= 0 ? '+' : ''}${totalGananciaUSD.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} (AR$ ${totalGananciaUSD >= 0 ? '+' : ''}${(totalGananciaUSD * mepRate).toLocaleString('es-AR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })})`}
               style={{
                 ...FONT,
                 flex: 1,
@@ -91,13 +92,24 @@ export const PortfolioSummary: React.FC<PortfolioSummaryProps> = ({
             />
           </div>
           {cashUSD > 0 && (
-            <div className="field-row">
+            <div className="field-row" style={{ marginBottom: '2px' }}>
               <label style={LABEL}>Efectivo:</label>
               <input
                 type="text"
                 readOnly
-                value={`U$D ${cashUSD.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+                value={`U$D ${cashUSD.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} (AR$ ${(cashUSD * mepRate).toLocaleString('es-AR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })})`}
                 style={{ ...FONT, flex: 1, cursor: 'default', color: COLOR_SECONDARY }}
+              />
+            </div>
+          )}
+          {comprometidoUSD > 0 && (
+            <div className="field-row">
+              <label style={LABEL}>Comprometido:</label>
+              <input
+                type="text"
+                readOnly
+                value={`U$D ${comprometidoUSD.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} (AR$ ${(comprometidoUSD * mepRate).toLocaleString('es-AR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })})`}
+                style={{ ...FONT, flex: 1, cursor: 'default', color: COLOR_NEGATIVE }}
               />
             </div>
           )}

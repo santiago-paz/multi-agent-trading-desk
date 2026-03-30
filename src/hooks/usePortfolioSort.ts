@@ -31,6 +31,19 @@ export function getCashUSD(estadoCuenta: EstadoCuenta | null, mepRate: number): 
   return total;
 }
 
+export function getComprometidoUSD(estadoCuenta: EstadoCuenta | null, mepRate: number): number {
+  if (!estadoCuenta?.cuentas) return 0;
+  let total = 0;
+  for (const cuenta of estadoCuenta.cuentas) {
+    if (cuenta.moneda === 'peso_Argentino') {
+      total += (cuenta.comprometido || 0) / mepRate;
+    } else if (cuenta.moneda === 'dolar_Estadounidense') {
+      total += (cuenta.comprometido || 0);
+    }
+  }
+  return total;
+}
+
 export function usePortfolioSort(
   portfolio: PortfolioResponse | null,
   mepRate: number,
@@ -63,6 +76,7 @@ export function usePortfolioSort(
     }
   }
   const cashUSD = getCashUSD(estadoCuenta ?? null, mepRate);
+  const comprometidoUSD = getComprometidoUSD(estadoCuenta ?? null, mepRate);
   totalUSD += cashUSD;
 
   const totalGananciaARS = activos.reduce((acc, asset) => acc + asset.gananciaDinero, 0);
@@ -91,6 +105,7 @@ export function usePortfolioSort(
     sortedActivos,
     totalUSD,
     cashUSD,
+    comprometidoUSD,
     totalGananciaUSD,
     totalActivosEnCartera: activos.length,
   };

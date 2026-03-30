@@ -81,11 +81,14 @@ export async function searchSymbolHits(query: string, limit = 15): Promise<Symbo
     const symbol = typeof r.symbol === 'string' ? r.symbol.trim() : '';
     const name = typeof r.name === 'string' ? r.name.trim() : '';
     const exchange =
+      (typeof r.exchange === 'string' && r.exchange.trim()) ||
       (typeof r.exchangeShortName === 'string' && r.exchangeShortName.trim()) ||
       (typeof r.stockExchange === 'string' && r.stockExchange.trim()) ||
       '';
+    const currency = typeof r.currency === 'string' ? r.currency.trim() : undefined;
+    const exchangeFullName = typeof r.exchangeFullName === 'string' ? r.exchangeFullName.trim() : undefined;
     if (!symbol) continue;
-    mapped.push({ symbol, name, exchange });
+    mapped.push({ symbol, name, exchange, currency, exchangeFullName });
   }
 
   const withIdx = mapped.map((h, i) => ({
@@ -95,7 +98,7 @@ export async function searchSymbolHits(query: string, limit = 15): Promise<Symbo
   }));
   withIdx.sort((a, b) => (b._us - a._us) || (a._order - b._order));
 
-  return withIdx.slice(0, limit).map(({ symbol, name, exchange }) => ({ symbol, name, exchange }));
+  return withIdx.slice(0, limit).map(({ symbol, name, exchange, currency, exchangeFullName }) => ({ symbol, name, exchange, currency, exchangeFullName }));
 }
 
 export async function getCompanyNames(symbols: string[]): Promise<Record<string, string>> {
