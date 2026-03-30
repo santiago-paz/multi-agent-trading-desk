@@ -8,7 +8,7 @@ export const DEFAULT_WINDOWS: Record<AppId, { width: number; height: number; x: 
   portfolio: { x: 24, y: 24, width: 580, height: 440 },
   news: { x: 380, y: 24, width: 500, height: 440 },
   marketdata: { x: 400, y: 80, width: 540, height: 400 },
-  movements: { x: 120, y: 120, width: 620, height: 420 },
+  movements: { x: 120, y: 120, width: 750, height: 420 },
 
   backtesting: { x: 80, y: 40, width: 850, height: 620 },
   quicktrade: { x: 140, y: 80, width: 560, height: 500 },

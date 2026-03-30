@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { PortfolioResponse, EstadoCuenta } from '@/lib/iol/types';
 import { usePortfolioSort, SortKey, UsdPriceEntry } from '@/hooks/usePortfolioSort';
 import { stripCurrencySuffix } from '@/lib/cedear-map';
@@ -38,6 +38,17 @@ const COLUMNS: ColumnDef[] = [
   { key: 'gananciaPorcentaje', label: 'Rend. %', align: 'right', width: '55px' },
 ];
 
+const formatAssetType = (type: string) => {
+  if (type === 'Todos') return 'Todos';
+  if (type === 'CEDEARS') return 'CEDEARs';
+  if (type === 'ACCIONES') return 'Acciones';
+  if (type === 'TITULOS PUBLICOS') return 'Bonos';
+  if (type === 'OPCIONES') return 'Opciones';
+  if (type === 'FONDOS COMUNES DE INVERSION') return 'FCIs';
+  if (type === 'OBLIGACIONES NEGOCIABLES') return 'ONs';
+  return type.charAt(0).toUpperCase() + type.slice(1).toLowerCase();
+};
+
 
 
 /* ─── Component ──────────────────────────────────────────────────────────── */
@@ -67,6 +78,20 @@ export const PortfolioSummary: React.FC<PortfolioSummaryProps> = ({
   } = usePortfolioSort(portfolio, mepRate, estadoCuenta, usdPrices);
 
   const [displayCurrency, setDisplayCurrency] = useState<'USD' | 'ARS'>('USD');
+  const [activeTab, setActiveTab] = useState<string>('Todos');
+
+  const assetTypes = useMemo(() => {
+    const types = new Set<string>();
+    portfolio.activos.forEach(a => {
+      if (a.titulo.tipo) types.add(a.titulo.tipo);
+    });
+    return ['Todos', ...Array.from(types).sort()];
+  }, [portfolio.activos]);
+
+  const filteredActivos = useMemo(() => {
+    if (activeTab === 'Todos') return sortedActivos;
+    return sortedActivos.filter(a => a.titulo.tipo === activeTab);
+  }, [sortedActivos, activeTab]);
 
   const isUSD = displayCurrency === 'USD';
   const displayTotal = isUSD ? totalUSD : totalARS;
@@ -142,12 +167,26 @@ export const PortfolioSummary: React.FC<PortfolioSummaryProps> = ({
 
         {/* ─── Holdings ListView ─── */}
         <fieldset style={{ marginTop: '6px' }}>
-          <legend>Tenencia ({totalActivosEnCartera} títulos)</legend>
-          <div
-            className="sunken-panel win98-scrollbar"
-            style={{ overflow: 'auto', maxHeight: '320px', padding: 0 }}
-          >
-            <table
+          <legend>Tenencia ({filteredActivos.length} títulos)</legend>
+          
+          {assetTypes.length > 2 && (
+            <menu role="tablist" style={{ marginBottom: 0 }}>
+              {assetTypes.map(type => (
+                <li key={type} role="tab" aria-selected={activeTab === type}>
+                  <a href={`#${type}`} onClick={(e) => { e.preventDefault(); setActiveTab(type); }} style={{ textDecoration: 'none' }}>
+                    {formatAssetType(type)}
+                  </a>
+                </li>
+              ))}
+            </menu>
+          )}
+
+          <div role="tabpanel" style={{ padding: 0, marginTop: assetTypes.length > 2 ? '-1px' : 0 }}>
+            <div
+              className="sunken-panel win98-scrollbar"
+              style={{ overflow: 'auto', maxHeight: '320px', padding: 0 }}
+            >
+              <table
               style={{
                 ...FONT,
                 width: '100%',
@@ -182,7 +221,7 @@ export const PortfolioSummary: React.FC<PortfolioSummaryProps> = ({
                 </tr>
               </thead>
               <tbody>
-                {sortedActivos.map((asset, idx) => {
+                {filteredActivos.map((asset, idx) => {
                   const sym = asset.titulo.simbolo;
                   const dPrice = usdPrices?.[sym];
                   const priceUSD = dPrice ? dPrice.price : asset.ultimoPrecio / mepRate;
@@ -254,6 +293,7 @@ export const PortfolioSummary: React.FC<PortfolioSummaryProps> = ({
                 })}
               </tbody>
             </table>
+          </div>
           </div>
         </fieldset>
       </div>

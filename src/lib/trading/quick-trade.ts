@@ -51,6 +51,7 @@ export function effectiveCashAfterCommission(cash: number, commissionRate = COMM
 export function filterAffordableCedears(
   titulos: PanelQuote[],
   effectiveCash: number,
+  includeAll: boolean = false,
 ): TradableCedear[] {
   const seen = new Set<string>();
   const affordable: TradableCedear[] = [];
@@ -67,7 +68,7 @@ export function filterAffordableCedears(
     seen.add(base);
 
     const maxQty = Math.floor(effectiveCash / t.ultimoPrecio);
-    if (maxQty < 1) continue;
+    if (!includeAll && maxQty < 1) continue;
 
     affordable.push({
       simbolo: t.simbolo,
@@ -76,7 +77,7 @@ export function filterAffordableCedears(
       ultimoPrecio: t.ultimoPrecio,
       variacionPorcentual: t.variacionPorcentual,
       maxCantidad: maxQty,
-      volumen: t.volumen ?? 0,
+      volumen: t.volumen || t.cantidadOperaciones || 0,
     });
   }
 

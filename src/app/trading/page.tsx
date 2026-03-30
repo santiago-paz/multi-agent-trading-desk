@@ -15,7 +15,7 @@ import {
   DraggableResizableWindow,
 } from '@/components/ui/DraggableResizableWindow';
 import { useNewsStore } from '@/lib/store/news-store';
-import { getPortfolioSummary, getMarketData, getOperations, getAffordableCedearsForTrading, placeBuyOrder, getCompanyDetail } from './actions';
+import { getPortfolioSummary, getMarketData, getOperations, getCedearsForTrading, placeBuyOrder, getCompanyDetail } from './actions';
 import { PortfolioResponse, Operation, DatosPerfil, EstadoCuenta } from '@/lib/iol/types';
 import type { HistoricalRow } from '@/lib/fmp/types';
 import { DESKTOP_APP_ICONS } from '@/lib/win98se-icons';
@@ -354,7 +354,7 @@ export default function TradingDashboard() {
 
   const fetchQuickTradeData = useCallback(async () => {
     setIsLoadingQuickTrade(true);
-    const result = await getAffordableCedearsForTrading();
+    const result = await getCedearsForTrading();
     if (result.success && result.data) {
       setQuickTradeData(result.data);
     }

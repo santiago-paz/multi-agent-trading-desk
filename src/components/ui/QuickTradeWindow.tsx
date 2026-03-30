@@ -66,6 +66,7 @@ export const QuickTradeWindow: React.FC<QuickTradeWindowProps> = ({
   const [sortKey, setSortKey] = useState<SortKey>('volumen');
   const [sortDir, setSortDir] = useState<SortDir>('desc');
   const [filter, setFilter] = useState('');
+  const [showAll, setShowAll] = useState(false);
 
   // Order form state
   const [selected, setSelected] = useState<TradableCedear | null>(null);
@@ -82,10 +83,11 @@ export const QuickTradeWindow: React.FC<QuickTradeWindowProps> = ({
 
   const filtered = useMemo(() => {
     const q = filter.toLowerCase();
-    return cedears.filter(
-      (c) => c.base.toLowerCase().includes(q) || c.descripcion.toLowerCase().includes(q)
-    );
-  }, [cedears, filter]);
+    return cedears.filter((c) => {
+      if (!showAll && c.maxCantidad < 1) return false;
+      return c.base.toLowerCase().includes(q) || c.descripcion.toLowerCase().includes(q);
+    });
+  }, [cedears, filter, showAll]);
 
   const sorted = useMemo(() => {
     return [...filtered].sort((a, b) => {
@@ -165,14 +167,22 @@ export const QuickTradeWindow: React.FC<QuickTradeWindowProps> = ({
       </div>
 
       {/* Search */}
-      <div style={{ padding: '4px 6px', flexShrink: 0 }}>
+      <div style={{ padding: '4px 6px', flexShrink: 0, display: 'flex', gap: '8px', alignItems: 'center' }}>
         <input
           type="text"
           placeholder="Buscar ticker o nombre..."
           value={filter}
           onChange={(e) => setFilter(e.target.value)}
-          style={{ ...FONT, width: '100%', padding: '2px 4px', boxSizing: 'border-box' }}
+          style={{ ...FONT, flex: 1, padding: '2px 4px', boxSizing: 'border-box' }}
         />
+        <label style={{ ...FONT, display: 'flex', alignItems: 'center', gap: '4px', whiteSpace: 'nowrap' }}>
+          <input
+            type="checkbox"
+            checked={showAll}
+            onChange={(e) => setShowAll(e.target.checked)}
+          />
+          Mostrar todos
+        </label>
       </div>
 
       {/* Table */}
@@ -193,8 +203,8 @@ export const QuickTradeWindow: React.FC<QuickTradeWindowProps> = ({
               <th style={COL_HEADER_RIGHT} onClick={() => toggleSort('maxCantidad')}>
                 Max Qty {sortKey === 'maxCantidad' ? (sortDir === 'asc' ? '\u25b2' : '\u25bc') : ''}
               </th>
-              <th style={COL_HEADER_RIGHT} onClick={() => toggleSort('volumen')}>
-                Vol {sortKey === 'volumen' ? (sortDir === 'asc' ? '\u25b2' : '\u25bc') : ''}
+              <th style={COL_HEADER_RIGHT} onClick={() => toggleSort('volumen')} title="Volumen operado en el día">
+                Vol. Diario {sortKey === 'volumen' ? (sortDir === 'asc' ? '\u25b2' : '\u25bc') : ''}
               </th>
             </tr>
           </thead>
@@ -230,7 +240,7 @@ export const QuickTradeWindow: React.FC<QuickTradeWindowProps> = ({
             {sorted.length === 0 && (
               <tr>
                 <td colSpan={6} style={{ ...CELL, textAlign: 'center', padding: '12px' }}>
-                  {filter ? 'Sin resultados' : 'No hay CEDEARs disponibles con tu saldo actual'}
+                  {filter ? 'Sin resultados' : (showAll ? 'No hay CEDEARs' : 'No hay CEDEARs disponibles con tu saldo actual')}
                 </td>
               </tr>
             )}
@@ -249,9 +259,12 @@ export const QuickTradeWindow: React.FC<QuickTradeWindowProps> = ({
               <input
                 type="number"
                 min={1}
-                max={selected.maxCantidad}
+                max={selected.maxCantidad > 0 ? selected.maxCantidad : undefined}
                 value={cantidad}
-                onChange={(e) => setCantidad(Math.min(Math.max(1, Number(e.target.value)), selected.maxCantidad))}
+                onChange={(e) => {
+                  const val = Math.max(1, Number(e.target.value));
+                  setCantidad(selected.maxCantidad > 0 ? Math.min(val, selected.maxCantidad) : val);
+                }}
                 style={{ ...FONT, width: '70px', marginLeft: '4px', padding: '1px 4px' }}
               />
               <span style={{ ...FONT, color: '#808080', marginLeft: '4px' }}>/ {fmtInt(selected.maxCantidad)}</span>

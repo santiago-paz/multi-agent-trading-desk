@@ -28,6 +28,7 @@ const COLUMNS: { key: SortKey; label: string; align: 'left' | 'right'; width: st
 
 export function OperationsFeed({ operations, isLoading, onRefresh }: OperationsFeedProps) {
   const { mepRate } = useMepStore();
+  const [displayCurrency, setDisplayCurrency] = useState<'ARS' | 'USD'>('ARS');
 
   // Default: most recent first (▼ = descending per guideline)
   const [sortKey, setSortKey] = useState<SortKey>('fechaOrden');
@@ -69,6 +70,21 @@ export function OperationsFeed({ operations, isLoading, onRefresh }: OperationsF
         {/* Group box: sentence caps for legend (group box label rule) */}
         <fieldset style={{ margin: 0, paddingBottom: '6px', display: 'flex', flexDirection: 'column', height: 'calc(100% - 10px)' }}>
           <legend>Últimos movimientos (IOL)</legend>
+          
+          <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '4px' }}>
+            <label style={{ ...FONT, display: 'flex', alignItems: 'center', gap: '4px' }}>
+              Moneda:
+              <select 
+                value={displayCurrency} 
+                onChange={(e) => setDisplayCurrency(e.target.value as 'ARS' | 'USD')}
+                style={FONT}
+              >
+                <option value="ARS">Pesos (AR$)</option>
+                <option value="USD">Dólar MEP (U$D)</option>
+              </select>
+            </label>
+          </div>
+
           <div
             className="sunken-panel win98-scrollbar"
             style={{ overflow: 'auto', flex: 1, padding: 0 }}
@@ -133,17 +149,34 @@ export function OperationsFeed({ operations, isLoading, onRefresh }: OperationsF
                         <td style={CELL_RIGHT}>
                           {(() => {
                             const precio = op.precioOperado || op.precio;
-                            return precio
-                              ? `U$D ${(precio / mepRate).toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
-                              : '—';
+                            if (!precio) return '—';
+                            const isUsdSymbol = op.simbolo.endsWith('D') && op.simbolo.length > 2;
+                            // If the symbol is inherently USD, we might not want to convert it, but for simplicity,
+                            // we assume the raw price is in ARS unless it's a USD symbol.
+                            // If it's a USD symbol, the raw price is already USD.
+                            let displayVal = precio;
+                            if (displayCurrency === 'USD' && !isUsdSymbol) {
+                              displayVal = precio / mepRate;
+                            } else if (displayCurrency === 'ARS' && isUsdSymbol) {
+                              displayVal = precio * mepRate;
+                            }
+                            const prefix = displayCurrency === 'USD' ? 'U$D' : 'AR$';
+                            return `${prefix} ${displayVal.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
                           })()}
                         </td>
                         <td style={CELL_RIGHT}>
                           {(() => {
                             const monto = op.montoOperado || op.monto;
-                            return monto
-                              ? `U$D ${(monto / mepRate).toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
-                              : '—';
+                            if (!monto) return '—';
+                            const isUsdSymbol = op.simbolo.endsWith('D') && op.simbolo.length > 2;
+                            let displayVal = monto;
+                            if (displayCurrency === 'USD' && !isUsdSymbol) {
+                              displayVal = monto / mepRate;
+                            } else if (displayCurrency === 'ARS' && isUsdSymbol) {
+                              displayVal = monto * mepRate;
+                            }
+                            const prefix = displayCurrency === 'USD' ? 'U$D' : 'AR$';
+                            return `${prefix} ${displayVal.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
                           })()}
                         </td>
                         <td style={{ ...CELL, borderRight: 'none' }}>

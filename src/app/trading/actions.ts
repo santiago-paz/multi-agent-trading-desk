@@ -165,10 +165,10 @@ export async function getOperations() {
 
 
 /**
- * Returns all CEDEARs the user can afford for the Quick Trade window.
+ * Returns CEDEARs for the Quick Trade window.
  * Includes price, max affordable quantity, and applies a commission margin.
  */
-export async function getAffordableCedearsForTrading() {
+export async function getCedearsForTrading() {
   try {
     const [cuenta, cedearsPanel] = await Promise.all([
       iolClient.getEstadoCuenta(),
@@ -182,7 +182,7 @@ export async function getAffordableCedearsForTrading() {
     const cash = extractCashArs(cuenta);
     const comprometido = extractComprometidoArs(cuenta);
     const effective = effectiveCashAfterCommission(cash);
-    const cedears = filterAffordableCedears(cedearsPanel.titulos || [], effective);
+    const cedears = filterAffordableCedears(cedearsPanel.titulos || [], effective, true);
 
     return {
       success: true as const,
@@ -195,7 +195,7 @@ export async function getAffordableCedearsForTrading() {
       },
     };
   } catch (error) {
-    console.error('getAffordableCedearsForTrading failed:', error);
+    console.error('getCedearsForTrading failed:', error);
     return { success: false as const, error: 'No se pudieron obtener los CEDEARs disponibles' };
   }
 }
