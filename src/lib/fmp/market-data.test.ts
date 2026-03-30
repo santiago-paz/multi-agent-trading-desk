@@ -637,22 +637,20 @@ describe('getComprehensiveAssetData', () => {
 
 // ── getCompanyNames ──────────────────────────────────────────────────────────
 
+vi.mock('fs', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('fs')>();
+  return {
+    ...actual,
+    default: {
+      ...actual,
+      readFileSync: vi.fn(),
+      writeFileSync: vi.fn(),
+    },
+  };
+});
+
 describe('getCompanyNames', () => {
   setupFetchEnv();
-
-  beforeEach(() => {
-    vi.mock('fs', async (importOriginal) => {
-      const actual = await importOriginal<typeof import('fs')>();
-      return {
-        ...actual,
-        default: {
-          ...actual,
-          readFileSync: vi.fn(),
-          writeFileSync: vi.fn(),
-        },
-      };
-    });
-  });
 
   afterEach(() => {
     vi.restoreAllMocks();
