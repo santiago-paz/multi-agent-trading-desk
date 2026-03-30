@@ -241,7 +241,6 @@ export const MarketDataWindow: React.FC<MarketDataWindowProps> = ({
           <a
             href="#mine"
             onClick={(e) => { e.preventDefault(); setActiveTab('mine'); }}
-            style={{ textDecoration: 'none' }}
           >
             Mis CEDEARs{mineItems.length > 0 ? ` (${mineItems.length})` : ''}
           </a>
@@ -250,7 +249,6 @@ export const MarketDataWindow: React.FC<MarketDataWindowProps> = ({
           <a
             href="#all"
             onClick={(e) => { e.preventDefault(); setActiveTab('all'); }}
-            style={{ textDecoration: 'none' }}
           >
             Todos{allItems.length > 0 ? ` (${allItems.length})` : ''}
           </a>
@@ -258,46 +256,37 @@ export const MarketDataWindow: React.FC<MarketDataWindowProps> = ({
       </menu>
 
       {/* Tab panel */}
-      <div
-        role="tabpanel"
-        className="win98-scrollbar"
-        style={{
-          flex: 1,
-          overflow: 'hidden',
-          display: 'flex',
-          flexDirection: 'column',
-          padding: '6px',
-          background: '#c0c0c0',
-        }}
-      >
-        <fieldset style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', minHeight: 0 }}>
-          <legend>
-            {activeTab === 'mine' ? 'Mis CEDEARs' : 'Todos los CEDEARs'}
-            {activeItems.length > 0 ? ` (${activeItems.length})` : ''}
-          </legend>
+      <div className="window" role="tabpanel" style={{ flex: 1, display: 'flex', flexDirection: 'column', marginBottom: 12, minHeight: 0 }}>
+        <div className="window-body" style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 8, overflow: 'hidden', minHeight: 0, marginTop: 0, marginRight: 0, marginBottom: 0, marginLeft: 0 }}>
+          <fieldset style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', minHeight: 0, margin: 0 }}>
+            <legend>
+              {activeTab === 'mine' ? 'Mis CEDEARs' : 'Todos los CEDEARs'}
+              {activeItems.length > 0 ? ` (${activeItems.length})` : ''}
+            </legend>
 
-          {isLoading && !marketData ? (
-            <p style={{ margin: 0, padding: 4 }}>Cargando datos de mercado…</p>
-          ) : !marketData ? (
-            <p style={{ margin: 0, padding: 4, color: COLOR_NEGATIVE }}>
-              Error al cargar datos.
-            </p>
-          ) : activeItems.length === 0 ? (
-            <p style={{ margin: 0, padding: 4, color: COLOR_SECONDARY }}>
-              {activeTab === 'mine'
-                ? 'No hay CEDEARs en tenencia.'
-                : 'No hay otros CEDEARs disponibles.'}
-            </p>
-          ) : (
-            <ListView
-              items={activeItems}
-              companyNames={companyNames}
-              sortCol={sortCol}
-              sortDir={sortDir}
-              onSort={handleSort}
-            />
-          )}
-        </fieldset>
+            {isLoading && !marketData ? (
+              <p style={{ margin: 0, padding: 4 }}>Cargando datos de mercado…</p>
+            ) : !marketData ? (
+              <p style={{ margin: 0, padding: 4, color: COLOR_NEGATIVE }}>
+                Error al cargar datos.
+              </p>
+            ) : activeItems.length === 0 ? (
+              <p style={{ margin: 0, padding: 4, color: COLOR_SECONDARY }}>
+                {activeTab === 'mine'
+                  ? 'No hay CEDEARs en tenencia.'
+                  : 'No hay otros CEDEARs disponibles.'}
+              </p>
+            ) : (
+              <ListView
+                items={activeItems}
+                companyNames={companyNames}
+                sortCol={sortCol}
+                sortDir={sortDir}
+                onSort={handleSort}
+              />
+            )}
+          </fieldset>
+        </div>
       </div>
 
       {/* Refresh button — bottom-right */}

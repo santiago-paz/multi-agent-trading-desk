@@ -364,9 +364,11 @@ For row selection highlight, add/remove the `highlighted` class on `<tr>` (handl
 </menu>
 
 {/* Tab panel MUST be wrapped in .window and .window-body to get the correct 3D border */}
-{/* Use minHeight: 0 on flex containers to allow scrolling, and marginBottom: '12px' for authentic spacing */}
-<div className="window" role="tabpanel" style={{ flex: 1, display: 'flex', flexDirection: 'column', marginBottom: '12px', minHeight: 0 }}>
-  <div className="window-body" style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '8px', overflow: 'hidden', minHeight: 0 }}>
+{/* Use minHeight: 0 on flex containers to allow scrolling, and marginBottom: 12 for authentic spacing */}
+{/* Add margin: 0 to the .window-body to prevent excessive inner padding */}
+{/* NOTE: If the tab panel is inside a group box (<fieldset>), do NOT wrap it in .window/.window-body as it will create a double border. */}
+<div className="window" role="tabpanel" style={{ flex: 1, display: 'flex', flexDirection: 'column', marginBottom: 12, minHeight: 0 }}>
+  <div className="window-body" style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 8, overflow: 'hidden', minHeight: 0, marginTop: 0, marginRight: 0, marginBottom: 0, marginLeft: 0 }}>
     {/* active tab content */}
   </div>
 </div>

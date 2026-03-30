@@ -29,14 +29,15 @@ export const PortfolioWindow: React.FC<PortfolioWindowProps> = ({
     <div style={{ ...WINDOW_CONTAINER, padding: '6px 6px 0 6px' }}>
       <menu role="tablist">
         <li role="tab" aria-selected={activeTab === 'portfolio'}>
-          <a href="#portfolio" onClick={(e) => { e.preventDefault(); setActiveTab('portfolio'); }} style={{ textDecoration: 'none' }}>Tenencias</a>
+          <a href="#portfolio" onClick={(e) => { e.preventDefault(); setActiveTab('portfolio'); }}>Tenencias</a>
         </li>
         <li role="tab" aria-selected={activeTab === 'account'}>
-          <a href="#account" onClick={(e) => { e.preventDefault(); setActiveTab('account'); }} style={{ textDecoration: 'none' }}>Mi Cuenta</a>
+          <a href="#account" onClick={(e) => { e.preventDefault(); setActiveTab('account'); }}>Mi Cuenta</a>
         </li>
       </menu>
 
-      <div role="tabpanel" style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column', padding: '4px 0 0 0' }}>
+      <div className="window" role="tabpanel" style={{ flex: 1, display: 'flex', flexDirection: 'column', marginBottom: 12, minHeight: 0 }}>
+        <div className="window-body" style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', minHeight: 0, marginTop: 0, marginRight: 0, marginBottom: 0, marginLeft: 0 }}>
           {activeTab === 'portfolio' && (
             isLoading && !portfolio ? (
               <p style={{ ...FONT, margin: 0, padding: '4px' }}>Cargando portafolio...</p>
@@ -61,6 +62,7 @@ export const PortfolioWindow: React.FC<PortfolioWindowProps> = ({
               onRefresh={onRefresh}
             />
           )}
+        </div>
       </div>
     </div>
   );

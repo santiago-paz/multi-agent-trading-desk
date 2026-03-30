@@ -51,6 +51,23 @@ const formatAssetType = (type: string) => {
 
 
 
+import { DonutChart } from './DonutChart';
+
+const CHART_COLORS = [
+  '#0000FF', // Blue
+  '#FF00FF', // Fuchsia
+  '#008080', // Teal
+  '#00FF00', // Lime
+  '#FF0000', // Red
+  '#FFFF00', // Yellow
+  '#000080', // Navy
+  '#800080', // Purple
+  '#008000', // Green
+  '#800000', // Maroon
+  '#808000', // Olive
+  '#00FFFF', // Aqua
+];
+
 /* ─── Component ──────────────────────────────────────────────────────────── */
 export const PortfolioSummary: React.FC<PortfolioSummaryProps> = ({
   portfolio,
@@ -100,80 +117,172 @@ export const PortfolioSummary: React.FC<PortfolioSummaryProps> = ({
   const displayComprometido = isUSD ? comprometidoUSD : comprometidoARS;
   const currencySymbol = isUSD ? 'U$D' : 'AR$';
 
+  const chartData = useMemo(() => {
+    if (displayTotal <= 0) return [];
+    
+    // Sort by value descending
+    const sortedByValue = [...sortedActivos].sort((a, b) => {
+      const valA = isUSD ? (usdPrices?.[a.titulo.simbolo]?.price ? usdPrices[a.titulo.simbolo].price * a.cantidad : a.valorizado / mepRate) : a.valorizado;
+      const valB = isUSD ? (usdPrices?.[b.titulo.simbolo]?.price ? usdPrices[b.titulo.simbolo].price * b.cantidad : b.valorizado / mepRate) : b.valorizado;
+      return valB - valA;
+    });
+
+    const data: { label: string; value: number; color: string }[] = [];
+    let otherValue = 0;
+    
+    sortedByValue.forEach((asset, idx) => {
+      const val = isUSD ? (usdPrices?.[asset.titulo.simbolo]?.price ? usdPrices[asset.titulo.simbolo].price * asset.cantidad : asset.valorizado / mepRate) : asset.valorizado;
+      
+      // Group items smaller than 2% into "Otros" if we have many items
+      if (val / displayTotal < 0.02 && idx >= 6) {
+        otherValue += val;
+      } else {
+        data.push({
+          label: asset.titulo.simbolo,
+          value: val,
+          color: CHART_COLORS[data.length % CHART_COLORS.length]
+        });
+      }
+    });
+
+    if (otherValue > 0) {
+      data.push({
+        label: 'Otros',
+        value: otherValue,
+        color: '#808080' // Gray for others
+      });
+    }
+
+    return data;
+  }, [sortedActivos, displayTotal, isUSD, usdPrices, mepRate]);
+
   return (
     <div style={WINDOW_CONTAINER}>
       {/* ── Scrollable body ── */}
       <div className="win98-scrollbar" style={SCROLLABLE_BODY}>
-        {/* ─── Resumen de Valuación ─── */}
-        <fieldset>
-          <legend>Valuación</legend>
-          <div className="field-row" style={{ marginBottom: '6px' }}>
-            <label style={LABEL}>Moneda:</label>
-            <select 
-              value={displayCurrency} 
-              onChange={(e) => setDisplayCurrency(e.target.value as 'USD' | 'ARS')}
-              style={{ ...FONT, flex: 1 }}
-            >
-              <option value="USD">Dólar MEP (U$D)</option>
-              <option value="ARS">Pesos (AR$)</option>
-            </select>
-          </div>
-          <div className="field-row" style={{ marginBottom: '2px' }}>
-            <label style={LABEL}>Total:</label>
-            <input
-              type="text"
-              readOnly
-              value={`${currencySymbol} ${displayTotal.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
-              style={{ ...FONT, flex: 1, cursor: 'default' }}
-            />
-          </div>
-          <div className="field-row" style={{ marginBottom: '2px' }}>
-            <label style={LABEL}>Ganancia:</label>
-            <input
-              type="text"
-              readOnly
-              value={`${currencySymbol} ${displayGanancia >= 0 ? '+' : ''}${displayGanancia.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
-              style={{
-                ...FONT,
-                flex: 1,
-                cursor: 'default',
-                color: displayGanancia >= 0 ? COLOR_POSITIVE : COLOR_NEGATIVE,
-              }}
-            />
-          </div>
-          {displayCash > 0 && (
+        <div style={{ display: 'flex', gap: '8px' }}>
+          {/* ─── Resumen de Valuación ─── */}
+          <fieldset style={{ flex: '0 0 200px', margin: 0 }}>
+            <legend>Valuación</legend>
+            <div className="field-row" style={{ marginBottom: '6px' }}>
+              <label style={LABEL}>Moneda:</label>
+              <select 
+                value={displayCurrency} 
+                onChange={(e) => setDisplayCurrency(e.target.value as 'USD' | 'ARS')}
+                style={{ ...FONT, flex: 1 }}
+              >
+                <option value="USD">Dólar MEP (U$D)</option>
+                <option value="ARS">Pesos (AR$)</option>
+              </select>
+            </div>
             <div className="field-row" style={{ marginBottom: '2px' }}>
-              <label style={LABEL}>Efectivo:</label>
+              <label style={LABEL}>Total:</label>
               <input
                 type="text"
                 readOnly
-                value={`${currencySymbol} ${displayCash.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
-                style={{ ...FONT, flex: 1, cursor: 'default', color: COLOR_SECONDARY }}
+                value={`${currencySymbol} ${displayTotal.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+                style={{ ...FONT, flex: 1, cursor: 'default' }}
               />
             </div>
-          )}
-          {displayComprometido > 0 && (
-            <div className="field-row">
-              <label style={LABEL}>Comprometido:</label>
+            <div className="field-row" style={{ marginBottom: '2px' }}>
+              <label style={LABEL}>Ganancia:</label>
               <input
                 type="text"
                 readOnly
-                value={`${currencySymbol} ${displayComprometido.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
-                style={{ ...FONT, flex: 1, cursor: 'default', color: COLOR_NEGATIVE }}
+                value={`${currencySymbol} ${displayGanancia >= 0 ? '+' : ''}${displayGanancia.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+                style={{
+                  ...FONT,
+                  flex: 1,
+                  cursor: 'default',
+                  color: displayGanancia >= 0 ? COLOR_POSITIVE : COLOR_NEGATIVE,
+                }}
               />
             </div>
+            {displayCash > 0 && (
+              <div className="field-row" style={{ marginBottom: '2px' }}>
+                <label style={LABEL}>Efectivo:</label>
+                <input
+                  type="text"
+                  readOnly
+                  value={`${currencySymbol} ${displayCash.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+                  style={{ ...FONT, flex: 1, cursor: 'default', color: COLOR_SECONDARY }}
+                />
+              </div>
+            )}
+            {displayComprometido > 0 && (
+              <div className="field-row">
+                <label style={LABEL}>Comprometido:</label>
+                <input
+                  type="text"
+                  readOnly
+                  value={`${currencySymbol} ${displayComprometido.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+                  style={{ ...FONT, flex: 1, cursor: 'default', color: COLOR_NEGATIVE }}
+                />
+              </div>
+            )}
+          </fieldset>
+
+          {/* ─── Gráfico de Distribución ─── */}
+          {chartData.length > 0 && (
+            <fieldset style={{ flex: 1, margin: 0, display: 'flex', gap: '16px', alignItems: 'center', padding: '12px' }}>
+              <legend>Distribución</legend>
+              <div style={{ flexShrink: 0 }}>
+                <DonutChart 
+                  data={chartData} 
+                  size={130} 
+                  thickness={35} 
+                  centerText={`${currencySymbol}`}
+                  centerSubText={displayTotal >= 1000000 ? `${(displayTotal / 1000000).toFixed(1)}M` : displayTotal >= 1000 ? `${(displayTotal / 1000).toFixed(1)}k` : displayTotal.toFixed(0)}
+                />
+              </div>
+              
+              {/* Leyenda */}
+              <div 
+                className="sunken-panel win98-scrollbar" 
+                style={{ 
+                  flex: 1, 
+                  height: '130px', 
+                  overflowY: 'auto', 
+                  backgroundColor: '#fff', 
+                  padding: '6px',
+                  margin: 0
+                }}
+              >
+                {chartData.map((item) => (
+                  <div key={item.label} style={{ display: 'flex', alignItems: 'center', marginBottom: '6px' }}>
+                    <div 
+                      style={{ 
+                        width: '14px', 
+                        height: '14px', 
+                        backgroundColor: item.color, 
+                        border: '1px solid #000', 
+                        boxShadow: 'inset 1px 1px 0px rgba(255,255,255,0.5), inset -1px -1px 0px rgba(0,0,0,0.2)',
+                        marginRight: '8px', 
+                        flexShrink: 0 
+                      }} 
+                    />
+                    <div style={{ ...FONT, fontSize: '11px', flex: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                      {item.label}
+                    </div>
+                    <div style={{ ...FONT, fontSize: '11px', fontWeight: 'bold', marginLeft: '8px' }}>
+                      {(item.value / displayTotal * 100).toFixed(1)}%
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </fieldset>
           )}
-        </fieldset>
+        </div>
 
         {/* ─── Holdings ListView ─── */}
-        <fieldset style={{ marginTop: '6px' }}>
+        <fieldset style={{ marginTop: '6px', flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
           <legend>Tenencia ({filteredActivos.length} títulos)</legend>
           
           {assetTypes.length > 2 && (
             <menu role="tablist" style={{ marginBottom: 0 }}>
               {assetTypes.map(type => (
                 <li key={type} role="tab" aria-selected={activeTab === type}>
-                  <a href={`#${type}`} onClick={(e) => { e.preventDefault(); setActiveTab(type); }} style={{ textDecoration: 'none' }}>
+                  <a href={`#${type}`} onClick={(e) => { e.preventDefault(); setActiveTab(type); }}>
                     {formatAssetType(type)}
                   </a>
                 </li>
@@ -181,10 +290,10 @@ export const PortfolioSummary: React.FC<PortfolioSummaryProps> = ({
             </menu>
           )}
 
-          <div role="tabpanel" style={{ padding: 0, marginTop: assetTypes.length > 2 ? '-1px' : 0 }}>
+          <div role="tabpanel" style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0, marginTop: assetTypes.length > 2 ? '-1px' : 0 }}>
             <div
               className="sunken-panel win98-scrollbar"
-              style={{ overflow: 'auto', maxHeight: '320px', padding: 0 }}
+              style={{ flex: 1, overflow: 'auto', padding: 0, minHeight: 0 }}
             >
               <table
               style={{
@@ -293,7 +402,7 @@ export const PortfolioSummary: React.FC<PortfolioSummaryProps> = ({
                 })}
               </tbody>
             </table>
-          </div>
+            </div>
           </div>
         </fieldset>
       </div>
