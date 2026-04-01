@@ -16,6 +16,11 @@
   src: url("/98/ms_sans_serif_bold.woff2") format("woff2"), url("/98/ms_sans_serif_bold.woff") format("woff");
 }
 
+/* Restore 98.css fieldset groupbox border (Tailwind preflight sets border-width: 0 on all elements) */
+fieldset {
+  border-width: 2px;
+}
+
 :root {
   --background: #008080;
   --foreground: #222;
@@ -43,10 +48,8 @@ body {
   padding-left: 4px;
   padding-bottom: 28px;
   overflow: hidden;
-  background-image: url("/wallpaper_win98.gif");
-  background-size: contain;
-  background-position: center;
-  background-repeat: no-repeat;
+  /* Background wallpaper/color now controlled by display-store via inline styles */
+  background-color: #008080;
 }
 
 .desktop-icons {

@@ -10,6 +10,8 @@ import { BacktestingWindow } from '@/components/ui/BacktestingWindow';
 import { QuickTradeWindow, TradableCedear } from '@/components/ui/QuickTradeWindow';
 import { AutoTraderWindow } from '@/components/ui/AutoTraderWindow';
 import { CompanyDetailWindow, CompanyDetailData } from '@/components/ui/CompanyDetailWindow';
+import { DisplayPropertiesWindow } from '@/components/ui/DisplayPropertiesWindow';
+import { useDisplayStore } from '@/lib/store/display-store';
 import { DesktopIcon } from '@/components/ui/DesktopIcon';
 import {
   DraggableResizableWindow,
@@ -39,6 +41,7 @@ const ICON_IDS = [
   'backtesting',
   'quicktrade',
   'autotrader',
+  'displayproperties',
 ] as const;
 type IconId = (typeof ICON_IDS)[number];
 
@@ -51,6 +54,7 @@ const DEFAULT_ICON_POSITIONS: Record<IconId, { x: number; y: number }> = {
   backtesting: { x: 8, y: 264 },
   quicktrade: { x: 8, y: 328 },
   autotrader: { x: 8, y: 392 },
+  displayproperties: { x: 8, y: 456 },
 };
 
 const DESKTOP_ICON_CONFIG: { id: IconId; label: string; emoji: string; iconKey: keyof typeof DESKTOP_APP_ICONS }[] = [
@@ -62,6 +66,7 @@ const DESKTOP_ICON_CONFIG: { id: IconId; label: string; emoji: string; iconKey: 
   { id: 'backtesting', label: 'Backtesting', emoji: '📉', iconKey: 'backtesting' },
   { id: 'quicktrade', label: 'Comprar CEDEARs', emoji: '💰', iconKey: 'quicktrade' },
   { id: 'autotrader', label: 'Auto Trader', emoji: '🤖', iconKey: 'autotrader' },
+  { id: 'displayproperties', label: 'Display', emoji: '🖥', iconKey: 'displayproperties' },
 ];
 
 // Grid cell size for "Alinear Iconos" — slightly larger than icon width (64px) for breathing room
@@ -107,6 +112,10 @@ export default function TradingDashboard() {
   const isLoadingNews = useNewsStore((s) => s.isLoading);
   const fetchNews = useNewsStore((s) => s.fetchNews);
   const lastUpdated = useNewsStore((s) => s.lastUpdated);
+
+  const displayWallpaper = useDisplayStore((s) => s.wallpaper);
+  const displayBgColor = useDisplayStore((s) => s.backgroundColor);
+  const displayMode = useDisplayStore((s) => s.displayMode);
 
   const {
     windows,
@@ -498,7 +507,13 @@ export default function TradingDashboard() {
   }, [quickTradeOpen, fetchQuickTradeData]);
 
   return (
-    <div ref={desktopRef} className="desktop relative w-full h-full overflow-hidden">
+    <div ref={desktopRef} className="desktop relative w-full h-full overflow-hidden" style={{
+      backgroundColor: displayBgColor,
+      backgroundImage: displayWallpaper ? `url(${displayWallpaper})` : 'none',
+      backgroundSize: displayMode === 'stretch' ? 'cover' : displayMode === 'tile' ? 'auto' : 'auto',
+      backgroundRepeat: displayMode === 'tile' ? 'repeat' : 'no-repeat',
+      backgroundPosition: 'center',
+    }}>
       {/* Desktop background — catches rubber-band and context-menu events (z-0, behind icons) */}
       <div
         className="absolute inset-0"
@@ -625,6 +640,9 @@ export default function TradingDashboard() {
             )}
             {appId === 'autotrader' && (
               <AutoTraderWindow />
+            )}
+            {appId === 'displayproperties' && (
+              <DisplayPropertiesWindow onClose={() => closeWindow('displayproperties')} />
             )}
           </DraggableResizableWindow>
         );

@@ -306,11 +306,15 @@ export const PortfolioSummary: React.FC<PortfolioSummaryProps> = ({
             </menu>
           )}
 
-          <div role="tabpanel" style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0, marginTop: assetTypes.length > 2 ? '-1px' : 0 }}>
+          <div className="window" role="tabpanel" style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0, marginTop: assetTypes.length > 2 ? '-1px' : 0 }}>
             <div
-              className="sunken-panel win98-scrollbar"
-              style={{ flex: 1, overflow: 'auto', padding: 0, minHeight: 0 }}
+              className="window-body"
+              style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', minHeight: 0, margin: 0 }}
             >
+              <div
+                className="sunken-panel win98-scrollbar"
+                style={{ flex: 1, overflow: 'auto', padding: 0, minHeight: 0, margin: 0 }}
+              >
               <table
               style={{
                 ...FONT,
@@ -419,8 +423,9 @@ export const PortfolioSummary: React.FC<PortfolioSummaryProps> = ({
                     </tr>
                   );
                 })}
-              </tbody>
-            </table>
+                  </tbody>
+                </table>
+              </div>
             </div>
           </div>
         </fieldset>

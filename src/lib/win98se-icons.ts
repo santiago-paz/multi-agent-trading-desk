@@ -21,8 +21,9 @@ export const DESKTOP_APP_ICONS = {
   movements: url('places/32/folder-recent.png'),
 
   backtesting: url('apps/32/accessories-calculator.png'),
-  quicktrade: url('actions/32/document-new.png'),
+  quicktrade: url('apps/32/system-software-installer.png'),
   autotrader: url('apps/32/utilities-system-monitor.png'),
+  displayproperties: url('apps/32/preferences-desktop-wallpaper.png'),
 } as const;
 
 export type DesktopAppId = keyof typeof DESKTOP_APP_ICONS;

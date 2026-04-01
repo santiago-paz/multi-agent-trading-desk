@@ -193,14 +193,9 @@ export const DonutChart: React.FC<DonutChartProps> = ({
       >
         {orderedSegments.map((seg) => {
           const isHovered = hoveredIdx === seg.index;
-          const dx = isHovered ? Math.cos(seg.midAngle) * EXPLODE_PX : 0;
-          const dy = isHovered ? Math.sin(seg.midAngle) * EXPLODE_PX : 0;
-
           return (
             <g
               key={seg.index}
-              transform={`translate(${dx}, ${dy})`}
-              style={{ transition: 'transform 100ms ease-out' }}
               onMouseEnter={() => handleHoverChange(seg.index)}
             >
               <path

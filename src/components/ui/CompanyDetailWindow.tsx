@@ -1009,7 +1009,7 @@ export const CompanyDetailWindow: React.FC<CompanyDetailWindowProps> = ({
 
       {/* Tabs */}
       <div style={{ padding: '6px', display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>
-        <menu role="tablist" style={{ marginBottom: 0, zIndex: 1, position: 'relative' }}>
+        <menu role="tablist">
           <li role="tab" aria-selected={tab === 'info'}>
             <a href="#info" onClick={(e) => { e.preventDefault(); setTab('info'); }}>Info</a>
           </li>
