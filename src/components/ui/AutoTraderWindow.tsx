@@ -90,6 +90,72 @@ function remapToIol<T>(record: Record<string, T>, fmpToIol: Record<string, strin
   return result;
 }
 
+function renderAgentDetail(detail: string | undefined): React.ReactNode {
+  if (!detail) return null;
+  
+  try {
+    const trimmed = detail.trim();
+    if (trimmed.startsWith('{') && trimmed.endsWith('}')) {
+      const data = JSON.parse(trimmed);
+      let info = null;
+      
+      const keys = Object.keys(data);
+      if (keys.length === 1 && data[keys[0]] && typeof data[keys[0]] === 'object') {
+        info = data[keys[0]];
+      } else {
+        info = data;
+      }
+      
+      const signal = info.signal || info.action;
+      const confidence = info.confidence;
+      const reasoning = info.reasoning || data.reasoning;
+      
+      let signalText = signal;
+      if (typeof signal === 'string') {
+        const s = String(signal).toLowerCase();
+        if (s === 'bullish' || s === 'buy') signalText = '🟢 Alcista';
+        else if (s === 'bearish' || s === 'sell') signalText = '🔴 Bajista';
+        else if (s === 'neutral' || s === 'hold') signalText = '⚪ Neutral';
+      }
+      
+      const rows = [];
+      if (signalText) {
+        rows.push(<div key="signal"><strong>Señal:</strong> {signalText} {confidence !== undefined ? `(Confianza: ${Math.round(confidence)}%)` : ''}</div>);
+      }
+      
+      if (info.news_titles && Array.isArray(info.news_titles) && info.news_titles.length > 0) {
+        rows.push(
+          <div key="news" style={{ marginTop: 6 }}>
+            <strong>Noticias analizadas:</strong>
+            <ul style={{ margin: '4px 0 0 16px', padding: 0, listStyleType: 'none', color: '#333' }}>
+              {info.news_titles.map((n: any, idx: number) => {
+                const sent = n.sentiment?.toLowerCase() || '';
+                const icon = sent === 'positive' ? '🟢' : sent === 'negative' ? '🔴' : '⚪';
+                return <li key={idx} style={{ marginBottom: 4, textIndent: -16, paddingLeft: 16 }}>{icon} {n.title}</li>;
+              })}
+            </ul>
+          </div>
+        );
+      } else if (reasoning && typeof reasoning === 'string') {
+        rows.push(<div key="reasoning" style={{ marginTop: 4 }}><strong>Resumen:</strong> {reasoning}</div>);
+      }
+      
+      // If we parsed successfully and generated human UI, return it.
+      if (rows.length > 0) {
+        return <div style={{ margin: '4px 0 0 12px' }}>{rows}</div>;
+      }
+    }
+  } catch (e) {
+    // Fall back below if not valid JSON
+  }
+  
+  if (detail.includes('\n')) {
+     return <div style={{ margin: '4px 0 0 12px', whiteSpace: 'pre-wrap' }}>{detail}</div>;
+  }
+  
+  return <span style={{ marginLeft: 4 }}>{detail}</span>;
+}
+
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export function AutoTraderWindow() {
@@ -142,11 +208,14 @@ export function AutoTraderWindow() {
   const [pSortDir, setPSortDir] = useState<'asc' | 'desc'>('asc');
 
   const logBodyRef = useRef<HTMLDivElement>(null);
+  const autoScrollRef = useRef(true);
   const abortRef = useRef<AbortController | null>(null);
 
   // Auto-scroll logs
   useEffect(() => {
-    if (logBodyRef.current) logBodyRef.current.scrollTop = logBodyRef.current.scrollHeight;
+    if (autoScrollRef.current && logBodyRef.current) {
+      logBodyRef.current.scrollTop = logBodyRef.current.scrollHeight;
+    }
   }, [logs]);
 
   // Cleanup on unmount
@@ -422,59 +491,80 @@ export function AutoTraderWindow() {
         setActiveTab('plan');
       };
 
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        buffer += decoder.decode(value, { stream: true });
+      let streamError: Error | null = null;
+      let receivedComplete = false;
 
-        const parts = buffer.split('\n\n');
-        buffer = parts.pop()!;
+      try {
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          buffer += decoder.decode(value, { stream: true });
 
-        for (const part of parts) {
-          const events = parseSSEChunk(part + '\n\n');
-          for (const evt of events) {
-            const d = evt.data as Record<string, unknown>;
+          const parts = buffer.split('\n\n');
+          buffer = parts.pop()!;
 
-            if (evt.event === 'start') {
-              updateLog('start', 'Análisis iniciado', 'ok');
-            } else if (evt.event === 'progress') {
-              progressCount++;
-              const agent = (d.agent as string) || '';
-              const ticker = (d.ticker as string) || '';
-              const status = (d.status as string) || '';
-              const analysis = (d.analysis as string) || '';
-              const logId = `progress-${progressCount}`;
+          for (const part of parts) {
+            const events = parseSSEChunk(part + '\n\n');
+            for (const evt of events) {
+              const d = evt.data as Record<string, unknown>;
 
-              addLog(
-                logId,
-                `${agent}${ticker ? ` [${ticker}]` : ''}: ${analysis || status}`,
-                analysis ? 'ok' : 'running',
-                agent,
-                ticker,
-                analysis || status
-              );
-              setProgress(Math.min(95, Math.round((progressCount / totalEstimate) * 100)));
-            } else if (evt.event === 'error') {
-              addLog('error', `Error: ${(d.message as string) || 'Error desconocido'}`, 'error');
-              setPhase('idle');
-            } else if (evt.event === 'complete') {
-              processCompleteEvent(d);
+              if (evt.event === 'start') {
+                updateLog('start', 'Análisis iniciado', 'ok');
+              } else if (evt.event === 'progress') {
+                progressCount++;
+                const agent = (d.agent as string) || '';
+                const ticker = (d.ticker as string) || '';
+                const status = (d.status as string) || '';
+                const analysis = (d.analysis as string) || '';
+                const logId = `progress-${progressCount}`;
+
+                addLog(
+                  logId,
+                  `${agent}${ticker ? ` [${ticker}]` : ''}: ${analysis || status}`,
+                  analysis ? 'ok' : 'running',
+                  agent,
+                  ticker,
+                  analysis || status
+                );
+                setProgress(Math.min(95, Math.round((progressCount / totalEstimate) * 100)));
+              } else if (evt.event === 'error') {
+                addLog('error', `Error: ${(d.message as string) || 'Error desconocido'}`, 'error');
+                setPhase('idle');
+              } else if (evt.event === 'complete') {
+                receivedComplete = true;
+                processCompleteEvent(d);
+              }
             }
           }
         }
+      } catch (readErr) {
+        // Stream read error — save it but still try to process any buffered data
+        streamError = readErr as Error;
+        console.warn('[FRONTEND] Stream read error, processing remaining buffer:', streamError.message);
       }
 
-      // Process remaining buffer
+      // Process remaining buffer (works even if the stream was interrupted)
       if (buffer.trim()) {
         for (const evt of parseSSEChunk(buffer + '\n\n')) {
           if (evt.event === 'complete') {
+            receivedComplete = true;
             processCompleteEvent(evt.data as Record<string, unknown>);
+          } else if (evt.event === 'error') {
+            const d = evt.data as Record<string, unknown>;
+            addLog('error', `Error: ${(d.message as string) || 'Error desconocido'}`, 'error');
+            setPhase('idle');
           }
         }
       }
+
+      // If stream broke but we never got the complete event, show the error
+      if (streamError && !receivedComplete) {
+        throw streamError;
+      }
     } catch (err: unknown) {
       if ((err as Error).name === 'AbortError') return;
-      addLog('error', `Error: ${(err as Error).message}`, 'error');
+      console.error('[FRONTEND] Analysis error:', err);
+      addLog('error', `Error de red: ${(err as Error).message}. El backend puede haber completado — revisá los logs del servidor.`, 'error');
       setPhase('idle');
     }
   }
@@ -753,15 +843,26 @@ export function AutoTraderWindow() {
                   {logs.length > 0 && (
                     <fieldset style={{ margin: 0, flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
                       <legend>Progreso {isAnalyzing && `(${progress}%)`}</legend>
-                      <div ref={logBodyRef} className="sunken-panel win98-scrollbar" style={{ flex: 1, overflow: 'auto', padding: 4, margin: 0 }}>
+                      <div 
+                        ref={logBodyRef} 
+                        className="sunken-panel win98-scrollbar" 
+                        style={{ flex: 1, overflow: 'auto', padding: 4, margin: 0 }}
+                        onScroll={(e) => {
+                          const target = e.target as HTMLDivElement;
+                          // If we are within 10px of the bottom, turn auto-scroll back on
+                          const isNearBottom = target.scrollHeight - target.scrollTop - target.clientHeight < 10;
+                          autoScrollRef.current = isNearBottom;
+                        }}
+                      >
                         {logs.map(l => (
                           <div key={l.id} style={{ ...FONT, display: 'flex', gap: 4, lineHeight: '16px' }}>
                             <LogIcon status={l.status} />
                             {l.agent ? (
-                              <span>
+                              <span style={{ display: 'block', paddingTop: 4 }}>
                                 <strong style={{ color: '#000080' }}>{l.agent.replace(/_/g, ' ')}</strong>
                                 {l.ticker && <span style={{ color: '#800000', fontWeight: 'bold' }}> [{l.ticker}]</span>}
-                                <span>: {l.detail}</span>
+                                <span>:</span>
+                                {renderAgentDetail(l.detail)}
                               </span>
                             ) : (
                               <span>{l.text}</span>
@@ -871,7 +972,7 @@ export function AutoTraderWindow() {
           {/* TAB 3: PLAN DE TRADING */}
           {activeTab === 'plan' && (
             <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0, gap: 8 }}>
-              <div className="win98-scrollbar" style={{ flex: 1, overflowY: 'auto', padding: 2, display: 'flex', flexDirection: 'column', gap: 6 }}>
+              <div className="win98-scrollbar" style={{ flex: 1, padding: 2, display: 'flex', flexDirection: 'column', gap: 6 }}>
                 {!plan && phase !== 'executing' && phase !== 'done' ? (
                   <div style={{ ...FONT, padding: 16, textAlign: 'center', color: COLOR_SECONDARY }}>
                     El plan de trading se generará una vez que se complete el análisis AI.
@@ -882,7 +983,7 @@ export function AutoTraderWindow() {
                     {plan && (
                       <fieldset style={{ margin: 0, flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
                         <legend>Plan de Trading</legend>
-                        <div className="win98-scrollbar" style={{ flex: 1, overflowY: 'auto', minHeight: 0, paddingRight: 4 }}>
+                        <div className="win98-scrollbar" style={{ flex: 1, overflowY: 'auto', minHeight: 0, paddingRight: 4, display: 'flex', flexDirection: 'column' }}>
                           {plan.sells.length > 0 && (
                             <>
                               <div style={{ ...FONT, fontWeight: 'bold', color: COLOR_NEGATIVE, margin: '4px 0 2px', flexShrink: 0 }}>

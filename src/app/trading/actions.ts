@@ -223,6 +223,7 @@ export async function placeOrder(params: {
   plazo: 't0' | 't1' | 't2';
   tipoOrden: 'precioLimite' | 'precioMercado';
   side: 'buy' | 'sell';
+  monto?: number;
 }) {
   try {
     // Validez = end of today (IOL expects ISO date-time)
@@ -230,15 +231,26 @@ export async function placeOrder(params: {
     today.setHours(23, 59, 59, 0);
     const validez = today.toISOString();
 
+    let { cantidad, monto } = params;
+
+    // IOL API requires 'monto' > 0 and frequently 'cantidad' = 0 for Market Buys.
+    if (params.side === 'buy' && params.tipoOrden === 'precioMercado') {
+      if (!monto) {
+        monto = cantidad * params.precio;
+      }
+      cantidad = 0;
+    }
+
     const result = await iolClient.placeOrder({
       mercado: 'bCBA',
       simbolo: params.simbolo,
-      cantidad: params.cantidad,
+      cantidad,
       precio: params.precio,
       plazo: params.plazo,
       validez,
       tipoOrden: params.tipoOrden,
       side: params.side,
+      monto,
     });
 
     // Normalize: IOL may return messages as empty or in unexpected shapes
