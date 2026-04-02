@@ -4,7 +4,7 @@ import React, { useState, useRef, useEffect, useCallback } from 'react';
 import {
   FONT, COL_HEADER_BASE, COL_RAISED, COL_SUNKEN,
   CELL, CELL_RIGHT, WINDOW_CONTAINER, STATUS_BAR_STYLE,
-  COLOR_POSITIVE, COLOR_NEGATIVE, COLOR_SECONDARY, COLOR_DISABLED,
+  COLOR_POSITIVE, COLOR_NEGATIVE, COLOR_SECONDARY, COLOR_DISABLED, COLOR_LINK
 } from '@/lib/theme/win98';
 import { getFullPortfolioContext, placeOrder } from '@/app/trading/actions';
 import { computeRebalancePlan, RebalancePlan, RebalanceOrder } from '@/lib/trading/rebalance-engine';
@@ -131,7 +131,18 @@ function renderAgentDetail(detail: string | undefined): React.ReactNode {
               {info.news_titles.map((n: any, idx: number) => {
                 const sent = n.sentiment?.toLowerCase() || '';
                 const icon = sent === 'positive' ? '🟢' : sent === 'negative' ? '🔴' : '⚪';
-                return <li key={idx} style={{ marginBottom: 4, textIndent: -16, paddingLeft: 16 }}>{icon} {n.title}</li>;
+                return (
+                  <li key={idx} style={{ marginBottom: 4, textIndent: -16, paddingLeft: 16 }}>
+                    {icon}{' '}
+                    {n.url ? (
+                      <a href={n.url} target="_blank" rel="noopener noreferrer" style={{ color: COLOR_LINK, textDecoration: 'underline' }}>
+                        {n.title}
+                      </a>
+                    ) : (
+                      n.title
+                    )}
+                  </li>
+                );
               })}
             </ul>
           </div>

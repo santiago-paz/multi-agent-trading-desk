@@ -70,7 +70,7 @@ interface DisplayState {
 export const useDisplayStore = create<DisplayState>()(
   persist(
     (set) => ({
-      wallpaper: '/_wallpaper_win98.gif',
+      wallpaper: '',
       backgroundColor: '#008080',
       displayMode: 'stretch',
       customWallpapers: [],
@@ -81,8 +81,8 @@ export const useDisplayStore = create<DisplayState>()(
       setWallpaper: (url) => set({ wallpaper: url }),
       setBackgroundColor: (color) => set({ backgroundColor: color }),
       setDisplayMode: (mode) => set({ displayMode: mode }),
-      addCustomWallpaper: (wp) => set((state) => ({ 
-        customWallpapers: [wp, ...state.customWallpapers] 
+      addCustomWallpaper: (wp) => set((state) => ({
+        customWallpapers: [wp, ...state.customWallpapers]
       })),
       setScreenSaver: (ss) => set({ screenSaver: ss }),
       setScreenSaverWait: (wait) => set({ screenSaverWait: wait }),

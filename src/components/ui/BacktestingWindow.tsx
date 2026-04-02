@@ -5,6 +5,7 @@ import {
   FONT, COL_HEADER, COL_HEADER_RIGHT, CELL, CELL_RIGHT,
   WINDOW_CONTAINER, SCROLLABLE_BODY, STATUS_BAR_STYLE,
   COLOR_POSITIVE, COLOR_NEGATIVE, COLOR_SECONDARY,
+  COL_HEADER_BASE, COL_RAISED, COLOR_LINK
 } from '@/lib/theme/win98';
 import { AgentSelector } from '@/components/ui/AgentSelector';
 
@@ -84,6 +85,82 @@ function LogIcon({ status }: { status: LogStatus }) {
   if (status === 'running') return <span style={{ color: COLOR_SECONDARY }}>►</span>;
   if (status === 'ok')      return <span style={{ color: COLOR_POSITIVE }}>■</span>;
   return                           <span style={{ color: COLOR_NEGATIVE }}>✕</span>;
+}
+
+function renderAgentDetail(detail: string | undefined): React.ReactNode {
+  if (!detail) return null;
+  
+  try {
+    const trimmed = detail.trim();
+    if (trimmed.startsWith('{') && trimmed.endsWith('}')) {
+      const data = JSON.parse(trimmed);
+      let info = null;
+      
+      const keys = Object.keys(data);
+      if (keys.length === 1 && data[keys[0]] && typeof data[keys[0]] === 'object') {
+        info = data[keys[0]];
+      } else {
+        info = data;
+      }
+      
+      const signal = info.signal || info.action;
+      const confidence = info.confidence;
+      const reasoning = info.reasoning || data.reasoning;
+      
+      let signalText = signal;
+      if (typeof signal === 'string') {
+        const s = String(signal).toLowerCase();
+        if (s === 'bullish' || s === 'buy') signalText = '🟢 Alcista';
+        else if (s === 'bearish' || s === 'sell') signalText = '🔴 Bajista';
+        else if (s === 'neutral' || s === 'hold') signalText = '⚪ Neutral';
+      }
+      
+      const rows = [];
+      if (signalText) {
+        rows.push(<div key="signal"><strong>Señal:</strong> {signalText} {confidence !== undefined ? `(Confianza: ${Math.round(confidence)}%)` : ''}</div>);
+      }
+      
+      if (info.news_titles && Array.isArray(info.news_titles) && info.news_titles.length > 0) {
+        rows.push(
+          <div key="news" style={{ marginTop: 6 }}>
+            <strong>Noticias analizadas:</strong>
+            <ul style={{ margin: '4px 0 0 16px', padding: 0, listStyleType: 'none', color: '#333' }}>
+              {info.news_titles.map((n: any, idx: number) => {
+                const sent = n.sentiment?.toLowerCase() || '';
+                const icon = sent === 'positive' ? '🟢' : sent === 'negative' ? '🔴' : '⚪';
+                return (
+                  <li key={idx} style={{ marginBottom: 4, textIndent: -16, paddingLeft: 16 }}>
+                    {icon}{' '}
+                    {n.url ? (
+                      <a href={n.url} target="_blank" rel="noopener noreferrer" style={{ color: COLOR_LINK, textDecoration: 'underline' }}>
+                        {n.title}
+                      </a>
+                    ) : (
+                      n.title
+                    )}
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+        );
+      } else if (reasoning && typeof reasoning === 'string') {
+        rows.push(<div key="reasoning" style={{ marginTop: 4 }}><strong>Resumen:</strong> {reasoning}</div>);
+      }
+      
+      if (rows.length > 0) {
+        return <div style={{ margin: '4px 0 0 12px' }}>{rows}</div>;
+      }
+    }
+  } catch (e) {
+    // Fall back below if not valid JSON
+  }
+  
+  if (detail.includes('\n')) {
+     return <div style={{ margin: '4px 0 0 12px', whiteSpace: 'pre-wrap' }}>{detail}</div>;
+  }
+  
+  return <span style={{ marginLeft: 4 }}>{detail}</span>;
 }
 
 // ─── SSE parser ───────────────────────────────────────────────────────────────
@@ -387,7 +464,11 @@ export function BacktestingWindow() {
               } else {
                 // Agent-level progress
                 const ticker = (d.ticker as string) || '';
-                addLog(`agent-${++logCounter.current}`, `${agent}${ticker ? ` [${ticker}]` : ''}: ${status}`, 'running', agent, ticker, status);
+                const statusStr = (d.status as string) || '';
+                const detailStr = (d.analysis as string) || statusStr;
+                const finalStatus: LogStatus = detailStr !== statusStr || statusStr === 'Done' ? 'ok' : 'running';
+                
+                addLog(`agent-${++logCounter.current}`, `${agent}${ticker ? ` [${ticker}]` : ''}: ${statusStr}`, finalStatus, agent, ticker, detailStr);
               }
             } else if (evt.event === 'error') {
               const msg = (d.message as string) || 'Error desconocido';
@@ -621,10 +702,11 @@ export function BacktestingWindow() {
                       >
                         <LogIcon status={log.status} />
                         {log.agent && log.agent !== 'backtest' ? (
-                          <span style={{ wordBreak: 'break-word' }}>
+                          <span style={{ wordBreak: 'break-word', display: 'block', paddingTop: 4 }}>
                             <strong style={{ color: '#000080' }}>{log.agent.replace(/_/g, ' ')}</strong>
                             {log.ticker && <span style={{ color: '#800000', fontWeight: 'bold' }}> [{log.ticker}]</span>}
-                            <span>: {log.detail}</span>
+                            <span>:</span>
+                            {renderAgentDetail(log.detail)}
                           </span>
                         ) : (
                           <span style={{ wordBreak: 'break-word' }}>{log.text}</span>
