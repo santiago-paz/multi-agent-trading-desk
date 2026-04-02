@@ -5,7 +5,7 @@ export const APP_IDS = ['portfolio', 'news', 'marketdata', 'movements', 'backtes
 export type AppId = (typeof APP_IDS)[number];
 
 export const DEFAULT_WINDOWS: Record<AppId, { width: number; height: number; x: number; y: number }> = {
-  portfolio: { x: 24, y: 24, width: 580, height: 440 },
+  portfolio: { x: 24, y: 24, width: 752, height: 613 },
   news: { x: 380, y: 24, width: 500, height: 440 },
   marketdata: { x: 400, y: 80, width: 540, height: 400 },
   movements: { x: 120, y: 120, width: 750, height: 420 },

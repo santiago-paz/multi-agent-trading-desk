@@ -352,14 +352,14 @@ export default function TradingDashboard() {
     setContextMenu(null);
   }, []);
 
-  const fetchOperationsData = async () => {
+  const fetchOperationsData = useCallback(async () => {
     setIsLoadingOperations(true);
     const result = await getOperations();
     if (result.success && result.data) {
       setOperations(result.data as Operation[]);
     }
     setIsLoadingOperations(false);
-  };
+  }, []);
 
   const fetchQuickTradeData = useCallback(async () => {
     setIsLoadingQuickTrade(true);
@@ -493,11 +493,25 @@ export default function TradingDashboard() {
   }, [marketDataOpen, fetchMarketData]);
 
   useEffect(() => {
-    if (movementsOpen && !operationsFetched.current) {
-      operationsFetched.current = true;
-      fetchOperationsData(); // eslint-disable-line react-hooks/set-state-in-effect
+    let intervalId: NodeJS.Timeout;
+
+    if (movementsOpen) {
+      if (!operationsFetched.current) {
+        operationsFetched.current = true;
+        fetchOperationsData(); // eslint-disable-line react-hooks/set-state-in-effect
+      }
+
+      intervalId = setInterval(() => {
+        fetchOperationsData();
+      }, 30 * 1000); // Actualiza cada 30 segundos
     }
-  }, [movementsOpen]);
+
+    return () => {
+      if (intervalId) {
+        clearInterval(intervalId);
+      }
+    };
+  }, [movementsOpen, fetchOperationsData]);
 
   useEffect(() => {
     if (quickTradeOpen && !quickTradeFetched.current) {
@@ -557,7 +571,6 @@ export default function TradingDashboard() {
       </div>
 
       {Object.entries(windows).map(([id, state]) => {
-        if (state.minimized) return null;
         const isCompanyDetail = id.startsWith(COMPANY_DETAIL_PREFIX);
         const appId = isCompanyDetail ? null : (id as AppId);
         const cdInstance = isCompanyDetail ? companyDetailInstances[id] : null;

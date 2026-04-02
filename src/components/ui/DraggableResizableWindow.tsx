@@ -197,12 +197,11 @@ export const DraggableResizableWindow: React.FC<DraggableResizableWindowProps> =
     setIsMaximized(!isMaximized);
   };
 
-  if (state.minimized) return null;
-
   return (
     <div
       className="absolute flex flex-col overflow-visible"
       style={{
+        display: state.minimized ? 'none' : undefined,
         left: state.x,
         top: state.y,
         width: state.width,

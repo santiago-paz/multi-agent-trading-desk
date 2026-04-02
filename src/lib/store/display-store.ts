@@ -31,6 +31,23 @@ export const WALLPAPER_OPTIONS: WallpaperOption[] = [
   { name: 'Schmid Meier HF', url: '/_wallpaper_win98.gif' },
 ];
 
+export const SCREENSAVER_OPTIONS = [
+  '(None)',
+  '3D Flower Box',
+  '3D Flying Objects',
+  '3D Maze',
+  '3D Pipes',
+  '3D Text',
+  'Baseball',
+  'Blank Screen',
+  'Channel Screen Saver',
+  'Flying Windows',
+  'Inside your Computer',
+  'Mystery',
+  'Nature',
+  'Science'
+];
+
 interface DisplayState {
   wallpaper: string | null;
   backgroundColor: string;
@@ -40,6 +57,14 @@ interface DisplayState {
   setBackgroundColor: (color: string) => void;
   setDisplayMode: (mode: DisplayMode) => void;
   addCustomWallpaper: (wallpaper: WallpaperOption) => void;
+  screenSaver: string;
+  screenSaverWait: number;
+  screenSaverText: string;
+  isPasswordProtected: boolean;
+  setScreenSaver: (ss: string) => void;
+  setScreenSaverWait: (wait: number) => void;
+  setScreenSaverText: (text: string) => void;
+  setIsPasswordProtected: (protected_val: boolean) => void;
 }
 
 export const useDisplayStore = create<DisplayState>()(
@@ -49,12 +74,20 @@ export const useDisplayStore = create<DisplayState>()(
       backgroundColor: '#008080',
       displayMode: 'stretch',
       customWallpapers: [],
+      screenSaver: '(None)',
+      screenSaverWait: 15,
+      screenSaverText: 'Schmid Meier HF',
+      isPasswordProtected: false,
       setWallpaper: (url) => set({ wallpaper: url }),
       setBackgroundColor: (color) => set({ backgroundColor: color }),
       setDisplayMode: (mode) => set({ displayMode: mode }),
       addCustomWallpaper: (wp) => set((state) => ({ 
         customWallpapers: [wp, ...state.customWallpapers] 
       })),
+      setScreenSaver: (ss) => set({ screenSaver: ss }),
+      setScreenSaverWait: (wait) => set({ screenSaverWait: wait }),
+      setScreenSaverText: (text) => set({ screenSaverText: text }),
+      setIsPasswordProtected: (protected_val) => set({ isPasswordProtected: protected_val }),
     }),
     {
       name: 'display-settings',
