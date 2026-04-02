@@ -5,6 +5,7 @@ import {
   WINDOW_CONTAINER, REFRESH_FOOTER, STATUS_BAR_STYLE,
   COLOR_POSITIVE, COLOR_NEGATIVE, COLOR_SECONDARY, COLOR_DISABLED,
 } from '@/lib/theme/win98';
+import { QuickTradePanel, QuickTradePanelProps } from './QuickTradePanel';
 
 interface MarketItem {
   symbol: string;
@@ -12,12 +13,16 @@ interface MarketItem {
 }
 
 interface MarketDataWindowProps {
+  // Market Data Props
   marketData: MarketItem[] | null;
   ownedSymbols: string[];
   companyNames: Record<string, string>;
-  isLoading: boolean;
-  onRefresh: () => void;
+  isLoadingMarketData: boolean;
+  onRefreshMarketData: () => void;
   onCompanyDetail?: (symbol: string) => void;
+  
+  // Quick Trade Props
+  quickTradeProps: Omit<QuickTradePanelProps, 'onCompanyDetail'>;
 }
 
 type SortCol = 'symbol' | 'last' | 'pct';
@@ -223,11 +228,12 @@ export const MarketDataWindow: React.FC<MarketDataWindowProps> = ({
   marketData,
   ownedSymbols,
   companyNames,
-  isLoading,
-  onRefresh,
+  isLoadingMarketData,
+  onRefreshMarketData,
   onCompanyDetail,
+  quickTradeProps,
 }) => {
-  const [activeTab, setActiveTab] = useState<'mine' | 'all'>('mine');
+  const [activeTab, setActiveTab] = useState<'mine' | 'all' | 'trade'>('mine');
   const [sortCol, setSortCol] = useState<SortCol>('symbol');
   const [sortDir, setSortDir] = useState<SortDir>('asc');
 
@@ -243,6 +249,7 @@ export const MarketDataWindow: React.FC<MarketDataWindowProps> = ({
   const mineItems = (marketData ?? []).filter((d) => ownedSymbols.includes(d.symbol));
   const allItems = marketData ?? [];
   const activeItems = activeTab === 'mine' ? mineItems : allItems;
+  const isMarketDataTab = activeTab === 'mine' || activeTab === 'all';
 
   return (
     <div style={{ ...WINDOW_CONTAINER, padding: '6px 6px 0 6px', boxSizing: 'border-box' }}>
@@ -264,56 +271,82 @@ export const MarketDataWindow: React.FC<MarketDataWindowProps> = ({
             Todos{allItems.length > 0 ? ` (${allItems.length})` : ''}
           </a>
         </li>
+        <li role="tab" aria-selected={activeTab === 'trade'}>
+          <a
+            href="#trade"
+            onClick={(e) => { e.preventDefault(); setActiveTab('trade'); }}
+          >
+            Operar
+          </a>
+        </li>
       </menu>
 
       {/* Tab panel */}
       <div className="window" role="tabpanel" style={{ flex: 1, display: 'flex', flexDirection: 'column', marginBottom: 12, minHeight: 0, marginTop: '-1px' }}>
         <div className="window-body" style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 8, overflow: 'hidden', minHeight: 0, marginTop: 0, marginRight: 0, marginBottom: 0, marginLeft: 0 }}>
-          <fieldset style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', minHeight: 0, margin: 0 }}>
-            <legend>
-              {activeTab === 'mine' ? 'Mis CEDEARs' : 'Todos los CEDEARs'}
-              {activeItems.length > 0 ? ` (${activeItems.length})` : ''}
-            </legend>
+          
+          {isMarketDataTab && (
+            <fieldset style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', minHeight: 0, margin: 0 }}>
+              <legend>
+                {activeTab === 'mine' ? 'Mis CEDEARs' : 'Todos los CEDEARs'}
+                {activeItems.length > 0 ? ` (${activeItems.length})` : ''}
+              </legend>
 
-            {isLoading && !marketData ? (
-              <p style={{ margin: 0, padding: 4 }}>Cargando datos de mercado…</p>
-            ) : !marketData ? (
-              <p style={{ margin: 0, padding: 4, color: COLOR_NEGATIVE }}>
-                Error al cargar datos.
-              </p>
-            ) : activeItems.length === 0 ? (
-              <p style={{ margin: 0, padding: 4, color: COLOR_SECONDARY }}>
-                {activeTab === 'mine'
-                  ? 'No hay CEDEARs en tenencia.'
-                  : 'No hay otros CEDEARs disponibles.'}
-              </p>
-            ) : (
-              <ListView
-                items={activeItems}
-                companyNames={companyNames}
-                sortCol={sortCol}
-                sortDir={sortDir}
-                onSort={handleSort}
-                onCompanyDetail={onCompanyDetail}
-              />
-            )}
-          </fieldset>
+              {isLoadingMarketData && !marketData ? (
+                <p style={{ margin: 0, padding: 4 }}>Cargando datos de mercado…</p>
+              ) : !marketData ? (
+                <p style={{ margin: 0, padding: 4, color: COLOR_NEGATIVE }}>
+                  Error al cargar datos.
+                </p>
+              ) : activeItems.length === 0 ? (
+                <p style={{ margin: 0, padding: 4, color: COLOR_SECONDARY }}>
+                  {activeTab === 'mine'
+                    ? 'No hay CEDEARs en tenencia.'
+                    : 'No hay otros CEDEARs disponibles.'}
+                </p>
+              ) : (
+                <ListView
+                  items={activeItems}
+                  companyNames={companyNames}
+                  sortCol={sortCol}
+                  sortDir={sortDir}
+                  onSort={handleSort}
+                  onCompanyDetail={onCompanyDetail}
+                />
+              )}
+            </fieldset>
+          )}
+
+          {activeTab === 'trade' && (
+            <QuickTradePanel {...quickTradeProps} onCompanyDetail={onCompanyDetail} />
+          )}
+
         </div>
       </div>
 
       {/* Refresh button — bottom-right */}
       <div style={REFRESH_FOOTER}>
-        <button type="button" onClick={onRefresh} disabled={isLoading}>
-          {isLoading ? 'Actualizando...' : 'Actualizar'}
-        </button>
+        {isMarketDataTab ? (
+          <button type="button" onClick={onRefreshMarketData} disabled={isLoadingMarketData}>
+            {isLoadingMarketData ? 'Actualizando...' : 'Actualizar MD'}
+          </button>
+        ) : (
+          <button type="button" onClick={quickTradeProps.onRefresh} disabled={quickTradeProps.isLoading}>
+            {quickTradeProps.isLoading ? 'Actualizando...' : 'Actualizar Op'}
+          </button>
+        )}
       </div>
 
       {/* Status bar */}
       <div className="status-bar" style={STATUS_BAR_STYLE}>
         <p className="status-bar-field">
-          {marketData
-            ? `${activeItems.length} elemento${activeItems.length !== 1 ? 's' : ''}`
-            : 'Sin datos'}
+          {isMarketDataTab ? (
+            marketData
+              ? `${activeItems.length} elemento${activeItems.length !== 1 ? 's' : ''}`
+              : 'Sin datos'
+          ) : (
+            `${quickTradeProps.cedears.length} CEDEAR${quickTradeProps.cedears.length !== 1 ? 's' : ''} operable${quickTradeProps.cedears.length !== 1 ? 's' : ''}`
+          )}
         </p>
       </div>
     </div>

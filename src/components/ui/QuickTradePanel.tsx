@@ -26,7 +26,7 @@ export interface TradableCedear {
   volumen: number;
 }
 
-interface QuickTradeWindowProps {
+export interface QuickTradePanelProps {
   cedears: TradableCedear[];
   cash: number;
   comprometido?: number;
@@ -52,7 +52,7 @@ const fmt = (n: number) =>
 
 const fmtInt = (n: number) => n.toLocaleString('es-AR');
 
-export const QuickTradeWindow: React.FC<QuickTradeWindowProps> = ({
+export const QuickTradePanel: React.FC<QuickTradePanelProps> = ({
   cedears,
   cash,
   comprometido = 0,
@@ -147,14 +147,14 @@ export const QuickTradeWindow: React.FC<QuickTradeWindowProps> = ({
 
   if (isLoading) {
     return (
-      <div style={{ ...WINDOW_CONTAINER, padding: '6px' }}>
+      <div style={{ padding: '6px', height: '100%' }}>
         <p style={{ ...FONT, margin: 0, padding: '4px' }}>Cargando CEDEARs disponibles...</p>
       </div>
     );
   }
 
   return (
-    <div style={WINDOW_CONTAINER}>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
       {/* Summary bar */}
       <div style={{ padding: '4px 6px', flexShrink: 0, borderBottom: '1px solid #808080' }}>
         <div style={{ ...FONT, display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
@@ -175,14 +175,17 @@ export const QuickTradeWindow: React.FC<QuickTradeWindowProps> = ({
           onChange={(e) => setFilter(e.target.value)}
           style={{ ...FONT, flex: 1, padding: '2px 4px', boxSizing: 'border-box' }}
         />
-        <label style={{ ...FONT, display: 'flex', alignItems: 'center', gap: '4px', whiteSpace: 'nowrap' }}>
-          <input
-            type="checkbox"
-            checked={showAll}
-            onChange={(e) => setShowAll(e.target.checked)}
-          />
-          Mostrar todos
-        </label>
+        <div style={{ ...FONT, display: 'flex', alignItems: 'center', gap: '4px', whiteSpace: 'nowrap' }}>
+          <span>Filtro:</span>
+          <select
+            value={showAll ? 'all' : 'buyable'}
+            onChange={(e) => setShowAll(e.target.value === 'all')}
+            style={FONT}
+          >
+            <option value="buyable">Solo con saldo</option>
+            <option value="all">Todos</option>
+          </select>
+        </div>
       </div>
 
       {/* Table */}
@@ -349,18 +352,6 @@ export const QuickTradeWindow: React.FC<QuickTradeWindowProps> = ({
         </div>
       )}
 
-      {/* Footer */}
-      <div style={REFRESH_FOOTER}>
-        <button type="button" onClick={onRefresh} style={FONT}>
-          Actualizar
-        </button>
-      </div>
-
-      <div className="status-bar" style={STATUS_BAR_STYLE}>
-        <div className="status-bar-field">
-          {sorted.length} CEDEAR{sorted.length !== 1 ? 's' : ''} disponible{sorted.length !== 1 ? 's' : ''}
-        </div>
-      </div>
     </div>
   );
 };

@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect, useMemo, useRef } from 'react';
 import { WindowState } from '@/components/ui/DraggableResizableWindow';
 
-export const APP_IDS = ['portfolio', 'news', 'marketdata', 'movements', 'backtesting', 'quicktrade', 'autotrader', 'displayproperties'] as const;
+export const APP_IDS = ['portfolio', 'news', 'marketdata', 'movements', 'backtesting', 'autotrader', 'displayproperties'] as const;
 export type AppId = (typeof APP_IDS)[number];
 
 export const DEFAULT_WINDOWS: Record<AppId, { width: number; height: number; x: number; y: number }> = {
@@ -11,7 +11,6 @@ export const DEFAULT_WINDOWS: Record<AppId, { width: number; height: number; x: 
   movements: { x: 120, y: 120, width: 750, height: 420 },
 
   backtesting: { x: 80, y: 40, width: 850, height: 620 },
-  quicktrade: { x: 140, y: 80, width: 560, height: 500 },
   autotrader: { x: 80, y: 40, width: 760, height: 620 },
   displayproperties: { x: 200, y: 100, width: 420, height: 520 },
 };
@@ -19,11 +18,10 @@ export const DEFAULT_WINDOWS: Record<AppId, { width: number; height: number; x: 
 export const APP_LABELS: Record<AppId, string> = {
   portfolio: 'Portafolio y Cuenta',
   news: 'Market Intelligence Feed',
-  marketdata: 'Market Data',
+  marketdata: 'Market Data & Trade',
   movements: 'Movimientos',
 
   backtesting: 'Backtesting Engine',
-  quicktrade: 'Comprar CEDEARs',
   autotrader: 'Auto Trader',
   displayproperties: 'Display Properties',
 };
