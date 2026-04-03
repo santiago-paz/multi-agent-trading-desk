@@ -1,0 +1,318 @@
+import { useState, useRef, useCallback, useEffect } from 'react';
+import { LogEntry, LogStatus, Phase, OrderResult, AgentSignal, Decision } from '../types';
+import { computeRebalancePlan, RebalancePlan } from '@/lib/trading/rebalance-engine';
+import { placeOrder } from '@/app/trading/actions';
+import { parseSSEChunk, remapToIol, fmtARS } from '../utils';
+import { COMMISSION_RATE } from '@/lib/trading/quick-trade';
+
+const API_URL = process.env.NEXT_PUBLIC_AI_HEDGE_FUND_API_URL || 'http://localhost:8000';
+
+export function useTradingEngine({
+  cashArs,
+  effectiveMep,
+  dailyLimit,
+  holdings,
+  holdingTickers,
+  portfolioPositions,
+  arsPrices,
+  fmpTickers,
+  fmpToIol,
+  panelSymbols,
+  selectedAgents,
+}: {
+  cashArs: number;
+  effectiveMep: number;
+  dailyLimit: number;
+  holdings: Record<string, number>;
+  holdingTickers: string[];
+  portfolioPositions: Array<{ ticker: string; quantity: number; trade_price: number }>;
+  arsPrices: Record<string, number>;
+  fmpTickers: string[];
+  fmpToIol: Record<string, string>;
+  panelSymbols: string[];
+  selectedAgents: Set<string>;
+}) {
+  const [phase, setPhase] = useState<Phase>('idle');
+  const [logs, setLogs] = useState<LogEntry[]>([]);
+  const [progress, setProgress] = useState(0);
+  const [analystSignals, setAnalystSignals] = useState<Record<string, Record<string, AgentSignal>> | null>(null);
+  const [rawDecisions, setRawDecisions] = useState<Record<string, Decision> | null>(null);
+  const [plan, setPlan] = useState<RebalancePlan | null>(null);
+  const [candidateDecisions, setCandidateDecisions] = useState<Record<string, Decision> | null>(null);
+  const [orderResults, setOrderResults] = useState<OrderResult[]>([]);
+
+  const abortRef = useRef<AbortController | null>(null);
+
+  useEffect(() => () => { abortRef.current?.abort(); }, []);
+
+  const addLog = useCallback((id: string, text: string, status: LogStatus = 'running', agent?: string, ticker?: string, detail?: string) => {
+    setLogs(prev => [...prev, { id, text, status, agent, ticker, detail }]);
+  }, []);
+
+  const updateLog = useCallback((id: string, text: string, status: LogStatus, agent?: string, ticker?: string, detail?: string) => {
+    setLogs(prev => prev.map(l => l.id === id ? { ...l, text, status, agent, ticker, detail } : l));
+  }, []);
+
+  async function handleAnalyze(setActiveTab: (tab: 'config' | 'ai' | 'plan') => void) {
+    if (selectedAgents.size === 0 || fmpTickers.length === 0) return;
+
+    abortRef.current?.abort();
+    abortRef.current = new AbortController();
+
+    setPhase('analyzing');
+    setActiveTab('ai');
+    setLogs([]);
+    setProgress(0);
+    setAnalystSignals(null);
+    setRawDecisions(null);
+    setCandidateDecisions(null);
+    setPlan(null);
+    setOrderResults([]);
+
+    const agentKeys = Array.from(selectedAgents);
+
+    const graphNodes = [
+      ...agentKeys.map(key => ({ id: key, type: 'agent', data: { label: key } })),
+      { id: 'portfolio_manager', type: 'agent', data: { label: 'Portfolio Manager' } },
+    ];
+    const graphEdges = agentKeys.map(key => ({
+      id: `${key}-pm`,
+      source: key,
+      target: 'portfolio_manager',
+    }));
+
+    const cashUsd = effectiveMep > 0 ? cashArs / effectiveMep : 100000;
+    const holdingsValueArs = portfolioPositions.reduce(
+      (sum, p) => sum + (arsPrices[p.ticker] ?? p.trade_price) * p.quantity, 0
+    );
+    const budgetArs = cashArs + dailyLimit + holdingsValueArs;
+    const budgetUsd = effectiveMep > 0 ? budgetArs / effectiveMep : 100000;
+
+    const body = {
+      tickers: fmpTickers,
+      model_name: 'claude-haiku-4-5-20251001',
+      model_provider: 'Anthropic',
+      initial_cash: Math.round(budgetUsd * 100) / 100,
+      portfolio_positions: portfolioPositions.length > 0 ? portfolioPositions : undefined,
+      graph_nodes: graphNodes,
+      graph_edges: graphEdges,
+    };
+
+    addLog('cash', `Saldo disponible: $${fmtARS(cashArs)} ARS (~USD $${cashUsd.toFixed(0)}, MEP: ${effectiveMep.toFixed(0)})`, 'ok');
+    addLog('limit', `Límite plata nueva: $${fmtARS(dailyLimit)} ARS (~USD $${(dailyLimit / effectiveMep).toFixed(0)})`, 'ok');
+    addLog('portfolio-tickers', `Holdings actuales (${holdingTickers.length}): ${holdingTickers.join(', ') || '(sin posiciones)'}`, 'ok');
+    addLog('candidate-tickers', `Candidatos a compra (${panelSymbols.length} más líquidos): ${panelSymbols.join(', ') || '(ninguno)'}`, 'ok');
+    const fmpMapped = fmpTickers.filter(t => !holdingTickers.includes(t) && !panelSymbols.includes(t));
+    if (fmpMapped.length > 0) {
+      addLog('fmp-mapped', `Tickers mapeados IOL→FMP: ${fmpMapped.join(', ')}`, 'ok');
+    }
+    addLog('agents-info', `Agentes: ${agentKeys.map(k => k.replace(/_/g, ' ')).join(', ')}`, 'ok');
+    addLog('start', `Enviando ${fmpTickers.length} ticker(s) a ${agentKeys.length} agente(s) para análisis...`);
+
+    try {
+      const response = await fetch(`${API_URL}/hedge-fund/run`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+        signal: abortRef.current.signal,
+      });
+
+      if (!response.ok) {
+        const errText = await response.text();
+        throw new Error(`HTTP ${response.status}: ${errText}`);
+      }
+
+      const reader = response.body!.getReader();
+      const decoder = new TextDecoder();
+      let buffer = '';
+      let progressCount = 0;
+      const totalEstimate = agentKeys.length * fmpTickers.length + 5;
+
+      const processCompleteEvent = (d: Record<string, unknown>) => {
+        const completeData = d.data as Record<string, unknown> | undefined;
+        if (!completeData) return;
+
+        const rawSignals = completeData.analyst_signals as Record<string, Record<string, AgentSignal>>;
+        const remappedSignals: Record<string, Record<string, AgentSignal>> = {};
+        for (const [agent, tickerSignals] of Object.entries(rawSignals)) {
+          remappedSignals[agent] = remapToIol(tickerSignals, fmpToIol);
+        }
+        setAnalystSignals(remappedSignals);
+
+        const rawDec = completeData.decisions as Record<string, Decision>;
+        const iolDecisions = remapToIol(rawDec, fmpToIol);
+        setRawDecisions(iolDecisions);
+
+        const candidates: Record<string, Decision> = {};
+        for (const [ticker, dec] of Object.entries(iolDecisions)) {
+          if (!holdingTickers.includes(ticker)) candidates[ticker] = dec;
+        }
+        setCandidateDecisions(candidates);
+
+        const rebalancePlan = computeRebalancePlan({
+          decisions: iolDecisions,
+          holdings,
+          arsPrices,
+          cashArs,
+          dailyLimitArs: dailyLimit,
+          commissionRate: COMMISSION_RATE,
+        });
+        setPlan(rebalancePlan);
+
+        const nSells = rebalancePlan.sells.length;
+        const nBuys = rebalancePlan.buys.length;
+        const nCandidates = Object.keys(candidates).length;
+        const nCandBuys = Object.values(candidates).filter(d => d.action === 'buy').length;
+        addLog('complete', [
+          'Análisis completado.',
+          `Plan: ${nSells} venta(s), ${nBuys} compra(s).`,
+          nCandidates > 0 ? `${nCandBuys}/${nCandidates} candidatos recomendados para compra.` : '',
+        ].filter(Boolean).join(' '), 'ok');
+        setProgress(100);
+        setPhase('planned');
+        setActiveTab('plan');
+      };
+
+      let streamError: Error | null = null;
+      let receivedComplete = false;
+
+      try {
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          buffer += decoder.decode(value, { stream: true });
+
+          const parts = buffer.split('\n\n');
+          buffer = parts.pop()!;
+
+          for (const part of parts) {
+            const events = parseSSEChunk(part + '\n\n');
+            for (const evt of events) {
+              const d = evt.data as Record<string, unknown>;
+
+              if (evt.event === 'start') {
+                updateLog('start', 'Análisis iniciado', 'ok');
+              } else if (evt.event === 'progress') {
+                progressCount++;
+                const agent = (d.agent as string) || '';
+                const ticker = (d.ticker as string) || '';
+                const status = (d.status as string) || '';
+                const analysis = (d.analysis as string) || '';
+                const logId = `progress-${progressCount}`;
+
+                addLog(
+                  logId,
+                  `${agent}${ticker ? ` [${ticker}]` : ''}: ${analysis || status}`,
+                  analysis ? 'ok' : 'running',
+                  agent,
+                  ticker,
+                  analysis || status
+                );
+                setProgress(Math.min(95, Math.round((progressCount / totalEstimate) * 100)));
+              } else if (evt.event === 'error') {
+                addLog('error', `Error: ${(d.message as string) || 'Error desconocido'}`, 'error');
+                setPhase('idle');
+              } else if (evt.event === 'complete') {
+                receivedComplete = true;
+                processCompleteEvent(d);
+              }
+            }
+          }
+        }
+      } catch (readErr) {
+        streamError = readErr as Error;
+      }
+
+      if (buffer.trim()) {
+        for (const evt of parseSSEChunk(buffer + '\n\n')) {
+          if (evt.event === 'complete') {
+            receivedComplete = true;
+            processCompleteEvent(evt.data as Record<string, unknown>);
+          } else if (evt.event === 'error') {
+            const d = evt.data as Record<string, unknown>;
+            addLog('error', `Error: ${(d.message as string) || 'Error desconocido'}`, 'error');
+            setPhase('idle');
+          }
+        }
+      }
+
+      if (streamError && !receivedComplete) {
+        throw streamError;
+      }
+    } catch (err: unknown) {
+      if ((err as Error).name === 'AbortError') {
+        addLog('cancel', 'Análisis cancelado por el usuario', 'error');
+        setPhase('idle');
+        return;
+      }
+      addLog('error', `Error de red: ${(err as Error).message}. El backend puede haber completado — revisá los logs del servidor.`, 'error');
+      setPhase('idle');
+    }
+  }
+
+  async function handleExecuteOrders() {
+    if (!plan) return;
+    setPhase('executing');
+    setOrderResults([]);
+    const results: OrderResult[] = [];
+
+    for (const order of plan.sells) {
+      const res = await placeOrder({
+        simbolo: order.ticker,
+        cantidad: order.quantity,
+        precio: order.priceArs,
+        plazo: 't1',
+        tipoOrden: 'precioMercado',
+        side: 'sell',
+      });
+      results.push({
+        ticker: order.ticker, side: 'sell', quantity: order.quantity,
+        success: res.success && res.data?.ok === true,
+        message: res.success
+          ? (res.data?.numeroOperacion ? `Operación #${res.data.numeroOperacion}` : (res.data?.messages?.map((m: any) => m.description || m.title).join('. ') || 'Orden enviada'))
+          : (res.error || 'Error'),
+      });
+      setOrderResults([...results]);
+    }
+
+    for (const order of plan.buys) {
+      const res = await placeOrder({
+        simbolo: order.ticker,
+        cantidad: order.quantity,
+        precio: order.priceArs,
+        plazo: 't1',
+        tipoOrden: 'precioMercado',
+        side: 'buy',
+      });
+      results.push({
+        ticker: order.ticker, side: 'buy', quantity: order.quantity,
+        success: res.success && res.data?.ok === true,
+        message: res.success
+          ? (res.data?.numeroOperacion ? `Operación #${res.data.numeroOperacion}` : (res.data?.messages?.map((m: any) => m.description || m.title).join('. ') || 'Orden enviada'))
+          : (res.error || 'Error'),
+      });
+      setOrderResults([...results]);
+    }
+
+    setPhase('done');
+  }
+
+  function abortEngine() {
+    abortRef.current?.abort();
+  }
+
+  return {
+    phase,
+    setPhase,
+    logs,
+    progress,
+    analystSignals,
+    rawDecisions,
+    plan,
+    candidateDecisions,
+    orderResults,
+    handleAnalyze,
+    handleExecuteOrders,
+    abortEngine
+  };
+}
