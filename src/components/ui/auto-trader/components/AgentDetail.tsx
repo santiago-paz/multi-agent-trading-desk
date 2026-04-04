@@ -1,8 +1,8 @@
 import React from 'react';
 import { COLOR_LINK } from '@/lib/theme/win98';
-import { TechnicalDetail, SentimentDetail, ValuationDetail, GrowthDetail, FundamentalsDetail } from './analysts';
+import { TechnicalDetail, SentimentDetail, ValuationDetail, GrowthDetail, FundamentalsDetail, WarrenBuffettDetail } from './analysts';
 
-export function AgentDetail({ detail, ticker }: { detail: string | undefined; ticker?: string }) {
+export function AgentDetail({ detail, ticker, agent, status }: { detail: string | undefined; ticker?: string; agent?: string; status?: string }) {
   if (!detail) return null;
   
   try {
@@ -91,7 +91,11 @@ export function AgentDetail({ detail, ticker }: { detail: string | undefined; ti
           );
         }
       } else if (reasoning && typeof reasoning === 'string') {
-        rows.push(<div key="reasoning" style={{ marginTop: 4 }}><strong>Resumen:</strong> {reasoning}</div>);
+        if ((agent === 'warren_buffett_agent' || agent === 'warren_buffett')) {
+          rows.push(<WarrenBuffettDetail key="warren-detail" reasoning={reasoning} />);
+        } else {
+          rows.push(<div key="reasoning" style={{ marginTop: 4 }}><strong>Resumen:</strong> {reasoning}</div>);
+        }
       }
       
       // If we parsed successfully and generated human UI, return it.
@@ -103,6 +107,15 @@ export function AgentDetail({ detail, ticker }: { detail: string | undefined; ti
     // Fall back below if not valid JSON
   }
   
+  // Fall back below if not valid JSON or plain text
+  if ((agent === 'warren_buffett_agent' || agent === 'warren_buffett') && status === 'ok') {
+    return (
+      <div style={{ margin: '4px 0 0 12px' }}>
+        <WarrenBuffettDetail reasoning={detail} />
+      </div>
+    );
+  }
+
   if (detail.includes('\n')) {
      return <div style={{ margin: '4px 0 0 12px', whiteSpace: 'pre-wrap' }}>{detail}</div>;
   }

@@ -63,7 +63,7 @@ export function AITab({
                           <strong style={{ color: '#000080' }}>{l.agent.replace(/_/g, ' ')}</strong>
                           {l.ticker && <span style={{ color: '#800000', fontWeight: 'bold' }}> [{l.ticker}]</span>}
                           <span>:</span>
-                          <AgentDetail detail={l.detail} ticker={l.ticker} />
+                          <AgentDetail detail={l.detail} ticker={l.ticker} agent={l.agent} status={l.status} />
                         </span>
                       ) : (
                         <span>{l.text}</span>

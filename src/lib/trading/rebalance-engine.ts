@@ -95,15 +95,15 @@ export function computeRebalancePlan(input: RebalanceInput): RebalancePlan {
     const owned = holdings[ticker] ?? 0;
 
     if (!price || price <= 0) {
-      warnings.push(`${ticker}: sin precio ARS, no se puede vender`);
+      warnings.push(`Venta de ${ticker} omitida: el mercado no reporta un precio de cotización válido.`);
       continue;
     }
     if (owned <= 0) {
-      warnings.push(`${ticker}: AI sugiere vender pero no tenés posición`);
+      warnings.push(`Venta de ${ticker} omitida: el sistema sugirió la venta pero actualmente la cuenta no posee tenencia.`);
       continue;
     }
     if (remainingSellBudget <= 0) {
-      warnings.push(`${ticker}: límite de venta alcanzado, venta omitida`);
+      warnings.push(`Venta de ${ticker} omitida: se alcanzó el tope máximo diario permitido para tomar ganancias.`);
       continue;
     }
 
@@ -112,7 +112,7 @@ export function computeRebalancePlan(input: RebalanceInput): RebalancePlan {
     const quantity = Math.min(owned, maxByBudget);
 
     if (quantity <= 0) {
-      warnings.push(`${ticker}: límite restante insuficiente para 1 unidad (precio: ${fmtARS(price)}, restante: ${fmtARS(remainingSellBudget)})`);
+      warnings.push(`Venta de ${ticker} omitida: el margen del límite de ventas no cubre ni siquiera 1 CEDEAR (Precio: $${fmtARS(price)}, Margen restante: $${fmtARS(remainingSellBudget)}).`);
       continue;
     }
 
@@ -146,11 +146,11 @@ export function computeRebalancePlan(input: RebalanceInput): RebalancePlan {
     const price = arsPrices[ticker];
 
     if (!price || price <= 0) {
-      warnings.push(`${ticker}: sin precio ARS, no se puede comprar`);
+      warnings.push(`Compra de ${ticker} omitida: el mercado no reporta un precio de cotización válido.`);
       continue;
     }
     if (availableBudget <= 0) {
-      warnings.push(`${ticker}: presupuesto agotado, compra omitida`);
+      warnings.push(`Compra de ${ticker} omitida: liquidez de la cuenta agotada.`);
       continue;
     }
 
@@ -162,7 +162,7 @@ export function computeRebalancePlan(input: RebalanceInput): RebalancePlan {
       : maxByBudget;
 
     if (quantity <= 0) {
-      warnings.push(`${ticker}: saldo insuficiente (precio: ${fmtARS(price)}, disponible: ${fmtARS(availableBudget)})`);
+      warnings.push(`Compra de ${ticker} omitida: tu poder de compra ($${fmtARS(availableBudget)}) es insuficiente para adquirir un CEDEAR (Precio: $${fmtARS(price)}).`);
       continue;
     }
 
@@ -194,7 +194,7 @@ export function computeRebalancePlan(input: RebalanceInput): RebalancePlan {
 
   // Settlement warning
   if (sells.length > 0 && buys.length > 0) {
-    warnings.push('Las ventas con plazo t1 (24hs) pueden no liberar el efectivo inmediatamente para compras del mismo día.');
+    warnings.push('Aviso de liquidación: el dinero de las ventas (al hacerse en plazo 24hs) podría no acreditarse a tiempo para cubrir las compras de hoy dependiendo del bróker.');
   }
 
   return {

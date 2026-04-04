@@ -87,11 +87,23 @@ export function PlanTab({
 
                 {plan.warnings.length > 0 && (
                   <div style={{ marginTop: 4, flexShrink: 0 }}>
-                    {plan.warnings.map((w, i) => (
-                      <div key={i} style={{ ...FONT, color: '#808000', lineHeight: '16px' }}>
-                        ! {w}
-                      </div>
-                    ))}
+                    {plan.warnings.map((w, i) => {
+                      const parts = w.split(': ');
+                      return (
+                        <div key={i} style={{ ...FONT, color: '#333', lineHeight: '18px', display: 'flex', gap: '6px', alignItems: 'flex-start' }}>
+                          <span style={{ marginTop: 1 }}>⚠️</span>
+                          <span>
+                            {parts.length > 1 ? (
+                              <>
+                                <strong>{parts[0]}:</strong> {parts.slice(1).join(': ')}
+                              </>
+                            ) : (
+                              w
+                            )}
+                          </span>
+                        </div>
+                      );
+                    })}
                   </div>
                 )}
               </fieldset>
