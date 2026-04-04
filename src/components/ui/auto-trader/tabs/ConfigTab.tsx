@@ -207,7 +207,7 @@ export function ConfigTab({
 
       <div style={{ display: 'flex', gap: 6, justifyContent: 'flex-end', flexShrink: 0, paddingTop: 6, borderTop: '1px solid #dfdfdf' }}>
         {isAnalyzing && (
-          <button onClick={abortEngine}>Cancelar</button>
+          <button onClick={abortEngine} style={{ ...FONT, minWidth: 75 }}>Cancelar</button>
         )}
         <button onClick={loadPortfolio} disabled={isAnalyzing}>
           Recargar Portfolio

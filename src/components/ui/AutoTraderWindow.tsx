@@ -16,7 +16,7 @@ export function AutoTraderWindow() {
 
   const portfolio = usePortfolio();
   const agents = useAgents();
-  
+
   const engine = useTradingEngine({
     cashArs: portfolio.cashArs,
     effectiveMep: portfolio.effectiveMep,
@@ -63,7 +63,7 @@ export function AutoTraderWindow() {
 
       <div className="window" role="tabpanel" style={{ flex: 1, display: 'flex', flexDirection: 'column', marginBottom: 12, minHeight: 0, marginTop: '-1px' }}>
         <div className="window-body" style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 8, overflow: 'hidden', minHeight: 0, margin: 0 }}>
-          
+
           {activeTab === 'config' && (
             <ConfigTab
               cashArs={portfolio.cashArs}
@@ -102,7 +102,6 @@ export function AutoTraderWindow() {
               analystSignals={engine.analystSignals}
               candidateDecisions={engine.candidateDecisions}
               arsPrices={portfolio.arsPrices}
-              abortEngine={engine.abortEngine}
             />
           )}
 

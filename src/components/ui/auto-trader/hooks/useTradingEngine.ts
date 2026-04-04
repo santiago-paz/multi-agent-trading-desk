@@ -240,11 +240,7 @@ export function useTradingEngine({
         throw streamError;
       }
     } catch (err: unknown) {
-      if ((err as Error).name === 'AbortError') {
-        addLog('cancel', 'Análisis cancelado por el usuario', 'error');
-        setPhase('idle');
-        return;
-      }
+      if ((err as Error).name === 'AbortError') return;
       addLog('error', `Error de red: ${(err as Error).message}. El backend puede haber completado — revisá los logs del servidor.`, 'error');
       setPhase('idle');
     }
@@ -299,6 +295,8 @@ export function useTradingEngine({
 
   function abortEngine() {
     abortRef.current?.abort();
+    setPhase('idle');
+    addLog('cancel', 'Análisis cancelado por el usuario', 'error');
   }
 
   return {

@@ -57,7 +57,9 @@ export function PlanTab({
 
                   {!hasOrders && (
                     <div style={{ ...FONT, color: COLOR_DISABLED, padding: '8px 0' }}>
-                      El AI no recomienda operaciones hoy.
+                      {plan.warnings.length > 0
+                        ? 'Las recomendaciones del AI no se pueden ejecutar (ver advertencias).'
+                        : 'El AI no recomendó operaciones hoy.'}
                     </div>
                   )}
                 </div>

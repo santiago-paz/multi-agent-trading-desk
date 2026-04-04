@@ -1,0 +1,5 @@
+export { TechnicalDetail } from './TechnicalDetail';
+export { SentimentDetail } from './SentimentDetail';
+export { ValuationDetail } from './ValuationDetail';
+export { GrowthDetail } from './GrowthDetail';
+export { FundamentalsDetail } from './FundamentalsDetail';

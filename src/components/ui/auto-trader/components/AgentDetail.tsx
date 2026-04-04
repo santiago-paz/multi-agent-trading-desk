@@ -1,5 +1,6 @@
 import React from 'react';
-import { COLOR_LINK, COL_SUNKEN } from '@/lib/theme/win98';
+import { COLOR_LINK } from '@/lib/theme/win98';
+import { TechnicalDetail, SentimentDetail, ValuationDetail, GrowthDetail, FundamentalsDetail } from './analysts';
 
 export function AgentDetail({ detail, ticker }: { detail: string | undefined; ticker?: string }) {
   if (!detail) return null;
@@ -21,7 +22,14 @@ export function AgentDetail({ detail, ticker }: { detail: string | undefined; ti
       
       const signal = info.signal || info.action;
       const confidence = info.confidence;
-      const reasoning = info.reasoning || data.reasoning;
+      let reasoning = info.reasoning || data.reasoning;
+
+      // Si el objeto principal es el reasoning en sí (no está envuelto en key "reasoning")
+      if (!reasoning && typeof info === 'object' && info !== null) {
+        if ('trend_following' in info || 'insider_trading' in info || 'dcf_analysis' in info || 'owner_earnings_analysis' in info || 'historical_growth' in info || 'profitability_signal' in info) {
+          reasoning = info;
+        }
+      }
       
       let signalText = signal;
       if (typeof signal === 'string') {
@@ -61,63 +69,27 @@ export function AgentDetail({ detail, ticker }: { detail: string | undefined; ti
           </div>
         );
       } else if (reasoning && typeof reasoning === 'object' && !Array.isArray(reasoning)) {
-        const METRIC_LABELS: Record<string, string> = {
-          adx: 'Fuerza Tendencia (ADX)',
-          trend_strength: 'Fuerza General',
-          z_score: 'Z-Score (Desv)',
-          price_vs_bb: 'Posición % Bandas BB',
-          rsi_14: 'RSI (14 días)',
-          rsi_28: 'RSI (28 días)',
-          momentum_1m: 'Momentum 1 Mes',
-          momentum_3m: 'Momentum 3 Meses',
-          momentum_6m: 'Momentum 6 Meses',
-          volume_momentum: 'Fuerza Volumen',
-          historical_volatility: 'Volatilidad Histórica',
-          volatility_regime: 'Régimen Volat',
-          volatility_z_score: 'Z-Score Volatilidad',
-          atr_ratio: 'Ratio Varianza (ATR)',
-          hurst_exponent: 'Exponente Hurst',
-          skewness: 'Asimetría (Skew)',
-          kurtosis: 'Curtosis',
-        };
-        rows.push(
-          <div key="tech-analysis" style={{ marginTop: 6 }}>
-            <strong>Análisis Técnico Detallado:</strong>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', marginTop: '6px' }}>
-              {[
-                { key: 'trend_following', title: '📈 Seguimiento de Tendencia' },
-                { key: 'mean_reversion', title: '🔄 Reversión a la Media' },
-                { key: 'momentum', title: '⚡ Momentum' },
-                { key: 'volatility', title: '📊 Volatilidad' },
-                { key: 'statistical_arbitrage', title: '📐 Arbitraje Estadístico' },
-              ].map(sec => {
-                const detail = reasoning[sec.key];
-                if (!detail) return null;
-                const secSig = detail.signal;
-                const icon = secSig === 'bullish' ? '🟢' : secSig === 'bearish' ? '🔴' : '⚪';
-                const sigText = secSig === 'bullish' ? 'Alcista' : secSig === 'bearish' ? 'Bajista' : 'Neutral';
-                return (
-                  <div key={sec.key} style={{ ...COL_SUNKEN, padding: '4px 6px' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: detail.metrics ? 4 : 0 }}>
-                      <strong>{sec.title}</strong>
-                      <span style={{ fontWeight: 'bold' }}>{icon} {sigText} ({Math.round(detail.confidence || 0)}%)</span>
-                    </div>
-                    {detail.metrics && (
-                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '2px 12px', fontSize: '0.85em', color: '#111' }}>
-                        {Object.entries(detail.metrics).map(([mKey, mVal]) => (
-                           <span key={mKey}>
-                             <span style={{color: '#666', marginRight: 2}}>{METRIC_LABELS[mKey] || mKey.replace(/_/g, ' ')}:</span>
-                             {typeof mVal === 'number' ? (Number.isInteger(mVal) ? mVal : (mVal as number).toFixed(2)) : String(mVal)}
-                           </span>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
+        if ('trend_following' in reasoning) {
+          rows.push(<TechnicalDetail key="tech-detail" reasoning={reasoning} />);
+        } else if ('insider_trading' in reasoning) {
+          rows.push(<SentimentDetail key="sent-detail" reasoning={reasoning} />);
+        } else if ('dcf_analysis' in reasoning || 'owner_earnings_analysis' in reasoning || 'ev_ebitda_analysis' in reasoning || 'residual_income_analysis' in reasoning) {
+          rows.push(<ValuationDetail key="val-detail" reasoning={reasoning} />);
+        } else if ('historical_growth' in reasoning || 'growth_valuation' in reasoning) {
+          rows.push(<GrowthDetail key="growth-detail" reasoning={reasoning} />);
+        } else if ('profitability_signal' in reasoning || 'financial_health_signal' in reasoning) {
+          rows.push(<FundamentalsDetail key="fundamentals-detail" reasoning={reasoning} />);
+        } else {
+          // Si es un objeto pero no es ninguno de los analistas conocidos, imprimimos como JSON formateado
+          rows.push(
+            <div key="json-fallback" style={{ marginTop: 4 }}>
+              <strong>Detalles adicionales:</strong>
+              <pre style={{ margin: '4px 0 0 0', whiteSpace: 'pre-wrap', fontSize: '0.85em', color: '#333' }}>
+                {JSON.stringify(reasoning, null, 2)}
+              </pre>
             </div>
-          </div>
-        );
+          );
+        }
       } else if (reasoning && typeof reasoning === 'string') {
         rows.push(<div key="reasoning" style={{ marginTop: 4 }}><strong>Resumen:</strong> {reasoning}</div>);
       }
