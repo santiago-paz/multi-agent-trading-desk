@@ -2,8 +2,17 @@ import React from 'react';
 import { COLOR_POSITIVE, COLOR_NEGATIVE, COLOR_SECONDARY } from '@/lib/theme/win98';
 import { LogStatus } from '../types';
 
+const DOT: React.CSSProperties = {
+  display: 'inline-block',
+  width: 6,
+  height: 6,
+  borderRadius: '50%',
+  flexShrink: 0,
+  alignSelf: 'center',
+};
+
 export function LogIcon({ status }: { status: LogStatus }) {
-  if (status === 'running') return <span style={{ color: COLOR_SECONDARY }}>&#9658;</span>;
-  if (status === 'ok')      return <span style={{ color: COLOR_POSITIVE }}>&#9632;</span>;
-  return                           <span style={{ color: COLOR_NEGATIVE }}>&#10005;</span>;
+  if (status === 'running') return <span style={{ ...DOT, background: COLOR_SECONDARY }} />;
+  if (status === 'ok')      return <span style={{ ...DOT, background: COLOR_POSITIVE }} />;
+  return                           <span style={{ ...DOT, background: COLOR_NEGATIVE }} />;
 }

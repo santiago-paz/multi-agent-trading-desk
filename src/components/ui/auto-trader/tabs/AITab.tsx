@@ -1,8 +1,7 @@
 import React, { useRef, useEffect } from 'react';
 import { FONT, COL_HEADER_BASE, COL_RAISED, CELL, CELL_RIGHT, COLOR_POSITIVE, COLOR_NEGATIVE, COLOR_SECONDARY } from '@/lib/theme/win98';
 import { LogEntry, Phase, AgentSignal, Decision } from '../types';
-import { AgentDetail } from '../components/AgentDetail';
-import { LogIcon } from '../components/LogIcon';
+import { TickerAccordion } from '../components/TickerAccordion';
 import { fmtARS2 } from '../utils';
 
 interface AITabProps {
@@ -55,21 +54,7 @@ export function AITab({
                     autoScrollRef.current = isNearBottom;
                   }}
                 >
-                  {logs.map(l => (
-                    <div key={l.id} style={{ ...FONT, display: 'flex', gap: 4, lineHeight: '16px' }}>
-                      <LogIcon status={l.status} />
-                      {l.agent ? (
-                        <span style={{ display: 'block', paddingTop: 4 }}>
-                          <strong style={{ color: '#000080' }}>{l.agent.replace(/_/g, ' ')}</strong>
-                          {l.ticker && <span style={{ color: '#800000', fontWeight: 'bold' }}> [{l.ticker}]</span>}
-                          <span>:</span>
-                          <AgentDetail detail={l.detail} ticker={l.ticker} agent={l.agent} status={l.status} />
-                        </span>
-                      ) : (
-                        <span>{l.text}</span>
-                      )}
-                    </div>
-                  ))}
+                  <TickerAccordion logs={logs} />
                 </div>
               </fieldset>
             )}
