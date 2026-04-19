@@ -15,24 +15,28 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: {
-    default: "Schmid Meier Hedge Fund",
-    template: "%s | Schmid Meier Hedge Fund",
+    default: "CEDEARs Fund",
+    template: "%s | CEDEARs Fund",
+  },
+  icons: {
+    icon: "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💸</text></svg>",
   },
   description:
-    "Plataforma de gestión de portafolio e inversiones con análisis impulsado por IA, seguimiento en tiempo real y trading inteligente.",
+    "Plataforma de gestión de portafolio e inversiones en CEDEARs con análisis impulsado por IA, seguimiento en tiempo real y trading inteligente.",
   keywords: [
+    "cedears",
     "hedge fund",
     "inversiones",
     "portafolio",
-    "trading",
+    "trading algorítmico",
     "finanzas",
     "InvertirOnline",
     "inteligencia artificial",
     "análisis de mercado",
     "Argentina",
   ],
-  authors: [{ name: "Schmid Meier" }],
-  creator: "Schmid Meier",
+  authors: [{ name: "CEDEARs Fund" }],
+  creator: "CEDEARs Fund",
   robots: {
     index: false,
     follow: false,
@@ -40,16 +44,16 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     locale: "es_AR",
-    title: "Schmid Meier Hedge Fund",
+    title: "CEDEARs Fund",
     description:
-      "Plataforma de gestión de portafolio e inversiones con análisis impulsado por IA.",
-    siteName: "Schmid Meier Hedge Fund",
+      "Plataforma de gestión de portafolio e inversiones en CEDEARs con análisis impulsado por IA.",
+    siteName: "CEDEARs Fund",
   },
   twitter: {
     card: "summary",
-    title: "Schmid Meier Hedge Fund",
+    title: "CEDEARs Fund",
     description:
-      "Plataforma de gestión de portafolio e inversiones con análisis impulsado por IA.",
+      "Plataforma de gestión de portafolio e inversiones en CEDEARs con análisis impulsado por IA.",
   },
 };
 
