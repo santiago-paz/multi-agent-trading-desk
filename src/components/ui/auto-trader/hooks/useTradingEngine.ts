@@ -1,9 +1,10 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
-import { LogEntry, LogStatus, Phase, OrderResult, AgentSignal, Decision } from '../types';
+import { LogEntry, LogStatus, Phase, OrderResult, AgentSignal, Decision, HistoricalRun } from '../types';
 import { computeRebalancePlan, RebalancePlan } from '@/lib/trading/rebalance-engine';
 import { placeOrder } from '@/app/trading/actions';
 import { parseSSEChunk, remapToIol, fmtARS } from '../utils';
 import { COMMISSION_RATE } from '@/lib/trading/quick-trade';
+import { useHistoryStore } from '@/lib/store/history-store';
 
 const API_URL = process.env.NEXT_PUBLIC_AI_HEDGE_FUND_API_URL || 'http://localhost:8000';
 
@@ -42,6 +43,7 @@ export function useTradingEngine({
   const [orderResults, setOrderResults] = useState<OrderResult[]>([]);
 
   const abortRef = useRef<AbortController | null>(null);
+  const currentRunIdRef = useRef<string | null>(null);
 
   useEffect(() => () => { abortRef.current?.abort(); }, []);
 
@@ -53,7 +55,7 @@ export function useTradingEngine({
     setLogs(prev => prev.map(l => l.id === id ? { ...l, text, status, agent, ticker, detail } : l));
   }, []);
 
-  async function handleAnalyze(setActiveTab: (tab: 'config' | 'ai' | 'plan') => void) {
+  async function handleAnalyze(setActiveTab: (tab: 'config' | 'ai' | 'plan' | 'history') => void) {
     if (selectedAgents.size === 0 || fmpTickers.length === 0) return;
 
     abortRef.current?.abort();
@@ -158,6 +160,30 @@ export function useTradingEngine({
           commissionRate: COMMISSION_RATE,
         });
         setPlan(rebalancePlan);
+
+        // Save historical run
+        const runId = `run-${Date.now()}`;
+        currentRunIdRef.current = runId;
+        const historicalRun: HistoricalRun = {
+          id: runId,
+          timestamp: Date.now(),
+          agentKeys: agentKeys,
+          tickers: fmpTickers,
+          analystSignals: remappedSignals,
+          decisions: iolDecisions,
+          plan: {
+            sells: rebalancePlan.sells,
+            buys: rebalancePlan.buys,
+            totalSellVolume: rebalancePlan.totalSellVolume,
+            totalBuyVolume: rebalancePlan.totalBuyVolume,
+            estimatedSellProceeds: rebalancePlan.estimatedSellProceeds,
+            warnings: rebalancePlan.warnings,
+          },
+          executed: false,
+          orderResults: [],
+          snapshot: { cashArs, holdings: { ...holdings }, dailyLimit },
+        };
+        useHistoryStore.getState().addRun(historicalRun);
 
         const nSells = rebalancePlan.sells.length;
         const nBuys = rebalancePlan.buys.length;
@@ -291,6 +317,14 @@ export function useTradingEngine({
     }
 
     setPhase('done');
+
+    // Update historical run with execution results
+    if (currentRunIdRef.current) {
+      useHistoryStore.getState().updateRun(currentRunIdRef.current, {
+        executed: true,
+        orderResults: results,
+      });
+    }
   }
 
   function abortEngine() {

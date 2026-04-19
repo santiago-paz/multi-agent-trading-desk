@@ -33,3 +33,38 @@ export interface OrderResult {
 }
 
 export type Phase = 'idle' | 'loading' | 'analyzing' | 'planned' | 'confirming' | 'executing' | 'done';
+
+export interface HistoricalOrder {
+  ticker: string;
+  side: string;
+  quantity: number;
+  priceArs: number;
+  volumeArs: number;
+  estimatedCostArs: number;
+  reasoning: string;
+  confidence: number;
+}
+
+export interface HistoricalRun {
+  id: string;
+  timestamp: number;
+  agentKeys: string[];
+  tickers: string[];
+  analystSignals: Record<string, Record<string, AgentSignal>>;
+  decisions: Record<string, Decision>;
+  plan: {
+    sells: HistoricalOrder[];
+    buys: HistoricalOrder[];
+    totalSellVolume: number;
+    totalBuyVolume: number;
+    estimatedSellProceeds: number;
+    warnings: string[];
+  };
+  executed: boolean;
+  orderResults: OrderResult[];
+  snapshot: {
+    cashArs: number;
+    holdings: Record<string, number>;
+    dailyLimit: number;
+  };
+}

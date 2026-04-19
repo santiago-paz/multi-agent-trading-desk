@@ -40,6 +40,10 @@ export function useAgents() {
     setSelectedAgents(new Set());
   }, []);
 
+  const setAgentsByKeys = useCallback((keys: string[]) => {
+    setSelectedAgents(new Set(keys));
+  }, []);
+
   return {
     agents,
     selectedAgents,
@@ -47,6 +51,7 @@ export function useAgents() {
     toggleAgent,
     selectAllAgents,
     selectNoAgents,
+    setAgentsByKeys,
     apiUrl: API_URL,
   };
 }

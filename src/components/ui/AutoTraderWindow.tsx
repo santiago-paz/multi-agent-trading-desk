@@ -8,10 +8,11 @@ import { useTradingEngine } from './auto-trader/hooks/useTradingEngine';
 import { ConfigTab } from './auto-trader/tabs/ConfigTab';
 import { AITab } from './auto-trader/tabs/AITab';
 import { PlanTab } from './auto-trader/tabs/PlanTab';
+import { HistoryTab } from './auto-trader/tabs/HistoryTab';
 import { COMMISSION_RATE } from '@/lib/trading/quick-trade';
 
 export function AutoTraderWindow() {
-  const [activeTab, setActiveTab] = useState<'config' | 'ai' | 'plan'>('config');
+  const [activeTab, setActiveTab] = useState<'config' | 'ai' | 'plan' | 'history'>('config');
   const [dailyLimit, setDailyLimit] = useState(100000);
 
   const portfolio = usePortfolio();
@@ -59,6 +60,9 @@ export function AutoTraderWindow() {
         <li role="tab" aria-selected={activeTab === 'plan'}>
           <a href="#plan" onClick={(e) => { e.preventDefault(); setActiveTab('plan'); }}>3. Plan de Trading</a>
         </li>
+        <li role="tab" aria-selected={activeTab === 'history'}>
+          <a href="#history" onClick={(e) => { e.preventDefault(); setActiveTab('history'); }}>4. Historial</a>
+        </li>
       </menu>
 
       <div className="window" role="tabpanel" style={{ flex: 1, display: 'flex', flexDirection: 'column', marginBottom: 12, minHeight: 0, marginTop: '-1px' }}>
@@ -105,11 +109,22 @@ export function AutoTraderWindow() {
             />
           )}
 
+          {activeTab === 'history' && (
+            <HistoryTab
+              isAnalyzing={isAnalyzing}
+              onRerun={(agentKeys) => {
+                agents.setAgentsByKeys(agentKeys);
+                setActiveTab('config');
+              }}
+            />
+          )}
+
           {activeTab === 'plan' && (
             <PlanTab
               plan={engine.plan}
               phase={engine.phase}
               dailyLimit={dailyLimit}
+              cashArs={portfolio.cashArs}
               orderResults={engine.orderResults}
               handleExecuteOrders={engine.handleExecuteOrders}
               setPhase={engine.setPhase}
