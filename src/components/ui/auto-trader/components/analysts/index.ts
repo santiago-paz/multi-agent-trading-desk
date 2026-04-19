@@ -7,3 +7,4 @@ export { WarrenBuffettDetail } from './WarrenBuffettDetail';
 export { StanleyDruckenmillerDetail } from './StanleyDruckenmillerDetail';
 export { RakeshJhunjhunwalaDetail } from './RakeshJhunjhunwalaDetail';
 export { PhilFisherDetail } from './PhilFisherDetail';
+export { PeterLynchDetail } from './PeterLynchDetail';
