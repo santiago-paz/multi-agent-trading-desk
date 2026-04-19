@@ -2,19 +2,21 @@ import React from 'react';
 import { FONT, COL_HEADER_BASE, COL_RAISED, CELL, CELL_RIGHT } from '@/lib/theme/win98';
 import { RebalanceOrder } from '@/lib/trading/rebalance-engine';
 import { fmtARS, fmtARS2 } from '../utils';
+import { useAutoTraderT } from '@/lib/i18n';
 
 export function OrderTable({ orders }: { orders: RebalanceOrder[] }) {
+  const t = useAutoTraderT();
   return (
     <div className="sunken-panel win98-scrollbar" style={{ flex: 1, overflow: 'auto', margin: 0, minHeight: 0 }}>
       <table style={{ ...FONT, width: '100%', borderCollapse: 'collapse', borderSpacing: 0 }}>
         <thead>
           <tr>
-            <th style={{ ...COL_HEADER_BASE, ...COL_RAISED, textAlign: 'left', position: 'sticky', top: 0, zIndex: 1 }}>Ticker</th>
-            <th style={{ ...COL_HEADER_BASE, ...COL_RAISED, textAlign: 'right', position: 'sticky', top: 0, zIndex: 1 }}>Cant</th>
-            <th style={{ ...COL_HEADER_BASE, ...COL_RAISED, textAlign: 'right', position: 'sticky', top: 0, zIndex: 1 }}>Precio</th>
-            <th style={{ ...COL_HEADER_BASE, ...COL_RAISED, textAlign: 'right', position: 'sticky', top: 0, zIndex: 1 }}>Volumen</th>
-            <th style={{ ...COL_HEADER_BASE, ...COL_RAISED, textAlign: 'right', position: 'sticky', top: 0, zIndex: 1 }}>Conf.</th>
-            <th style={{ ...COL_HEADER_BASE, ...COL_RAISED, textAlign: 'left', position: 'sticky', top: 0, zIndex: 1 }}>Razón</th>
+            <th style={{ ...COL_HEADER_BASE, ...COL_RAISED, textAlign: 'left', position: 'sticky', top: 0, zIndex: 1 }}>{t('col.ticker')}</th>
+            <th style={{ ...COL_HEADER_BASE, ...COL_RAISED, textAlign: 'right', position: 'sticky', top: 0, zIndex: 1 }}>{t('col.qty')}</th>
+            <th style={{ ...COL_HEADER_BASE, ...COL_RAISED, textAlign: 'right', position: 'sticky', top: 0, zIndex: 1 }}>{t('col.price')}</th>
+            <th style={{ ...COL_HEADER_BASE, ...COL_RAISED, textAlign: 'right', position: 'sticky', top: 0, zIndex: 1 }}>{t('col.volume')}</th>
+            <th style={{ ...COL_HEADER_BASE, ...COL_RAISED, textAlign: 'right', position: 'sticky', top: 0, zIndex: 1 }}>{t('col.confidence')}</th>
+            <th style={{ ...COL_HEADER_BASE, ...COL_RAISED, textAlign: 'left', position: 'sticky', top: 0, zIndex: 1 }}>{t('col.reason')}</th>
           </tr>
         </thead>
         <tbody>

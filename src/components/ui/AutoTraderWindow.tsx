@@ -11,12 +11,14 @@ import { PlanTab } from './auto-trader/tabs/PlanTab';
 import { HistoryTab } from './auto-trader/tabs/HistoryTab';
 import { COMMISSION_RATE } from '@/lib/trading/quick-trade';
 import { DEFAULT_MODEL, type AIModelId } from './auto-trader/market-hours';
+import { useAutoTraderT } from '@/lib/i18n';
 
 export function AutoTraderWindow() {
   const [activeTab, setActiveTab] = useState<'config' | 'ai' | 'plan' | 'history'>('config');
   const [dailyLimit, setDailyLimit] = useState(100000);
   const [modelName, setModelName] = useState<AIModelId>(DEFAULT_MODEL);
 
+  const t = useAutoTraderT();
   const portfolio = usePortfolio();
   const agents = useAgents();
 
@@ -40,31 +42,31 @@ export function AutoTraderWindow() {
   const hasOrders = engine.plan && (engine.plan.sells.length > 0 || engine.plan.buys.length > 0);
 
   const statusText = isAnalyzing
-    ? (engine.logs.findLast(l => l.status === 'running')?.text ?? 'Analizando...').slice(0, 60)
+    ? (engine.logs.findLast(l => l.status === 'running')?.text ?? t('status.analyzing')).slice(0, 60)
     : engine.phase === 'planned'
-      ? `Plan: ${engine.plan?.sells.length ?? 0} venta(s), ${engine.plan?.buys.length ?? 0} compra(s)`
+      ? t('status.plan', { sells: engine.plan?.sells.length ?? 0, buys: engine.plan?.buys.length ?? 0 })
       : engine.phase === 'executing'
-        ? 'Ejecutando órdenes...'
+        ? t('status.executing')
         : engine.phase === 'done'
-          ? `${engine.orderResults.length} orden(es) ejecutada(s)`
+          ? t('status.done', { count: engine.orderResults.length })
           : isLoading
-            ? 'Cargando...'
-            : 'Listo';
+            ? t('status.loading')
+            : t('status.ready');
 
   return (
     <div style={{ ...WINDOW_CONTAINER, padding: '6px 6px 0 6px', boxSizing: 'border-box' }}>
       <menu role="tablist">
         <li role="tab" aria-selected={activeTab === 'config'}>
-          <a href="#config" onClick={(e) => { e.preventDefault(); setActiveTab('config'); }}>1. Configuración</a>
+          <a href="#config" onClick={(e) => { e.preventDefault(); setActiveTab('config'); }}>{t('tabs.config')}</a>
         </li>
         <li role="tab" aria-selected={activeTab === 'ai'}>
-          <a href="#ai" onClick={(e) => { e.preventDefault(); setActiveTab('ai'); }}>2. Inteligencia AI</a>
+          <a href="#ai" onClick={(e) => { e.preventDefault(); setActiveTab('ai'); }}>{t('tabs.ai')}</a>
         </li>
         <li role="tab" aria-selected={activeTab === 'plan'}>
-          <a href="#plan" onClick={(e) => { e.preventDefault(); setActiveTab('plan'); }}>3. Plan de Trading</a>
+          <a href="#plan" onClick={(e) => { e.preventDefault(); setActiveTab('plan'); }}>{t('tabs.plan')}</a>
         </li>
         <li role="tab" aria-selected={activeTab === 'history'}>
-          <a href="#history" onClick={(e) => { e.preventDefault(); setActiveTab('history'); }}>4. Historial</a>
+          <a href="#history" onClick={(e) => { e.preventDefault(); setActiveTab('history'); }}>{t('tabs.history')}</a>
         </li>
       </menu>
 

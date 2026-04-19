@@ -16,6 +16,7 @@ import {
   WINDOW_CONTAINER, SCROLLABLE_BODY, REFRESH_FOOTER, STATUS_BAR_STYLE,
   COLOR_POSITIVE, COLOR_NEGATIVE,
 } from '@/lib/theme/win98';
+import { usePortfolioT } from '@/lib/i18n';
 
 /* ─── Component ──────────────────────────────────────────────────────────── */
 export const AccountData: React.FC<AccountDataProps> = ({
@@ -24,8 +25,9 @@ export const AccountData: React.FC<AccountDataProps> = ({
   isLoading,
   onRefresh,
 }) => {
+  const t = usePortfolioT();
   const { mepRate, fetchMepRate } = useMepStore();
-  
+
   const handleRefresh = () => {
     onRefresh();
     fetchMepRate();
@@ -36,18 +38,18 @@ export const AccountData: React.FC<AccountDataProps> = ({
       <div className="win98-scrollbar" style={SCROLLABLE_BODY}>
         {isLoading && !perfil && !estadoCuenta ? (
           <p style={{ ...FONT, margin: 0, padding: '4px' }}>
-            Cargando datos de la cuenta...
+            {t('account.loading')}
           </p>
         ) : (
           <>
             {/* ─── Información del Titular ─── */}
             <fieldset>
-              <legend>Información del titular</legend>
+              <legend>{t('account.holderTitle')}</legend>
 
               {perfil ? (
                 <>
                   <div className="field-row" style={{ marginBottom: '2px' }}>
-                    <label style={LABEL}>Nombre:</label>
+                    <label style={LABEL}>{t('account.name')}</label>
                     <input
                       type="text"
                       readOnly
@@ -56,7 +58,7 @@ export const AccountData: React.FC<AccountDataProps> = ({
                     />
                   </div>
                   <div className="field-row" style={{ marginBottom: '2px' }}>
-                    <label style={LABEL}>Nro. Cuenta:</label>
+                    <label style={LABEL}>{t('account.accountNumber')}</label>
                     <input
                       type="text"
                       readOnly
@@ -65,7 +67,7 @@ export const AccountData: React.FC<AccountDataProps> = ({
                     />
                   </div>
                   <div className="field-row" style={{ marginBottom: '2px' }}>
-                    <label style={LABEL}>Email:</label>
+                    <label style={LABEL}>{t('account.email')}</label>
                     <input
                       type="text"
                       readOnly
@@ -74,7 +76,7 @@ export const AccountData: React.FC<AccountDataProps> = ({
                     />
                   </div>
                   <div className="field-row">
-                    <label style={LABEL}>Perfil:</label>
+                    <label style={LABEL}>{t('account.investorProfile')}</label>
                     <input
                       type="text"
                       readOnly
@@ -84,13 +86,13 @@ export const AccountData: React.FC<AccountDataProps> = ({
                   </div>
                 </>
               ) : (
-                <p style={{ ...FONT, margin: 0 }}>No se pudo cargar el perfil.</p>
+                <p style={{ ...FONT, margin: 0 }}>{t('account.profileError')}</p>
               )}
             </fieldset>
 
             {/* ─── Estado del Portfolio ─── */}
             <fieldset style={{ marginTop: '6px' }}>
-              <legend>Estado del portfolio</legend>
+              <legend>{t('account.stateTitle')}</legend>
 
               {estadoCuenta ? (
                 estadoCuenta.cuentas.map((cuenta, index) => {
@@ -104,7 +106,7 @@ export const AccountData: React.FC<AccountDataProps> = ({
                   <React.Fragment key={index}>
                     {index > 0 && <hr style={HR98} />}
                     <div className="field-row" style={{ marginBottom: '2px' }}>
-                      <label style={LABEL}>Cuenta:</label>
+                      <label style={LABEL}>{t('account.accountLabel')}</label>
                       <input
                         type="text"
                         readOnly
@@ -119,7 +121,7 @@ export const AccountData: React.FC<AccountDataProps> = ({
                       />
                     </div>
                     <div className="field-row" style={{ marginBottom: '2px' }}>
-                      <label style={LABEL}>Disponible:</label>
+                      <label style={LABEL}>{t('account.available')}</label>
                       <input
                         type="text"
                         readOnly
@@ -133,7 +135,7 @@ export const AccountData: React.FC<AccountDataProps> = ({
                       />
                     </div>
                     <div className="field-row" style={{ marginBottom: '2px' }}>
-                      <label style={LABEL}>Comprometido:</label>
+                      <label style={LABEL}>{t('account.committed')}</label>
                       <input
                         type="text"
                         readOnly
@@ -147,7 +149,7 @@ export const AccountData: React.FC<AccountDataProps> = ({
                       />
                     </div>
                     <div className="field-row" style={{ marginBottom: '2px' }}>
-                      <label style={LABEL}>Títulos Valor.:</label>
+                      <label style={LABEL}>{t('account.securitiesValued')}</label>
                       <input
                         type="text"
                         readOnly
@@ -156,7 +158,7 @@ export const AccountData: React.FC<AccountDataProps> = ({
                       />
                     </div>
                     <div className="field-row" style={{ marginBottom: '2px' }}>
-                      <label style={LABEL}>Total:</label>
+                      <label style={LABEL}>{t('account.total')}</label>
                       <input
                         type="text"
                         readOnly
@@ -166,7 +168,7 @@ export const AccountData: React.FC<AccountDataProps> = ({
                     </div>
                     {saldoInmediato && (
                       <div className="field-row" style={{ marginBottom: '2px' }}>
-                        <label style={LABEL}>CI (T+0):</label>
+                        <label style={LABEL}>{t('account.immediate')}</label>
                         <input
                           type="text"
                           readOnly
@@ -177,7 +179,7 @@ export const AccountData: React.FC<AccountDataProps> = ({
                     )}
                     {saldo24 && (
                       <div className="field-row" style={{ marginBottom: '2px' }}>
-                        <label style={LABEL}>24hs (T+1):</label>
+                        <label style={LABEL}>{t('account.24h')}</label>
                         <input
                           type="text"
                           readOnly
@@ -188,7 +190,7 @@ export const AccountData: React.FC<AccountDataProps> = ({
                     )}
                     {saldo48 && (
                       <div className="field-row">
-                        <label style={LABEL}>48hs (T+2):</label>
+                        <label style={LABEL}>{t('account.48h')}</label>
                         <input
                           type="text"
                           readOnly
@@ -198,7 +200,7 @@ export const AccountData: React.FC<AccountDataProps> = ({
                       </div>
                     )}
                     <div className="field-row" style={{ marginTop: '2px' }}>
-                      <label style={LABEL}>Estado:</label>
+                      <label style={LABEL}>{t('account.status')}</label>
                       <input
                         type="text"
                         readOnly
@@ -210,18 +212,18 @@ export const AccountData: React.FC<AccountDataProps> = ({
                   );
                 })
               ) : (
-                <p style={{ ...FONT, margin: 0 }}>No se pudo cargar el estado de cuenta.</p>
+                <p style={{ ...FONT, margin: 0 }}>{t('account.stateError')}</p>
               )}
             </fieldset>
 
             {/* ─── Total en Pesos + Estadísticas ─── */}
             <fieldset style={{ marginTop: '6px' }}>
-              <legend>Resumen</legend>
+              <legend>{t('account.summaryTitle')}</legend>
 
               {estadoCuenta ? (
                 <>
                   <div className="field-row" style={{ marginBottom: '4px' }}>
-                    <label style={LABEL}>Total (USD):</label>
+                    <label style={LABEL}>{t('account.totalUSD')}</label>
                     <input
                       type="text"
                       readOnly
@@ -249,9 +251,9 @@ export const AccountData: React.FC<AccountDataProps> = ({
                       >
                         <thead>
                           <tr>
-                            <th style={{ ...COL_HEADER, position: 'sticky', top: 0, zIndex: 1 }}>Período</th>
-                            <th style={{ ...COL_HEADER_RIGHT, position: 'sticky', top: 0, zIndex: 1 }}>Operaciones</th>
-                            <th style={{ ...COL_HEADER_RIGHT, position: 'sticky', top: 0, zIndex: 1 }}>Volumen</th>
+                            <th style={{ ...COL_HEADER, position: 'sticky', top: 0, zIndex: 1 }}>{t('col.period')}</th>
+                            <th style={{ ...COL_HEADER_RIGHT, position: 'sticky', top: 0, zIndex: 1 }}>{t('col.operations')}</th>
+                            <th style={{ ...COL_HEADER_RIGHT, position: 'sticky', top: 0, zIndex: 1 }}>{t('col.volume')}</th>
                           </tr>
                         </thead>
                         <tbody>
@@ -275,7 +277,7 @@ export const AccountData: React.FC<AccountDataProps> = ({
                   ) : null}
                 </>
               ) : (
-                <p style={{ ...FONT, margin: 0 }}>Sin datos.</p>
+                <p style={{ ...FONT, margin: 0 }}>{t('account.noData')}</p>
               )}
             </fieldset>
           </>
@@ -285,16 +287,16 @@ export const AccountData: React.FC<AccountDataProps> = ({
       {/* ── Botón Actualizar ── */}
       <div style={REFRESH_FOOTER}>
         <button onClick={handleRefresh} disabled={isLoading}>
-          {isLoading ? 'Actualizando...' : 'Actualizar'}
+          {isLoading ? t('footer.updating') : t('footer.update')}
         </button>
       </div>
 
       {/* ── Status Bar ── */}
       <div className="status-bar" style={STATUS_BAR_STYLE}>
-        <p className="status-bar-field">Listo</p>
+        <p className="status-bar-field">{t('account.ready')}</p>
         <p className="status-bar-field">MEP: ${mepRate.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
         <p className="status-bar-field">
-          {isLoading ? 'Actualizando...' : perfil ? `Cta: ${perfil.numeroCuenta}` : 'Sin sesión'}
+          {isLoading ? t('footer.updating') : perfil ? `${t('account.accountPrefix')} ${perfil.numeroCuenta}` : t('account.noSession')}
         </p>
       </div>
     </div>

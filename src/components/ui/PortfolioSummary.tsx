@@ -19,6 +19,7 @@ import {
   WINDOW_CONTAINER, SCROLLABLE_BODY, REFRESH_FOOTER, STATUS_BAR_STYLE,
   COLOR_POSITIVE, COLOR_NEGATIVE, COLOR_SECONDARY,
 } from '@/lib/theme/win98';
+import { usePortfolioT } from '@/lib/i18n';
 
 interface ColumnDef {
   key: SortKey;
@@ -27,26 +28,14 @@ interface ColumnDef {
   width?: string;
 }
 
-const COLUMNS: ColumnDef[] = [
-  { key: 'simbolo',         label: 'Símbolo',     align: 'left',  width: '60px'  },
-  { key: 'descripcion',     label: 'Descripción', align: 'left'                 },
-  { key: 'cantidad',        label: 'Cant.',        align: 'right', width: '36px'  },
-  { key: 'ultimoPrecio',    label: 'Últ. Precio', align: 'right', width: '65px'  },
-  { key: 'valorizado',      label: 'Valorizado',  align: 'right', width: '75px'  },
-  { key: 'variacionDiaria', label: 'Var %',        align: 'right', width: '50px'  },
-  { key: 'gananciaDinero',  label: 'Ganancia',     align: 'right', width: '65px'  },
-  { key: 'gananciaPorcentaje', label: 'Rend. %', align: 'right', width: '55px' },
-];
-
-const formatAssetType = (type: string) => {
-  if (type === 'Todos') return 'Todos';
-  if (type === 'CEDEARS') return 'CEDEARs';
-  if (type === 'ACCIONES') return 'Acciones';
-  if (type === 'TITULOS PUBLICOS') return 'Bonos';
-  if (type === 'OPCIONES') return 'Opciones';
-  if (type === 'FONDOS COMUNES DE INVERSION') return 'FCIs';
-  if (type === 'OBLIGACIONES NEGOCIABLES') return 'ONs';
-  return type.charAt(0).toUpperCase() + type.slice(1).toLowerCase();
+const ASSET_TYPE_KEYS: Record<string, string> = {
+  'Todos': 'assetType.all',
+  'CEDEARS': 'assetType.cedears',
+  'ACCIONES': 'assetType.stocks',
+  'TITULOS PUBLICOS': 'assetType.bonds',
+  'OPCIONES': 'assetType.options',
+  'FONDOS COMUNES DE INVERSION': 'assetType.mutualFunds',
+  'OBLIGACIONES NEGOCIABLES': 'assetType.corporateBonds',
 };
 
 
@@ -77,6 +66,7 @@ export const PortfolioSummary: React.FC<PortfolioSummaryProps> = ({
   onRefresh,
   onCompanyDetail,
 }) => {
+  const t = usePortfolioT();
   const { mepRate, fetchMepRate } = useMepStore();
   const {
     sortKey,
@@ -96,6 +86,23 @@ export const PortfolioSummary: React.FC<PortfolioSummaryProps> = ({
 
   const [displayCurrency, setDisplayCurrency] = useState<'USD' | 'ARS'>('USD');
   const [activeTab, setActiveTab] = useState<string>('Todos');
+
+  const columns: ColumnDef[] = useMemo(() => [
+    { key: 'simbolo',         label: t('col.symbol'),      align: 'left',  width: '60px'  },
+    { key: 'descripcion',     label: t('col.description'), align: 'left'                 },
+    { key: 'cantidad',        label: t('col.qty'),         align: 'right', width: '36px'  },
+    { key: 'ultimoPrecio',    label: t('col.lastPrice'),   align: 'right', width: '65px'  },
+    { key: 'valorizado',      label: t('col.valued'),      align: 'right', width: '75px'  },
+    { key: 'variacionDiaria', label: t('col.dailyVar'),    align: 'right', width: '50px'  },
+    { key: 'gananciaDinero',  label: t('col.profit'),      align: 'right', width: '65px'  },
+    { key: 'gananciaPorcentaje', label: t('col.yield'),    align: 'right', width: '55px'  },
+  ], [t]);
+
+  const formatAssetType = (type: string) => {
+    const key = ASSET_TYPE_KEYS[type];
+    if (key) return t(key as Parameters<typeof t>[0]);
+    return type.charAt(0).toUpperCase() + type.slice(1).toLowerCase();
+  };
   const [hoveredChartLabel, setHoveredChartLabel] = useState<string | null>(null);
   const [selectedSymbol, setSelectedSymbol] = useState<string | null>(null);
 
@@ -149,14 +156,14 @@ export const PortfolioSummary: React.FC<PortfolioSummaryProps> = ({
 
     if (otherValue > 0) {
       data.push({
-        label: 'Otros',
+        label: t('valuation.others'),
         value: otherValue,
         color: '#808080' // Gray for others
       });
     }
 
     return data;
-  }, [sortedActivos, displayTotal, isUSD, usdPrices, mepRate]);
+  }, [sortedActivos, displayTotal, isUSD, usdPrices, mepRate, t]);
 
   return (
     <div style={WINDOW_CONTAINER}>
@@ -165,20 +172,20 @@ export const PortfolioSummary: React.FC<PortfolioSummaryProps> = ({
         <div style={{ display: 'flex', gap: '8px' }}>
           {/* ─── Resumen de Valuación ─── */}
           <fieldset style={{ flex: '0 0 200px', margin: 0 }}>
-            <legend>Valuación</legend>
+            <legend>{t('valuation.title')}</legend>
             <div className="field-row" style={{ marginBottom: '6px' }}>
-              <label style={LABEL}>Moneda:</label>
-              <select 
-                value={displayCurrency} 
+              <label style={LABEL}>{t('valuation.currency')}</label>
+              <select
+                value={displayCurrency}
                 onChange={(e) => setDisplayCurrency(e.target.value as 'USD' | 'ARS')}
                 style={{ ...FONT, flex: 1 }}
               >
-                <option value="USD">Dólar MEP (U$D)</option>
-                <option value="ARS">Pesos (AR$)</option>
+                <option value="USD">{t('valuation.currencyUSD')}</option>
+                <option value="ARS">{t('valuation.currencyARS')}</option>
               </select>
             </div>
             <div className="field-row" style={{ marginBottom: '2px' }}>
-              <label style={LABEL}>Total:</label>
+              <label style={LABEL}>{t('valuation.total')}</label>
               <input
                 type="text"
                 readOnly
@@ -187,7 +194,7 @@ export const PortfolioSummary: React.FC<PortfolioSummaryProps> = ({
               />
             </div>
             <div className="field-row" style={{ marginBottom: '2px' }}>
-              <label style={LABEL}>Ganancia:</label>
+              <label style={LABEL}>{t('valuation.profit')}</label>
               <input
                 type="text"
                 readOnly
@@ -202,7 +209,7 @@ export const PortfolioSummary: React.FC<PortfolioSummaryProps> = ({
             </div>
             {displayCash > 0 && (
               <div className="field-row" style={{ marginBottom: '2px' }}>
-                <label style={LABEL}>Efectivo:</label>
+                <label style={LABEL}>{t('valuation.cash')}</label>
                 <input
                   type="text"
                   readOnly
@@ -213,7 +220,7 @@ export const PortfolioSummary: React.FC<PortfolioSummaryProps> = ({
             )}
             {displayComprometido > 0 && (
               <div className="field-row">
-                <label style={LABEL}>Comprometido:</label>
+                <label style={LABEL}>{t('valuation.committed')}</label>
                 <input
                   type="text"
                   readOnly
@@ -227,7 +234,7 @@ export const PortfolioSummary: React.FC<PortfolioSummaryProps> = ({
           {/* ─── Gráfico de Distribución ─── */}
           {chartData.length > 0 && (
             <fieldset style={{ flex: 1, margin: 0, display: 'flex', gap: '16px', alignItems: 'center', padding: '12px' }}>
-              <legend>Distribución</legend>
+              <legend>{t('valuation.distribution')}</legend>
               <div style={{ flexShrink: 0 }}>
                 <DonutChart 
                   data={chartData} 
@@ -292,7 +299,7 @@ export const PortfolioSummary: React.FC<PortfolioSummaryProps> = ({
 
         {/* ─── Holdings ListView ─── */}
         <fieldset style={{ marginTop: '6px', flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
-          <legend>Tenencia ({filteredActivos.length} títulos)</legend>
+          <legend>{t('holdings.title', { count: filteredActivos.length })}</legend>
           
           {assetTypes.length > 2 && (
             <menu role="tablist" style={{ marginBottom: 0 }}>
@@ -325,7 +332,7 @@ export const PortfolioSummary: React.FC<PortfolioSummaryProps> = ({
             >
               <thead>
                 <tr>
-                  {COLUMNS.map((col) => {
+                  {columns.map((col) => {
                     const isActive = sortKey === col.key;
                     const arrow = isActive ? (sortDir === 'asc' ? ' ▲' : ' ▼') : '';
                     return (
@@ -435,7 +442,7 @@ export const PortfolioSummary: React.FC<PortfolioSummaryProps> = ({
       {onRefresh && (
         <div style={REFRESH_FOOTER}>
           <button onClick={() => { onRefresh?.(); fetchMepRate(); }} disabled={isLoading}>
-            {isLoading ? 'Actualizando...' : 'Actualizar'}
+            {isLoading ? t('footer.updating') : t('footer.update')}
           </button>
         </div>
       )}
@@ -443,7 +450,7 @@ export const PortfolioSummary: React.FC<PortfolioSummaryProps> = ({
       {/* ── Status Bar ── */}
       <div className="status-bar" style={STATUS_BAR_STYLE}>
         <p className="status-bar-field">
-          {totalActivosEnCartera} títulos en cartera
+          {t('footer.titlesInPortfolio', { count: totalActivosEnCartera })}
         </p>
         <p className="status-bar-field">
           MEP: ${mepRate.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}

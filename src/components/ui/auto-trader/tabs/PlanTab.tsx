@@ -4,6 +4,7 @@ import { Phase, OrderResult } from '../types';
 import { RebalancePlan } from '@/lib/trading/rebalance-engine';
 import { OrderTable } from '../components/OrderTable';
 import { fmtARS, fmtARS2 } from '../utils';
+import { useAutoTraderT } from '@/lib/i18n';
 
 interface PlanTabProps {
   plan: RebalancePlan | null;
@@ -26,23 +27,24 @@ export function PlanTab({
   setPhase,
   hasOrders
 }: PlanTabProps) {
+  const t = useAutoTraderT();
   return (
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0, gap: 8 }}>
       <div className="win98-scrollbar" style={{ flex: 1, padding: 2, overflowY: 'auto', minHeight: 0 }}>
         {!plan && phase !== 'executing' && phase !== 'done' ? (
           <div style={{ ...FONT, padding: 16, textAlign: 'center', color: COLOR_SECONDARY }}>
-            El plan de trading se generará una vez que se complete el análisis AI.
+            {t('plan.empty')}
           </div>
         ) : (
           <>
             {plan && (
               <fieldset style={{ margin: 0 }}>
-                <legend>Plan de Trading</legend>
+                <legend>{t('plan.title')}</legend>
                 <div>
                   {plan.sells.length > 0 && (
                     <>
                       <div style={{ ...FONT, fontWeight: 'bold', color: COLOR_NEGATIVE, margin: '4px 0 2px', flexShrink: 0 }}>
-                        VENTAS
+                        {t('plan.sells')}
                       </div>
                       <OrderTable orders={plan.sells} />
                       <div style={{
@@ -50,11 +52,11 @@ export function PlanTab({
                         background: '#f8f0f0', border: '1px solid #dfdfdf', flexShrink: 0,
                       }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                          <span>Volumen bruto:</span>
+                          <span>{t('plan.grossVolume')}</span>
                           <strong>${fmtARS(plan.totalSellVolume)}</strong>
                         </div>
                         <div style={{ display: 'flex', justifyContent: 'space-between', color: COLOR_SECONDARY }}>
-                          <span>Neto después de comisiones:</span>
+                          <span>{t('plan.netAfterCommissions')}</span>
                           <span>${fmtARS(plan.estimatedSellProceeds)}</span>
                         </div>
                         <div style={{
@@ -63,7 +65,7 @@ export function PlanTab({
                           borderTop: '1px solid #c0c0c0',
                           fontWeight: 'bold',
                         }}>
-                          <span>Saldo después de ventas:</span>
+                          <span>{t('plan.balanceAfterSells')}</span>
                           <span>${fmtARS(cashArs + plan.estimatedSellProceeds)}</span>
                         </div>
                       </div>
@@ -73,7 +75,7 @@ export function PlanTab({
                   {plan.buys.length > 0 && (
                     <>
                       <div style={{ ...FONT, fontWeight: 'bold', color: COLOR_POSITIVE, margin: '4px 0 2px', marginTop: plan.sells.length > 0 ? 8 : 4, flexShrink: 0 }}>
-                        COMPRAS
+                        {t('plan.buys')}
                       </div>
                       <OrderTable orders={plan.buys} />
                       <div style={{
@@ -81,11 +83,11 @@ export function PlanTab({
                         background: '#f0f8f0', border: '1px solid #dfdfdf', flexShrink: 0,
                       }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                          <span>Volumen bruto:</span>
+                          <span>{t('plan.grossVolume')}</span>
                           <strong>${fmtARS(plan.totalBuyVolume)}</strong>
                         </div>
                         <div style={{ display: 'flex', justifyContent: 'space-between', color: COLOR_SECONDARY }}>
-                          <span>Costo total (con comisiones):</span>
+                          <span>{t('plan.totalCost')}</span>
                           <span>${fmtARS(plan.buys.reduce((s, o) => s + o.estimatedCostArs, 0))}</span>
                         </div>
                       </div>
@@ -95,8 +97,8 @@ export function PlanTab({
                   {!hasOrders && (
                     <div style={{ ...FONT, color: COLOR_DISABLED, padding: '8px 0' }}>
                       {plan.warnings.length > 0
-                        ? 'Las recomendaciones del AI no se pueden ejecutar (ver advertencias).'
-                        : 'El AI no recomendó operaciones hoy.'}
+                        ? t('plan.noOrders.warnings')
+                        : t('plan.noOrders.none')}
                     </div>
                   )}
 
@@ -110,18 +112,18 @@ export function PlanTab({
                         display: 'flex', flexDirection: 'column', gap: 1,
                       }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                          <span style={{ color: COLOR_SECONDARY }}>Saldo actual:</span>
+                          <span style={{ color: COLOR_SECONDARY }}>{t('plan.currentBalance')}</span>
                           <span>${fmtARS(cashArs)}</span>
                         </div>
                         {plan.sells.length > 0 && (
                           <div style={{ display: 'flex', justifyContent: 'space-between', color: COLOR_POSITIVE }}>
-                            <span>+ Ventas (neto):</span>
+                            <span>{t('plan.plusSells')}</span>
                             <span>+${fmtARS(plan.estimatedSellProceeds)}</span>
                           </div>
                         )}
                         {plan.buys.length > 0 && (
                           <div style={{ display: 'flex', justifyContent: 'space-between', color: COLOR_NEGATIVE }}>
-                            <span>− Compras (total):</span>
+                            <span>{t('plan.minusBuys')}</span>
                             <span>−${fmtARS(totalBuyCost)}</span>
                           </div>
                         )}
@@ -130,11 +132,11 @@ export function PlanTab({
                           fontWeight: 'bold', marginTop: 2, paddingTop: 2,
                           borderTop: '1px solid #808080',
                         }}>
-                          <span>Saldo final estimado:</span>
+                          <span>{t('plan.estimatedFinal')}</span>
                           <span>${fmtARS(finalCash)}</span>
                         </div>
                         <div style={{ display: 'flex', justifyContent: 'space-between', color: COLOR_SECONDARY, marginTop: 2 }}>
-                          <span>Límite diario restante:</span>
+                          <span>{t('plan.remainingLimit')}</span>
                           <span>${fmtARS(plan.remainingLimit)} / ${fmtARS(dailyLimit)}</span>
                         </div>
                       </div>
@@ -168,32 +170,32 @@ export function PlanTab({
 
             {phase === 'confirming' && plan && (
               <fieldset style={{ margin: '6px 0 0', border: '2px solid #000080' }}>
-                <legend style={{ color: '#000080', fontWeight: 'bold' }}>Confirmar Ejecución</legend>
+                <legend style={{ color: '#000080', fontWeight: 'bold' }}>{t('plan.confirm.title')}</legend>
                 <div style={{ ...FONT, padding: '4px 0' }}>
-                  Se ejecutarán las siguientes órdenes a precio de mercado, plazo 24hs:
+                  {t('plan.confirm.description')}
                 </div>
                 <div className="sunken-panel" style={{ padding: 4, margin: '4px 0' }}>
                   {plan.sells.map(o => (
                     <div key={`sell-${o.ticker}`} style={{ ...FONT, color: COLOR_NEGATIVE }}>
-                      VENDER {o.ticker} x{o.quantity} @ ${fmtARS2(o.priceArs)}
+                      {t('plan.confirm.sell')} {o.ticker} x{o.quantity} @ ${fmtARS2(o.priceArs)}
                     </div>
                   ))}
                   {plan.buys.map(o => (
                     <div key={`buy-${o.ticker}`} style={{ ...FONT, color: COLOR_POSITIVE }}>
-                      COMPRAR {o.ticker} x{o.quantity} @ ${fmtARS2(o.priceArs)}
+                      {t('plan.confirm.buy')} {o.ticker} x{o.quantity} @ ${fmtARS2(o.priceArs)}
                     </div>
                   ))}
                 </div>
                 <div style={{ display: 'flex', gap: 6, marginTop: 4, flexShrink: 0 }}>
-                  <button onClick={handleExecuteOrders}>Confirmar y enviar</button>
-                  <button onClick={() => setPhase('planned')}>Cancelar</button>
+                  <button onClick={handleExecuteOrders}>{t('plan.confirm.submit')}</button>
+                  <button onClick={() => setPhase('planned')}>{t('plan.confirm.cancel')}</button>
                 </div>
               </fieldset>
             )}
 
             {orderResults.length > 0 && (
               <fieldset style={{ margin: '6px 0 0' }}>
-                <legend>Resultados</legend>
+                <legend>{t('plan.results')}</legend>
                 <div className="sunken-panel" style={{ padding: 4, margin: 0 }}>
                   {orderResults.map((r, i) => (
                     <div key={i} style={{ ...FONT, display: 'flex', gap: 4, lineHeight: '16px' }}>
@@ -217,7 +219,7 @@ export function PlanTab({
       {phase === 'planned' && hasOrders && (
         <div style={{ display: 'flex', justifyContent: 'flex-end', flexShrink: 0, paddingTop: 6, borderTop: '1px solid #dfdfdf' }}>
           <button className="default" onClick={() => setPhase('confirming')}>
-            Ejecutar Órdenes
+            {t('plan.execute')}
           </button>
         </div>
       )}

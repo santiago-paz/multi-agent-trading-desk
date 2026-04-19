@@ -303,8 +303,7 @@ export function BacktestingWindow() {
         const data = await res.json();
         const agentList: Agent[] = (data.agents || []).sort((a: Agent, b: Agent) => a.order - b.order);
         setAgents(agentList);
-        const defaults = agentList.slice(0, 3).map(a => a.key);
-        setSelectedAgents(new Set(defaults));
+        setSelectedAgents(new Set());
       } catch (err) {
         console.error('Failed to fetch agents:', err);
       } finally {

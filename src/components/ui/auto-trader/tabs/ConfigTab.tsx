@@ -4,6 +4,7 @@ import { AgentSelector } from '@/components/ui/AgentSelector';
 import { fmtARS, fmtARS2 } from '../utils';
 import { Agent, PortfolioSortKey } from '../types';
 import { AI_MODELS, type AIModelId, isMarketOpen } from '../market-hours';
+import { useAutoTraderT } from '@/lib/i18n';
 
 interface ConfigTabProps {
   cashArs: number;
@@ -62,6 +63,7 @@ export function ConfigTab({
   fmpTickers,
   abortEngine
 }: ConfigTabProps) {
+  const t = useAutoTraderT();
   const [pSortKey, setPSortKey] = useState<PortfolioSortKey>('ticker');
   const [pSortDir, setPSortDir] = useState<'asc' | 'desc'>('asc');
   const marketStatus = useMemo(() => isMarketOpen(), []);
@@ -70,14 +72,14 @@ export function ConfigTab({
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0, gap: 8 }}>
       <div className="win98-scrollbar" style={{ flex: 1, overflowY: 'auto', padding: 2, display: 'flex', flexDirection: 'column', gap: 6 }}>
         <fieldset style={{ margin: 0, flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
-          <legend>Portafolio Actual</legend>
+          <legend>{t('config.portfolio.title')}</legend>
           <div style={{ ...FONT, padding: '2px 0 6px 0', display: 'flex', gap: 16, flexShrink: 0 }}>
             <div>
-              <span>Cash disponible: </span>
+              <span>{t('config.portfolio.cash')}</span>
               <strong>${fmtARS(cashArs)} ARS</strong>
               {comprometidoArs > 0 && (
                 <span style={{ color: COLOR_NEGATIVE, marginLeft: 8 }}>
-                  (Comprometido: ${fmtARS(comprometidoArs)} ARS)
+                  {t('config.portfolio.committed', { amount: `$${fmtARS(comprometidoArs)}` })}
                 </span>
               )}
               <span style={{ color: COLOR_SECONDARY, marginLeft: 8 }}>
@@ -87,7 +89,7 @@ export function ConfigTab({
           </div>
           <div style={{ ...FONT, padding: '2px 0', borderTop: '1px solid #808080', borderBottom: '1px solid #ffffff', marginTop: 4, paddingTop: 4, display: 'flex', gap: 16, flexShrink: 0 }}>
             <div>
-              <span>Total portfolio: </span>
+              <span>{t('config.portfolio.total')}</span>
               <strong>${fmtARS(totalPortfolioArs)} ARS</strong>
               <span style={{ color: COLOR_SECONDARY, marginLeft: 8 }}>
                 (~USD ${fmtARS(totalPortfolioArs / effectiveMep)})
@@ -100,11 +102,11 @@ export function ConfigTab({
                 <thead>
                   <tr>
                     {([
-                      { key: 'ticker' as PortfolioSortKey, label: 'Ticker', align: 'left' as const },
-                      { key: 'qty' as PortfolioSortKey, label: 'Cant', align: 'right' as const },
-                      { key: 'price' as PortfolioSortKey, label: 'Precio', align: 'right' as const },
-                      { key: 'priceUsd' as PortfolioSortKey, label: 'USD', align: 'right' as const },
-                      { key: 'valuation' as PortfolioSortKey, label: 'Valuación', align: 'right' as const },
+                      { key: 'ticker' as PortfolioSortKey, label: t('col.ticker'), align: 'left' as const },
+                      { key: 'qty' as PortfolioSortKey, label: t('col.qty'), align: 'right' as const },
+                      { key: 'price' as PortfolioSortKey, label: t('col.price'), align: 'right' as const },
+                      { key: 'priceUsd' as PortfolioSortKey, label: t('col.usd'), align: 'right' as const },
+                      { key: 'valuation' as PortfolioSortKey, label: t('col.valuation'), align: 'right' as const },
                     ]).map((col) => {
                       const isActive = pSortKey === col.key;
                       const arrow = isActive ? (pSortDir === 'asc' ? ' ▲' : ' ▼') : '';
@@ -167,16 +169,16 @@ export function ConfigTab({
             </div>
           ) : (
             <div style={{ ...FONT, color: portfolioError ? COLOR_NEGATIVE : COLOR_DISABLED, padding: '4px 0' }}>
-              {isLoadingPortfolio ? 'Cargando...' : portfolioError ? portfolioError : 'Sin posiciones en CEDEARs'}
+              {isLoadingPortfolio ? t('config.portfolio.loading') : portfolioError ? portfolioError : t('config.portfolio.empty')}
             </div>
           )}
         </fieldset>
 
         <fieldset style={{ margin: 0, flexShrink: 0 }}>
-          <legend>Configuración</legend>
+          <legend>{t('config.settings.title')}</legend>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, ...FONT, flexWrap: 'wrap' }}>
             <div className="field-row">
-              <label htmlFor="daily-limit">Límite plata nueva:</label>
+              <label htmlFor="daily-limit">{t('config.settings.dailyLimit')}</label>
               <input
                 id="daily-limit"
                 type="number"
@@ -191,12 +193,12 @@ export function ConfigTab({
               (~USD ${fmtARS(dailyLimit / effectiveMep)})
             </span>
             <span style={{ color: COLOR_SECONDARY, marginLeft: 16 }}>
-              Comisión: {(commissionRate * 100).toFixed(1)}% por operación
+              {t('config.settings.commission', { rate: (commissionRate * 100).toFixed(1) })}
             </span>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, ...FONT, marginTop: 4 }}>
             <div className="field-row">
-              <label htmlFor="model-select">Modelo AI:</label>
+              <label htmlFor="model-select">{t('config.settings.model')}</label>
               <select
                 id="model-select"
                 value={modelName}
@@ -222,7 +224,7 @@ export function ConfigTab({
               border: '1px solid #808000',
               color: '#666600',
             }}>
-              Mercado cerrado ({marketStatus.reason}). Los precios de IOL pueden no estar actualizados.
+              {t('config.settings.marketClosed', { reason: marketStatus.reason })}
             </div>
           )}
         </fieldset>
@@ -236,7 +238,7 @@ export function ConfigTab({
             onSelectNone={selectNoAgents}
             isLoading={isLoadingAgents}
             disabled={isAnalyzing}
-            errorText={`No se pudo conectar al servidor AI Hedge Fund (${apiUrl})`}
+            errorText={t('config.agents.error', { url: apiUrl })}
             idPrefix="at-agent"
           />
         </div>
@@ -244,17 +246,17 @@ export function ConfigTab({
 
       <div style={{ display: 'flex', gap: 6, justifyContent: 'flex-end', flexShrink: 0, paddingTop: 6, borderTop: '1px solid #dfdfdf' }}>
         {isAnalyzing && (
-          <button onClick={abortEngine} style={{ ...FONT, minWidth: 75 }}>Cancelar</button>
+          <button onClick={abortEngine} style={{ ...FONT, minWidth: 75 }}>{t('config.actions.cancel')}</button>
         )}
         <button onClick={loadPortfolio} disabled={isAnalyzing}>
-          Recargar Portfolio
+          {t('config.actions.reload')}
         </button>
         <button
           className="default"
           onClick={handleAnalyze}
           disabled={isLoadingPortfolio || isLoadingAgents || isAnalyzing || selectedAgents.size === 0 || fmpTickers.length === 0}
         >
-          {isAnalyzing ? 'Analizando...' : 'Analizar'}
+          {isAnalyzing ? t('config.actions.analyzing') : t('config.actions.analyze')}
         </button>
       </div>
     </div>

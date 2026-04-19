@@ -6,6 +6,7 @@ import {
 import { useHistoryStore } from '@/lib/store/history-store';
 import type { HistoricalRun } from '../types';
 import { fmtARS, fmtARS2 } from '../utils';
+import { useAutoTraderT } from '@/lib/i18n';
 
 interface HistoryTabProps {
   onRerun: (agentKeys: string[]) => void;
@@ -19,6 +20,7 @@ function formatDate(ts: number): string {
 }
 
 function RunDetail({ run }: { run: HistoricalRun }) {
+  const t = useAutoTraderT();
   const [tab, setTab] = useState<'plan' | 'signals'>('plan');
 
   return (
@@ -29,13 +31,13 @@ function RunDetail({ run }: { run: HistoricalRun }) {
           style={tab === 'plan' ? { fontWeight: 'bold' } : undefined}
           onClick={() => setTab('plan')}
         >
-          Plan
+          {t('history.tabs.plan')}
         </button>
         <button
           style={tab === 'signals' ? { fontWeight: 'bold' } : undefined}
           onClick={() => setTab('signals')}
         >
-          Señales
+          {t('history.tabs.signals')}
         </button>
       </div>
 
@@ -45,17 +47,17 @@ function RunDetail({ run }: { run: HistoricalRun }) {
           {run.plan.sells.length > 0 && (
             <div>
               <div style={{ ...FONT, fontWeight: 'bold', color: COLOR_NEGATIVE, marginBottom: 2 }}>
-                VENTAS ({run.plan.sells.length})
+                {t('history.sells.title', { count: run.plan.sells.length })}
               </div>
               <div className="sunken-panel" style={{ margin: 0 }}>
                 <table style={{ ...FONT, width: '100%', borderCollapse: 'collapse' }}>
                   <thead>
                     <tr>
-                      <th style={{ ...COL_HEADER_BASE, ...COL_RAISED, textAlign: 'left' }}>Ticker</th>
-                      <th style={{ ...COL_HEADER_BASE, ...COL_RAISED, textAlign: 'right' }}>Cant</th>
-                      <th style={{ ...COL_HEADER_BASE, ...COL_RAISED, textAlign: 'right' }}>Precio</th>
-                      <th style={{ ...COL_HEADER_BASE, ...COL_RAISED, textAlign: 'right' }}>Conf.</th>
-                      <th style={{ ...COL_HEADER_BASE, ...COL_RAISED, textAlign: 'left' }}>Razón</th>
+                      <th style={{ ...COL_HEADER_BASE, ...COL_RAISED, textAlign: 'left' }}>{t('col.ticker')}</th>
+                      <th style={{ ...COL_HEADER_BASE, ...COL_RAISED, textAlign: 'right' }}>{t('col.qty')}</th>
+                      <th style={{ ...COL_HEADER_BASE, ...COL_RAISED, textAlign: 'right' }}>{t('col.price')}</th>
+                      <th style={{ ...COL_HEADER_BASE, ...COL_RAISED, textAlign: 'right' }}>{t('col.confidence')}</th>
+                      <th style={{ ...COL_HEADER_BASE, ...COL_RAISED, textAlign: 'left' }}>{t('col.reason')}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -74,7 +76,7 @@ function RunDetail({ run }: { run: HistoricalRun }) {
                 </table>
               </div>
               <div style={{ ...FONT, color: COLOR_SECONDARY, marginTop: 2 }}>
-                Vol. bruto: ${fmtARS(run.plan.totalSellVolume)} — Neto: ${fmtARS(run.plan.estimatedSellProceeds)}
+                {t('history.sells.summary', { gross: `$${fmtARS(run.plan.totalSellVolume)}`, net: `$${fmtARS(run.plan.estimatedSellProceeds)}` })}
               </div>
             </div>
           )}
@@ -83,17 +85,17 @@ function RunDetail({ run }: { run: HistoricalRun }) {
           {run.plan.buys.length > 0 && (
             <div>
               <div style={{ ...FONT, fontWeight: 'bold', color: COLOR_POSITIVE, marginBottom: 2 }}>
-                COMPRAS ({run.plan.buys.length})
+                {t('history.buys.title', { count: run.plan.buys.length })}
               </div>
               <div className="sunken-panel" style={{ margin: 0 }}>
                 <table style={{ ...FONT, width: '100%', borderCollapse: 'collapse' }}>
                   <thead>
                     <tr>
-                      <th style={{ ...COL_HEADER_BASE, ...COL_RAISED, textAlign: 'left' }}>Ticker</th>
-                      <th style={{ ...COL_HEADER_BASE, ...COL_RAISED, textAlign: 'right' }}>Cant</th>
-                      <th style={{ ...COL_HEADER_BASE, ...COL_RAISED, textAlign: 'right' }}>Precio</th>
-                      <th style={{ ...COL_HEADER_BASE, ...COL_RAISED, textAlign: 'right' }}>Conf.</th>
-                      <th style={{ ...COL_HEADER_BASE, ...COL_RAISED, textAlign: 'left' }}>Razón</th>
+                      <th style={{ ...COL_HEADER_BASE, ...COL_RAISED, textAlign: 'left' }}>{t('col.ticker')}</th>
+                      <th style={{ ...COL_HEADER_BASE, ...COL_RAISED, textAlign: 'right' }}>{t('col.qty')}</th>
+                      <th style={{ ...COL_HEADER_BASE, ...COL_RAISED, textAlign: 'right' }}>{t('col.price')}</th>
+                      <th style={{ ...COL_HEADER_BASE, ...COL_RAISED, textAlign: 'right' }}>{t('col.confidence')}</th>
+                      <th style={{ ...COL_HEADER_BASE, ...COL_RAISED, textAlign: 'left' }}>{t('col.reason')}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -112,19 +114,19 @@ function RunDetail({ run }: { run: HistoricalRun }) {
                 </table>
               </div>
               <div style={{ ...FONT, color: COLOR_SECONDARY, marginTop: 2 }}>
-                Vol. bruto: ${fmtARS(run.plan.totalBuyVolume)}
+                {t('history.buys.summary', { gross: `$${fmtARS(run.plan.totalBuyVolume)}` })}
               </div>
             </div>
           )}
 
           {run.plan.sells.length === 0 && run.plan.buys.length === 0 && (
-            <div style={{ ...FONT, color: COLOR_SECONDARY }}>Sin operaciones recomendadas.</div>
+            <div style={{ ...FONT, color: COLOR_SECONDARY }}>{t('history.noOps')}</div>
           )}
 
           {/* Execution results */}
           {run.executed && run.orderResults.length > 0 && (
             <div>
-              <div style={{ ...FONT, fontWeight: 'bold', marginBottom: 2 }}>Resultados de ejecución:</div>
+              <div style={{ ...FONT, fontWeight: 'bold', marginBottom: 2 }}>{t('history.executionResults')}</div>
               {run.orderResults.map((r, i) => (
                 <div key={i} style={{ ...FONT, display: 'flex', gap: 4, lineHeight: '16px' }}>
                   <span style={{ color: r.success ? COLOR_POSITIVE : COLOR_NEGATIVE }}>
@@ -145,10 +147,10 @@ function RunDetail({ run }: { run: HistoricalRun }) {
             ...FONT, padding: '3px 6px', marginTop: 2,
             background: '#f8f8f0', border: '1px solid #dfdfdf',
           }}>
-            <div style={{ fontWeight: 'bold', marginBottom: 2 }}>Snapshot del portfolio al momento:</div>
-            <div>Saldo: ${fmtARS(run.snapshot.cashArs)} — Límite diario: ${fmtARS(run.snapshot.dailyLimit)}</div>
+            <div style={{ fontWeight: 'bold', marginBottom: 2 }}>{t('history.snapshot.title')}</div>
+            <div>{t('history.snapshot.balance', { balance: `$${fmtARS(run.snapshot.cashArs)}`, limit: `$${fmtARS(run.snapshot.dailyLimit)}` })}</div>
             <div style={{ color: COLOR_SECONDARY }}>
-              Holdings: {Object.entries(run.snapshot.holdings).map(([t, q]) => `${t}(${q})`).join(', ') || '(vacío)'}
+              {t('history.snapshot.holdings')} {Object.entries(run.snapshot.holdings).map(([tk, q]) => `${tk}(${q})`).join(', ') || t('history.snapshot.empty')}
             </div>
           </div>
 
@@ -171,11 +173,11 @@ function RunDetail({ run }: { run: HistoricalRun }) {
           <table style={{ ...FONT, width: '100%', borderCollapse: 'collapse' }}>
             <thead>
               <tr>
-                <th style={{ ...COL_HEADER_BASE, ...COL_RAISED, textAlign: 'left' }}>Ticker</th>
-                <th style={{ ...COL_HEADER_BASE, ...COL_RAISED, textAlign: 'left' }}>Agente</th>
-                <th style={{ ...COL_HEADER_BASE, ...COL_RAISED, textAlign: 'left' }}>Señal</th>
-                <th style={{ ...COL_HEADER_BASE, ...COL_RAISED, textAlign: 'right' }}>Conf.</th>
-                <th style={{ ...COL_HEADER_BASE, ...COL_RAISED, textAlign: 'left' }}>Decisión</th>
+                <th style={{ ...COL_HEADER_BASE, ...COL_RAISED, textAlign: 'left' }}>{t('col.ticker')}</th>
+                <th style={{ ...COL_HEADER_BASE, ...COL_RAISED, textAlign: 'left' }}>{t('col.agent')}</th>
+                <th style={{ ...COL_HEADER_BASE, ...COL_RAISED, textAlign: 'left' }}>{t('col.signal')}</th>
+                <th style={{ ...COL_HEADER_BASE, ...COL_RAISED, textAlign: 'right' }}>{t('col.confidence')}</th>
+                <th style={{ ...COL_HEADER_BASE, ...COL_RAISED, textAlign: 'left' }}>{t('col.decision')}</th>
               </tr>
             </thead>
             <tbody>
@@ -196,7 +198,7 @@ function RunDetail({ run }: { run: HistoricalRun }) {
                         color: sig.signal === 'bullish' ? COLOR_POSITIVE
                           : sig.signal === 'bearish' ? COLOR_NEGATIVE : COLOR_SECONDARY,
                       }}>
-                        {sig.signal === 'bullish' ? 'Alcista' : sig.signal === 'bearish' ? 'Bajista' : 'Neutral'}
+                        {sig.signal === 'bullish' ? t('history.signals.bullish') : sig.signal === 'bearish' ? t('history.signals.bearish') : t('history.signals.neutral')}
                       </td>
                       <td style={{ ...CELL_RIGHT }}>{sig.confidence}%</td>
                       <td style={{
@@ -219,6 +221,7 @@ function RunDetail({ run }: { run: HistoricalRun }) {
 }
 
 export function HistoryTab({ onRerun, isAnalyzing }: HistoryTabProps) {
+  const t = useAutoTraderT();
   const { runs, deleteRun, clearAll } = useHistoryStore();
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
@@ -227,7 +230,7 @@ export function HistoryTab({ onRerun, isAnalyzing }: HistoryTabProps) {
       <div className="win98-scrollbar" style={{ flex: 1, padding: 2, overflowY: 'auto', minHeight: 0 }}>
         {runs.length === 0 ? (
           <div style={{ ...FONT, padding: 16, textAlign: 'center', color: COLOR_SECONDARY }}>
-            No hay análisis guardados. Los análisis se guardan automáticamente al completarse.
+            {t('history.empty')}
           </div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
@@ -245,28 +248,28 @@ export function HistoryTab({ onRerun, isAnalyzing }: HistoryTabProps) {
                   >
                     <span style={{ ...FONT, fontFamily: 'monospace', width: 12 }}>{isExpanded ? '\u25BC' : '\u25B6'}</span>
                     <div style={{ ...FONT, flex: 1 }}>
-                      <span>{run.agentKeys.length} agente(s), {run.tickers.length} ticker(s)</span>
+                      <span>{t('history.summary', { agents: run.agentKeys.length, tickers: run.tickers.length })}</span>
                       <span style={{ margin: '0 6px' }}>—</span>
                       {nSells > 0 && <span style={{ color: COLOR_NEGATIVE }}>{nSells}V</span>}
                       {nSells > 0 && nBuys > 0 && <span> / </span>}
                       {nBuys > 0 && <span style={{ color: COLOR_POSITIVE }}>{nBuys}C</span>}
-                      {nSells === 0 && nBuys === 0 && <span style={{ color: COLOR_SECONDARY }}>sin ops</span>}
+                      {nSells === 0 && nBuys === 0 && <span style={{ color: COLOR_SECONDARY }}>{t('history.noOpsShort')}</span>}
                       {run.executed && (
                         <span style={{ ...FONT, marginLeft: 6, color: COLOR_POSITIVE, fontWeight: 'bold' }}>
-                          [Ejecutado]
+                          {t('history.executed')}
                         </span>
                       )}
                     </div>
                     <div style={{ display: 'flex', gap: 4 }}>
                       <button
                         disabled={isAnalyzing}
-                        title="Re-ejecutar con portfolio actual"
+                        title={t('history.reanalyzeTitle')}
                         onClick={(e) => { e.stopPropagation(); onRerun(run.agentKeys); }}
                       >
-                        Re-analizar
+                        {t('history.reanalyze')}
                       </button>
                       <button
-                        title="Eliminar"
+                        title={t('history.deleteTitle')}
                         onClick={(e) => { e.stopPropagation(); deleteRun(run.id); }}
                       >
                         X
@@ -289,8 +292,8 @@ export function HistoryTab({ onRerun, isAnalyzing }: HistoryTabProps) {
 
       {runs.length > 0 && (
         <div style={{ display: 'flex', justifyContent: 'flex-end', flexShrink: 0, paddingTop: 6, borderTop: '1px solid #dfdfdf' }}>
-          <button onClick={() => { if (confirm('¿Borrar todo el historial?')) clearAll(); }}>
-            Limpiar historial
+          <button onClick={() => { if (confirm(t('history.confirmClear'))) clearAll(); }}>
+            {t('history.clearAll')}
           </button>
         </div>
       )}

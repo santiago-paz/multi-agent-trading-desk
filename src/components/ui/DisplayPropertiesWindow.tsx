@@ -4,6 +4,7 @@ import React, { useState, useCallback } from 'react';
 import { FONT, WINDOW_CONTAINER } from '@/lib/theme/win98';
 import { useDisplayStore, WALLPAPER_OPTIONS, DisplayMode, SCREENSAVER_OPTIONS } from '@/lib/store/display-store';
 import { ScreenSaverRenderer } from '@/components/screensavers';
+import { useLocale, type Locale } from '@/lib/i18n';
 
 type Tab = 'background' | 'screensaver' | 'appearance' | 'effects' | 'web' | 'settings';
 
@@ -29,9 +30,10 @@ export function DisplayPropertiesWindow({ onClose }: DisplayPropertiesWindowProp
     setScreenSaver, setScreenSaverWait, setScreenSaverText, setIsPasswordProtected
   } = useDisplayStore();
 
+  const { locale, setLocale } = useLocale();
   const [activeTab, setActiveTab] = useState<Tab>('screensaver');
 
-  const baseStateRef = React.useRef({ wallpaper, backgroundColor, displayMode, screenSaver, screenSaverWait, screenSaverText, isPasswordProtected });
+  const baseStateRef = React.useRef({ wallpaper, backgroundColor, displayMode, screenSaver, screenSaverWait, screenSaverText, isPasswordProtected, locale });
   const isOkRef = React.useRef(false);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
 
@@ -44,6 +46,7 @@ export function DisplayPropertiesWindow({ onClose }: DisplayPropertiesWindowProp
   const [localScreenSaverWait, setLocalScreenSaverWait] = useState(screenSaverWait);
   const [localScreenSaverText, setLocalScreenSaverText] = useState(screenSaverText);
   const [localPasswordProtected, setLocalPasswordProtected] = useState(isPasswordProtected);
+  const [localLocale, setLocalLocale] = useState<Locale>(locale);
 
   const [isUploading, setIsUploading] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
@@ -62,6 +65,7 @@ export function DisplayPropertiesWindow({ onClose }: DisplayPropertiesWindowProp
     setScreenSaverWait(localScreenSaverWait);
     setScreenSaverText(localScreenSaverText);
     setIsPasswordProtected(localPasswordProtected);
+    setLocale(localLocale);
 
     // Evaluate if there are actual changes to enable the "Apply" button
     setHasChanges(
@@ -71,13 +75,16 @@ export function DisplayPropertiesWindow({ onClose }: DisplayPropertiesWindowProp
       localScreenSaver !== baseStateRef.current.screenSaver ||
       localScreenSaverWait !== baseStateRef.current.screenSaverWait ||
       localScreenSaverText !== baseStateRef.current.screenSaverText ||
-      localPasswordProtected !== baseStateRef.current.isPasswordProtected
+      localPasswordProtected !== baseStateRef.current.isPasswordProtected ||
+      localLocale !== baseStateRef.current.locale
     );
   }, [
-    localWallpaper, localBgColor, localDisplayMode, 
+    localWallpaper, localBgColor, localDisplayMode,
     localScreenSaver, localScreenSaverWait, localScreenSaverText, localPasswordProtected,
+    localLocale,
     setWallpaper, setBackgroundColor, setDisplayMode,
-    setScreenSaver, setScreenSaverWait, setScreenSaverText, setIsPasswordProtected
+    setScreenSaver, setScreenSaverWait, setScreenSaverText, setIsPasswordProtected,
+    setLocale,
   ]);
 
   // Cleanup: revert if we didn't confirm via OK
@@ -92,9 +99,10 @@ export function DisplayPropertiesWindow({ onClose }: DisplayPropertiesWindowProp
         setScreenSaverWait(baseStateRef.current.screenSaverWait);
         setScreenSaverText(baseStateRef.current.screenSaverText);
         setIsPasswordProtected(baseStateRef.current.isPasswordProtected);
+        setLocale(baseStateRef.current.locale);
       }
     };
-  }, [setWallpaper, setBackgroundColor, setDisplayMode, setScreenSaver, setScreenSaverWait, setScreenSaverText, setIsPasswordProtected]);
+  }, [setWallpaper, setBackgroundColor, setDisplayMode, setScreenSaver, setScreenSaverWait, setScreenSaverText, setIsPasswordProtected, setLocale]);
 
   const applySettings = useCallback(() => {
     baseStateRef.current = {
@@ -105,9 +113,10 @@ export function DisplayPropertiesWindow({ onClose }: DisplayPropertiesWindowProp
       screenSaverWait: localScreenSaverWait,
       screenSaverText: localScreenSaverText,
       isPasswordProtected: localPasswordProtected,
+      locale: localLocale,
     };
     setHasChanges(false);
-  }, [localWallpaper, localBgColor, localDisplayMode, localScreenSaver, localScreenSaverWait, localScreenSaverText, localPasswordProtected]);
+  }, [localWallpaper, localBgColor, localDisplayMode, localScreenSaver, localScreenSaverWait, localScreenSaverText, localPasswordProtected, localLocale]);
 
   const handleOk = useCallback(() => {
     isOkRef.current = true;
@@ -451,6 +460,25 @@ export function DisplayPropertiesWindow({ onClose }: DisplayPropertiesWindowProp
                  </div>
                </fieldset>
             </>
+          )}
+          {activeTab === 'settings' && (
+            <fieldset style={{ margin: 0, padding: '8px 8px 12px 8px' }}>
+              <legend>Language</legend>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, ...FONT }}>
+                <div className="field-row">
+                  <label htmlFor="locale-select">Interface language:</label>
+                  <select
+                    id="locale-select"
+                    value={localLocale}
+                    onChange={(e) => setLocalLocale(e.target.value as Locale)}
+                    style={{ ...FONT, width: 180 }}
+                  >
+                    <option value="es">Espa&#241;ol (Argentina)</option>
+                    <option value="en">English</option>
+                  </select>
+                </div>
+              </div>
+            </fieldset>
           )}
         </div>
       </div>

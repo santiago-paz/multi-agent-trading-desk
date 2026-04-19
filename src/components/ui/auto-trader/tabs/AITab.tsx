@@ -3,6 +3,7 @@ import { FONT, COL_HEADER_BASE, COL_RAISED, CELL, CELL_RIGHT, COLOR_POSITIVE, CO
 import { LogEntry, Phase, AgentSignal, Decision } from '../types';
 import { TickerAccordion } from '../components/TickerAccordion';
 import { fmtARS2 } from '../utils';
+import { useAutoTraderT } from '@/lib/i18n';
 
 interface AITabProps {
   phase: Phase;
@@ -23,6 +24,7 @@ export function AITab({
   candidateDecisions,
   arsPrices
 }: AITabProps) {
+  const t = useAutoTraderT();
   const logBodyRef = useRef<HTMLDivElement>(null);
   const autoScrollRef = useRef(true);
 
@@ -37,13 +39,13 @@ export function AITab({
       <div className="win98-scrollbar" style={{ flex: 1, overflowY: 'auto', padding: 2, display: 'flex', flexDirection: 'column', gap: 6 }}>
         {phase === 'idle' && logs.length === 0 ? (
           <div style={{ ...FONT, padding: 16, textAlign: 'center', color: COLOR_SECONDARY }}>
-            No hay datos de análisis. Configure los parámetros y presione &quot;Analizar&quot; en la pestaña de Configuración.
+            {t('ai.empty')}
           </div>
         ) : (
           <>
             {logs.length > 0 && (
               <fieldset style={{ margin: 0, flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
-                <legend>Progreso {isAnalyzing && `(${progress}%)`}</legend>
+                <legend>{t('ai.progress')} {isAnalyzing && `(${progress}%)`}</legend>
                 <div 
                   ref={logBodyRef} 
                   className="sunken-panel win98-scrollbar" 
@@ -61,15 +63,15 @@ export function AITab({
 
             {analystSignals && (
               <fieldset style={{ margin: 0, flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
-                <legend>Señales de Analistas</legend>
+                <legend>{t('ai.signals.title')}</legend>
                 <div className="sunken-panel win98-scrollbar" style={{ flex: 1, overflow: 'auto', margin: 0 }}>
                   <table style={{ ...FONT, width: '100%', borderCollapse: 'collapse', borderSpacing: 0 }}>
                     <thead>
                       <tr>
-                        <th style={{ ...COL_HEADER_BASE, ...COL_RAISED, textAlign: 'left', position: 'sticky', top: 0, zIndex: 1 }}>Ticker</th>
-                        <th style={{ ...COL_HEADER_BASE, ...COL_RAISED, textAlign: 'left', position: 'sticky', top: 0, zIndex: 1 }}>Agente</th>
-                        <th style={{ ...COL_HEADER_BASE, ...COL_RAISED, textAlign: 'left', position: 'sticky', top: 0, zIndex: 1 }}>Señal</th>
-                        <th style={{ ...COL_HEADER_BASE, ...COL_RAISED, textAlign: 'right', position: 'sticky', top: 0, zIndex: 1 }}>Conf.</th>
+                        <th style={{ ...COL_HEADER_BASE, ...COL_RAISED, textAlign: 'left', position: 'sticky', top: 0, zIndex: 1 }}>{t('col.ticker')}</th>
+                        <th style={{ ...COL_HEADER_BASE, ...COL_RAISED, textAlign: 'left', position: 'sticky', top: 0, zIndex: 1 }}>{t('col.agent')}</th>
+                        <th style={{ ...COL_HEADER_BASE, ...COL_RAISED, textAlign: 'left', position: 'sticky', top: 0, zIndex: 1 }}>{t('col.signal')}</th>
+                        <th style={{ ...COL_HEADER_BASE, ...COL_RAISED, textAlign: 'right', position: 'sticky', top: 0, zIndex: 1 }}>{t('col.confidence')}</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -104,16 +106,16 @@ export function AITab({
 
             {candidateDecisions && Object.keys(candidateDecisions).length > 0 && (
               <fieldset style={{ margin: 0, flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
-                <legend>Sugerencias AI (fuera de portfolio)</legend>
+                <legend>{t('ai.candidates.title')}</legend>
                 <div className="sunken-panel win98-scrollbar" style={{ flex: 1, overflow: 'auto', margin: 0 }}>
                   <table style={{ ...FONT, width: '100%', borderCollapse: 'collapse', borderSpacing: 0 }}>
                     <thead>
                       <tr>
-                        <th style={{ ...COL_HEADER_BASE, ...COL_RAISED, textAlign: 'left', position: 'sticky', top: 0, zIndex: 1 }}>Ticker</th>
-                        <th style={{ ...COL_HEADER_BASE, ...COL_RAISED, textAlign: 'left', position: 'sticky', top: 0, zIndex: 1 }}>Acción</th>
-                        <th style={{ ...COL_HEADER_BASE, ...COL_RAISED, textAlign: 'right', position: 'sticky', top: 0, zIndex: 1 }}>Conf.</th>
-                        <th style={{ ...COL_HEADER_BASE, ...COL_RAISED, textAlign: 'right', position: 'sticky', top: 0, zIndex: 1 }}>Precio</th>
-                        <th style={{ ...COL_HEADER_BASE, ...COL_RAISED, textAlign: 'left', position: 'sticky', top: 0, zIndex: 1 }}>Razón</th>
+                        <th style={{ ...COL_HEADER_BASE, ...COL_RAISED, textAlign: 'left', position: 'sticky', top: 0, zIndex: 1 }}>{t('col.ticker')}</th>
+                        <th style={{ ...COL_HEADER_BASE, ...COL_RAISED, textAlign: 'left', position: 'sticky', top: 0, zIndex: 1 }}>{t('col.action')}</th>
+                        <th style={{ ...COL_HEADER_BASE, ...COL_RAISED, textAlign: 'right', position: 'sticky', top: 0, zIndex: 1 }}>{t('col.confidence')}</th>
+                        <th style={{ ...COL_HEADER_BASE, ...COL_RAISED, textAlign: 'right', position: 'sticky', top: 0, zIndex: 1 }}>{t('col.price')}</th>
+                        <th style={{ ...COL_HEADER_BASE, ...COL_RAISED, textAlign: 'left', position: 'sticky', top: 0, zIndex: 1 }}>{t('col.reason')}</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -163,9 +165,9 @@ export function AITab({
               const body = l.detail || l.text;
               return `${header}\n${body}`;
             }).join('\n\n');
-            navigator.clipboard.writeText(text).then(() => alert('Logs copiados al portapapeles'));
+            navigator.clipboard.writeText(text).then(() => alert(t('ai.logs.copied')));
           }}>
-            Copiar Logs
+            {t('ai.logs.copy')}
           </button>
         </div>
       )}

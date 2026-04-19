@@ -3,6 +3,7 @@ import { PortfolioSummary } from './PortfolioSummary';
 import { AccountData } from './AccountData';
 import { PortfolioResponse, DatosPerfil, EstadoCuenta } from '@/lib/iol/types';
 import { FONT, WINDOW_CONTAINER, COLOR_NEGATIVE } from '@/lib/theme/win98';
+import { usePortfolioT } from '@/lib/i18n';
 
 interface PortfolioWindowProps {
   portfolio: PortfolioResponse | null;
@@ -24,15 +25,16 @@ export const PortfolioWindow: React.FC<PortfolioWindowProps> = ({
   onCompanyDetail,
 }) => {
   const [activeTab, setActiveTab] = useState<'portfolio' | 'account'>('portfolio');
+  const t = usePortfolioT();
 
   return (
     <div style={{ ...WINDOW_CONTAINER, padding: '6px 6px 0 6px' }}>
       <menu role="tablist">
         <li role="tab" aria-selected={activeTab === 'portfolio'}>
-          <a href="#portfolio" onClick={(e) => { e.preventDefault(); setActiveTab('portfolio'); }}>Tenencias</a>
+          <a href="#portfolio" onClick={(e) => { e.preventDefault(); setActiveTab('portfolio'); }}>{t('tabs.holdings')}</a>
         </li>
         <li role="tab" aria-selected={activeTab === 'account'}>
-          <a href="#account" onClick={(e) => { e.preventDefault(); setActiveTab('account'); }}>Mi Cuenta</a>
+          <a href="#account" onClick={(e) => { e.preventDefault(); setActiveTab('account'); }}>{t('tabs.account')}</a>
         </li>
       </menu>
 
@@ -40,7 +42,7 @@ export const PortfolioWindow: React.FC<PortfolioWindowProps> = ({
         <div className="window-body" style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', minHeight: 0, marginTop: 0, marginRight: 0, marginBottom: 0, marginLeft: 0 }}>
           {activeTab === 'portfolio' && (
             isLoading && !portfolio ? (
-              <p style={{ ...FONT, margin: 0, padding: '4px' }}>Cargando portafolio...</p>
+              <p style={{ ...FONT, margin: 0, padding: '4px' }}>{t('loading')}</p>
             ) : portfolio ? (
               <PortfolioSummary
                 portfolio={portfolio}
@@ -51,7 +53,7 @@ export const PortfolioWindow: React.FC<PortfolioWindowProps> = ({
                 onCompanyDetail={onCompanyDetail}
               />
             ) : (
-              <p style={{ ...FONT, margin: 0, padding: '4px', color: COLOR_NEGATIVE }}>No se pudo cargar el portafolio.</p>
+              <p style={{ ...FONT, margin: 0, padding: '4px', color: COLOR_NEGATIVE }}>{t('error')}</p>
             )
           )}
           {activeTab === 'account' && (

@@ -3,6 +3,7 @@ import { FONT, COLOR_POSITIVE, COLOR_NEGATIVE, COLOR_SECONDARY, COL_SUNKEN } fro
 import { LogEntry } from '../types';
 import { AgentDetail } from './AgentDetail';
 import { LogIcon } from './LogIcon';
+import { useAutoTraderT } from '@/lib/i18n';
 
 /* ── Helpers ──────────────────────────────────────────────────────────────── */
 
@@ -77,18 +78,26 @@ function friendlyStep(detail: string): string {
   return detail;
 }
 
-function signalFromAnalysis(log: LogEntry | null): { label: string; color: string } | null {
+type SignalType = 'bullish' | 'bearish' | 'neutral';
+
+function signalFromAnalysis(log: LogEntry | null): { type: SignalType; color: string } | null {
   if (!log?.detail) return null;
   try {
     const data = JSON.parse(log.detail.trim());
     const info = log.ticker && data[log.ticker] ? data[log.ticker] : (Object.keys(data).length === 1 ? data[Object.keys(data)[0]] : data);
     const signal = (info?.signal || info?.action || '').toLowerCase();
-    if (signal === 'bullish' || signal === 'buy') return { label: 'Alcista', color: COLOR_POSITIVE };
-    if (signal === 'bearish' || signal === 'sell') return { label: 'Bajista', color: COLOR_NEGATIVE };
-    if (signal === 'neutral' || signal === 'hold') return { label: 'Neutral', color: COLOR_SECONDARY };
+    if (signal === 'bullish' || signal === 'buy') return { type: 'bullish', color: COLOR_POSITIVE };
+    if (signal === 'bearish' || signal === 'sell') return { type: 'bearish', color: COLOR_NEGATIVE };
+    if (signal === 'neutral' || signal === 'hold') return { type: 'neutral', color: COLOR_SECONDARY };
   } catch { /* ignore */ }
   return null;
 }
+
+const SIGNAL_KEYS = {
+  bullish: 'accordion.bullish',
+  bearish: 'accordion.bearish',
+  neutral: 'accordion.neutral',
+} as const;
 
 function groupByAgent(logs: LogEntry[]): { agent: string; logs: LogEntry[] }[] {
   const map = new Map<string, LogEntry[]>();
@@ -107,6 +116,7 @@ function groupByAgent(logs: LogEntry[]): { agent: string; logs: LogEntry[] }[] {
 /* ── Components ───────────────────────────────────────────────────────────── */
 
 function TickerGroupRow({ group }: { group: TickerGroup }) {
+  const t = useAutoTraderT();
   const [open, setOpen] = useState(false);
   const signal = useMemo(() => signalFromAnalysis(group.analysisLog), [group.analysisLog]);
 
@@ -165,23 +175,23 @@ function TickerGroupRow({ group }: { group: TickerGroup }) {
             fontWeight: 'bold',
             flexShrink: 0,
           }}>
-            {signal.label}
+            {t(SIGNAL_KEYS[signal.type])}
           </span>
         )}
 
         {/* Progress or summary */}
         <span style={{ color: COLOR_SECONDARY, flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
           {isComplete
-            ? `${group.logs.length} pasos completados`
+            ? t('accordion.stepsCompleted', { count: group.logs.length })
             : isError
-              ? 'Error en análisis'
+              ? t('accordion.analysisError')
               : friendlyStep(group.latestStep)
           }
         </span>
 
         {/* Step counter */}
         <span style={{ color: COLOR_SECONDARY, flexShrink: 0, fontSize: 10 }}>
-          {group.logs.length} {group.logs.length === 1 ? 'paso' : 'pasos'}
+          {t('accordion.steps', { count: group.logs.length, unit: group.logs.length === 1 ? t('accordion.stepSingular') : t('accordion.stepPlural') })}
         </span>
       </div>
 

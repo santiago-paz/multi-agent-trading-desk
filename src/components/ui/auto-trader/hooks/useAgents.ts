@@ -15,7 +15,7 @@ export function useAgents() {
         const data = await res.json();
         const agentList: Agent[] = (data.agents || []).sort((a: Agent, b: Agent) => a.order - b.order);
         setAgents(agentList);
-        setSelectedAgents(new Set(agentList.slice(0, 3).map(a => a.key)));
+        setSelectedAgents(new Set());
       } catch (err) {
         console.error('Failed to fetch agents:', err);
       } finally {
