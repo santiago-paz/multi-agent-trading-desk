@@ -9,7 +9,7 @@ export function WarrenBuffettDetail({ reasoning }: { reasoning: string }) {
       <strong>Análisis de Warren Buffett:</strong>
       <div style={{
         display: 'flex', 
-        gap: '12px', 
+        gap: '8px', 
         marginTop: '6px', 
         ...COL_SUNKEN,
         padding: '8px',
@@ -29,15 +29,14 @@ export function WarrenBuffettDetail({ reasoning }: { reasoning: string }) {
             }} 
           />
         </div>
-        <div style={{ flex: 1, ...FONT, fontSize: '0.9em', color: '#111', display: 'block', paddingTop: '4px' }}>
-          <i style={{ 
-            display: 'block', 
-            whiteSpace: 'pre-wrap', 
-            wordBreak: 'break-word',
-            lineHeight: '1.4'
-          }}>
-            "{reasoning}"
-          </i>
+        <div style={{ flex: 1, ...FONT, fontSize: '0.9em', color: '#111', display: 'block', paddingTop: '1px' }}>
+          <div style={{ wordBreak: 'break-word', lineHeight: '1.4', whiteSpace: 'normal' }}>
+            {reasoning.split('\n').filter(line => line.trim() !== '').map((paragraph, idx, arr) => (
+              <i key={idx} style={{ display: 'block', marginBottom: idx < arr.length - 1 ? '8px' : '0' }}>
+                {idx === 0 ? '"' : ''}{paragraph.trim()}{idx === arr.length - 1 ? '"' : ''}
+              </i>
+            ))}
+          </div>
         </div>
       </div>
     </div>
