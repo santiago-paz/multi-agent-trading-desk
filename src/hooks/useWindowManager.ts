@@ -31,7 +31,7 @@ export function useAppLabels(): Record<AppId, string> {
 
 export const COMPANY_DETAIL_DEFAULTS = { width: 560, height: 600 };
 
-function centerPosition(width: number, height: number): { x: number; y: number } {
+export function centerPosition(width: number, height: number): { x: number; y: number } {
   if (typeof window === 'undefined') return { x: 0, y: 0 };
   return {
     x: Math.max(0, Math.floor((window.innerWidth - width) / 2)),
