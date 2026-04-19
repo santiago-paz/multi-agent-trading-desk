@@ -1,28 +1,21 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
-import { createPortal } from 'react-dom';
-import {
-  ResponsiveContainer,
-  AreaChart, Area,
-  BarChart, Bar,
-  XAxis, YAxis, Tooltip, CartesianGrid,
-  ComposedChart, Line,
-} from 'recharts';
 import {
   FONT,
   WINDOW_CONTAINER,
-  SCROLLABLE_BODY,
-  HR98,
-  STATUS_BAR_STYLE,
-  COLOR_LINK,
   COLOR_SECONDARY,
-  COLOR_POSITIVE,
-  COLOR_NEGATIVE,
-  BUTTON_PRESSED,
+  STATUS_BAR_STYLE,
 } from '@/lib/theme/win98';
-import type { CompanyProfile, IncomeStatementRow, KeyMetricsRow, CashFlowRow, BalanceSheetRow, FinancialScores, DCFValue, NewsItem, SymbolSearchHit } from '@/lib/fmp/types';
-import { getCompanyAdvancedData, getCompanyNews, AdvancedDetailResult, searchTickerSymbols } from '@/app/trading/actions';
+import { useCompanyDetailT } from '@/lib/i18n';
+import type { CompanyProfile, IncomeStatementRow, NewsItem } from '@/lib/fmp/types';
+import { getCompanyAdvancedData, getCompanyNews, AdvancedDetailResult } from '@/app/trading/actions';
+
+import { SearchBar } from './company-detail/components/SearchBar';
+import { InfoTab } from './company-detail/tabs/InfoTab';
+import { ChartsTab } from './company-detail/tabs/ChartsTab';
+import { AdvancedTab } from './company-detail/tabs/AdvancedTab';
+import { NewsTab } from './company-detail/tabs/NewsTab';
 
 export interface CompanyDetailData {
   fmpTicker: string | null;
@@ -43,473 +36,6 @@ interface CompanyDetailWindowProps {
 
 type Tab = 'info' | 'charts' | 'advanced' | 'news';
 
-const fmtMktCap = (n: number): string => {
-  if (n >= 1e12) return `$${(n / 1e12).toFixed(2)}T`;
-  if (n >= 1e9) return `$${(n / 1e9).toFixed(2)}B`;
-  if (n >= 1e6) return `$${(n / 1e6).toFixed(1)}M`;
-  return `$${n.toLocaleString('en-US')}`;
-};
-
-const fmtCompact = (n: number): string => {
-  if (Math.abs(n) >= 1e9) return `${(n / 1e9).toFixed(1)}B`;
-  if (Math.abs(n) >= 1e6) return `${(n / 1e6).toFixed(0)}M`;
-  if (Math.abs(n) >= 1e3) return `${(n / 1e3).toFixed(0)}K`;
-  return n.toFixed(0);
-};
-
-const fmtVol = (n: number): string => n.toLocaleString('en-US');
-
-const CHART_FONT = { fontFamily: '"Pixelated MS Sans Serif", Arial, sans-serif', fontSize: 9 };
-
-const StatRow: React.FC<{ label: string; value: React.ReactNode }> = ({ label, value }) => (
-  <tr>
-    <td style={{ ...FONT, padding: '1px 8px 1px 4px', color: COLOR_SECONDARY, whiteSpace: 'nowrap' }}>{label}</td>
-    <td style={{ ...FONT, padding: '1px 4px' }}>{value}</td>
-  </tr>
-);
-
-// ── Help tooltip ────────────────────────────────────────────────
-
-const InfoTip: React.FC<{ text: string }> = ({ text }) => {
-  const [show, setShow] = useState(false);
-  const ref = useRef<HTMLSpanElement>(null);
-  const [pos, setPos] = useState({ top: 0, left: 0 });
-
-  useEffect(() => {
-    if (show && ref.current) {
-      const rect = ref.current.getBoundingClientRect();
-      setPos({ top: rect.bottom + 4, left: rect.left + rect.width / 2 });
-    }
-  }, [show]);
-
-  return (
-    <span
-      ref={ref}
-      style={{ display: 'inline-block', marginLeft: '4px', cursor: 'help' }}
-      onMouseEnter={() => setShow(true)}
-      onMouseLeave={() => setShow(false)}
-    >
-      <span style={{
-        ...FONT,
-        display: 'inline-flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        width: 14,
-        height: 14,
-        borderRadius: '50%',
-        border: '1px solid #808080',
-        background: '#ffffcc',
-        fontSize: '9px',
-        fontWeight: 'bold',
-        color: '#000',
-        lineHeight: 1,
-      }}>
-        ?
-      </span>
-      {show && createPortal(
-        <div style={{
-          ...FONT,
-          position: 'fixed',
-          top: pos.top,
-          left: pos.left,
-          transform: 'translateX(-50%)',
-          background: '#ffffcc',
-          border: '1px solid #000',
-          padding: '3px 6px',
-          whiteSpace: 'normal',
-          width: 220,
-          zIndex: 99999,
-          lineHeight: '1.3',
-          boxShadow: '2px 2px 0 rgba(0,0,0,0.15)',
-          pointerEvents: 'none',
-        }}>
-          {text}
-        </div>,
-        document.body,
-      )}
-    </span>
-  );
-};
-
-// ── Chart sections ──────────────────────────────────────────────
-
-const PriceChart: React.FC<{ data: { date: string; close: number }[] }> = ({ data }) => {
-  if (data.length === 0) return <p style={{ ...FONT, color: COLOR_SECONDARY }}>Sin datos de precio.</p>;
-  const isUp = data[data.length - 1].close >= data[0].close;
-  const color = isUp ? COLOR_POSITIVE : COLOR_NEGATIVE;
-  return (
-    <fieldset style={{ margin: '0 0 6px', padding: '4px' }}>
-      <legend style={FONT}>Precio (1 año) <InfoTip text="Precio de cierre diario del último año en la bolsa de EE.UU. Verde si subió, rojo si bajó respecto al inicio del período." /></legend>
-      <ResponsiveContainer width="100%" height={160}>
-        <AreaChart data={data} margin={{ top: 4, right: 8, bottom: 0, left: 0 }}>
-          <defs>
-            <linearGradient id="priceGrad" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor={color} stopOpacity={0.3} />
-              <stop offset="95%" stopColor={color} stopOpacity={0.02} />
-            </linearGradient>
-          </defs>
-          <CartesianGrid strokeDasharray="3 3" stroke="#c0c0c0" />
-          <XAxis
-            dataKey="date"
-            tick={CHART_FONT}
-            tickFormatter={(d: string) => d.slice(5)} // MM-DD
-            interval="preserveStartEnd"
-            minTickGap={40}
-          />
-          <YAxis
-            tick={CHART_FONT}
-            domain={['auto', 'auto']}
-            tickFormatter={(v: number) => `$${v.toFixed(v >= 100 ? 0 : 2)}`}
-            width={52}
-          />
-          <Tooltip
-            contentStyle={{ ...FONT, background: '#ffffcc', border: '1px solid #000', padding: '2px 6px' }}
-            formatter={(value) => [`$${Number(value).toFixed(2)}`, 'Precio']}
-            labelFormatter={(label) => String(label)}
-          />
-          <Area type="monotone" dataKey="close" stroke={color} strokeWidth={1.5} fill="url(#priceGrad)" dot={false} />
-        </AreaChart>
-      </ResponsiveContainer>
-    </fieldset>
-  );
-};
-
-const VolumeChart: React.FC<{ data: { date: string; volume: number }[] }> = ({ data }) => {
-  if (data.length === 0) return null;
-  return (
-    <fieldset style={{ margin: '0 0 6px', padding: '4px' }}>
-      <legend style={FONT}>Volumen (1 año) <InfoTip text="Cantidad de acciones operadas por día. Un volumen alto indica mayor liquidez e interés del mercado." /></legend>
-      <ResponsiveContainer width="100%" height={100}>
-        <BarChart data={data} margin={{ top: 4, right: 8, bottom: 0, left: 0 }}>
-          <CartesianGrid strokeDasharray="3 3" stroke="#c0c0c0" />
-          <XAxis
-            dataKey="date"
-            tick={CHART_FONT}
-            tickFormatter={(d: string) => d.slice(5)}
-            interval="preserveStartEnd"
-            minTickGap={40}
-          />
-          <YAxis tick={CHART_FONT} tickFormatter={fmtCompact} width={42} />
-          <Tooltip
-            contentStyle={{ ...FONT, background: '#ffffcc', border: '1px solid #000', padding: '2px 6px' }}
-            formatter={(value) => [fmtVol(Number(value)), 'Volumen']}
-            labelFormatter={(label) => String(label)}
-          />
-          <Bar dataKey="volume" fill="#000080" opacity={0.6} />
-        </BarChart>
-      </ResponsiveContainer>
-    </fieldset>
-  );
-};
-
-const RevenueChart: React.FC<{ data: IncomeStatementRow[] }> = ({ data }) => {
-  if (data.length === 0) return <p style={{ ...FONT, color: COLOR_SECONDARY }}>Sin datos financieros disponibles.</p>;
-  const chartData = data.map(r => ({
-    year: r.date.slice(0, 4),
-    revenue: r.revenue,
-    netIncome: r.netIncome,
-  }));
-  return (
-    <fieldset style={{ margin: '0 0 6px', padding: '4px' }}>
-      <legend style={FONT}>Revenue & Net Income <InfoTip text="Revenue (barras): ingresos totales anuales. Net Income (línea): ganancia neta después de impuestos y gastos. Crecimiento sostenido indica un negocio saludable." /></legend>
-      <ResponsiveContainer width="100%" height={160}>
-        <ComposedChart data={chartData} margin={{ top: 4, right: 8, bottom: 0, left: 0 }}>
-          <CartesianGrid strokeDasharray="3 3" stroke="#c0c0c0" />
-          <XAxis dataKey="year" tick={CHART_FONT} />
-          <YAxis tick={CHART_FONT} tickFormatter={(v: number) => `$${fmtCompact(v)}`} width={52} />
-          <Tooltip
-            contentStyle={{ ...FONT, background: '#ffffcc', border: '1px solid #000', padding: '2px 6px' }}
-            formatter={(value, name) => [`$${fmtCompact(Number(value))}`, name === 'revenue' ? 'Revenue' : 'Net Income']}
-          />
-          <Bar dataKey="revenue" fill="#000080" opacity={0.5} name="revenue" />
-          <Line type="monotone" dataKey="netIncome" stroke={COLOR_POSITIVE} strokeWidth={2} dot={{ r: 2 }} name="netIncome" />
-        </ComposedChart>
-      </ResponsiveContainer>
-      <div style={{ ...FONT, display: 'flex', gap: '12px', justifyContent: 'center', marginTop: '2px', alignItems: 'center' }}>
-        <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><span style={{ display: 'inline-block', width: 8, height: 8, backgroundColor: '#000080' }} /> Revenue</span>
-        <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><span style={{ display: 'inline-block', width: 8, height: 8, backgroundColor: COLOR_POSITIVE }} /> Net Income</span>
-      </div>
-    </fieldset>
-  );
-};
-
-const MarginsChart: React.FC<{ data: IncomeStatementRow[] }> = ({ data }) => {
-  if (data.length === 0) return null;
-  const chartData = data
-    .filter(r => r.revenue > 0)
-    .map(r => ({
-      year: r.date.slice(0, 4),
-      grossMargin: ((r.grossProfit / r.revenue) * 100),
-      operatingMargin: ((r.operatingIncome / r.revenue) * 100),
-      netMargin: ((r.netIncome / r.revenue) * 100),
-    }));
-  if (chartData.length === 0) return null;
-  return (
-    <fieldset style={{ margin: '0 0 6px', padding: '4px' }}>
-      <legend style={FONT}>Márgenes (%) <InfoTip text="Bruto: % de ingreso que queda después del costo de producción. Operativo: después de gastos operativos. Neto: ganancia final como % del ingreso. Márgenes estables o crecientes indican eficiencia." /></legend>
-      <ResponsiveContainer width="100%" height={140}>
-        <AreaChart data={chartData} margin={{ top: 4, right: 8, bottom: 0, left: 0 }}>
-          <CartesianGrid strokeDasharray="3 3" stroke="#c0c0c0" />
-          <XAxis dataKey="year" tick={CHART_FONT} />
-          <YAxis tick={CHART_FONT} tickFormatter={(v: number) => `${v.toFixed(0)}%`} width={36} />
-          <Tooltip
-            contentStyle={{ ...FONT, background: '#ffffcc', border: '1px solid #000', padding: '2px 6px' }}
-            formatter={(value, name) => {
-              const labels: Record<string, string> = { grossMargin: 'Bruto', operatingMargin: 'Operativo', netMargin: 'Neto' };
-              return [`${Number(value).toFixed(1)}%`, labels[String(name)] ?? name];
-            }}
-          />
-          <Area type="monotone" dataKey="grossMargin" stroke="#000080" fill="#000080" fillOpacity={0.15} strokeWidth={1.5} dot={false} />
-          <Area type="monotone" dataKey="operatingMargin" stroke="#808000" fill="#808000" fillOpacity={0.1} strokeWidth={1.5} dot={false} />
-          <Area type="monotone" dataKey="netMargin" stroke={COLOR_POSITIVE} fill={COLOR_POSITIVE} fillOpacity={0.1} strokeWidth={1.5} dot={false} />
-        </AreaChart>
-      </ResponsiveContainer>
-      <div style={{ ...FONT, display: 'flex', gap: '12px', justifyContent: 'center', marginTop: '2px', alignItems: 'center' }}>
-        <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><span style={{ display: 'inline-block', width: 8, height: 8, backgroundColor: '#000080' }} /> Bruto</span>
-        <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><span style={{ display: 'inline-block', width: 8, height: 8, backgroundColor: '#808000' }} /> Operativo</span>
-        <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><span style={{ display: 'inline-block', width: 8, height: 8, backgroundColor: COLOR_POSITIVE }} /> Neto</span>
-      </div>
-    </fieldset>
-  );
-};
-
-const EPSChart: React.FC<{ data: IncomeStatementRow[] }> = ({ data }) => {
-  if (data.length === 0) return null;
-  const chartData = data.map(r => ({
-    year: r.date.slice(0, 4),
-    eps: r.eps,
-  }));
-  return (
-    <fieldset style={{ margin: '0 0 6px', padding: '4px' }}>
-      <legend style={FONT}>EPS <InfoTip text="Earnings Per Share: ganancia neta dividida por la cantidad de acciones. Un EPS creciente sugiere mayor rentabilidad por acción para el inversor." /></legend>
-      <ResponsiveContainer width="100%" height={120}>
-        <BarChart data={chartData} margin={{ top: 4, right: 8, bottom: 0, left: 0 }}>
-          <CartesianGrid strokeDasharray="3 3" stroke="#c0c0c0" />
-          <XAxis dataKey="year" tick={CHART_FONT} />
-          <YAxis tick={CHART_FONT} tickFormatter={(v: number) => `$${v.toFixed(2)}`} width={42} />
-          <Tooltip
-            contentStyle={{ ...FONT, background: '#ffffcc', border: '1px solid #000', padding: '2px 6px' }}
-            formatter={(value) => [`$${Number(value).toFixed(2)}`, 'EPS']}
-          />
-          <Bar
-            dataKey="eps"
-            fill={COLOR_POSITIVE}
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            shape={(props: any) => {
-              const { x, y, width, height, payload } = props;
-              const fill = payload.eps >= 0 ? COLOR_POSITIVE : COLOR_NEGATIVE;
-              return <rect x={x} y={y} width={width} height={height} fill={fill} opacity={0.7} />;
-            }}
-          />
-        </BarChart>
-      </ResponsiveContainer>
-    </fieldset>
-  );
-};
-
-// ── Advanced tab components ─────────────────────────────────────
-
-const ScoresSummary: React.FC<{ scores: FinancialScores | null; dcf: DCFValue | null }> = ({ scores, dcf }) => {
-  if (!scores && !dcf) return <p style={{ ...FONT, color: COLOR_SECONDARY }}>Sin datos de scores disponibles.</p>;
-
-  const zColor = (z: number) => z >= 2.99 ? COLOR_POSITIVE : z >= 1.81 ? '#808000' : COLOR_NEGATIVE;
-  const pColor = (p: number) => p >= 7 ? COLOR_POSITIVE : p >= 4 ? '#808000' : COLOR_NEGATIVE;
-
-  return (
-    <fieldset style={{ margin: '0 0 6px', padding: '4px' }}>
-      <legend style={FONT}>Scores & Valuación <InfoTip text="Altman Z-Score: riesgo de quiebra (>2.99 seguro, 1.81-2.99 zona gris, <1.81 peligro). Piotroski F-Score: calidad del valor (0-9, ≥7 fuerte). DCF: valor intrínseco estimado por flujo de caja descontado." /></legend>
-      <table style={{ borderCollapse: 'collapse', width: '100%' }}>
-        <tbody>
-          {scores && (
-            <>
-              <StatRow
-                label="Altman Z-Score"
-                value={<span style={{ fontWeight: 'bold', color: zColor(scores.altmanZScore) }}>{scores.altmanZScore.toFixed(2)}</span>}
-              />
-              <StatRow
-                label="Piotroski F-Score"
-                value={<span style={{ fontWeight: 'bold', color: pColor(scores.piotroskiScore) }}>{scores.piotroskiScore.toFixed(0)}/9</span>}
-              />
-            </>
-          )}
-          {dcf && dcf.dcf > 0 && dcf.price > 0 && (
-            <>
-              <StatRow label="DCF (valor justo)" value={`$${dcf.dcf.toFixed(2)}`} />
-              <StatRow label="Precio actual" value={`$${dcf.price.toFixed(2)}`} />
-              <StatRow
-                label="Señal"
-                value={
-                  <span style={{ fontWeight: 'bold', color: dcf.dcf > dcf.price ? COLOR_POSITIVE : COLOR_NEGATIVE }}>
-                    {dcf.dcf > dcf.price ? 'Subvaluada' : 'Sobrevaluada'} ({((dcf.dcf / dcf.price - 1) * 100).toFixed(1)}%)
-                  </span>
-                }
-              />
-            </>
-          )}
-        </tbody>
-      </table>
-    </fieldset>
-  );
-};
-
-const ValuationChart: React.FC<{ data: KeyMetricsRow[] }> = ({ data }) => {
-  if (data.length === 0) return null;
-  const chartData = data.map(r => ({ year: r.date.slice(0, 4), pe: r.peRatio, pb: r.pbRatio }));
-  return (
-    <fieldset style={{ margin: '0 0 6px', padding: '4px' }}>
-      <legend style={FONT}>Valuación (P/E & P/B) <InfoTip text="P/E (barras): precio dividido ganancias — cuántos años de ganancias se pagan. P/B (línea): precio vs valor contable. Valores bajos pueden indicar subvaluación." /></legend>
-      <ResponsiveContainer width="100%" height={160}>
-        <ComposedChart data={chartData} margin={{ top: 4, right: 8, bottom: 0, left: 0 }}>
-          <CartesianGrid strokeDasharray="3 3" stroke="#c0c0c0" />
-          <XAxis dataKey="year" tick={CHART_FONT} />
-          <YAxis yAxisId="left" tick={CHART_FONT} tickFormatter={(v: number) => v.toFixed(0)} width={36} />
-          <YAxis yAxisId="right" orientation="right" tick={CHART_FONT} tickFormatter={(v: number) => v.toFixed(1)} width={36} />
-          <Tooltip
-            contentStyle={{ ...FONT, background: '#ffffcc', border: '1px solid #000', padding: '2px 6px' }}
-            formatter={(value, name) => [Number(value).toFixed(2), name === 'pe' ? 'P/E' : 'P/B']}
-          />
-          <Bar yAxisId="left" dataKey="pe" fill="#000080" opacity={0.5} name="pe" />
-          <Line yAxisId="right" type="monotone" dataKey="pb" stroke="#808000" strokeWidth={2} dot={{ r: 2 }} name="pb" />
-        </ComposedChart>
-      </ResponsiveContainer>
-      <div style={{ ...FONT, display: 'flex', gap: '12px', justifyContent: 'center', marginTop: '2px', alignItems: 'center' }}>
-        <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><span style={{ display: 'inline-block', width: 8, height: 8, backgroundColor: '#000080' }} /> P/E</span>
-        <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><span style={{ display: 'inline-block', width: 8, height: 8, backgroundColor: '#808000' }} /> P/B</span>
-      </div>
-    </fieldset>
-  );
-};
-
-const ProfitabilityChart: React.FC<{ data: KeyMetricsRow[] }> = ({ data }) => {
-  if (data.length === 0) return null;
-  const chartData = data.map(r => ({ year: r.date.slice(0, 4), roe: r.roe * 100, roa: r.roa * 100 }));
-  return (
-    <fieldset style={{ margin: '0 0 6px', padding: '4px' }}>
-      <legend style={FONT}>Rentabilidad (ROE & ROA) <InfoTip text="ROE: retorno sobre patrimonio — cuánto genera por cada peso invertido por accionistas. ROA: retorno sobre activos totales. Valores más altos indican mejor eficiencia." /></legend>
-      <ResponsiveContainer width="100%" height={140}>
-        <AreaChart data={chartData} margin={{ top: 4, right: 8, bottom: 0, left: 0 }}>
-          <CartesianGrid strokeDasharray="3 3" stroke="#c0c0c0" />
-          <XAxis dataKey="year" tick={CHART_FONT} />
-          <YAxis tick={CHART_FONT} tickFormatter={(v: number) => `${v.toFixed(0)}%`} width={40} />
-          <Tooltip
-            contentStyle={{ ...FONT, background: '#ffffcc', border: '1px solid #000', padding: '2px 6px' }}
-            formatter={(value, name) => [`${Number(value).toFixed(1)}%`, name === 'roe' ? 'ROE' : 'ROA']}
-          />
-          <Area type="monotone" dataKey="roe" stroke="#000080" fill="#000080" fillOpacity={0.15} strokeWidth={1.5} dot={false} />
-          <Area type="monotone" dataKey="roa" stroke={COLOR_POSITIVE} fill={COLOR_POSITIVE} fillOpacity={0.1} strokeWidth={1.5} dot={false} />
-        </AreaChart>
-      </ResponsiveContainer>
-      <div style={{ ...FONT, display: 'flex', gap: '12px', justifyContent: 'center', marginTop: '2px', alignItems: 'center' }}>
-        <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><span style={{ display: 'inline-block', width: 8, height: 8, backgroundColor: '#000080' }} /> ROE</span>
-        <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><span style={{ display: 'inline-block', width: 8, height: 8, backgroundColor: COLOR_POSITIVE }} /> ROA</span>
-      </div>
-    </fieldset>
-  );
-};
-
-const CashFlowChart: React.FC<{ data: CashFlowRow[] }> = ({ data }) => {
-  if (data.length === 0) return null;
-  const chartData = data.map(r => ({
-    year: r.date.slice(0, 4),
-    operatingCF: r.operatingCashFlow,
-    freeCF: r.freeCashFlow,
-  }));
-  return (
-    <fieldset style={{ margin: '0 0 6px', padding: '4px' }}>
-      <legend style={FONT}>Flujo de Caja <InfoTip text="Operating CF (barras): efectivo generado por operaciones. Free CF (línea): efectivo disponible después de inversiones en capital. FCF positivo y creciente es señal de solidez financiera." /></legend>
-      <ResponsiveContainer width="100%" height={160}>
-        <ComposedChart data={chartData} margin={{ top: 4, right: 8, bottom: 0, left: 0 }}>
-          <CartesianGrid strokeDasharray="3 3" stroke="#c0c0c0" />
-          <XAxis dataKey="year" tick={CHART_FONT} />
-          <YAxis tick={CHART_FONT} tickFormatter={(v: number) => `$${fmtCompact(v)}`} width={52} />
-          <Tooltip
-            contentStyle={{ ...FONT, background: '#ffffcc', border: '1px solid #000', padding: '2px 6px' }}
-            formatter={(value, name) => [`$${fmtCompact(Number(value))}`, name === 'operatingCF' ? 'Operating CF' : 'Free CF']}
-          />
-          <Bar dataKey="operatingCF" fill="#000080" opacity={0.5} name="operatingCF" />
-          <Line type="monotone" dataKey="freeCF" stroke={COLOR_POSITIVE} strokeWidth={2} dot={{ r: 2 }} name="freeCF" />
-        </ComposedChart>
-      </ResponsiveContainer>
-      <div style={{ ...FONT, display: 'flex', gap: '12px', justifyContent: 'center', marginTop: '2px', alignItems: 'center' }}>
-        <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><span style={{ display: 'inline-block', width: 8, height: 8, backgroundColor: '#000080' }} /> Operating CF</span>
-        <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><span style={{ display: 'inline-block', width: 8, height: 8, backgroundColor: COLOR_POSITIVE }} /> Free CF</span>
-      </div>
-    </fieldset>
-  );
-};
-
-const BalanceSheetChart: React.FC<{ data: BalanceSheetRow[] }> = ({ data }) => {
-  if (data.length === 0) return null;
-  const chartData = data.map(r => ({
-    year: r.date.slice(0, 4),
-    equity: r.totalStockholdersEquity,
-    liabilities: r.totalLiabilities,
-    netDebt: r.netDebt,
-  }));
-  return (
-    <fieldset style={{ margin: '0 0 6px', padding: '4px' }}>
-      <legend style={FONT}>Estructura de Capital <InfoTip text="Equity (verde) + Liabilities (azul) = Total Assets. Net Debt (línea): deuda total menos efectivo. Una proporción creciente de equity indica mayor solidez." /></legend>
-      <ResponsiveContainer width="100%" height={160}>
-        <ComposedChart data={chartData} margin={{ top: 4, right: 8, bottom: 0, left: 0 }}>
-          <CartesianGrid strokeDasharray="3 3" stroke="#c0c0c0" />
-          <XAxis dataKey="year" tick={CHART_FONT} />
-          <YAxis yAxisId="left" tick={CHART_FONT} tickFormatter={(v: number) => `$${fmtCompact(v)}`} width={52} />
-          <YAxis yAxisId="right" orientation="right" tick={CHART_FONT} tickFormatter={(v: number) => `$${fmtCompact(v)}`} width={52} />
-          <Tooltip
-            contentStyle={{ ...FONT, background: '#ffffcc', border: '1px solid #000', padding: '2px 6px' }}
-            formatter={(value, name) => {
-              const labels: Record<string, string> = { equity: 'Patrimonio', liabilities: 'Pasivos', netDebt: 'Deuda Neta' };
-              return [`$${fmtCompact(Number(value))}`, labels[String(name)] ?? name];
-            }}
-          />
-          <Bar yAxisId="left" dataKey="equity" stackId="a" fill={COLOR_POSITIVE} opacity={0.5} name="equity" />
-          <Bar yAxisId="left" dataKey="liabilities" stackId="a" fill="#000080" opacity={0.4} name="liabilities" />
-          <Line yAxisId="right" type="monotone" dataKey="netDebt" stroke={COLOR_NEGATIVE} strokeWidth={2} dot={{ r: 2 }} name="netDebt" />
-        </ComposedChart>
-      </ResponsiveContainer>
-      <div style={{ ...FONT, display: 'flex', gap: '12px', justifyContent: 'center', marginTop: '2px', alignItems: 'center' }}>
-        <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><span style={{ display: 'inline-block', width: 8, height: 8, backgroundColor: COLOR_POSITIVE }} /> Patrimonio</span>
-        <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><span style={{ display: 'inline-block', width: 8, height: 8, backgroundColor: '#000080' }} /> Pasivos</span>
-        <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><span style={{ display: 'inline-block', width: 8, height: 8, backgroundColor: COLOR_NEGATIVE }} /> Deuda Neta</span>
-      </div>
-    </fieldset>
-  );
-};
-
-const LeverageChart: React.FC<{ data: KeyMetricsRow[] }> = ({ data }) => {
-  if (data.length === 0) return null;
-  const chartData = data.map(r => ({
-    year: r.date.slice(0, 4),
-    debtToEquity: r.debtToEquity,
-    currentRatio: r.currentRatio,
-  }));
-  return (
-    <fieldset style={{ margin: '0 0 6px', padding: '4px' }}>
-      <legend style={FONT}>Apalancamiento <InfoTip text="Debt/Equity (barras): cuánta deuda por cada peso de patrimonio. Current Ratio (línea): activos corrientes / pasivos corrientes — >1 indica solvencia a corto plazo." /></legend>
-      <ResponsiveContainer width="100%" height={140}>
-        <ComposedChart data={chartData} margin={{ top: 4, right: 8, bottom: 0, left: 0 }}>
-          <CartesianGrid strokeDasharray="3 3" stroke="#c0c0c0" />
-          <XAxis dataKey="year" tick={CHART_FONT} />
-          <YAxis yAxisId="left" tick={CHART_FONT} tickFormatter={(v: number) => v.toFixed(1)} width={36} />
-          <YAxis yAxisId="right" orientation="right" tick={CHART_FONT} tickFormatter={(v: number) => v.toFixed(1)} width={36} />
-          <Tooltip
-            contentStyle={{ ...FONT, background: '#ffffcc', border: '1px solid #000', padding: '2px 6px' }}
-            formatter={(value, name) => [Number(value).toFixed(2), name === 'debtToEquity' ? 'D/E' : 'Current Ratio']}
-          />
-          <Bar yAxisId="left" dataKey="debtToEquity" fill="#000080" opacity={0.5} name="debtToEquity" />
-          <Line yAxisId="right" type="monotone" dataKey="currentRatio" stroke="#808000" strokeWidth={2} dot={{ r: 2 }} name="currentRatio" />
-        </ComposedChart>
-      </ResponsiveContainer>
-      <div style={{ ...FONT, display: 'flex', gap: '12px', justifyContent: 'center', marginTop: '2px', alignItems: 'center' }}>
-        <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><span style={{ display: 'inline-block', width: 8, height: 8, backgroundColor: '#000080' }} /> D/E</span>
-        <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><span style={{ display: 'inline-block', width: 8, height: 8, backgroundColor: '#808000' }} /> Current Ratio</span>
-      </div>
-    </fieldset>
-  );
-};
-
-// ── Main component ──────────────────────────────────────────────
-
 export const CompanyDetailWindow: React.FC<CompanyDetailWindowProps> = ({
   iolSymbol,
   isLoading,
@@ -517,14 +43,9 @@ export const CompanyDetailWindow: React.FC<CompanyDetailWindowProps> = ({
   data,
   onSearch,
 }) => {
+  const t = useCompanyDetailT();
   const [imgFailed, setImgFailed] = useState(false);
   const [tab, setTab] = useState<Tab>('info');
-  const [searchValue, setSearchValue] = useState('');
-  const [suggestions, setSuggestions] = useState<SymbolSearchHit[]>([]);
-  const [suggestOpen, setSuggestOpen] = useState(false);
-  const [suggestLoading, setSuggestLoading] = useState(false);
-  const [highlightIndex, setHighlightIndex] = useState(0);
-  const suggestReqId = useRef(0);
   const [advData, setAdvData] = useState<AdvancedDetailResult | null>(null);
   const [advLoading, setAdvLoading] = useState(false);
   const advFetchedRef = useRef<string | null>(null);
@@ -580,208 +101,12 @@ export const CompanyDetailWindow: React.FC<CompanyDetailWindowProps> = ({
     return () => { cancelled = true; };
   }, [tab, data?.fmpTicker]);
 
-  useEffect(() => {
-    const q = searchValue.trim();
-    if (!q.length) {
-      setSuggestions([]);
-      setSuggestOpen(false);
-      setSuggestLoading(false);
-      return;
-    }
-
-    const id = ++suggestReqId.current;
-    setSuggestLoading(true);
-    const timer = setTimeout(async () => {
-      setSuggestOpen(true);
-      const res = await searchTickerSymbols(q);
-      if (id !== suggestReqId.current) return;
-      setSuggestLoading(false);
-      if (res.success) {
-        setSuggestions(res.data);
-        setHighlightIndex(0);
-      } else {
-        setSuggestions([]);
-        setSuggestOpen(false);
-      }
-    }, 280);
-
-    return () => clearTimeout(timer);
-  }, [searchValue]);
-
-  const pickSuggestion = (symbol: string) => {
-    const trimmed = symbol.trim().toUpperCase();
-    if (trimmed && onSearch) {
-      onSearch(trimmed);
-      setSearchValue('');
-      setSuggestions([]);
-      setSuggestOpen(false);
-    }
-  };
-
-  const handleSearch = () => {
-    if (suggestOpen && suggestions.length > 0) {
-      const sym = suggestions[highlightIndex]?.symbol ?? suggestions[0].symbol;
-      pickSuggestion(sym);
-      return;
-    }
-    const trimmed = searchValue.trim().toUpperCase();
-    if (trimmed && onSearch) {
-      onSearch(trimmed);
-      setSearchValue('');
-      setSuggestions([]);
-      setSuggestOpen(false);
-    }
-  };
-
   if (isLoading) {
     return (
       <div style={WINDOW_CONTAINER}>
-        {/* Search bar */}
-        {onSearch && (
-          <div style={{ padding: '4px 8px', display: 'flex', gap: '4px', flexShrink: 0, borderBottom: '1px solid #808080', alignItems: 'flex-start' }}>
-            <div style={{ position: 'relative', flex: 1, minWidth: 0 }}>
-              <input
-                type="text"
-                autoComplete="off"
-                placeholder="Buscar ticker..."
-                value={searchValue}
-                onChange={(e) => setSearchValue(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Escape') {
-                    e.preventDefault();
-                    setSuggestOpen(false);
-                    return;
-                  }
-                  if (suggestOpen && suggestions.length > 0) {
-                    if (e.key === 'ArrowDown') {
-                      e.preventDefault();
-                      setHighlightIndex((i) => Math.min(i + 1, suggestions.length - 1));
-                      return;
-                    }
-                    if (e.key === 'ArrowUp') {
-                      e.preventDefault();
-                      setHighlightIndex((i) => Math.max(i - 1, 0));
-                      return;
-                    }
-                    if (e.key === 'Enter') {
-                      e.preventDefault();
-                      const sym = suggestions[highlightIndex]?.symbol ?? suggestions[0].symbol;
-                      pickSuggestion(sym);
-                      return;
-                    }
-                  }
-                  if (e.key === 'Enter') handleSearch();
-                }}
-                onFocus={() => {
-                  if (searchValue.trim().length > 0 && suggestions.length > 0) setSuggestOpen(true);
-                }}
-                onBlur={() => setSuggestOpen(false)}
-                style={{ ...FONT, width: '100%', boxSizing: 'border-box', paddingTop: '2px', paddingBottom: '2px', paddingLeft: '4px', paddingRight: '4px' }}
-              />
-              {suggestOpen && searchValue.trim().length > 0 && (
-                <div
-                  className="sunken-panel"
-                  role="listbox"
-                  style={{
-                    position: 'absolute',
-                    left: 0,
-                    right: 0,
-                    top: '100%',
-                    marginTop: 2,
-                    zIndex: 100,
-                    maxHeight: 200,
-                    overflowY: 'auto',
-                    background: '#ffffff',
-                    border: '1px solid #000000',
-                    boxShadow: '2px 2px 0 rgba(0,0,0,0.15)',
-                  }}
-                  onMouseDown={(e) => e.preventDefault()}
-                >
-                  {suggestLoading && (
-                    <div style={{ ...FONT, padding: '4px 6px', color: COLOR_SECONDARY }}>
-                      Buscando…
-                    </div>
-                  )}
-                  {!suggestLoading && suggestions.length === 0 && (
-                    <div style={{ ...FONT, padding: '4px 6px', color: COLOR_SECONDARY }}>
-                      Sin coincidencias
-                    </div>
-                  )}
-                  {!suggestLoading &&
-                    suggestions.map((s, i) => {
-                      const active = i === highlightIndex;
-                      return (
-                        <div
-                          key={`${s.symbol}-${s.exchange}-${i}`}
-                          role="option"
-                          aria-selected={active}
-                          onMouseEnter={() => setHighlightIndex(i)}
-                          onMouseDown={(e) => {
-                            e.preventDefault();
-                            pickSuggestion(s.symbol);
-                          }}
-                          style={{
-                            ...FONT,
-                            padding: '3px 6px',
-                            cursor: 'default',
-                            userSelect: 'none',
-                            background: active ? '#000080' : '#ffffff',
-                            color: active ? '#ffffff' : '#000000',
-                            borderBottom: i < suggestions.length - 1 ? '1px solid #e0e0e0' : undefined,
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '8px',
-                          }}
-                        >
-                          <div style={{ width: 24, height: 24, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#fff', border: '1px solid #dfdfdf' }}>
-                            {/* eslint-disable-next-line @next/next/no-img-element */}
-                            <img
-                              src={`https://financialmodelingprep.com/image-stock/${s.symbol}.png`}
-                              alt=""
-                              style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }}
-                              onError={(e) => {
-                                (e.target as HTMLImageElement).style.display = 'none';
-                              }}
-                            />
-                          </div>
-                          <div style={{ minWidth: 0, flex: 1 }}>
-                            <div>
-                              <span style={{ fontWeight: 'bold' }}>{s.symbol}</span>
-                              {s.exchange ? (
-                                <span style={{ marginLeft: 6, opacity: active ? 0.9 : 1, color: active ? '#dcdcdc' : COLOR_SECONDARY }}>
-                                  {s.exchange}
-                                </span>
-                              ) : null}
-                              {s.currency ? (
-                                <span style={{ marginLeft: 6, opacity: active ? 0.9 : 1, color: active ? '#dcdcdc' : COLOR_SECONDARY }}>
-                                  · {s.currency}
-                                </span>
-                              ) : null}
-                            </div>
-                            <div
-                              style={{
-                                marginTop: 1,
-                                fontSize: '11px',
-                                color: active ? '#e8e8e8' : '#404040',
-                                whiteSpace: 'nowrap',
-                                overflow: 'hidden',
-                                textOverflow: 'ellipsis',
-                              }}
-                            >
-                              {s.name || '—'}
-                            </div>
-                          </div>
-                        </div>
-                      );
-                    })}
-                </div>
-              )}
-            </div>
-            <button type="button" onClick={handleSearch} style={FONT}>Ir</button>
-          </div>
-        )}
+        {onSearch && <SearchBar onSearch={onSearch} />}
         <div style={{ padding: '6px' }}>
-          <p style={{ ...FONT, margin: 0, padding: '4px' }}>Cargando información de {iolSymbol}...</p>
+          <p style={{ ...FONT, margin: 0, padding: '4px' }}>{t('loading', { symbol: iolSymbol })}</p>
         </div>
       </div>
     );
@@ -802,8 +127,8 @@ export const CompanyDetailWindow: React.FC<CompanyDetailWindowProps> = ({
       <div style={{ ...WINDOW_CONTAINER, padding: '6px' }}>
         <div style={{ padding: '12px', textAlign: 'center' }}>
           <p style={{ ...FONT, fontWeight: 'bold', marginBottom: '8px' }}>{iolSymbol}</p>
-          <p style={FONT}>Este CEDEAR no tiene equivalente listado en EE.UU.</p>
-          <p style={{ ...FONT, color: COLOR_SECONDARY }}>No se puede obtener información desde FMP.</p>
+          <p style={FONT}>{t('noUsEquivalent')}</p>
+          <p style={{ ...FONT, color: COLOR_SECONDARY }}>{t('noUsEquivalentSub')}</p>
         </div>
       </div>
     );
@@ -814,7 +139,7 @@ export const CompanyDetailWindow: React.FC<CompanyDetailWindowProps> = ({
     return (
       <div style={{ ...WINDOW_CONTAINER, padding: '6px' }}>
         <p style={{ ...FONT, margin: 0, padding: '4px', color: COLOR_SECONDARY }}>
-          No se encontró información para {data.fmpTicker ?? iolSymbol}.
+          {t('noProfile', { symbol: data.fmpTicker ?? iolSymbol })}
         </p>
       </div>
     );
@@ -825,149 +150,7 @@ export const CompanyDetailWindow: React.FC<CompanyDetailWindowProps> = ({
   return (
     <div style={WINDOW_CONTAINER}>
       {/* Search bar */}
-      {onSearch && (
-        <div style={{ padding: '4px 8px', display: 'flex', gap: '4px', flexShrink: 0, borderBottom: '1px solid #808080', alignItems: 'flex-start' }}>
-          <div style={{ position: 'relative', flex: 1, minWidth: 0 }}>
-            <input
-              type="text"
-              autoComplete="off"
-              placeholder="Buscar ticker..."
-              value={searchValue}
-              onChange={(e) => setSearchValue(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Escape') {
-                  e.preventDefault();
-                  setSuggestOpen(false);
-                  return;
-                }
-                if (suggestOpen && suggestions.length > 0) {
-                  if (e.key === 'ArrowDown') {
-                    e.preventDefault();
-                    setHighlightIndex((i) => Math.min(i + 1, suggestions.length - 1));
-                    return;
-                  }
-                  if (e.key === 'ArrowUp') {
-                    e.preventDefault();
-                    setHighlightIndex((i) => Math.max(i - 1, 0));
-                    return;
-                  }
-                  if (e.key === 'Enter') {
-                    e.preventDefault();
-                    const sym = suggestions[highlightIndex]?.symbol ?? suggestions[0].symbol;
-                    pickSuggestion(sym);
-                    return;
-                  }
-                }
-                if (e.key === 'Enter') handleSearch();
-              }}
-              onFocus={() => {
-                if (searchValue.trim().length > 0 && suggestions.length > 0) setSuggestOpen(true);
-              }}
-              onBlur={() => setSuggestOpen(false)}
-              style={{ ...FONT, width: '100%', boxSizing: 'border-box', paddingTop: '2px', paddingBottom: '2px', paddingLeft: '4px', paddingRight: '4px' }}
-            />
-            {suggestOpen && searchValue.trim().length > 0 && (
-              <div
-                className="sunken-panel"
-                role="listbox"
-                style={{
-                  position: 'absolute',
-                  left: 0,
-                  right: 0,
-                  top: '100%',
-                  marginTop: 2,
-                  zIndex: 100,
-                  maxHeight: 200,
-                  overflowY: 'auto',
-                  background: '#ffffff',
-                  border: '1px solid #000000',
-                  boxShadow: '2px 2px 0 rgba(0,0,0,0.15)',
-                }}
-                onMouseDown={(e) => e.preventDefault()}
-              >
-                {suggestLoading && (
-                  <div style={{ ...FONT, padding: '4px 6px', color: COLOR_SECONDARY }}>
-                    Buscando…
-                  </div>
-                )}
-                {!suggestLoading && suggestions.length === 0 && (
-                  <div style={{ ...FONT, padding: '4px 6px', color: COLOR_SECONDARY }}>
-                    Sin coincidencias
-                  </div>
-                )}
-                {!suggestLoading &&
-                  suggestions.map((s, i) => {
-                    const active = i === highlightIndex;
-                    return (
-                      <div
-                        key={`${s.symbol}-${s.exchange}-${i}`}
-                        role="option"
-                        aria-selected={active}
-                        onMouseEnter={() => setHighlightIndex(i)}
-                        onMouseDown={(e) => {
-                          e.preventDefault();
-                          pickSuggestion(s.symbol);
-                        }}
-                        style={{
-                          ...FONT,
-                          padding: '3px 6px',
-                          cursor: 'default',
-                          userSelect: 'none',
-                          background: active ? '#000080' : '#ffffff',
-                          color: active ? '#ffffff' : '#000000',
-                          borderBottom: i < suggestions.length - 1 ? '1px solid #e0e0e0' : undefined,
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '8px',
-                        }}
-                      >
-                        <div style={{ width: 24, height: 24, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#fff', border: '1px solid #dfdfdf' }}>
-                          {/* eslint-disable-next-line @next/next/no-img-element */}
-                          <img
-                            src={`https://financialmodelingprep.com/image-stock/${s.symbol}.png`}
-                            alt=""
-                            style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }}
-                            onError={(e) => {
-                              (e.target as HTMLImageElement).style.display = 'none';
-                            }}
-                          />
-                        </div>
-                        <div style={{ minWidth: 0, flex: 1 }}>
-                          <div>
-                            <span style={{ fontWeight: 'bold' }}>{s.symbol}</span>
-                            {s.exchange ? (
-                              <span style={{ marginLeft: 6, opacity: active ? 0.9 : 1, color: active ? '#dcdcdc' : COLOR_SECONDARY }}>
-                                {s.exchange}
-                              </span>
-                            ) : null}
-                            {s.currency ? (
-                              <span style={{ marginLeft: 6, opacity: active ? 0.9 : 1, color: active ? '#dcdcdc' : COLOR_SECONDARY }}>
-                                · {s.currency}
-                              </span>
-                            ) : null}
-                          </div>
-                          <div
-                            style={{
-                              marginTop: 1,
-                              fontSize: '11px',
-                              color: active ? '#e8e8e8' : '#404040',
-                              whiteSpace: 'nowrap',
-                              overflow: 'hidden',
-                              textOverflow: 'ellipsis',
-                            }}
-                          >
-                            {s.name || '—'}
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })}
-              </div>
-            )}
-          </div>
-          <button type="button" onClick={handleSearch} style={FONT}>Ir</button>
-        </div>
-      )}
+      {onSearch && <SearchBar onSearch={onSearch} />}
 
       {/* Header */}
       <div style={{ padding: '6px 8px', display: 'flex', gap: '8px', alignItems: 'center', flexShrink: 0, borderBottom: '1px solid #808080' }}>
@@ -1011,21 +194,21 @@ export const CompanyDetailWindow: React.FC<CompanyDetailWindowProps> = ({
       <div style={{ padding: '6px', display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>
         <menu role="tablist">
           <li role="tab" aria-selected={tab === 'info'}>
-            <a href="#info" onClick={(e) => { e.preventDefault(); setTab('info'); }}>Info</a>
+            <a href="#info" onClick={(e) => { e.preventDefault(); setTab('info'); }}>{t('tabs.info')}</a>
           </li>
           {hasChartData && (
             <li role="tab" aria-selected={tab === 'charts'}>
-              <a href="#charts" onClick={(e) => { e.preventDefault(); setTab('charts'); }}>Charts</a>
+              <a href="#charts" onClick={(e) => { e.preventDefault(); setTab('charts'); }}>{t('tabs.charts')}</a>
             </li>
           )}
           {!data.isEtf && data.fmpTicker && (
             <li role="tab" aria-selected={tab === 'advanced'}>
-              <a href="#advanced" onClick={(e) => { e.preventDefault(); setTab('advanced'); }}>Avanzado</a>
+              <a href="#advanced" onClick={(e) => { e.preventDefault(); setTab('advanced'); }}>{t('tabs.advanced')}</a>
             </li>
           )}
           {data.fmpTicker && (
             <li role="tab" aria-selected={tab === 'news'}>
-              <a href="#news" onClick={(e) => { e.preventDefault(); setTab('news'); }}>Noticias</a>
+              <a href="#news" onClick={(e) => { e.preventDefault(); setTab('news'); }}>{t('tabs.news')}</a>
             </li>
           )}
         </menu>
@@ -1034,143 +217,23 @@ export const CompanyDetailWindow: React.FC<CompanyDetailWindowProps> = ({
         <div className="window" role="tabpanel" style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0, margin: 0, marginTop: '-1px' }}>
           <div className="window-body" style={{ flex: 1, display: 'flex', flexDirection: 'column', overflowY: 'auto', overflowX: 'hidden', minHeight: 0, margin: 0, padding: '6px' }}>
         {tab === 'info' && (
-          <>
-            {/* Stats */}
-            <fieldset style={{ margin: '4px 0 2px', padding: '4px 4px 4px 2px' }}>
-              <legend style={FONT}>{data.isEtf ? 'Datos del ETF' : 'Datos de la empresa'}</legend>
-              <table style={{ borderCollapse: 'collapse' }}>
-                <tbody>
-                  {!data.isEtf && p.sector && <StatRow label="Sector" value={p.sector} />}
-                  {!data.isEtf && p.industry && <StatRow label="Industria" value={p.industry} />}
-                  {p.mktCap > 0 && <StatRow label="Market Cap" value={fmtMktCap(p.mktCap)} />}
-                  {p.beta !== 0 && <StatRow label="Beta" value={p.beta.toFixed(2)} />}
-                  {p.volAvg > 0 && <StatRow label="Vol. promedio" value={fmtVol(p.volAvg)} />}
-                  {p.country && <StatRow label="País" value={p.country} />}
-                  {p.ipoDate && <StatRow label={data.isEtf ? 'Inception' : 'IPO'} value={p.ipoDate} />}
-                  {p.website && (
-                    <StatRow
-                      label="Web"
-                      value={
-                        <a
-                          href={p.website}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          style={{ ...FONT, color: COLOR_LINK, textDecoration: 'underline' }}
-                        >
-                          {p.website.replace(/^https?:\/\/(www\.)?/, '').replace(/\/$/, '')}
-                        </a>
-                      }
-                    />
-                  )}
-                </tbody>
-              </table>
-            </fieldset>
-
-            <hr style={HR98} />
-
-            {/* Description */}
-            <div className="sunken-panel" style={{ padding: '4px 6px', background: '#fff' }}>
-              <p style={{ ...FONT, margin: 0, lineHeight: '1.4' }}>
-                {p.description || 'Sin descripción disponible.'}
-              </p>
-            </div>
-          </>
+          <InfoTab profile={p} isEtf={data.isEtf} />
         )}
 
         {tab === 'charts' && (
-          <>
-            <PriceChart data={data.priceHistory} />
-            <VolumeChart data={data.priceHistory} />
-            {!data.isEtf && (
-              <>
-                <RevenueChart data={data.incomeStatements} />
-                <MarginsChart data={data.incomeStatements} />
-                <EPSChart data={data.incomeStatements} />
-              </>
-            )}
-          </>
+          <ChartsTab
+            priceHistory={data.priceHistory}
+            incomeStatements={data.incomeStatements}
+            isEtf={data.isEtf}
+          />
         )}
 
         {tab === 'advanced' && (
-          <>
-            {advLoading && (
-              <p style={{ ...FONT, padding: '8px', color: COLOR_SECONDARY }}>Cargando datos avanzados...</p>
-            )}
-            {!advLoading && advData && (
-              <>
-                <ScoresSummary scores={advData.scores} dcf={advData.dcf} />
-                <ValuationChart data={advData.keyMetrics} />
-                <ProfitabilityChart data={advData.keyMetrics} />
-                <CashFlowChart data={advData.cashFlow} />
-                <BalanceSheetChart data={advData.balanceSheet} />
-                <LeverageChart data={advData.keyMetrics} />
-              </>
-            )}
-            {!advLoading && !advData && (
-              <p style={{ ...FONT, padding: '8px', color: COLOR_SECONDARY }}>No se pudieron obtener datos avanzados.</p>
-            )}
-          </>
+          <AdvancedTab advLoading={advLoading} advData={advData} />
         )}
 
-        {tab === 'news' && (
-          <>
-            {newsLoading && (
-              <p style={{ ...FONT, padding: '8px', color: COLOR_SECONDARY }}>Cargando noticias...</p>
-            )}
-            {!newsLoading && newsData && newsData.length > 0 && (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', padding: '4px' }}>
-                {newsData.map((news, i) => (
-                  <div
-                    key={i}
-                    style={{
-                      display: 'flex',
-                      gap: '8px',
-                      paddingBottom: '6px',
-                      borderBottom: i < newsData.length - 1 ? '1px solid #dfdfdf' : undefined,
-                    }}
-                  >
-                    {news.image && (
-                      /* eslint-disable-next-line @next/next/no-img-element */
-                      <img
-                        src={news.image}
-                        alt=""
-                        style={{ width: 56, height: 56, objectFit: 'cover', flexShrink: 0, border: '1px solid #808080' }}
-                      />
-                    )}
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', minWidth: 0 }}>
-                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', alignItems: 'center' }}>
-                        <span style={{ ...FONT, color: COLOR_SECONDARY }}>{news.publisher}</span>
-                        {news.providerPublishTime && (
-                          <span style={{ ...FONT, color: COLOR_SECONDARY }}>
-                            {new Date(news.providerPublishTime).toLocaleDateString()}
-                          </span>
-                        )}
-                      </div>
-                      <a
-                        href={news.link}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        style={{ ...FONT, color: COLOR_LINK, textDecoration: 'underline', cursor: 'pointer' }}
-                      >
-                        {news.title}
-                      </a>
-                      {news.text && (
-                        <p style={{ ...FONT, margin: 0, lineHeight: '1.3' }}>
-                          {news.text.length > 180 ? news.text.slice(0, 180) + '...' : news.text}
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-            {!newsLoading && newsData && newsData.length === 0 && (
-              <p style={{ ...FONT, padding: '8px', color: COLOR_SECONDARY }}>No hay noticias disponibles para {data.fmpTicker}.</p>
-            )}
-            {!newsLoading && !newsData && (
-              <p style={{ ...FONT, padding: '8px', color: COLOR_SECONDARY }}>No se pudieron obtener noticias.</p>
-            )}
-          </>
+        {tab === 'news' && data.fmpTicker && (
+          <NewsTab newsLoading={newsLoading} newsData={newsData} fmpTicker={data.fmpTicker} />
         )}
           </div>
         </div>

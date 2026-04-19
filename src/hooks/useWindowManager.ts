@@ -1,5 +1,6 @@
 import { useState, useCallback, useEffect, useMemo, useRef } from 'react';
 import { WindowState } from '@/components/ui/DraggableResizableWindow';
+import { useWindowsT } from '@/lib/i18n';
 
 export const APP_IDS = ['portfolio', 'news', 'marketdata', 'movements', 'backtesting', 'autotrader', 'displayproperties'] as const;
 export type AppId = (typeof APP_IDS)[number];
@@ -15,25 +16,36 @@ export const DEFAULT_WINDOWS: Record<AppId, { width: number; height: number; x: 
   displayproperties: { x: 200, y: 100, width: 420, height: 520 },
 };
 
-export const APP_LABELS: Record<AppId, string> = {
-  portfolio: 'Portafolio y Cuenta',
-  news: 'Market Intelligence Feed',
-  marketdata: 'Market Data & Trade',
-  movements: 'Movimientos',
+export function useAppLabels(): Record<AppId, string> {
+  const t = useWindowsT();
+  return useMemo(() => ({
+    portfolio: t('portfolio'),
+    news: t('news'),
+    marketdata: t('marketdata'),
+    movements: t('movements'),
+    backtesting: t('backtesting'),
+    autotrader: t('autotrader'),
+    displayproperties: t('displayproperties'),
+  }), [t]);
+}
 
-  backtesting: 'Backtesting Engine',
-  autotrader: 'Auto Trader',
-  displayproperties: 'Display Properties',
-};
+export const COMPANY_DETAIL_DEFAULTS = { width: 560, height: 600 };
 
-export const COMPANY_DETAIL_DEFAULTS = { x: 200, y: 60, width: 560, height: 600 };
+function centerPosition(width: number, height: number): { x: number; y: number } {
+  if (typeof window === 'undefined') return { x: 0, y: 0 };
+  return {
+    x: Math.max(0, Math.floor((window.innerWidth - width) / 2)),
+    y: Math.max(0, Math.floor((window.innerHeight - height) / 2)),
+  };
+}
 
 function createWindowState(id: AppId, zIndex: number, minimized = false): WindowState {
   const def = DEFAULT_WINDOWS[id];
+  const { x, y } = centerPosition(def.width, def.height);
   return {
     id,
-    x: def.x,
-    y: def.y,
+    x,
+    y,
     width: def.width,
     height: def.height,
     zIndex,
@@ -61,7 +73,7 @@ export function useWindowManager() {
   }, [nextZ]);
 
   /** Open a dynamic window (not in APP_IDS) with custom defaults. If it already exists, focus it. */
-  const openDynamicWindow = useCallback((id: string, defaults: { x: number; y: number; width: number; height: number }) => {
+  const openDynamicWindow = useCallback((id: string, defaults: { width: number; height: number; offset?: number }) => {
     const newZ = nextZ();
     setFocusedId(id);
     setWindows((prev) => {
@@ -69,7 +81,9 @@ export function useWindowManager() {
       if (current) {
         return { ...prev, [id]: { ...current, minimized: false, zIndex: newZ } };
       }
-      return { ...prev, [id]: { id, ...defaults, zIndex: newZ, minimized: false } };
+      const center = centerPosition(defaults.width, defaults.height);
+      const off = defaults.offset ?? 0;
+      return { ...prev, [id]: { id, x: center.x + off, y: center.y + off, width: defaults.width, height: defaults.height, zIndex: newZ, minimized: false } };
     });
   }, [nextZ]);
 

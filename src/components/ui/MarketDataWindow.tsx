@@ -6,6 +6,7 @@ import {
   COLOR_POSITIVE, COLOR_NEGATIVE, COLOR_SECONDARY, COLOR_DISABLED,
 } from '@/lib/theme/win98';
 import { QuickTradePanel, QuickTradePanelProps } from './QuickTradePanel';
+import { useMarketDataT } from '@/lib/i18n';
 
 interface MarketItem {
   symbol: string;
@@ -90,9 +91,10 @@ interface ListViewProps {
   sortDir: SortDir;
   onSort: (col: SortCol) => void;
   onCompanyDetail?: (symbol: string) => void;
+  t: ReturnType<typeof useMarketDataT>;
 }
 
-const ListView: React.FC<ListViewProps> = ({ items, companyNames, sortCol, sortDir, onSort, onCompanyDetail }) => {
+const ListView: React.FC<ListViewProps> = ({ items, companyNames, sortCol, sortDir, onSort, onCompanyDetail, t }) => {
   const [selectedSymbol, setSelectedSymbol] = useState<string | null>(null);
 
   const enriched = items.map((item) => {
@@ -134,13 +136,13 @@ const ListView: React.FC<ListViewProps> = ({ items, companyNames, sortCol, sortD
         <thead>
           <tr>
             <SortableTh col="symbol" activeCol={sortCol} dir={sortDir} onSort={onSort}>
-              Símbolo
+              {t('col.symbol')}
             </SortableTh>
             <SortableTh col="last" activeCol={sortCol} dir={sortDir} onSort={onSort} style={{ textAlign: 'right' }}>
-              Último
+              {t('col.last')}
             </SortableTh>
             <SortableTh col="pct" activeCol={sortCol} dir={sortDir} onSort={onSort} style={{ textAlign: 'right' }}>
-              7D %
+              {t('col.pct')}
             </SortableTh>
             <th
               style={{
@@ -157,7 +159,7 @@ const ListView: React.FC<ListViewProps> = ({ items, companyNames, sortCol, sortD
                 textOverflow: 'ellipsis',
               }}
             >
-              7 Días
+              {t('col.chart')}
             </th>
           </tr>
         </thead>
@@ -233,6 +235,7 @@ export const MarketDataWindow: React.FC<MarketDataWindowProps> = ({
   onCompanyDetail,
   quickTradeProps,
 }) => {
+  const t = useMarketDataT();
   const [activeTab, setActiveTab] = useState<'mine' | 'all' | 'trade'>('mine');
   const [sortCol, setSortCol] = useState<SortCol>('symbol');
   const [sortDir, setSortDir] = useState<SortDir>('asc');
@@ -260,7 +263,7 @@ export const MarketDataWindow: React.FC<MarketDataWindowProps> = ({
             href="#mine"
             onClick={(e) => { e.preventDefault(); setActiveTab('mine'); }}
           >
-            Mis CEDEARs{mineItems.length > 0 ? ` (${mineItems.length})` : ''}
+            {t('tabs.mine')}{mineItems.length > 0 ? ` (${mineItems.length})` : ''}
           </a>
         </li>
         <li role="tab" aria-selected={activeTab === 'all'}>
@@ -268,7 +271,7 @@ export const MarketDataWindow: React.FC<MarketDataWindowProps> = ({
             href="#all"
             onClick={(e) => { e.preventDefault(); setActiveTab('all'); }}
           >
-            Todos{allItems.length > 0 ? ` (${allItems.length})` : ''}
+            {t('tabs.all')}{allItems.length > 0 ? ` (${allItems.length})` : ''}
           </a>
         </li>
         <li role="tab" aria-selected={activeTab === 'trade'}>
@@ -276,7 +279,7 @@ export const MarketDataWindow: React.FC<MarketDataWindowProps> = ({
             href="#trade"
             onClick={(e) => { e.preventDefault(); setActiveTab('trade'); }}
           >
-            Operar
+            {t('tabs.trade')}
           </a>
         </li>
       </menu>
@@ -288,21 +291,19 @@ export const MarketDataWindow: React.FC<MarketDataWindowProps> = ({
           {isMarketDataTab && (
             <fieldset style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', minHeight: 0, margin: 0 }}>
               <legend>
-                {activeTab === 'mine' ? 'Mis CEDEARs' : 'Todos los CEDEARs'}
+                {activeTab === 'mine' ? t('legend.mine') : t('legend.all')}
                 {activeItems.length > 0 ? ` (${activeItems.length})` : ''}
               </legend>
 
               {isLoadingMarketData && !marketData ? (
-                <p style={{ margin: 0, padding: 4 }}>Cargando datos de mercado…</p>
+                <p style={{ margin: 0, padding: 4 }}>{t('loading')}</p>
               ) : !marketData ? (
                 <p style={{ margin: 0, padding: 4, color: COLOR_NEGATIVE }}>
-                  Error al cargar datos.
+                  {t('error')}
                 </p>
               ) : activeItems.length === 0 ? (
                 <p style={{ margin: 0, padding: 4, color: COLOR_SECONDARY }}>
-                  {activeTab === 'mine'
-                    ? 'No hay CEDEARs en tenencia.'
-                    : 'No hay otros CEDEARs disponibles.'}
+                  {activeTab === 'mine' ? t('empty.mine') : t('empty.all')}
                 </p>
               ) : (
                 <ListView
@@ -312,6 +313,7 @@ export const MarketDataWindow: React.FC<MarketDataWindowProps> = ({
                   sortDir={sortDir}
                   onSort={handleSort}
                   onCompanyDetail={onCompanyDetail}
+                  t={t}
                 />
               )}
             </fieldset>
@@ -328,11 +330,11 @@ export const MarketDataWindow: React.FC<MarketDataWindowProps> = ({
       <div style={REFRESH_FOOTER}>
         {isMarketDataTab ? (
           <button type="button" onClick={onRefreshMarketData} disabled={isLoadingMarketData}>
-            {isLoadingMarketData ? 'Actualizando...' : 'Actualizar MD'}
+            {isLoadingMarketData ? t('footer.updatingMd') : t('footer.updateMd')}
           </button>
         ) : (
           <button type="button" onClick={quickTradeProps.onRefresh} disabled={quickTradeProps.isLoading}>
-            {quickTradeProps.isLoading ? 'Actualizando...' : 'Actualizar Op'}
+            {quickTradeProps.isLoading ? t('footer.updatingOp') : t('footer.updateOp')}
           </button>
         )}
       </div>
@@ -342,10 +344,10 @@ export const MarketDataWindow: React.FC<MarketDataWindowProps> = ({
         <p className="status-bar-field">
           {isMarketDataTab ? (
             marketData
-              ? `${activeItems.length} elemento${activeItems.length !== 1 ? 's' : ''}`
-              : 'Sin datos'
+              ? t('status.items', { count: activeItems.length, s: activeItems.length !== 1 ? 's' : '' })
+              : t('status.noData')
           ) : (
-            `${quickTradeProps.cedears.length} CEDEAR${quickTradeProps.cedears.length !== 1 ? 's' : ''} operable${quickTradeProps.cedears.length !== 1 ? 's' : ''}`
+            t('status.tradable', { count: quickTradeProps.cedears.length, s: quickTradeProps.cedears.length !== 1 ? 's' : '', s2: quickTradeProps.cedears.length !== 1 ? 's' : '' })
           )}
         </p>
       </div>

@@ -15,6 +15,7 @@ import {
   COLOR_NEGATIVE,
   HR98,
 } from '@/lib/theme/win98';
+import { useMarketDataT } from '@/lib/i18n';
 
 export interface TradableCedear {
   simbolo: string;
@@ -63,6 +64,7 @@ export const QuickTradePanel: React.FC<QuickTradePanelProps> = ({
   onBuy,
   onCompanyDetail,
 }) => {
+  const t = useMarketDataT();
   const [sortKey, setSortKey] = useState<SortKey>('volumen');
   const [sortDir, setSortDir] = useState<SortDir>('desc');
   const [filter, setFilter] = useState('');
@@ -124,20 +126,18 @@ export const QuickTradePanel: React.FC<QuickTradePanelProps> = ({
       const detail = msgs.map(m => m.description || m.title).filter(Boolean).join('. ');
 
       if (result.data.ok) {
-        const successMsg = result.data.numeroOperacion 
-          ? `Orden enviada correctamente (Operación #${result.data.numeroOperacion})` 
-          : (detail || 'Orden enviada correctamente');
+        const successMsg = result.data.numeroOperacion
+          ? t('trade.orderSentWithNum', { num: result.data.numeroOperacion })
+          : (detail || t('trade.orderSent'));
         setOrderStatus({ type: 'success', msg: successMsg });
         setSelected(null);
       } else if (detail) {
-        // IOL explicitly rejected with a reason
         setOrderStatus({ type: 'error', msg: detail });
       } else {
-        // IOL returned ok:false without explanation — order may still have gone through
-        setOrderStatus({ type: 'warning', msg: 'IOL no confirmó la orden. Verificá en Movimientos si fue enviada.' });
+        setOrderStatus({ type: 'warning', msg: t('trade.orderUnconfirmed') });
       }
     } else {
-      setOrderStatus({ type: 'error', msg: result.error || 'Error al enviar orden' });
+      setOrderStatus({ type: 'error', msg: result.error || t('trade.orderError') });
     }
     setIsSending(false);
   };
@@ -148,7 +148,7 @@ export const QuickTradePanel: React.FC<QuickTradePanelProps> = ({
   if (isLoading) {
     return (
       <div style={{ padding: '6px', height: '100%' }}>
-        <p style={{ ...FONT, margin: 0, padding: '4px' }}>Cargando CEDEARs disponibles...</p>
+        <p style={{ ...FONT, margin: 0, padding: '4px' }}>{t('trade.loading')}</p>
       </div>
     );
   }
@@ -158,11 +158,11 @@ export const QuickTradePanel: React.FC<QuickTradePanelProps> = ({
       {/* Summary bar */}
       <div style={{ padding: '4px 6px', flexShrink: 0, borderBottom: '1px solid #808080' }}>
         <div style={{ ...FONT, display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
-          <span>Disponible: <b>AR$ {fmt(cash)}</b></span>
+          <span>{t('trade.available')} <b>AR$ {fmt(cash)}</b></span>
           {comprometido > 0 && (
-            <span style={{ color: COLOR_NEGATIVE }}>Comprometido: <b>AR$ {fmt(comprometido)}</b></span>
+            <span style={{ color: COLOR_NEGATIVE }}>{t('trade.committed')} <b>AR$ {fmt(comprometido)}</b></span>
           )}
-          <span>Operable (neto com.): <b>AR$ {fmt(effectiveCash)}</b></span>
+          <span>{t('trade.operable')} <b>AR$ {fmt(effectiveCash)}</b></span>
         </div>
       </div>
 
@@ -170,20 +170,20 @@ export const QuickTradePanel: React.FC<QuickTradePanelProps> = ({
       <div style={{ padding: '4px 6px', flexShrink: 0, display: 'flex', gap: '8px', alignItems: 'center' }}>
         <input
           type="text"
-          placeholder="Buscar ticker o nombre..."
+          placeholder={t('trade.searchPlaceholder')}
           value={filter}
           onChange={(e) => setFilter(e.target.value)}
           style={{ ...FONT, flex: 1, padding: '2px 4px', boxSizing: 'border-box' }}
         />
         <div style={{ ...FONT, display: 'flex', alignItems: 'center', gap: '4px', whiteSpace: 'nowrap' }}>
-          <span>Filtro:</span>
+          <span>{t('trade.filterLabel')}</span>
           <select
             value={showAll ? 'all' : 'buyable'}
             onChange={(e) => setShowAll(e.target.value === 'all')}
             style={FONT}
           >
-            <option value="buyable">Solo con saldo</option>
-            <option value="all">Todos</option>
+            <option value="buyable">{t('trade.filterBuyable')}</option>
+            <option value="all">{t('trade.filterAll')}</option>
           </select>
         </div>
       </div>
@@ -194,20 +194,20 @@ export const QuickTradePanel: React.FC<QuickTradePanelProps> = ({
           <thead>
             <tr>
               <th style={COL_HEADER} onClick={() => toggleSort('base')}>
-                Ticker {sortKey === 'base' ? (sortDir === 'asc' ? '\u25b2' : '\u25bc') : ''}
+                {t('trade.col.ticker')} {sortKey === 'base' ? (sortDir === 'asc' ? '\u25b2' : '\u25bc') : ''}
               </th>
-              <th style={COL_HEADER}>Nombre</th>
+              <th style={COL_HEADER}>{t('trade.col.name')}</th>
               <th style={COL_HEADER_RIGHT} onClick={() => toggleSort('ultimoPrecio')}>
-                Precio {sortKey === 'ultimoPrecio' ? (sortDir === 'asc' ? '\u25b2' : '\u25bc') : ''}
+                {t('trade.col.price')} {sortKey === 'ultimoPrecio' ? (sortDir === 'asc' ? '\u25b2' : '\u25bc') : ''}
               </th>
               <th style={COL_HEADER_RIGHT} onClick={() => toggleSort('variacionPorcentual')}>
-                Var% {sortKey === 'variacionPorcentual' ? (sortDir === 'asc' ? '\u25b2' : '\u25bc') : ''}
+                {t('trade.col.var')} {sortKey === 'variacionPorcentual' ? (sortDir === 'asc' ? '\u25b2' : '\u25bc') : ''}
               </th>
               <th style={COL_HEADER_RIGHT} onClick={() => toggleSort('maxCantidad')}>
-                Max Qty {sortKey === 'maxCantidad' ? (sortDir === 'asc' ? '\u25b2' : '\u25bc') : ''}
+                {t('trade.col.maxQty')} {sortKey === 'maxCantidad' ? (sortDir === 'asc' ? '\u25b2' : '\u25bc') : ''}
               </th>
-              <th style={COL_HEADER_RIGHT} onClick={() => toggleSort('volumen')} title="Volumen operado en el día">
-                Vol. Diario {sortKey === 'volumen' ? (sortDir === 'asc' ? '\u25b2' : '\u25bc') : ''}
+              <th style={COL_HEADER_RIGHT} onClick={() => toggleSort('volumen')}>
+                {t('trade.col.dailyVol')} {sortKey === 'volumen' ? (sortDir === 'asc' ? '\u25b2' : '\u25bc') : ''}
               </th>
             </tr>
           </thead>
@@ -243,7 +243,7 @@ export const QuickTradePanel: React.FC<QuickTradePanelProps> = ({
             {sorted.length === 0 && (
               <tr>
                 <td colSpan={6} style={{ ...CELL, textAlign: 'center', padding: '12px' }}>
-                  {filter ? 'Sin resultados' : (showAll ? 'No hay CEDEARs' : 'No hay CEDEARs disponibles con tu saldo actual')}
+                  {filter ? t('trade.noResults') : (showAll ? t('trade.noCedears') : t('trade.noCedearsAvailable'))}
                 </td>
               </tr>
             )}
@@ -254,11 +254,11 @@ export const QuickTradePanel: React.FC<QuickTradePanelProps> = ({
       {/* Order panel */}
       {selected && (
         <fieldset style={{ margin: '6px', padding: '4px 8px' }}>
-          <legend style={FONT}>Comprar {selected.base}</legend>
+          <legend style={FONT}>{t('trade.buy', { ticker: selected.base })}</legend>
 
           <div style={{ display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
             <label style={FONT}>
-              Cantidad:
+              {t('trade.qty')}
               <input
                 type="number"
                 min={1}
@@ -282,7 +282,7 @@ export const QuickTradePanel: React.FC<QuickTradePanelProps> = ({
             </label>
 
             <label style={FONT}>
-              Plazo:
+              {t('trade.term')}
               <select
                 value={plazo}
                 onChange={(e) => setPlazo(e.target.value as 't0' | 't1' | 't2')}
@@ -295,14 +295,14 @@ export const QuickTradePanel: React.FC<QuickTradePanelProps> = ({
             </label>
 
             <label style={FONT}>
-              Tipo:
+              {t('trade.type')}
               <select
                 value={tipoOrden}
                 onChange={(e) => setTipoOrden(e.target.value as 'precioLimite' | 'precioMercado')}
                 style={{ ...FONT, marginLeft: '4px' }}
               >
-                <option value="precioLimite">Limite</option>
-                <option value="precioMercado">Mercado</option>
+                <option value="precioLimite">{t('trade.typeLimit')}</option>
+                <option value="precioMercado">{t('trade.typeMarket')}</option>
               </select>
             </label>
           </div>
@@ -311,9 +311,9 @@ export const QuickTradePanel: React.FC<QuickTradePanelProps> = ({
 
           <div style={{ ...FONT, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <div>
-              <span>Total: <b>${fmt(totalEstimado)}</b></span>
+              <span>{t('trade.total')} <b>${fmt(totalEstimado)}</b></span>
               <span style={{ color: '#808080', marginLeft: '8px' }}>
-                (com. est. ~${fmt(comisionEstimada)})
+                {t('trade.commissionEst', { amount: fmt(comisionEstimada) })}
               </span>
             </div>
             <div style={{ display: 'flex', gap: '6px' }}>
@@ -322,7 +322,7 @@ export const QuickTradePanel: React.FC<QuickTradePanelProps> = ({
                 onClick={() => setSelected(null)}
                 style={FONT}
               >
-                Cancelar
+                {t('trade.cancel')}
               </button>
               <button
                 type="button"
@@ -330,7 +330,7 @@ export const QuickTradePanel: React.FC<QuickTradePanelProps> = ({
                 disabled={isSending || cantidad < 1}
                 style={{ ...FONT, fontWeight: 'bold', minWidth: '80px' }}
               >
-                {isSending ? 'Enviando...' : 'Comprar'}
+                {isSending ? t('trade.sending') : t('trade.buyBtn')}
               </button>
             </div>
           </div>

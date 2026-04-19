@@ -4,17 +4,17 @@ export const AI_MODELS = [
   {
     id: 'claude-haiku-4-5-20251001',
     label: 'Claude Haiku 4.5',
-    description: 'Rápido y económico',
+    descriptionKey: 'model.haiku',
   },
   {
     id: 'claude-sonnet-4-6',
     label: 'Claude Sonnet 4.6',
-    description: 'Equilibrio entre velocidad y calidad',
+    descriptionKey: 'model.sonnet',
   },
   {
     id: 'claude-opus-4-6',
     label: 'Claude Opus 4.6',
-    description: 'Máxima capacidad de razonamiento',
+    descriptionKey: 'model.opus',
   },
 ] as const;
 
@@ -33,7 +33,15 @@ const BYMA_OPEN_HOUR = 11;
 const BYMA_CLOSE_HOUR = 17;
 const ART_UTC_OFFSET = -3;
 
-export function isMarketOpen(now: Date = new Date()): { open: boolean; reason: string } {
+export interface MarketStatus {
+  open: boolean;
+  /** i18n key under 'market.' namespace */
+  reasonKey: string;
+  /** interpolation params for the reason key */
+  reasonParams?: Record<string, string | number>;
+}
+
+export function isMarketOpen(now: Date = new Date()): MarketStatus {
   // Convert to ART (UTC-3)
   const utcHours = now.getUTCHours();
   const utcMinutes = now.getUTCMinutes();
@@ -48,16 +56,16 @@ export function isMarketOpen(now: Date = new Date()): { open: boolean; reason: s
   const dayOfWeek = artDate.getUTCDay(); // 0=Sun, 6=Sat
 
   if (dayOfWeek === 0 || dayOfWeek === 6) {
-    return { open: false, reason: 'fin de semana' };
+    return { open: false, reasonKey: 'market.weekend' };
   }
 
   if (artHour < BYMA_OPEN_HOUR) {
-    return { open: false, reason: `abre a las ${BYMA_OPEN_HOUR}:00 ART` };
+    return { open: false, reasonKey: 'market.opensAt', reasonParams: { hour: `${BYMA_OPEN_HOUR}:00` } };
   }
 
   if (artHour >= BYMA_CLOSE_HOUR) {
-    return { open: false, reason: `cerró a las ${BYMA_CLOSE_HOUR}:00 ART` };
+    return { open: false, reasonKey: 'market.closedAt', reasonParams: { hour: `${BYMA_CLOSE_HOUR}:00` } };
   }
 
-  return { open: true, reason: `rueda continua (${artHour}:${artMin.toString().padStart(2, '0')} ART)` };
+  return { open: true, reasonKey: 'market.continuous', reasonParams: { time: `${artHour}:${artMin.toString().padStart(2, '0')}` } };
 }

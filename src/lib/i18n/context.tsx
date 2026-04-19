@@ -1,17 +1,10 @@
 'use client';
 
-import { createContext, useContext, useState, useCallback, type ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from 'react';
 
 export type Locale = 'es' | 'en';
 
 const STORAGE_KEY = 'locale';
-
-function getInitialLocale(): Locale {
-  if (typeof window === 'undefined') return 'es';
-  const stored = localStorage.getItem(STORAGE_KEY);
-  if (stored === 'es' || stored === 'en') return stored;
-  return 'es';
-}
 
 interface LocaleContextValue {
   locale: Locale;
@@ -24,7 +17,15 @@ const LocaleContext = createContext<LocaleContextValue>({
 });
 
 export function LocaleProvider({ children }: { children: ReactNode }) {
-  const [locale, setLocaleState] = useState<Locale>(getInitialLocale);
+  const [locale, setLocaleState] = useState<Locale>('es');
+
+  // Hydrate from localStorage after mount to avoid SSR mismatch
+  useEffect(() => {
+    const stored = localStorage.getItem(STORAGE_KEY);
+    if (stored === 'es' || stored === 'en') {
+      setLocaleState(stored);
+    }
+  }, []);
 
   const setLocale = useCallback((l: Locale) => {
     setLocaleState(l);

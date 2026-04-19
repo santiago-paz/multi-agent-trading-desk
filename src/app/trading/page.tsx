@@ -21,7 +21,8 @@ import { getPortfolioSummary, getMarketData, getOperations, getCedearsForTrading
 import { PortfolioResponse, Operation, DatosPerfil, EstadoCuenta } from '@/lib/iol/types';
 import type { HistoricalRow } from '@/lib/fmp/types';
 import { DESKTOP_APP_ICONS } from '@/lib/win98se-icons';
-import { useWindowManager, AppId, APP_LABELS, COMPANY_DETAIL_DEFAULTS } from '@/hooks/useWindowManager';
+import { useWindowManager, AppId, useAppLabels, COMPANY_DETAIL_DEFAULTS } from '@/hooks/useWindowManager';
+import { useWindowsT } from '@/lib/i18n';
 
 interface CompanyDetailInstance {
   symbol: string;
@@ -55,15 +56,15 @@ const DEFAULT_ICON_POSITIONS: Record<IconId, { x: number; y: number }> = {
   displayproperties: { x: 8, y: 392 },
 };
 
-const DESKTOP_ICON_CONFIG: { id: IconId; label: string; emoji: string; iconKey: keyof typeof DESKTOP_APP_ICONS }[] = [
-  { id: 'portfolio',  label: 'Portfolio',    emoji: '📊', iconKey: 'portfolio'  },
-  { id: 'news',       label: 'News',         emoji: '📰', iconKey: 'news'       },
-  { id: 'marketdata', label: 'Market & Trade',  emoji: '📈', iconKey: 'marketdata' },
-  { id: 'movements',  label: 'Movimientos',  emoji: '💸', iconKey: 'movements'  },
+const DESKTOP_ICON_CONFIG: { id: IconId; emoji: string; iconKey: keyof typeof DESKTOP_APP_ICONS }[] = [
+  { id: 'portfolio',  emoji: '📊', iconKey: 'portfolio'  },
+  { id: 'news',       emoji: '📰', iconKey: 'news'       },
+  { id: 'marketdata', emoji: '📈', iconKey: 'marketdata' },
+  { id: 'movements',  emoji: '💸', iconKey: 'movements'  },
 
-  { id: 'backtesting', label: 'Backtesting', emoji: '📉', iconKey: 'backtesting' },
-  { id: 'autotrader', label: 'Auto Trader', emoji: '🤖', iconKey: 'autotrader' },
-  { id: 'displayproperties', label: 'Display', emoji: '🖥', iconKey: 'displayproperties' },
+  { id: 'backtesting', emoji: '📉', iconKey: 'backtesting' },
+  { id: 'autotrader', emoji: '🤖', iconKey: 'autotrader' },
+  { id: 'displayproperties', emoji: '🖥', iconKey: 'displayproperties' },
 ];
 
 // Grid cell size for "Alinear Iconos" — slightly larger than icon width (64px) for breathing room
@@ -74,6 +75,8 @@ const ICON_HEIGHT = 64;
 import { useMepStore } from '@/lib/store/mep-store';
 
 export default function TradingDashboard() {
+  const APP_LABELS = useAppLabels();
+  const tw = useWindowsT();
   const [portfolio, setPortfolio] = useState<PortfolioResponse | null>(null);
   const [usdPrices, setUsdPrices] = useState<Record<string, { price: number; pct: number }>>({});
   const [isLoadingPortfolio, setIsLoadingPortfolio] = useState(true);
@@ -411,14 +414,10 @@ export default function TradingDashboard() {
       return;
     }
 
-    // Stagger position so overlapping windows are offset
+    // Stagger position so overlapping windows are offset from center
     const offset = (companyDetailCountRef.current % 6) * 28;
     companyDetailCountRef.current++;
-    openDynamicWindow(windowId, {
-      ...COMPANY_DETAIL_DEFAULTS,
-      x: COMPANY_DETAIL_DEFAULTS.x + offset,
-      y: COMPANY_DETAIL_DEFAULTS.y + offset,
-    });
+    openDynamicWindow(windowId, { ...COMPANY_DETAIL_DEFAULTS, offset });
 
     setCompanyDetailInstances((prev) => ({
       ...prev,
@@ -549,11 +548,11 @@ export default function TradingDashboard() {
 
       {/* Desktop icons */}
       <div className="absolute inset-0 pointer-events-none z-0">
-        {DESKTOP_ICON_CONFIG.map(({ id, label, emoji, iconKey }) => (
+        {DESKTOP_ICON_CONFIG.map(({ id, emoji, iconKey }) => (
           <DesktopIcon
             key={id}
             id={id}
-            label={label}
+            label={tw(`icon.${id}` as Parameters<typeof tw>[0])}
             iconSrc={DESKTOP_APP_ICONS[iconKey]}
             icon={emoji}
             onClick={() => openOrFocusWindow(id)}
@@ -571,7 +570,7 @@ export default function TradingDashboard() {
         const appId = isCompanyDetail ? null : (id as AppId);
         const cdInstance = isCompanyDetail ? companyDetailInstances[id] : null;
         const title = isCompanyDetail && cdInstance
-          ? `${cdInstance.symbol} — Company Detail`
+          ? tw('companyDetail', { symbol: cdInstance.symbol })
           : appId ? APP_LABELS[appId] : id;
         return (
           <DraggableResizableWindow
@@ -661,12 +660,12 @@ export default function TradingDashboard() {
           className="taskbar-button"
           style={{ cursor: 'default' }}
         >
-          Start
+          {tw('start')}
         </button>
         {allOpenWindows.map(([id]) => {
           const isCd = id.startsWith(COMPANY_DETAIL_PREFIX);
           const label = isCd
-            ? `${id.slice(COMPANY_DETAIL_PREFIX.length)} — Detail`
+            ? tw('companyDetail', { symbol: id.slice(COMPANY_DETAIL_PREFIX.length) })
             : APP_LABELS[id as AppId];
           return (
             <button

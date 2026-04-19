@@ -104,6 +104,24 @@ export const autoTraderEn: Record<AutoTraderKey, string> = {
   'history.signals.bearish': 'Bearish',
   'history.signals.neutral': 'Neutral',
 
+  // ── Market hours ──
+  'market.weekend': 'weekend',
+  'market.opensAt': 'opens at {hour} ART',
+  'market.closedAt': 'closed at {hour} ART',
+  'market.continuous': 'continuous session ({time} ART)',
+
+  // ── AI Models ──
+  'model.haiku': 'Fast and economical',
+  'model.sonnet': 'Balance between speed and quality',
+  'model.opus': 'Maximum reasoning capability',
+
+  // ── AgentSelector ──
+  'agents.title': 'Investment agents',
+  'agents.selectAll': 'All',
+  'agents.selectNone': 'None',
+  'agents.selected': '{count} selected',
+  'agents.loading': 'Loading agents...',
+
   // ── TickerAccordion ──
   'accordion.bullish': 'Bullish',
   'accordion.bearish': 'Bearish',

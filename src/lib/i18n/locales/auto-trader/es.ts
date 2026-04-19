@@ -102,6 +102,24 @@ export const autoTraderEs = {
   'history.signals.bearish': 'Bajista',
   'history.signals.neutral': 'Neutral',
 
+  // ── Market hours ──
+  'market.weekend': 'fin de semana',
+  'market.opensAt': 'abre a las {hour} ART',
+  'market.closedAt': 'cerró a las {hour} ART',
+  'market.continuous': 'rueda continua ({time} ART)',
+
+  // ── AI Models ──
+  'model.haiku': 'Rápido y económico',
+  'model.sonnet': 'Equilibrio entre velocidad y calidad',
+  'model.opus': 'Máxima capacidad de razonamiento',
+
+  // ── AgentSelector ──
+  'agents.title': 'Agentes de inversión',
+  'agents.selectAll': 'Todos',
+  'agents.selectNone': 'Ninguno',
+  'agents.selected': '{count} seleccionado{s}',
+  'agents.loading': 'Cargando agentes...',
+
   // ── TickerAccordion ──
   'accordion.bullish': 'Alcista',
   'accordion.bearish': 'Bajista',

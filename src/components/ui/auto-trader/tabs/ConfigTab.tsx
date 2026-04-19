@@ -212,7 +212,7 @@ export function ConfigTab({
               </select>
             </div>
             <span style={{ color: COLOR_SECONDARY }}>
-              {AI_MODELS.find(m => m.id === modelName)?.description}
+              {t(AI_MODELS.find(m => m.id === modelName)?.descriptionKey as Parameters<typeof t>[0])}
             </span>
           </div>
           {!marketStatus.open && (
@@ -224,7 +224,7 @@ export function ConfigTab({
               border: '1px solid #808000',
               color: '#666600',
             }}>
-              {t('config.settings.marketClosed', { reason: marketStatus.reason })}
+              {t('config.settings.marketClosed', { reason: t(marketStatus.reasonKey as Parameters<typeof t>[0], marketStatus.reasonParams) })}
             </div>
           )}
         </fieldset>
