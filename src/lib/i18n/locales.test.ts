@@ -13,9 +13,12 @@ import { companyDetailEn } from './locales/company-detail/en';
 
 // ── Helper ──────────────────────────────────────────────────────────────────
 
-/** Extract {param} placeholders from a translation string */
+/** Extract {param} placeholders from a translation string, ignoring plural suffixes like {s}, {s2} */
 function placeholders(text: string): string[] {
-  return [...text.matchAll(/\{(\w+)\}/g)].map(m => m[1]).sort();
+  return [...text.matchAll(/\{(\w+)\}/g)]
+    .map(m => m[1])
+    .filter(p => !/^s\d*$/.test(p))
+    .sort();
 }
 
 function testDomain(name: string, es: Record<string, string>, en: Record<string, string>) {
