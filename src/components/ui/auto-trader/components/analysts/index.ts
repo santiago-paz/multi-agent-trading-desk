@@ -4,3 +4,4 @@ export { ValuationDetail } from './ValuationDetail';
 export { GrowthDetail } from './GrowthDetail';
 export { FundamentalsDetail } from './FundamentalsDetail';
 export { WarrenBuffettDetail } from './WarrenBuffettDetail';
+export { StanleyDruckenmillerDetail } from './StanleyDruckenmillerDetail';
