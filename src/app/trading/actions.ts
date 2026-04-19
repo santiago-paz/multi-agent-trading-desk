@@ -7,8 +7,10 @@ import { extractCashArs, extractComprometidoArs, effectiveCashAfterCommission, f
 import type { HistoricalRow, CompanyProfile, IncomeStatementRow, KeyMetricsRow, CashFlowRow, BalanceSheetRow, FinancialScores, DCFValue, NewsItem, SymbolSearchHit } from '@/lib/fmp/types';
 import { getHistoricalData, getAllNews, getCompanyNames, getCompanyProfile, getIncomeStatements, getKeyMetrics, getCashFlowStatements, getBalanceSheetStatements, getFinancialScores, getDCFValue, getTickerNews, searchSymbolHits } from '@/lib/fmp/market-data';
 import { stripCurrencySuffix, toFmpTicker, isEtf } from '@/lib/cedear-map';
+import { DEMO_MODE, DEMO_MEP_RATE, DEMO_PERFIL, DEMO_ESTADO_CUENTA, DEMO_PORTFOLIO, DEMO_USD_PRICES, DEMO_VALUE_USD, DEMO_OPERATIONS, DEMO_NEWS_GENERAL, DEMO_NEWS_SPECIFIC, getDemoMarketData, getDemoCedearsForTrading, getDemoFullPortfolioContext } from '@/lib/demo/data';
 
 export async function getMarketData() {
+  if (DEMO_MODE) return { success: true, data: getDemoMarketData() };
   try {
     // 1. Get portfolio to identify owned CEDEARs
     const portfolio = await iolClient.getPortfolio();
@@ -95,6 +97,7 @@ export async function getMarketData() {
 }
 
 export async function getNewsMetadata() {
+  if (DEMO_MODE) return { success: true, data: { general: DEMO_NEWS_GENERAL, specific: DEMO_NEWS_SPECIFIC } };
   try {
     const { general, specific } = await getAllNews();
 
@@ -107,6 +110,7 @@ export async function getNewsMetadata() {
 
 
 export async function getPortfolioSummary() {
+    if (DEMO_MODE) return { success: true, data: { portfolio: DEMO_PORTFOLIO, valueUSD: DEMO_VALUE_USD, mepRate: DEMO_MEP_RATE, usdPrices: DEMO_USD_PRICES, estadoCuenta: DEMO_ESTADO_CUENTA, perfil: DEMO_PERFIL } };
     try {
         // Single batch — avoids duplicate calls to getPortfolio, getEstadoCuenta, getMEP
         const [portfolio, estadoCuenta, mepRate, cedearsPanel, perfil] = await Promise.all([
@@ -144,6 +148,7 @@ export async function getPortfolioSummary() {
 }
 
 export async function getMEPRate() {
+    if (DEMO_MODE) return { success: true, data: DEMO_MEP_RATE };
     try {
         const mepRate = await iolClient.getMEP();
         return { success: true, data: mepRate };
@@ -154,6 +159,7 @@ export async function getMEPRate() {
 }
 
 export async function getOperations() {
+    if (DEMO_MODE) return { success: true, data: DEMO_OPERATIONS };
     try {
         const operations = await iolClient.getOperations(30);
         return { success: true, data: operations };
@@ -169,6 +175,7 @@ export async function getOperations() {
  * Includes price, max affordable quantity, and applies a commission margin.
  */
 export async function getCedearsForTrading() {
+  if (DEMO_MODE) return { success: true as const, data: getDemoCedearsForTrading() };
   try {
     const [cuenta, cedearsPanel] = await Promise.all([
       iolClient.getEstadoCuenta(),
@@ -225,6 +232,7 @@ export async function placeOrder(params: {
   side: 'buy' | 'sell';
   monto?: number;
 }) {
+  if (DEMO_MODE) return { success: true as const, data: { ok: true, numeroOperacion: Math.floor(100000 + Math.random() * 900000), messages: [] } };
   try {
     // Validez = end of today (IOL expects ISO date-time)
     const today = new Date();
@@ -280,6 +288,7 @@ export async function placeOrder(params: {
  * Returns ALL CEDEARs in the panel + all current holdings.
  */
 export async function getFullPortfolioContext() {
+  if (DEMO_MODE) return getDemoFullPortfolioContext();
   try {
     const [portfolio, cuenta, mepRate, cedearsPanel] = await Promise.all([
       iolClient.getPortfolio(),

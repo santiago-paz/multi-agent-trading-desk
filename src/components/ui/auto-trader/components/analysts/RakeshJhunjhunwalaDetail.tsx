@@ -1,32 +1,35 @@
 import React from 'react';
 import { COL_SUNKEN, FONT } from '@/lib/theme/win98';
+import { useAutoTraderT } from '@/lib/i18n';
 
 export function RakeshJhunjhunwalaDetail({ reasoning }: { reasoning: string }) {
+  const t = useAutoTraderT();
+
   if (!reasoning || typeof reasoning !== 'string') return null;
 
   return (
     <div key="rakesh-jhunjhunwala-analysis" style={{ marginTop: 6, marginBottom: 8 }}>
-      <strong>Análisis de Rakesh Jhunjhunwala:</strong>
+      <strong>{t('detail.rakesh.title')}</strong>
       <div style={{
-        display: 'flex', 
-        gap: '8px', 
-        marginTop: '6px', 
+        display: 'flex',
+        gap: '8px',
+        marginTop: '6px',
         ...COL_SUNKEN,
         padding: '8px',
         backgroundColor: '#ffffff'
       }}>
         <div style={{ flexShrink: 0 }}>
-          <img 
-            src="/rakesh.png" 
-            alt="Rakesh Jhunjhunwala" 
-            style={{ 
-              width: '48px', 
-              height: '48px', 
+          <img
+            src="/rakesh.png"
+            alt="Rakesh Jhunjhunwala"
+            style={{
+              width: '48px',
+              height: '48px',
               imageRendering: 'pixelated',
               border: '2px solid #dfdfdf',
               borderBottomColor: '#808080',
               borderRightColor: '#808080'
-            }} 
+            }}
           />
         </div>
         <div style={{ flex: 1, ...FONT, fontSize: '1.05em', color: '#111', display: 'block', paddingTop: '1px' }}>

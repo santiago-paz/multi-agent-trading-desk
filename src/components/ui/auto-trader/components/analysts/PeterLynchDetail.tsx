@@ -1,32 +1,35 @@
 import React from 'react';
 import { COL_SUNKEN, FONT } from '@/lib/theme/win98';
+import { useAutoTraderT } from '@/lib/i18n';
 
 export function PeterLynchDetail({ reasoning }: { reasoning: string }) {
+  const t = useAutoTraderT();
+
   if (!reasoning || typeof reasoning !== 'string') return null;
 
   return (
     <div key="peter-lynch-analysis" style={{ marginTop: 6, marginBottom: 8 }}>
-      <strong>Análisis de Peter Lynch:</strong>
+      <strong>{t('detail.peter.title')}</strong>
       <div style={{
-        display: 'flex', 
-        gap: '8px', 
-        marginTop: '6px', 
+        display: 'flex',
+        gap: '8px',
+        marginTop: '6px',
         ...COL_SUNKEN,
         padding: '8px',
         backgroundColor: '#ffffff'
       }}>
         <div style={{ flexShrink: 0 }}>
-          <img 
-            src="/peter.png" 
-            alt="Peter Lynch" 
-            style={{ 
-              width: '48px', 
-              height: '48px', 
+          <img
+            src="/peter.png"
+            alt="Peter Lynch"
+            style={{
+              width: '48px',
+              height: '48px',
               imageRendering: 'pixelated',
               border: '2px solid #dfdfdf',
               borderBottomColor: '#808080',
               borderRightColor: '#808080'
-            }} 
+            }}
           />
         </div>
         <div style={{ flex: 1, ...FONT, fontSize: '1.05em', color: '#111', display: 'block', paddingTop: '1px' }}>

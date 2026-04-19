@@ -1,36 +1,41 @@
 import React from 'react';
 import { COL_SUNKEN } from '@/lib/theme/win98';
+import { useAutoTraderT, type AutoTraderKey } from '@/lib/i18n';
 
-const VALUATION_LABELS: Record<string, string> = {
-  bear_case: 'Escenario Pesimista',
-  base_case: 'Escenario Base',
-  bull_case: 'Escenario Optimista',
-  wacc_used: 'WACC Utilizado',
-  fcf_periods_analyzed: 'Períodos FCF Analizados'
+const VALUATION_I18N: Record<string, AutoTraderKey> = {
+  bear_case: 'detail.valuation.bearCase',
+  base_case: 'detail.valuation.baseCase',
+  bull_case: 'detail.valuation.bullCase',
+  wacc_used: 'detail.valuation.waccUsed',
+  fcf_periods_analyzed: 'detail.valuation.fcfPeriods',
 };
 
 export function ValuationDetail({ reasoning }: { reasoning: any }) {
+  const t = useAutoTraderT();
+
   if (!reasoning || typeof reasoning !== 'object') return null;
+
+  const sections: { key: string; titleKey: AutoTraderKey }[] = [
+    { key: 'dcf_analysis', titleKey: 'detail.valuation.dcf' },
+    { key: 'owner_earnings_analysis', titleKey: 'detail.valuation.ownerEarnings' },
+    { key: 'ev_ebitda_analysis', titleKey: 'detail.valuation.evEbitda' },
+    { key: 'residual_income_analysis', titleKey: 'detail.valuation.residualIncome' },
+  ];
 
   return (
     <div key="valuation-analysis" style={{ marginTop: 6 }}>
-      <strong>Análisis de Valoración Detallado:</strong>
+      <strong>{t('detail.valuation.title')}</strong>
       <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', marginTop: '6px' }}>
-        {[
-          { key: 'dcf_analysis', title: 'Flujo de Caja Descontado (DCF)' },
-          { key: 'owner_earnings_analysis', title: 'Ganancias del Propietario (Buffett)' },
-          { key: 'ev_ebitda_analysis', title: 'Múltiplo EV/EBITDA' },
-          { key: 'residual_income_analysis', title: 'Ingreso Residual' },
-        ].map(sec => {
+        {sections.map(sec => {
           const detail = reasoning[sec.key];
           if (!detail) return null;
           const secSig = detail.signal;
           const icon = secSig === 'bullish' ? '🟢' : secSig === 'bearish' ? '🔴' : '⚪';
-          const sigText = secSig === 'bullish' ? 'Alcista' : secSig === 'bearish' ? 'Bajista' : 'Neutral';
+          const sigText = secSig === 'bullish' ? t('detail.bullish') : secSig === 'bearish' ? t('detail.bearish') : t('detail.neutral');
           return (
             <div key={sec.key} style={{ ...COL_SUNKEN, padding: '4px 6px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <strong>{sec.title}</strong>
+                <strong>{t(sec.titleKey)}</strong>
                 <span style={{ fontWeight: 'bold' }}>{icon} {sigText}</span>
               </div>
               {detail.details && (
@@ -45,11 +50,11 @@ export function ValuationDetail({ reasoning }: { reasoning: any }) {
         })}
         {reasoning.dcf_scenario_analysis && (
           <div key="dcf-scenario" style={{ ...COL_SUNKEN, padding: '4px 6px', marginTop: '2px', backgroundColor: '#e8ecef' }}>
-            <div style={{ marginBottom: 4 }}><strong>Escenarios DCF:</strong></div>
+            <div style={{ marginBottom: 4 }}><strong>{t('detail.valuation.dcfScenarios')}</strong></div>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '2px 12px', fontSize: '0.95em', color: '#111' }}>
               {Object.entries(reasoning.dcf_scenario_analysis).map(([mKey, mVal]) => (
                  <span key={mKey}>
-                   <span style={{color: '#666', marginRight: 2}}>{VALUATION_LABELS[mKey] || mKey.replace(/_/g, ' ')}:</span>
+                   <span style={{color: '#666', marginRight: 2}}>{VALUATION_I18N[mKey] ? t(VALUATION_I18N[mKey]) : mKey.replace(/_/g, ' ')}:</span>
                    {String(mVal)}
                  </span>
               ))}

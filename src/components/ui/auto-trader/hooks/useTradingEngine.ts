@@ -5,6 +5,7 @@ import { placeOrder } from '@/app/trading/actions';
 import { parseSSEChunk, remapToIol, fmtARS } from '../utils';
 import { COMMISSION_RATE } from '@/lib/trading/quick-trade';
 import { useHistoryStore } from '@/lib/store/history-store';
+import { useAutoTraderT } from '@/lib/i18n';
 
 const API_URL = process.env.NEXT_PUBLIC_AI_HEDGE_FUND_API_URL || 'http://localhost:8000';
 
@@ -35,6 +36,7 @@ export function useTradingEngine({
   selectedAgents: Set<string>;
   modelName: string;
 }) {
+  const t = useAutoTraderT();
   const [phase, setPhase] = useState<Phase>('idle');
   const [logs, setLogs] = useState<LogEntry[]>([]);
   const [progress, setProgress] = useState(0);
@@ -102,16 +104,16 @@ export function useTradingEngine({
       graph_edges: graphEdges,
     };
 
-    addLog('cash', `Saldo disponible: $${fmtARS(cashArs)} ARS (~USD $${cashUsd.toFixed(0)}, MEP: ${effectiveMep.toFixed(0)})`, 'ok');
-    addLog('limit', `Límite plata nueva: $${fmtARS(dailyLimit)} ARS (~USD $${(dailyLimit / effectiveMep).toFixed(0)})`, 'ok');
-    addLog('portfolio-tickers', `Holdings actuales (${holdingTickers.length}): ${holdingTickers.join(', ') || '(sin posiciones)'}`, 'ok');
-    addLog('candidate-tickers', `Candidatos a compra (${panelSymbols.length} más líquidos): ${panelSymbols.join(', ') || '(ninguno)'}`, 'ok');
-    const fmpMapped = fmpTickers.filter(t => !holdingTickers.includes(t) && !panelSymbols.includes(t));
+    addLog('cash', t('engine.log.cash', { amount: fmtARS(cashArs), usd: cashUsd.toFixed(0), mep: effectiveMep.toFixed(0) }), 'ok');
+    addLog('limit', t('engine.log.limit', { amount: fmtARS(dailyLimit), usd: (dailyLimit / effectiveMep).toFixed(0) }), 'ok');
+    addLog('portfolio-tickers', t('engine.log.holdings', { count: holdingTickers.length, list: holdingTickers.join(', ') || t('engine.log.noPositions') }), 'ok');
+    addLog('candidate-tickers', t('engine.log.candidates', { count: panelSymbols.length, list: panelSymbols.join(', ') || t('engine.log.none') }), 'ok');
+    const fmpMapped = fmpTickers.filter(tk => !holdingTickers.includes(tk) && !panelSymbols.includes(tk));
     if (fmpMapped.length > 0) {
-      addLog('fmp-mapped', `Tickers mapeados IOL→FMP: ${fmpMapped.join(', ')}`, 'ok');
+      addLog('fmp-mapped', t('engine.log.mapped', { list: fmpMapped.join(', ') }), 'ok');
     }
-    addLog('agents-info', `Agentes: ${agentKeys.map(k => k.replace(/_/g, ' ')).join(', ')}`, 'ok');
-    addLog('start', `Enviando ${fmpTickers.length} ticker(s) a ${agentKeys.length} agente(s) para análisis...`);
+    addLog('agents-info', t('engine.log.agents', { list: agentKeys.map(k => k.replace(/_/g, ' ')).join(', ') }), 'ok');
+    addLog('start', t('engine.log.sending', { tickers: fmpTickers.length, agents: agentKeys.length }));
 
     try {
       const response = await fetch(`${API_URL}/hedge-fund/run`, {
@@ -160,7 +162,7 @@ export function useTradingEngine({
           cashArs,
           dailyLimitArs: dailyLimit,
           commissionRate: COMMISSION_RATE,
-        });
+        }, t);
         setPlan(rebalancePlan);
 
         // Save historical run
@@ -192,9 +194,9 @@ export function useTradingEngine({
         const nCandidates = Object.keys(candidates).length;
         const nCandBuys = Object.values(candidates).filter(d => d.action === 'buy').length;
         addLog('complete', [
-          'Análisis completado.',
-          `Plan: ${nSells} venta(s), ${nBuys} compra(s).`,
-          nCandidates > 0 ? `${nCandBuys}/${nCandidates} candidatos recomendados para compra.` : '',
+          t('engine.log.completed'),
+          t('engine.log.planSummary', { sells: nSells, buys: nBuys }),
+          nCandidates > 0 ? t('engine.log.candidateSummary', { buyCount: nCandBuys, totalCount: nCandidates }) : '',
         ].filter(Boolean).join(' '), 'ok');
         setProgress(100);
         setPhase('planned');
@@ -219,7 +221,7 @@ export function useTradingEngine({
               const d = evt.data as Record<string, unknown>;
 
               if (evt.event === 'start') {
-                updateLog('start', 'Análisis iniciado', 'ok');
+                updateLog('start', t('engine.log.started'), 'ok');
               } else if (evt.event === 'progress') {
                 progressCount++;
                 const agent = (d.agent as string) || '';
@@ -238,7 +240,7 @@ export function useTradingEngine({
                 );
                 setProgress(Math.min(95, Math.round((progressCount / totalEstimate) * 100)));
               } else if (evt.event === 'error') {
-                addLog('error', `Error: ${(d.message as string) || 'Error desconocido'}`, 'error');
+                addLog('error', t('engine.log.error', { message: (d.message as string) || t('engine.log.unknownError') }), 'error');
                 setPhase('idle');
               } else if (evt.event === 'complete') {
                 receivedComplete = true;
@@ -269,7 +271,7 @@ export function useTradingEngine({
       }
     } catch (err: unknown) {
       if ((err as Error).name === 'AbortError') return;
-      addLog('error', `Error de red: ${(err as Error).message}. El backend puede haber completado — revisá los logs del servidor.`, 'error');
+      addLog('error', t('engine.log.networkError', { message: (err as Error).message }), 'error');
       setPhase('idle');
     }
   }
@@ -293,7 +295,7 @@ export function useTradingEngine({
         ticker: order.ticker, side: 'sell', quantity: order.quantity,
         success: res.success && res.data?.ok === true,
         message: res.success
-          ? (res.data?.numeroOperacion ? `Operación #${res.data.numeroOperacion}` : (res.data?.messages?.map((m: any) => m.description || m.title).join('. ') || 'Orden enviada'))
+          ? (res.data?.numeroOperacion ? t('engine.log.operationNum', { num: res.data.numeroOperacion }) : (res.data?.messages?.map((m: any) => m.description || m.title).join('. ') || t('engine.log.orderSent')))
           : (res.error || 'Error'),
       });
       setOrderResults([...results]);
@@ -312,7 +314,7 @@ export function useTradingEngine({
         ticker: order.ticker, side: 'buy', quantity: order.quantity,
         success: res.success && res.data?.ok === true,
         message: res.success
-          ? (res.data?.numeroOperacion ? `Operación #${res.data.numeroOperacion}` : (res.data?.messages?.map((m: any) => m.description || m.title).join('. ') || 'Orden enviada'))
+          ? (res.data?.numeroOperacion ? t('engine.log.operationNum', { num: res.data.numeroOperacion }) : (res.data?.messages?.map((m: any) => m.description || m.title).join('. ') || t('engine.log.orderSent')))
           : (res.error || 'Error'),
       });
       setOrderResults([...results]);
@@ -332,7 +334,7 @@ export function useTradingEngine({
   function abortEngine() {
     abortRef.current?.abort();
     setPhase('idle');
-    addLog('cancel', 'Análisis cancelado por el usuario', 'error');
+    addLog('cancel', t('engine.log.cancelled'), 'error');
   }
 
   return {

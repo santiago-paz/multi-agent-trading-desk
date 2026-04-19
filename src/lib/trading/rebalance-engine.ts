@@ -9,6 +9,9 @@ export interface Decision {
   reasoning: string;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type Translator = (key: any, params?: Record<string, string | number>) => string;
+
 export interface RebalanceInput {
   decisions: Record<string, Decision>;  // IOL symbol → AI decision
   holdings: Record<string, number>;     // IOL symbol → quantity owned
@@ -52,7 +55,7 @@ export interface RebalancePlan {
  * - New cash (beyond sell proceeds) is also capped by dailyLimitArs.
  * - Each buy respects the AI's recommended quantity as a maximum.
  */
-export function computeRebalancePlan(input: RebalanceInput): RebalancePlan {
+export function computeRebalancePlan(input: RebalanceInput, t: Translator): RebalancePlan {
   const {
     decisions,
     holdings,
@@ -95,15 +98,15 @@ export function computeRebalancePlan(input: RebalanceInput): RebalancePlan {
     const owned = holdings[ticker] ?? 0;
 
     if (!price || price <= 0) {
-      warnings.push(`Venta de ${ticker} omitida: el mercado no reporta un precio de cotización válido.`);
+      warnings.push(t('engine.sell.noPrice', { ticker }));
       continue;
     }
     if (owned <= 0) {
-      warnings.push(`Venta de ${ticker} omitida: el sistema sugirió la venta pero actualmente la cuenta no posee tenencia.`);
+      warnings.push(t('engine.sell.noHolding', { ticker }));
       continue;
     }
     if (remainingSellBudget <= 0) {
-      warnings.push(`Venta de ${ticker} omitida: se alcanzó el tope máximo diario permitido para tomar ganancias.`);
+      warnings.push(t('engine.sell.limitReached', { ticker }));
       continue;
     }
 
@@ -112,7 +115,7 @@ export function computeRebalancePlan(input: RebalanceInput): RebalancePlan {
     const quantity = Math.min(owned, maxByBudget);
 
     if (quantity <= 0) {
-      warnings.push(`Venta de ${ticker} omitida: el margen del límite de ventas no cubre ni siquiera 1 CEDEAR (Precio: $${fmtARS(price)}, Margen restante: $${fmtARS(remainingSellBudget)}).`);
+      warnings.push(t('engine.sell.budgetInsufficient', { ticker, price: fmtARS(price), remaining: fmtARS(remainingSellBudget) }));
       continue;
     }
 
@@ -146,11 +149,11 @@ export function computeRebalancePlan(input: RebalanceInput): RebalancePlan {
     const price = arsPrices[ticker];
 
     if (!price || price <= 0) {
-      warnings.push(`Compra de ${ticker} omitida: el mercado no reporta un precio de cotización válido.`);
+      warnings.push(t('engine.buy.noPrice', { ticker }));
       continue;
     }
     if (availableBudget <= 0) {
-      warnings.push(`Compra de ${ticker} omitida: liquidez de la cuenta agotada.`);
+      warnings.push(t('engine.buy.noLiquidity', { ticker }));
       continue;
     }
 
@@ -162,7 +165,7 @@ export function computeRebalancePlan(input: RebalanceInput): RebalancePlan {
       : maxByBudget;
 
     if (quantity <= 0) {
-      warnings.push(`Compra de ${ticker} omitida: tu poder de compra ($${fmtARS(availableBudget)}) es insuficiente para adquirir un CEDEAR (Precio: $${fmtARS(price)}).`);
+      warnings.push(t('engine.buy.insufficientFunds', { ticker, budget: fmtARS(availableBudget), price: fmtARS(price) }));
       continue;
     }
 
@@ -194,7 +197,7 @@ export function computeRebalancePlan(input: RebalanceInput): RebalancePlan {
 
   // Settlement warning
   if (sells.length > 0 && buys.length > 0) {
-    warnings.push('Aviso de liquidación: el dinero de las ventas (al hacerse en plazo 24hs) podría no acreditarse a tiempo para cubrir las compras de hoy dependiendo del bróker.');
+    warnings.push(t('engine.settlement'));
   }
 
   return {
