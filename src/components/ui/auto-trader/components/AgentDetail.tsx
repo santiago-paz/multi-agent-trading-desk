@@ -1,6 +1,6 @@
 import React from 'react';
 import { COLOR_LINK } from '@/lib/theme/win98';
-import { TechnicalDetail, SentimentDetail, ValuationDetail, GrowthDetail, FundamentalsDetail, WarrenBuffettDetail, StanleyDruckenmillerDetail } from './analysts';
+import { TechnicalDetail, SentimentDetail, ValuationDetail, GrowthDetail, FundamentalsDetail, WarrenBuffettDetail, StanleyDruckenmillerDetail, RakeshJhunjhunwalaDetail } from './analysts';
 
 export function AgentDetail({ detail, ticker, agent, status }: { detail: string | undefined; ticker?: string; agent?: string; status?: string }) {
   if (!detail) return null;
@@ -95,6 +95,8 @@ export function AgentDetail({ detail, ticker, agent, status }: { detail: string 
           rows.push(<WarrenBuffettDetail key="warren-detail" reasoning={reasoning} />);
         } else if ((agent === 'stanley_druckenmiller_agent' || agent === 'stanley_druckenmiller')) {
           rows.push(<StanleyDruckenmillerDetail key="stanley-detail" reasoning={reasoning} />);
+        } else if ((agent === 'rakesh_jhunjhunwala_agent' || agent === 'rakesh_jhunjhunwala')) {
+          rows.push(<RakeshJhunjhunwalaDetail key="rakesh-detail" reasoning={reasoning} />);
         } else {
           rows.push(<div key="reasoning" style={{ marginTop: 4 }}><strong>Resumen:</strong> {reasoning}</div>);
         }
@@ -122,6 +124,14 @@ export function AgentDetail({ detail, ticker, agent, status }: { detail: string 
     return (
       <div style={{ margin: '4px 0 0 12px' }}>
         <StanleyDruckenmillerDetail reasoning={detail} />
+      </div>
+    );
+  }
+
+  if ((agent === 'rakesh_jhunjhunwala_agent' || agent === 'rakesh_jhunjhunwala') && status === 'ok') {
+    return (
+      <div style={{ margin: '4px 0 0 12px' }}>
+        <RakeshJhunjhunwalaDetail reasoning={detail} />
       </div>
     );
   }

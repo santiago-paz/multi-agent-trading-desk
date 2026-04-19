@@ -5,3 +5,4 @@ export { GrowthDetail } from './GrowthDetail';
 export { FundamentalsDetail } from './FundamentalsDetail';
 export { WarrenBuffettDetail } from './WarrenBuffettDetail';
 export { StanleyDruckenmillerDetail } from './StanleyDruckenmillerDetail';
+export { RakeshJhunjhunwalaDetail } from './RakeshJhunjhunwalaDetail';
