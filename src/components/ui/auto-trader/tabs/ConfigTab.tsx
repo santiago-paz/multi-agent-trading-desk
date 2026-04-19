@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { FONT, COL_HEADER_BASE, COL_RAISED, COL_SUNKEN, CELL, CELL_RIGHT, COLOR_NEGATIVE, COLOR_SECONDARY, COLOR_DISABLED } from '@/lib/theme/win98';
 import { AgentSelector } from '@/components/ui/AgentSelector';
 import { fmtARS, fmtARS2 } from '../utils';
 import { Agent, PortfolioSortKey } from '../types';
+import { AI_MODELS, type AIModelId, isMarketOpen } from '../market-hours';
 
 interface ConfigTabProps {
   cashArs: number;
@@ -11,6 +12,8 @@ interface ConfigTabProps {
   effectiveMep: number;
   dailyLimit: number;
   setDailyLimit: (val: number) => void;
+  modelName: AIModelId;
+  setModelName: (val: AIModelId) => void;
   holdingTickers: string[];
   holdings: Record<string, number>;
   arsPrices: Record<string, number>;
@@ -38,6 +41,8 @@ export function ConfigTab({
   effectiveMep,
   dailyLimit,
   setDailyLimit,
+  modelName,
+  setModelName,
   holdingTickers,
   holdings,
   arsPrices,
@@ -59,6 +64,7 @@ export function ConfigTab({
 }: ConfigTabProps) {
   const [pSortKey, setPSortKey] = useState<PortfolioSortKey>('ticker');
   const [pSortDir, setPSortDir] = useState<'asc' | 'desc'>('asc');
+  const marketStatus = useMemo(() => isMarketOpen(), []);
 
   return (
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0, gap: 8 }}>
@@ -168,7 +174,7 @@ export function ConfigTab({
 
         <fieldset style={{ margin: 0, flexShrink: 0 }}>
           <legend>Configuración</legend>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, ...FONT }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, ...FONT, flexWrap: 'wrap' }}>
             <div className="field-row">
               <label htmlFor="daily-limit">Límite plata nueva:</label>
               <input
@@ -188,6 +194,37 @@ export function ConfigTab({
               Comisión: {(commissionRate * 100).toFixed(1)}% por operación
             </span>
           </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, ...FONT, marginTop: 4 }}>
+            <div className="field-row">
+              <label htmlFor="model-select">Modelo AI:</label>
+              <select
+                id="model-select"
+                value={modelName}
+                onChange={e => setModelName(e.target.value as AIModelId)}
+                style={{ ...FONT, width: 200 }}
+                disabled={isAnalyzing}
+              >
+                {AI_MODELS.map(m => (
+                  <option key={m.id} value={m.id}>{m.label}</option>
+                ))}
+              </select>
+            </div>
+            <span style={{ color: COLOR_SECONDARY }}>
+              {AI_MODELS.find(m => m.id === modelName)?.description}
+            </span>
+          </div>
+          {!marketStatus.open && (
+            <div style={{
+              ...FONT,
+              marginTop: 6,
+              padding: '3px 6px',
+              background: '#ffffcc',
+              border: '1px solid #808000',
+              color: '#666600',
+            }}>
+              Mercado cerrado ({marketStatus.reason}). Los precios de IOL pueden no estar actualizados.
+            </div>
+          )}
         </fieldset>
 
         <div style={{ margin: 0, flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>

@@ -10,10 +10,12 @@ import { AITab } from './auto-trader/tabs/AITab';
 import { PlanTab } from './auto-trader/tabs/PlanTab';
 import { HistoryTab } from './auto-trader/tabs/HistoryTab';
 import { COMMISSION_RATE } from '@/lib/trading/quick-trade';
+import { DEFAULT_MODEL, type AIModelId } from './auto-trader/market-hours';
 
 export function AutoTraderWindow() {
   const [activeTab, setActiveTab] = useState<'config' | 'ai' | 'plan' | 'history'>('config');
   const [dailyLimit, setDailyLimit] = useState(100000);
+  const [modelName, setModelName] = useState<AIModelId>(DEFAULT_MODEL);
 
   const portfolio = usePortfolio();
   const agents = useAgents();
@@ -30,6 +32,7 @@ export function AutoTraderWindow() {
     fmpToIol: portfolio.fmpToIol,
     panelSymbols: portfolio.panelSymbols,
     selectedAgents: agents.selectedAgents,
+    modelName,
   });
 
   const isLoading = portfolio.isLoadingPortfolio || agents.isLoadingAgents;
@@ -76,6 +79,8 @@ export function AutoTraderWindow() {
               effectiveMep={portfolio.effectiveMep}
               dailyLimit={dailyLimit}
               setDailyLimit={setDailyLimit}
+              modelName={modelName}
+              setModelName={setModelName}
               holdingTickers={portfolio.holdingTickers}
               holdings={portfolio.holdings}
               arsPrices={portfolio.arsPrices}

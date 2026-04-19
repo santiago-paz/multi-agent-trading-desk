@@ -20,6 +20,7 @@ export function useTradingEngine({
   fmpToIol,
   panelSymbols,
   selectedAgents,
+  modelName,
 }: {
   cashArs: number;
   effectiveMep: number;
@@ -32,6 +33,7 @@ export function useTradingEngine({
   fmpToIol: Record<string, string>;
   panelSymbols: string[];
   selectedAgents: Set<string>;
+  modelName: string;
 }) {
   const [phase, setPhase] = useState<Phase>('idle');
   const [logs, setLogs] = useState<LogEntry[]>([]);
@@ -92,7 +94,7 @@ export function useTradingEngine({
 
     const body = {
       tickers: fmpTickers,
-      model_name: 'claude-haiku-4-5-20251001',
+      model_name: modelName,
       model_provider: 'Anthropic',
       initial_cash: Math.round(budgetUsd * 100) / 100,
       portfolio_positions: portfolioPositions.length > 0 ? portfolioPositions : undefined,
