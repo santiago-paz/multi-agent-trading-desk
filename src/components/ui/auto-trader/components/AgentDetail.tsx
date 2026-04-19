@@ -1,6 +1,6 @@
 import React from 'react';
 import { COLOR_LINK } from '@/lib/theme/win98';
-import { TechnicalDetail, SentimentDetail, ValuationDetail, GrowthDetail, FundamentalsDetail, WarrenBuffettDetail, StanleyDruckenmillerDetail, RakeshJhunjhunwalaDetail, PhilFisherDetail, PeterLynchDetail } from './analysts';
+import { TechnicalDetail, SentimentDetail, ValuationDetail, GrowthDetail, FundamentalsDetail, WarrenBuffettDetail, StanleyDruckenmillerDetail, RakeshJhunjhunwalaDetail, PhilFisherDetail, PeterLynchDetail, MohnishPabraiDetail } from './analysts';
 
 export function AgentDetail({ detail, ticker, agent, status }: { detail: string | undefined; ticker?: string; agent?: string; status?: string }) {
   if (!detail) return null;
@@ -101,6 +101,8 @@ export function AgentDetail({ detail, ticker, agent, status }: { detail: string 
           rows.push(<PhilFisherDetail key="phil-detail" reasoning={reasoning} />);
         } else if ((agent === 'peter_lynch_agent' || agent === 'peter_lynch')) {
           rows.push(<PeterLynchDetail key="peter-detail" reasoning={reasoning} />);
+        } else if ((agent === 'mohnish_pabrai_agent' || agent === 'mohnish_pabrai')) {
+          rows.push(<MohnishPabraiDetail key="mohnish-detail" reasoning={reasoning} />);
         } else {
           rows.push(<div key="reasoning" style={{ marginTop: 4 }}><strong>Resumen:</strong> {reasoning}</div>);
         }
@@ -152,6 +154,14 @@ export function AgentDetail({ detail, ticker, agent, status }: { detail: string 
     return (
       <div style={{ margin: '4px 0 0 12px' }}>
         <PeterLynchDetail reasoning={detail} />
+      </div>
+    );
+  }
+
+  if ((agent === 'mohnish_pabrai_agent' || agent === 'mohnish_pabrai') && status === 'ok') {
+    return (
+      <div style={{ margin: '4px 0 0 12px' }}>
+        <MohnishPabraiDetail reasoning={detail} />
       </div>
     );
   }

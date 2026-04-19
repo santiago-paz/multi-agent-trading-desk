@@ -8,3 +8,4 @@ export { StanleyDruckenmillerDetail } from './StanleyDruckenmillerDetail';
 export { RakeshJhunjhunwalaDetail } from './RakeshJhunjhunwalaDetail';
 export { PhilFisherDetail } from './PhilFisherDetail';
 export { PeterLynchDetail } from './PeterLynchDetail';
+export { MohnishPabraiDetail } from './MohnishPabraiDetail';
