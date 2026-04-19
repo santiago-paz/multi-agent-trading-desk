@@ -37,7 +37,7 @@ export function SentimentDetail({ reasoning }: { reasoning: any }) {
                 <span style={{ fontWeight: 'bold' }}>{icon} {sigText} ({Math.round(detail.confidence || 0)}%)</span>
               </div>
               {detail.metrics && (
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '2px 12px', fontSize: '0.85em', color: '#111' }}>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '2px 12px', fontSize: '0.95em', color: '#111' }}>
                   {Object.entries(detail.metrics).map(([mKey, mVal]) => (
                      <span key={mKey}>
                        <span style={{color: '#666', marginRight: 2}}>{SENTIMENT_LABELS[mKey] || mKey.replace(/_/g, ' ')}:</span>
@@ -51,7 +51,7 @@ export function SentimentDetail({ reasoning }: { reasoning: any }) {
         })}
         {reasoning.combined_analysis && (
           <div key="combined" style={{ ...COL_SUNKEN, padding: '4px 6px', marginTop: '2px', backgroundColor: '#e8ecef' }}>
-            <div style={{ fontSize: '0.9em' }}>
+            <div style={{ fontSize: '1em' }}>
               <strong>Conclusión:</strong> {reasoning.combined_analysis.signal_determination === 'Bullish based on weighted signal comparison' ? 'Alcista basado en comparación de señales.' :
                 reasoning.combined_analysis.signal_determination === 'Bearish based on weighted signal comparison' ? 'Bajista basado en comparación de señales.' :
                 reasoning.combined_analysis.signal_determination === 'Neutral based on weighted signal comparison' ? 'Neutral basado en señales mixtas.' :

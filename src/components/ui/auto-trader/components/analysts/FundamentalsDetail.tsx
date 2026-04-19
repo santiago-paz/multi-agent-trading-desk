@@ -28,7 +28,7 @@ export function FundamentalsDetail({ reasoning }: { reasoning: any }) {
                 <span style={{ fontWeight: 'bold' }}>{icon} {sigText}</span>
               </div>
               {detail.details && (
-                 <div style={{ fontSize: '0.85em', color: '#111', marginTop: 3 }}>
+                 <div style={{ fontSize: '0.95em', color: '#111', marginTop: 3 }}>
                    {detail.details.split(', ').map((metric: string, idx: number) => (
                      <div key={idx} style={{ display: 'inline-block', marginRight: 12 }}>
                        <span style={{ color: '#666', marginRight: 4 }}>•</span>

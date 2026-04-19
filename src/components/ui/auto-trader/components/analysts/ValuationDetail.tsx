@@ -34,7 +34,7 @@ export function ValuationDetail({ reasoning }: { reasoning: any }) {
                 <span style={{ fontWeight: 'bold' }}>{icon} {sigText}</span>
               </div>
               {detail.details && (
-                 <div style={{ fontSize: '0.85em', color: '#111', marginTop: 3, whiteSpace: 'pre-wrap' }}>
+                 <div style={{ fontSize: '0.95em', color: '#111', marginTop: 3, whiteSpace: 'pre-wrap' }}>
                    {detail.details.split('\n').map((line: string, i: number) => (
                      <div key={i}>{line}</div>
                    ))}
@@ -46,7 +46,7 @@ export function ValuationDetail({ reasoning }: { reasoning: any }) {
         {reasoning.dcf_scenario_analysis && (
           <div key="dcf-scenario" style={{ ...COL_SUNKEN, padding: '4px 6px', marginTop: '2px', backgroundColor: '#e8ecef' }}>
             <div style={{ marginBottom: 4 }}><strong>Escenarios DCF:</strong></div>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '2px 12px', fontSize: '0.85em', color: '#111' }}>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '2px 12px', fontSize: '0.95em', color: '#111' }}>
               {Object.entries(reasoning.dcf_scenario_analysis).map(([mKey, mVal]) => (
                  <span key={mKey}>
                    <span style={{color: '#666', marginRight: 2}}>{VALUATION_LABELS[mKey] || mKey.replace(/_/g, ' ')}:</span>

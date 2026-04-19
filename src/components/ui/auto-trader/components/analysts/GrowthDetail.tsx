@@ -74,7 +74,7 @@ export function GrowthDetail({ reasoning }: { reasoning: any }) {
                 <strong>{sec.title}</strong>
                 {scoreComponent}
               </div>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '2px 12px', fontSize: '0.85em', color: '#111' }}>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '2px 12px', fontSize: '0.95em', color: '#111' }}>
                 {Object.entries(detail).filter(([k]) => k !== 'score').map(([mKey, mVal]) => (
                    <span key={mKey}>
                      <span style={{color: '#666', marginRight: 2}}>{GROWTH_LABELS[mKey] || mKey.replace(/_/g, ' ')}:</span>
@@ -96,7 +96,7 @@ export function GrowthDetail({ reasoning }: { reasoning: any }) {
                  {' '}({Math.round(reasoning.final_analysis.confidence || 0)}%)
               </span>
             </div>
-            <div style={{ fontSize: '0.85em', color: '#333', marginTop: 2 }}>
+            <div style={{ fontSize: '0.95em', color: '#333', marginTop: 2 }}>
               Puntuación Ponderada: {Math.round((reasoning.final_analysis.weighted_score || 0) * 100)}/100
             </div>
           </div>

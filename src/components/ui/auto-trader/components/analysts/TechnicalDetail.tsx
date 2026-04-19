@@ -47,7 +47,7 @@ export function TechnicalDetail({ reasoning }: { reasoning: any }) {
                 <span style={{ fontWeight: 'bold' }}>{icon} {sigText} ({Math.round(detail.confidence || 0)}%)</span>
               </div>
               {detail.metrics && (
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '2px 12px', fontSize: '0.85em', color: '#111' }}>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '2px 12px', fontSize: '0.95em', color: '#111' }}>
                   {Object.entries(detail.metrics).map(([mKey, mVal]) => (
                      <span key={mKey}>
                        <span style={{color: '#666', marginRight: 2}}>{METRIC_LABELS[mKey] || mKey.replace(/_/g, ' ')}:</span>

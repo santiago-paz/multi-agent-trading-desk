@@ -29,7 +29,7 @@ export function StanleyDruckenmillerDetail({ reasoning }: { reasoning: string })
             }} 
           />
         </div>
-        <div style={{ flex: 1, ...FONT, fontSize: '0.9em', color: '#111', display: 'block', paddingTop: '1px' }}>
+        <div style={{ flex: 1, ...FONT, fontSize: '1.05em', color: '#111', display: 'block', paddingTop: '1px' }}>
           <div style={{ wordBreak: 'break-word', lineHeight: '1.4', whiteSpace: 'normal' }}>
             {reasoning.split('\n').filter(line => line.trim() !== '').map((paragraph, idx, arr) => (
               <i key={idx} style={{ display: 'block', marginBottom: idx < arr.length - 1 ? '8px' : '0' }}>
