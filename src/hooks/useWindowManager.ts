@@ -125,10 +125,17 @@ export function useWindowManager() {
     });
   }, [nextZ]);
 
+  // IDs where Escape should minimize instead of close (long-running processes)
+  const minimizeOnEscapeIds = useMemo(() => new Set(['autotrader', 'backtesting']), []);
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape' && focusedId) {
-        closeWindow(focusedId);
+        if (minimizeOnEscapeIds.has(focusedId)) {
+          minimizeWindow(focusedId);
+        } else {
+          closeWindow(focusedId);
+        }
       }
     };
 
@@ -136,7 +143,7 @@ export function useWindowManager() {
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [focusedId, closeWindow]);
+  }, [focusedId, closeWindow, minimizeWindow, minimizeOnEscapeIds]);
 
   const allOpenWindows = useMemo(() => Object.entries(windows), [windows]);
 

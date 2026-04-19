@@ -581,7 +581,7 @@ export default function TradingDashboard() {
             onMove={(x, y) => updateWindow(id, { x, y })}
             onResize={(width, height) => updateWindow(id, { width, height })}
             onMinimize={() => minimizeWindow(id)}
-            onClose={() => closeWindow(id)}
+            onClose={() => (id === 'autotrader' || id === 'backtesting') ? minimizeWindow(id) : closeWindow(id)}
             onFocus={() => focusWindow(id)}
           >
             {appId === 'portfolio' && (
