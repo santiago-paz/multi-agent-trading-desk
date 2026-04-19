@@ -6,3 +6,4 @@ export { FundamentalsDetail } from './FundamentalsDetail';
 export { WarrenBuffettDetail } from './WarrenBuffettDetail';
 export { StanleyDruckenmillerDetail } from './StanleyDruckenmillerDetail';
 export { RakeshJhunjhunwalaDetail } from './RakeshJhunjhunwalaDetail';
+export { PhilFisherDetail } from './PhilFisherDetail';
