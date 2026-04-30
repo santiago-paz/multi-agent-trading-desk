@@ -21,7 +21,7 @@ import { getPortfolioSummary, getMarketData, getOperations, getCedearsForTrading
 import { PortfolioResponse, Operation, DatosPerfil, EstadoCuenta } from '@/lib/iol/types';
 import type { HistoricalRow } from '@/lib/fmp/types';
 import { DESKTOP_APP_ICONS } from '@/lib/win98se-icons';
-import { useWindowManager, AppId, useAppLabels, COMPANY_DETAIL_DEFAULTS } from '@/hooks/useWindowManager';
+import { useWindowManager, AppId, APP_IDS, useAppLabels, COMPANY_DETAIL_DEFAULTS } from '@/hooks/useWindowManager';
 import { useWindowsT } from '@/lib/i18n';
 
 interface CompanyDetailInstance {
@@ -140,6 +140,17 @@ export default function TradingDashboard() {
       });
     }
   }, [rawCloseWindow]);
+
+  // Deep-link: ?open=<AppId> from the landing page opens that window on mount.
+  const deepLinkHandledRef = useRef(false);
+  useEffect(() => {
+    if (deepLinkHandledRef.current) return;
+    deepLinkHandledRef.current = true;
+    const param = new URLSearchParams(window.location.search).get('open');
+    if (param && (APP_IDS as readonly string[]).includes(param)) {
+      openOrFocusWindow(param as AppId);
+    }
+  }, [openOrFocusWindow]);
 
   const [iconPositions, setIconPositions] = useState<Record<IconId, { x: number; y: number }>>(DEFAULT_ICON_POSITIONS);
   const [selectedIconIds, setSelectedIconIds] = useState<Set<string>>(new Set());

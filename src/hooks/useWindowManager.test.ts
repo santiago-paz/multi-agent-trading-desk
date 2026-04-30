@@ -20,13 +20,15 @@ describe('centerPosition', () => {
   it('centers a window in a 1920×1080 viewport', () => {
     mockViewport(1920, 1080);
     const pos = centerPosition(800, 600);
-    expect(pos).toEqual({ x: 560, y: 240 });
+    // usableHeight = 1080 - 28 (taskbar) = 1052; y = (1052-600)/2 = 226
+    expect(pos).toEqual({ x: 560, y: 226 });
   });
 
   it('centers a window in a 1280×720 viewport', () => {
     mockViewport(1280, 720);
     const pos = centerPosition(400, 300);
-    expect(pos).toEqual({ x: 440, y: 210 });
+    // usableHeight = 720 - 28 (taskbar) = 692; y = (692-300)/2 = 196
+    expect(pos).toEqual({ x: 440, y: 196 });
   });
 
   it('clamps to 0 when window is larger than viewport', () => {
@@ -44,8 +46,8 @@ describe('centerPosition', () => {
   it('floors fractional positions', () => {
     mockViewport(1001, 701);
     const pos = centerPosition(400, 300);
-    // (1001-400)/2 = 300.5 → 300, (701-300)/2 = 200.5 → 200
-    expect(pos).toEqual({ x: 300, y: 200 });
+    // (1001-400)/2 = 300.5 → 300; usableHeight = 701-28 = 673, (673-300)/2 = 186.5 → 186
+    expect(pos).toEqual({ x: 300, y: 186 });
   });
 
   it('returns {0,0} when window is undefined (SSR)', () => {

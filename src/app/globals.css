@@ -60,6 +60,34 @@ body {
   padding: 8px;
 }
 
+/* Splash-screen module link: behaves like a hyperlink, no 98.css button chrome */
+button.module-link {
+  background: transparent !important;
+  box-shadow: none !important;
+  border: none !important;
+  font-family: inherit;
+  color: inherit;
+}
+
+button.module-link:hover,
+button.module-link:focus {
+  background: #000080 !important;
+  color: #ffffff !important;
+  outline: none;
+}
+
+button.module-link:hover .module-link-label,
+button.module-link:focus .module-link-label,
+button.module-link:hover .module-link-desc,
+button.module-link:focus .module-link-desc {
+  color: #ffffff !important;
+}
+
+button.module-link:focus-visible {
+  outline: 1px dotted #ffffff;
+  outline-offset: -3px;
+}
+
 /* Classic Windows 98 desktop icon: icon + label, NO 98.css button chrome */
 button.desktop-icon {
   background: transparent !important;
