@@ -2,7 +2,7 @@ import { useState, useCallback, useEffect, useMemo, useRef } from 'react';
 import { WindowState } from '@/components/ui/DraggableResizableWindow';
 import { useWindowsT } from '@/lib/i18n';
 
-export const APP_IDS = ['portfolio', 'news', 'marketdata', 'movements', 'backtesting', 'autotrader', 'displayproperties'] as const;
+export const APP_IDS = ['portfolio', 'news', 'marketdata', 'movements', 'backtesting', 'autotrader', 'displayproperties', 'appmanager'] as const;
 export type AppId = (typeof APP_IDS)[number];
 
 export const DEFAULT_WINDOWS: Record<AppId, { width: number; height: number; x: number; y: number }> = {
@@ -14,6 +14,7 @@ export const DEFAULT_WINDOWS: Record<AppId, { width: number; height: number; x: 
   backtesting: { x: 80, y: 40, width: 850, height: 620 },
   autotrader: { x: 80, y: 40, width: 760, height: 558 },
   displayproperties: { x: 200, y: 100, width: 420, height: 520 },
+  appmanager: { x: 120, y: 80, width: 540, height: 460 },
 };
 
 export function useAppLabels(): Record<AppId, string> {
@@ -26,6 +27,7 @@ export function useAppLabels(): Record<AppId, string> {
     backtesting: t('backtesting'),
     autotrader: t('autotrader'),
     displayproperties: t('displayproperties'),
+    appmanager: t('appmanager'),
   }), [t]);
 }
 
@@ -126,6 +128,34 @@ export function useWindowManager() {
     });
   }, [nextZ]);
 
+  /** Reposition + resize multiple windows at once, restoring minimized state and assigning fresh z-indices in array order. If `focusId` is given, that window ends on top. */
+  const arrangeWindows = useCallback((
+    targets: Array<{ id: string; x: number; y: number; width: number; height: number }>,
+    focusId?: string,
+  ) => {
+    setWindows((prev) => {
+      const next = { ...prev };
+      targets.forEach((t) => {
+        const existing = next[t.id];
+        if (!existing) return;
+        next[t.id] = {
+          ...existing,
+          x: t.x,
+          y: t.y,
+          width: t.width,
+          height: t.height,
+          zIndex: ++zIndexRef.current,
+          minimized: false,
+        };
+      });
+      if (focusId && next[focusId]) {
+        next[focusId] = { ...next[focusId], zIndex: ++zIndexRef.current, minimized: false };
+      }
+      return next;
+    });
+    if (focusId) setFocusedId(focusId);
+  }, []);
+
   const toggleMinimize = useCallback((id: string) => {
     setWindows((prev) => {
       const w = prev[id];
@@ -174,6 +204,7 @@ export function useWindowManager() {
     closeWindow,
     minimizeWindow,
     focusWindow,
-    toggleMinimize
+    toggleMinimize,
+    arrangeWindows,
   };
 }

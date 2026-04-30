@@ -11,6 +11,7 @@ import { TradableCedear } from '@/components/ui/QuickTradePanel';
 import { AutoTraderWindow } from '@/components/ui/AutoTraderWindow';
 import { CompanyDetailWindow, CompanyDetailData } from '@/components/ui/CompanyDetailWindow';
 import { DisplayPropertiesWindow } from '@/components/ui/DisplayPropertiesWindow';
+import { AppManagerWindow, ManagedApp, AppStatus } from '@/components/ui/AppManagerWindow';
 import { useDisplayStore } from '@/lib/store/display-store';
 import { DesktopIcon } from '@/components/ui/DesktopIcon';
 import {
@@ -42,6 +43,7 @@ const ICON_IDS = [
   'backtesting',
   'autotrader',
   'displayproperties',
+  'appmanager',
 ] as const;
 type IconId = (typeof ICON_IDS)[number];
 
@@ -54,6 +56,7 @@ const DEFAULT_ICON_POSITIONS: Record<IconId, { x: number; y: number }> = {
   backtesting: { x: 8, y: 264 },
   autotrader: { x: 8, y: 328 },
   displayproperties: { x: 8, y: 392 },
+  appmanager: { x: 8, y: 456 },
 };
 
 const DESKTOP_ICON_CONFIG: { id: IconId; emoji: string; iconKey: keyof typeof DESKTOP_APP_ICONS }[] = [
@@ -65,7 +68,28 @@ const DESKTOP_ICON_CONFIG: { id: IconId; emoji: string; iconKey: keyof typeof DE
   { id: 'backtesting', emoji: '📉', iconKey: 'backtesting' },
   { id: 'autotrader', emoji: '🤖', iconKey: 'autotrader' },
   { id: 'displayproperties', emoji: '🖥', iconKey: 'displayproperties' },
+  { id: 'appmanager', emoji: '🗂', iconKey: 'appmanager' },
 ];
+
+/** Apps shown in the manager (excludes the manager itself). Order = list order. */
+const MANAGED_APP_IDS = [
+  'portfolio',
+  'news',
+  'marketdata',
+  'movements',
+  'backtesting',
+  'autotrader',
+  'displayproperties',
+] as const;
+
+/** Apps treated as long-running: bulk "close all" minimizes them instead of closing. */
+const LONG_RUNNING_APPS = new Set<AppId>(['autotrader', 'backtesting']);
+
+const TASKBAR_HEIGHT = 32;
+const CASCADE_OFFSET = 28;
+const CASCADE_ORIGIN = 24;
+const CASCADE_W = 600;
+const CASCADE_H = 450;
 
 // Grid cell size for "Alinear Iconos" — slightly larger than icon width (64px) for breathing room
 const GRID_SIZE = 75;
@@ -104,6 +128,9 @@ export default function TradingDashboard() {
   /** Counter for staggering new window positions */
   const companyDetailCountRef = useRef(0);
 
+  /** App currently shown in the AppManager's right panel. Lifted so lazy fetches can react to it. */
+  const [managerSelectedId, setManagerSelectedId] = useState<AppId>('portfolio');
+
   const [perfil, setPerfil] = useState<DatosPerfil | null>(null);
   const [estadoCuenta, setEstadoCuenta] = useState<EstadoCuenta | null>(null);
 
@@ -127,7 +154,8 @@ export default function TradingDashboard() {
     closeWindow: rawCloseWindow,
     minimizeWindow,
     focusWindow,
-    toggleMinimize
+    toggleMinimize,
+    arrangeWindows,
   } = useWindowManager();
 
   const closeWindow = useCallback((id: string) => {
@@ -487,21 +515,27 @@ export default function TradingDashboard() {
     fetchPortfolio(); // eslint-disable-line react-hooks/set-state-in-effect
   }, [fetchPortfolio]);
 
-  // Lazy-load market data, operations, and quick trade only when their windows first open
-  const marketDataOpen = !!windows['marketdata'] && !windows['marketdata'].minimized;
-  const movementsOpen = !!windows['movements'] && !windows['movements'].minimized;
+  // Lazy-load market data, operations, and quick trade. An app counts as "needed" when
+  // its standalone window is visible OR the AppManager is visible and showing it.
+  const isManagerVisible = !!windows['appmanager'] && !windows['appmanager'].minimized;
+  const marketDataNeeded =
+    (!!windows['marketdata'] && !windows['marketdata'].minimized) ||
+    (isManagerVisible && managerSelectedId === 'marketdata');
+  const movementsNeeded =
+    (!!windows['movements'] && !windows['movements'].minimized) ||
+    (isManagerVisible && managerSelectedId === 'movements');
 
   useEffect(() => {
-    if (marketDataOpen && !marketDataFetched.current) {
+    if (marketDataNeeded && !marketDataFetched.current) {
       marketDataFetched.current = true;
       fetchMarketData(); // eslint-disable-line react-hooks/set-state-in-effect
     }
-  }, [marketDataOpen, fetchMarketData]);
+  }, [marketDataNeeded, fetchMarketData]);
 
   useEffect(() => {
     let intervalId: NodeJS.Timeout;
 
-    if (movementsOpen) {
+    if (movementsNeeded) {
       if (!operationsFetched.current) {
         operationsFetched.current = true;
         fetchOperationsData(); // eslint-disable-line react-hooks/set-state-in-effect
@@ -517,14 +551,93 @@ export default function TradingDashboard() {
         clearInterval(intervalId);
       }
     };
-  }, [movementsOpen, fetchOperationsData]);
+  }, [movementsNeeded, fetchOperationsData]);
 
   useEffect(() => {
-    if (marketDataOpen && !quickTradeFetched.current) {
+    if (marketDataNeeded && !quickTradeFetched.current) {
       quickTradeFetched.current = true;
       fetchQuickTradeData(); // eslint-disable-line react-hooks/set-state-in-effect
     }
-  }, [marketDataOpen, fetchQuickTradeData]);
+  }, [marketDataNeeded, fetchQuickTradeData]);
+
+  // ── App Manager: derive list + bulk actions ────────────────────────────────
+  const managedApps: ManagedApp[] = useMemo(() => {
+    return MANAGED_APP_IDS.map((id) => {
+      const w = windows[id];
+      let status: AppStatus = 'closed';
+      if (w) status = w.minimized ? 'minimized' : 'open';
+      return {
+        id,
+        label: APP_LABELS[id],
+        iconSrc: DESKTOP_APP_ICONS[id],
+        status,
+      };
+    });
+  }, [windows, APP_LABELS]);
+
+  const showAllApps = useCallback(() => {
+    MANAGED_APP_IDS.forEach((id) => {
+      const w = windows[id];
+      if (!w || w.minimized) openOrFocusWindow(id);
+    });
+  }, [windows, openOrFocusWindow]);
+
+  const minimizeAllApps = useCallback(() => {
+    Object.entries(windows).forEach(([id, w]) => {
+      if (id === 'appmanager') return;
+      if (!w.minimized) minimizeWindow(id);
+    });
+  }, [windows, minimizeWindow]);
+
+  const closeAllApps = useCallback(() => {
+    Object.keys(windows).forEach((id) => {
+      if (id === 'appmanager') return;
+      if (LONG_RUNNING_APPS.has(id as AppId)) {
+        minimizeWindow(id);
+      } else {
+        closeWindow(id);
+      }
+    });
+  }, [windows, minimizeWindow, closeWindow]);
+
+  const cascadeAllApps = useCallback(() => {
+    // Cascade in a deterministic order: managed apps first, then any company-detail windows, manager last.
+    const others = Object.keys(windows).filter((id) => id !== 'appmanager');
+    const ordered = [...others, ...(windows['appmanager'] ? ['appmanager'] : [])];
+    if (ordered.length === 0) return;
+    const targets = ordered.map((id, i) => ({
+      id,
+      x: CASCADE_ORIGIN + i * CASCADE_OFFSET,
+      y: CASCADE_ORIGIN + i * CASCADE_OFFSET,
+      width: CASCADE_W,
+      height: CASCADE_H,
+    }));
+    arrangeWindows(targets, 'appmanager');
+  }, [windows, arrangeWindows]);
+
+  const tileAllApps = useCallback(() => {
+    const others = Object.keys(windows).filter((id) => id !== 'appmanager');
+    const ordered = [...others, ...(windows['appmanager'] ? ['appmanager'] : [])];
+    if (ordered.length === 0) return;
+    const screenW = window.innerWidth;
+    const screenH = window.innerHeight - TASKBAR_HEIGHT;
+    const cols = Math.ceil(Math.sqrt(ordered.length));
+    const rows = Math.ceil(ordered.length / cols);
+    const cellW = Math.floor(screenW / cols);
+    const cellH = Math.floor(screenH / rows);
+    const targets = ordered.map((id, i) => {
+      const c = i % cols;
+      const r = Math.floor(i / cols);
+      return {
+        id,
+        x: c * cellW,
+        y: r * cellH,
+        width: cellW,
+        height: cellH,
+      };
+    });
+    arrangeWindows(targets, 'appmanager');
+  }, [windows, arrangeWindows]);
 
   return (
     <div ref={desktopRef} className="desktop relative w-full h-full overflow-hidden" style={{
@@ -576,94 +689,109 @@ export default function TradingDashboard() {
         ))}
       </div>
 
-      {Object.entries(windows).map(([id, state]) => {
-        const isCompanyDetail = id.startsWith(COMPANY_DETAIL_PREFIX);
-        const appId = isCompanyDetail ? null : (id as AppId);
-        const cdInstance = isCompanyDetail ? companyDetailInstances[id] : null;
-        const title = isCompanyDetail && cdInstance
-          ? tw('companyDetail', { symbol: cdInstance.symbol })
-          : appId ? APP_LABELS[appId] : id;
-        return (
-          <DraggableResizableWindow
-            key={id}
-            state={state}
-            title={title}
-            onMove={(x, y) => updateWindow(id, { x, y })}
-            onResize={(width, height) => updateWindow(id, { width, height })}
-            onMinimize={() => minimizeWindow(id)}
-            onClose={() => (id === 'autotrader' || id === 'backtesting') ? minimizeWindow(id) : closeWindow(id)}
-            onFocus={() => focusWindow(id)}
-          >
-            {appId === 'portfolio' && (
-              <PortfolioWindow
-                portfolio={portfolio}
-                usdPrices={usdPrices}
-                isLoading={isLoadingPortfolio}
-                onRefresh={fetchPortfolio}
-                perfil={perfil}
-                estadoCuenta={estadoCuenta}
-                onCompanyDetail={openCompanyDetail}
-              />
-            )}
-            {appId === 'news' && (
-              <NewsFeed
-                generalNews={generalNews}
-                specificNews={specificNews}
-                lastUpdated={lastUpdated}
-                onRefresh={() => fetchNews(true)}
-                isLoading={isLoadingNews}
-              />
-            )}
-            {appId === 'marketdata' && (
-              <MarketDataWindow
-                marketData={marketData?.marketData ?? null}
-                ownedSymbols={marketData?.ownedSymbols ?? []}
-                companyNames={marketData?.companyNames ?? {}}
-                isLoadingMarketData={isLoadingMarketData}
-                onRefreshMarketData={fetchMarketData}
-                onCompanyDetail={openCompanyDetail}
-                quickTradeProps={{
-                  cedears: quickTradeData?.cedears ?? [],
-                  cash: quickTradeData?.cash ?? 0,
-                  comprometido: quickTradeData?.comprometido ?? 0,
-                  effectiveCash: quickTradeData?.effectiveCash ?? 0,
-                  commissionRate: quickTradeData?.commissionRate ?? 0.015,
-                  isLoading: isLoadingQuickTrade,
-                  onRefresh: () => { quickTradeFetched.current = false; fetchQuickTradeData(); },
-                  onBuy: placeBuyOrder,
-                }}
-              />
-            )}
-            {appId === 'movements' && (
-              <OperationsFeed
-                operations={operations}
-                isLoading={isLoadingOperations}
-                onRefresh={fetchOperationsData}
-              />
-            )}
+      {(() => {
+        // Built once per render; reused by both standalone draggable windows and the AppManager's
+        // right panel. Re-rendering identical JSX in two places creates two independent instances,
+        // which is fine — each consumes the same upstream data via props.
+        const appContents: Partial<Record<AppId, React.ReactNode>> = {
+          portfolio: (
+            <PortfolioWindow
+              portfolio={portfolio}
+              usdPrices={usdPrices}
+              isLoading={isLoadingPortfolio}
+              onRefresh={fetchPortfolio}
+              perfil={perfil}
+              estadoCuenta={estadoCuenta}
+              onCompanyDetail={openCompanyDetail}
+            />
+          ),
+          news: (
+            <NewsFeed
+              generalNews={generalNews}
+              specificNews={specificNews}
+              lastUpdated={lastUpdated}
+              onRefresh={() => fetchNews(true)}
+              isLoading={isLoadingNews}
+            />
+          ),
+          marketdata: (
+            <MarketDataWindow
+              marketData={marketData?.marketData ?? null}
+              ownedSymbols={marketData?.ownedSymbols ?? []}
+              companyNames={marketData?.companyNames ?? {}}
+              isLoadingMarketData={isLoadingMarketData}
+              onRefreshMarketData={fetchMarketData}
+              onCompanyDetail={openCompanyDetail}
+              quickTradeProps={{
+                cedears: quickTradeData?.cedears ?? [],
+                cash: quickTradeData?.cash ?? 0,
+                comprometido: quickTradeData?.comprometido ?? 0,
+                effectiveCash: quickTradeData?.effectiveCash ?? 0,
+                commissionRate: quickTradeData?.commissionRate ?? 0.015,
+                isLoading: isLoadingQuickTrade,
+                onRefresh: () => { quickTradeFetched.current = false; fetchQuickTradeData(); },
+                onBuy: placeBuyOrder,
+              }}
+            />
+          ),
+          movements: (
+            <OperationsFeed
+              operations={operations}
+              isLoading={isLoadingOperations}
+              onRefresh={fetchOperationsData}
+            />
+          ),
+          backtesting: <BacktestingWindow />,
+          autotrader: <AutoTraderWindow />,
+          displayproperties: <DisplayPropertiesWindow onClose={() => closeWindow('displayproperties')} />,
+        };
 
-            {appId === 'backtesting' && (
-              <BacktestingWindow />
-            )}
-
-            {isCompanyDetail && cdInstance && (
-              <CompanyDetailWindow
-                iolSymbol={cdInstance.symbol}
-                isLoading={cdInstance.isLoading}
-                error={cdInstance.error}
-                data={cdInstance.data}
-                onSearch={(sym) => navigateCompanyDetail(id, sym)}
-              />
-            )}
-            {appId === 'autotrader' && (
-              <AutoTraderWindow />
-            )}
-            {appId === 'displayproperties' && (
-              <DisplayPropertiesWindow onClose={() => closeWindow('displayproperties')} />
-            )}
-          </DraggableResizableWindow>
-        );
-      })}
+        return Object.entries(windows).map(([id, state]) => {
+          const isCompanyDetail = id.startsWith(COMPANY_DETAIL_PREFIX);
+          const appId = isCompanyDetail ? null : (id as AppId);
+          const cdInstance = isCompanyDetail ? companyDetailInstances[id] : null;
+          const title = isCompanyDetail && cdInstance
+            ? tw('companyDetail', { symbol: cdInstance.symbol })
+            : appId ? APP_LABELS[appId] : id;
+          return (
+            <DraggableResizableWindow
+              key={id}
+              state={state}
+              title={title}
+              onMove={(x, y) => updateWindow(id, { x, y })}
+              onResize={(width, height) => updateWindow(id, { width, height })}
+              onMinimize={() => minimizeWindow(id)}
+              onClose={() => (id === 'autotrader' || id === 'backtesting') ? minimizeWindow(id) : closeWindow(id)}
+              onFocus={() => focusWindow(id)}
+            >
+              {isCompanyDetail && cdInstance && (
+                <CompanyDetailWindow
+                  iolSymbol={cdInstance.symbol}
+                  isLoading={cdInstance.isLoading}
+                  error={cdInstance.error}
+                  data={cdInstance.data}
+                  onSearch={(sym) => navigateCompanyDetail(id, sym)}
+                />
+              )}
+              {appId === 'appmanager' && (
+                <AppManagerWindow
+                  apps={managedApps}
+                  appContents={appContents}
+                  selectedId={managerSelectedId}
+                  onSelect={setManagerSelectedId}
+                  onPopOut={openOrFocusWindow}
+                  onShowAll={showAllApps}
+                  onMinimizeAll={minimizeAllApps}
+                  onCloseAll={closeAllApps}
+                  onCascade={cascadeAllApps}
+                  onTile={tileAllApps}
+                />
+              )}
+              {appId && appId !== 'appmanager' && appContents[appId]}
+            </DraggableResizableWindow>
+          );
+        });
+      })()}
 
       <div className="taskbar">
         <button
