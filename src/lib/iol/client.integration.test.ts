@@ -32,14 +32,24 @@ import type {
 function extractShape(value: unknown, prefix = ''): string[] {
   if (Array.isArray(value)) {
     if (value.length === 0) return [prefix + '[]'];
-    return extractShape(value[0], prefix + '[].');
+    // Merge shapes from every element so that fields which are null in some items
+    // but populated in others (e.g. `puntas` outside market hours) still surface.
+    const merged = new Set<string>();
+    for (const item of value) {
+      for (const k of extractShape(item, prefix + '[].')) merged.add(k);
+    }
+    return [...merged].sort();
   }
   if (value !== null && typeof value === 'object') {
     const keys: string[] = [];
     for (const key of Object.keys(value as Record<string, unknown>)) {
       const child = (value as Record<string, unknown>)[key];
       const childPath = prefix + key;
-      if (child !== null && typeof child === 'object') {
+      // null carries no shape info — skip it so an item with `puntas: null`
+      // doesn't pollute the shape with a `puntas` leaf that conflicts with
+      // populated items.
+      if (child === null) continue;
+      if (typeof child === 'object') {
         keys.push(...extractShape(child, childPath + (Array.isArray(child) ? '' : '.')));
       } else {
         keys.push(childPath);
@@ -198,8 +208,10 @@ describe.skipIf(SKIP)('IOL API integration', () => {
     });
 
     it('each titulo has puntas with bid/ask', () => {
+      // `puntas` is null when there is no live order book (e.g. outside market
+      // hours or for illiquid CEDEARs). Validate shape only when populated.
       for (const t of panel.titulos.slice(0, 5)) {
-        expect(t.puntas).toBeDefined();
+        if (t.puntas == null) continue;
         const p = t.puntas as Puntas;
         expect(typeof p.cantidadCompra).toBe('number');
         expect(typeof p.precioCompra).toBe('number');
@@ -436,8 +448,12 @@ describe.skipIf(SKIP)('IOL API integration', () => {
     it('getPanelQuotes matches panel-cedears.json fixture shape', async () => {
       const live = await client.getPanelQuotes('cedears');
       const fixture = loadFixture('panel-cedears.json');
-      const liveShape = new Set(extractShape(live));
-      const fixtureShape = new Set(extractShape(fixture));
+      // `puntas` (order book) is null outside market hours, so its sub-paths
+      // disappear from the live shape. Exclude that subtree from the diff —
+      // it's market-state, not a schema change.
+      const isPuntasPath = (k: string) => k.startsWith('titulos[].puntas.');
+      const liveShape = new Set(extractShape(live).filter(k => !isPuntasPath(k)));
+      const fixtureShape = new Set(extractShape(fixture).filter(k => !isPuntasPath(k)));
       const added = [...liveShape].filter(k => !fixtureShape.has(k));
       const removed = [...fixtureShape].filter(k => !liveShape.has(k));
       expect(added, `New fields in live API not in fixture: ${added.join(', ')}`).toEqual([]);
