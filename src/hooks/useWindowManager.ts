@@ -6,13 +6,13 @@ export const APP_IDS = ['portfolio', 'news', 'marketdata', 'movements', 'backtes
 export type AppId = (typeof APP_IDS)[number];
 
 export const DEFAULT_WINDOWS: Record<AppId, { width: number; height: number; x: number; y: number }> = {
-  portfolio: { x: 24, y: 24, width: 752, height: 613 },
+  portfolio: { x: 24, y: 24, width: 752, height: 552 },
   news: { x: 380, y: 24, width: 500, height: 440 },
   marketdata: { x: 400, y: 80, width: 540, height: 400 },
   movements: { x: 120, y: 120, width: 750, height: 420 },
 
   backtesting: { x: 80, y: 40, width: 850, height: 620 },
-  autotrader: { x: 80, y: 40, width: 760, height: 620 },
+  autotrader: { x: 80, y: 40, width: 760, height: 558 },
   displayproperties: { x: 200, y: 100, width: 420, height: 520 },
 };
 
@@ -31,11 +31,14 @@ export function useAppLabels(): Record<AppId, string> {
 
 export const COMPANY_DETAIL_DEFAULTS = { width: 560, height: 600 };
 
+const TASKBAR_HEIGHT = 28;
+
 export function centerPosition(width: number, height: number): { x: number; y: number } {
   if (typeof window === 'undefined') return { x: 0, y: 0 };
+  const usableHeight = window.innerHeight - TASKBAR_HEIGHT;
   return {
     x: Math.max(0, Math.floor((window.innerWidth - width) / 2)),
-    y: Math.max(0, Math.floor((window.innerHeight - height) / 2)),
+    y: Math.max(0, Math.floor((usableHeight - height) / 2)),
   };
 }
 
