@@ -806,14 +806,30 @@ export default function TradingDashboard() {
           const label = isCd
             ? tw('companyDetail', { symbol: id.slice(COMPANY_DETAIL_PREFIX.length) })
             : APP_LABELS[id as AppId];
+          const iconSrc = isCd
+            ? DESKTOP_APP_ICONS.analysis
+            : DESKTOP_APP_ICONS[id as keyof typeof DESKTOP_APP_ICONS];
           return (
             <button
               key={id}
               type="button"
               className={`taskbar-button ${focusedId === id ? 'active' : ''}`}
               onClick={() => toggleMinimize(id)}
+              style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}
             >
-              {label}
+              {iconSrc && (
+                /* eslint-disable-next-line @next/next/no-img-element */
+                <img
+                  src={iconSrc}
+                  alt=""
+                  width={16}
+                  height={16}
+                  style={{ flexShrink: 0, pointerEvents: 'none' }}
+                />
+              )}
+              <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                {label}
+              </span>
             </button>
           );
         })}
