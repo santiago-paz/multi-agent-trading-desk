@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { FONT, WINDOW_CONTAINER } from '@/lib/theme/win98';
 import { useDisplayStore, WALLPAPER_OPTIONS, DisplayMode, SCREENSAVER_OPTIONS } from '@/lib/store/display-store';
 import { ScreenSaverRenderer } from '@/components/screensavers';
@@ -497,7 +498,7 @@ export function DisplayPropertiesWindow({ onClose }: DisplayPropertiesWindowProp
       </div>
     </div>
 
-    {isPreviewing && (
+    {isPreviewing && typeof document !== 'undefined' && createPortal(
       <div style={{
         position: 'fixed',
         top: 0, left: 0, right: 0, bottom: 0,
@@ -506,7 +507,8 @@ export function DisplayPropertiesWindow({ onClose }: DisplayPropertiesWindowProp
         cursor: 'none', // Hide cursor to mimic real screensaver
       }}>
         <ScreenSaverRenderer name={localScreenSaver} text={localScreenSaverText} isFullScreen={true} />
-      </div>
+      </div>,
+      document.body
     )}
     </>
   );
