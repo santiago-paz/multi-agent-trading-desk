@@ -11,7 +11,7 @@ import { AgentSelector } from '@/components/ui/AgentSelector';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-const API_URL = process.env.NEXT_PUBLIC_AI_HEDGE_FUND_API_URL || 'http://localhost:8000';
+const API_URL = '/api/hedge-fund';
 
 interface Agent {
   key: string;
@@ -299,7 +299,7 @@ export function BacktestingWindow() {
   useEffect(() => {
     (async () => {
       try {
-        const res = await fetch(`${API_URL}/hedge-fund/agents`);
+        const res = await fetch(`${API_URL}/agents`);
         const data = await res.json();
         const agentList: Agent[] = (data.agents || []).sort((a: Agent, b: Agent) => a.order - b.order);
         setAgents(agentList);
@@ -392,7 +392,7 @@ export function BacktestingWindow() {
     addLog('start', `Iniciando backtest con ${agentKeys.length} agente(s)...`);
 
     try {
-      const response = await fetch(`${API_URL}/hedge-fund/backtest`, {
+      const response = await fetch(`${API_URL}/backtest`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),

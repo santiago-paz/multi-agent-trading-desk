@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Agent } from '../types';
 
-const API_URL = process.env.NEXT_PUBLIC_AI_HEDGE_FUND_API_URL || 'http://localhost:8000';
+const API_URL = '/api/hedge-fund';
 
 export function useAgents() {
   const [agents, setAgents] = useState<Agent[]>([]);
@@ -11,7 +11,7 @@ export function useAgents() {
   useEffect(() => {
     (async () => {
       try {
-        const res = await fetch(`${API_URL}/hedge-fund/agents`);
+        const res = await fetch(`${API_URL}/agents`);
         const data = await res.json();
         const agentList: Agent[] = (data.agents || []).sort((a: Agent, b: Agent) => a.order - b.order);
         setAgents(agentList);

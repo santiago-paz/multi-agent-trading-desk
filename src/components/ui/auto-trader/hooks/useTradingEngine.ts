@@ -7,7 +7,7 @@ import { COMMISSION_RATE } from '@/lib/trading/quick-trade';
 import { useHistoryStore } from '@/lib/store/history-store';
 import { useAutoTraderT } from '@/lib/i18n';
 
-const API_URL = process.env.NEXT_PUBLIC_AI_HEDGE_FUND_API_URL || 'http://localhost:8000';
+const API_URL = '/api/hedge-fund';
 
 export function useTradingEngine({
   cashArs,
@@ -116,7 +116,7 @@ export function useTradingEngine({
     addLog('start', t('engine.log.sending', { tickers: fmpTickers.length, agents: agentKeys.length }));
 
     try {
-      const response = await fetch(`${API_URL}/hedge-fund/run`, {
+      const response = await fetch(`${API_URL}/run`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),

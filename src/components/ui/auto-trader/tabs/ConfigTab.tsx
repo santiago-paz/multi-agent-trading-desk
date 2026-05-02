@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef } from 'react';
 import { FONT, COL_HEADER_BASE, COL_RAISED, COL_SUNKEN, CELL, CELL_RIGHT, COLOR_NEGATIVE, COLOR_SECONDARY, COLOR_DISABLED } from '@/lib/theme/win98';
 import { AgentSelector } from '@/components/ui/AgentSelector';
 import { fmtARS, fmtARS2 } from '../utils';
@@ -67,6 +67,16 @@ export function ConfigTab({
   const [pSortKey, setPSortKey] = useState<PortfolioSortKey>('ticker');
   const [pSortDir, setPSortDir] = useState<'asc' | 'desc'>('asc');
   const marketStatus = useMemo(() => isMarketOpen(), []);
+  const helpRef = useRef<HTMLSpanElement>(null);
+  const [helpPos, setHelpPos] = useState<{ top: number; left: number } | null>(null);
+
+  const showHelp = () => {
+    const el = helpRef.current;
+    if (!el) return;
+    const r = el.getBoundingClientRect();
+    setHelpPos({ top: r.bottom + 4, left: r.left });
+  };
+  const hideHelp = () => setHelpPos(null);
 
   return (
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0, gap: 8 }}>
@@ -176,9 +186,11 @@ export function ConfigTab({
 
         <fieldset style={{ margin: 0, flexShrink: 0 }}>
           <legend>{t('config.settings.title')}</legend>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, ...FONT, flexWrap: 'wrap' }}>
-            <div className="field-row">
-              <label htmlFor="daily-limit">{t('config.settings.dailyLimit')}</label>
+          <div style={{ ...FONT, display: 'grid', gridTemplateColumns: 'auto 1fr', columnGap: 8, rowGap: 4, alignItems: 'center' }}>
+            <label htmlFor="daily-limit" style={{ textAlign: 'right', whiteSpace: 'nowrap' }}>
+              {t('config.settings.dailyLimit')}
+            </label>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
               <input
                 id="daily-limit"
                 type="number"
@@ -187,18 +199,73 @@ export function ConfigTab({
                 style={{ width: 120, ...FONT }}
                 disabled={isAnalyzing}
               />
+              <span>ARS</span>
+              <span style={{ color: COLOR_SECONDARY }}>
+                (~USD ${fmtARS(dailyLimit / effectiveMep)})
+              </span>
+              <span
+                ref={helpRef}
+                role="img"
+                aria-label={t('config.settings.helpAria')}
+                onMouseEnter={showHelp}
+                onMouseLeave={hideHelp}
+                onFocus={showHelp}
+                onBlur={hideHelp}
+                tabIndex={0}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  width: 14,
+                  height: 14,
+                  border: '1px solid #808080',
+                  borderTop: '1px solid #ffffff',
+                  borderLeft: '1px solid #ffffff',
+                  background: '#c0c0c0',
+                  color: '#000080',
+                  fontWeight: 'bold',
+                  fontSize: 10,
+                  lineHeight: 1,
+                  cursor: 'help',
+                  userSelect: 'none',
+                }}
+              >
+                ?
+              </span>
+              {helpPos && (
+                <div
+                  role="tooltip"
+                  style={{
+                    ...FONT,
+                    position: 'fixed',
+                    top: Math.min(helpPos.top, window.innerHeight - 120),
+                    left: Math.min(helpPos.left, window.innerWidth - 360),
+                    width: 340,
+                    padding: '4px 6px',
+                    background: '#ffffe1',
+                    color: '#000000',
+                    border: '1px solid #000000',
+                    boxShadow: '2px 2px 0 rgba(0,0,0,0.25)',
+                    whiteSpace: 'normal',
+                    lineHeight: 1.35,
+                    zIndex: 10000,
+                    pointerEvents: 'none',
+                  }}
+                >
+                  {t('config.settings.dailyLimitHelp')}
+                </div>
+              )}
             </div>
-            <span>ARS</span>
-            <span style={{ color: COLOR_SECONDARY, marginLeft: 8 }}>
-              (~USD ${fmtARS(dailyLimit / effectiveMep)})
+
+            <span />
+            <span style={{ color: COLOR_SECONDARY, fontStyle: 'italic' }}>
+              {t('config.settings.dailyLimitHint')}
             </span>
-            <span style={{ color: COLOR_SECONDARY, marginLeft: 16 }}>
-              {t('config.settings.commission', { rate: (commissionRate * 100).toFixed(1) })}
-            </span>
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, ...FONT, marginTop: 4 }}>
-            <div className="field-row">
-              <label htmlFor="model-select">{t('config.settings.model')}</label>
+
+            <label htmlFor="model-select" style={{ textAlign: 'right', whiteSpace: 'nowrap' }}>
+              {t('config.settings.model')}
+            </label>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
               <select
                 id="model-select"
                 value={modelName}
@@ -210,9 +277,16 @@ export function ConfigTab({
                   <option key={m.id} value={m.id}>{m.label}</option>
                 ))}
               </select>
+              <span style={{ color: COLOR_SECONDARY }}>
+                {t(AI_MODELS.find(m => m.id === modelName)?.descriptionKey as Parameters<typeof t>[0])}
+              </span>
             </div>
+
+            <span style={{ textAlign: 'right', whiteSpace: 'nowrap' }}>
+              {t('config.settings.commissionLabel')}
+            </span>
             <span style={{ color: COLOR_SECONDARY }}>
-              {t(AI_MODELS.find(m => m.id === modelName)?.descriptionKey as Parameters<typeof t>[0])}
+              {t('config.settings.commissionValue', { rate: (commissionRate * 100).toFixed(1) })}
             </span>
           </div>
           {!marketStatus.open && (
