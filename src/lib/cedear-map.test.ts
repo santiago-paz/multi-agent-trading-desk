@@ -4,6 +4,7 @@ import {
   toFmpTicker,
   buildFmpToIolMap,
   deduplicateIolSymbols,
+  isEtf,
 } from './cedear-map';
 
 // ── stripCurrencySuffix ─────────────────────────────────────────────────────
@@ -79,6 +80,106 @@ describe('toFmpTicker', () => {
 
   it('maps XROX → XRX (known exception)', () => {
     expect(toFmpTicker('XROX')).toBe('XRX');
+  });
+
+  it('maps every BYMA exception to its FMP ticker', () => {
+    // Full BYMA exceptions block from IOL_TO_FMP. If FMP renames any of these,
+    // the whole pipeline silently breaks — assert each one explicitly.
+    expect(toFmpTicker('ADGO')).toBe('AGRO');   // Adecoagro
+    expect(toFmpTicker('AOCA')).toBe('ACH');    // Aluminum Corp of China
+    expect(toFmpTicker('BA.C')).toBe('BAC');    // Bank of America (BYMA disambiguates from Boeing)
+    expect(toFmpTicker('BRKB')).toBe('BRK-B');  // Berkshire Hathaway B
+    expect(toFmpTicker('BNG')).toBe('BG');      // Bunge
+    expect(toFmpTicker('DISN')).toBe('DIS');    // Disney
+    expect(toFmpTicker('DTEA')).toBe('DTEGY');  // Deutsche Telekom
+    expect(toFmpTicker('GOGL')).toBe('GOOGL');  // Alphabet Cl. A — FMP "GOGL" is Golden Ocean!
+    expect(toFmpTicker('KOFM')).toBe('KOF');    // Coca-Cola Femsa
+    expect(toFmpTicker('NOKA')).toBe('NOK');    // Nokia
+    expect(toFmpTicker('PKS')).toBe('PKX');     // Posco
+    expect(toFmpTicker('TEFO')).toBe('TEF');    // Telefonica
+    expect(toFmpTicker('TRVV')).toBe('TRV');    // Travelers
+    expect(toFmpTicker('TXR')).toBe('TX');      // Ternium
+    expect(toFmpTicker('UN')).toBe('NU');       // Nu Holdings (NOT Unilever — UN was delisted)
+    expect(toFmpTicker('WBO')).toBe('WB');      // Weibo
+    expect(toFmpTicker('YZCA')).toBe('YZC');    // Yanzhou Coal
+  });
+
+  it('maps BYMA exceptions correctly when arriving with C/D suffix', () => {
+    // IOL emits these with currency suffixes (C = pesos, D = dollars)
+    expect(toFmpTicker('XROXC')).toBe('XRX');
+    expect(toFmpTicker('GOGLD')).toBe('GOOGL');
+    expect(toFmpTicker('DISNC')).toBe('DIS');
+    expect(toFmpTicker('BRKBD')).toBe('BRK-B');
+  });
+
+  it('returns identity for natural C/D-ending tickers (full coverage)', () => {
+    // Complete the set started above — these were the symbols being wrongly
+    // stripped to "X" (e.g. HD → H = Hyatt) before the whitelist was added.
+    expect(toFmpTicker('BBD')).toBe('BBD');     // Banco Bradesco
+    expect(toFmpTicker('DD')).toBe('DD');       // DuPont
+    expect(toFmpTicker('HMC')).toBe('HMC');     // Honda
+    expect(toFmpTicker('HOOD')).toBe('HOOD');   // Robinhood
+    expect(toFmpTicker('HSBC')).toBe('HSBC');   // HSBC
+    expect(toFmpTicker('KGC')).toBe('KGC');     // Kinross Gold
+    expect(toFmpTicker('LAC')).toBe('LAC');     // Lithium Americas
+    expect(toFmpTicker('LND')).toBe('LND');     // BrasilAgro
+    expect(toFmpTicker('PAC')).toBe('PAC');     // Grupo Aeroport. Pacífico
+    expect(toFmpTicker('SID')).toBe('SID');     // CSN ADR
+  });
+
+  it('maps Brazilian B3 tickers to their NYSE/NASDAQ ADR', () => {
+    expect(toFmpTicker('ABEV3')).toBe('ABEV');  // Ambev
+    expect(toFmpTicker('BBDC3')).toBe('BBD');   // Bradesco
+    expect(toFmpTicker('ITUB3')).toBe('ITUB');  // Itaú
+    expect(toFmpTicker('NTCO3')).toBe('NTCO');  // Natura
+    expect(toFmpTicker('PETR3')).toBe('PBR');   // Petrobras
+    expect(toFmpTicker('SUZB3')).toBe('SUZ');   // Suzano
+    expect(toFmpTicker('TIMS3')).toBe('TIMB');  // TIM
+    expect(toFmpTicker('VALE3')).toBe('VALE');  // Vale
+    expect(toFmpTicker('VIVT3')).toBe('VIV');   // Telefônica Brasil
+  });
+
+  it('returns null for B3 tickers without a US ADR', () => {
+    expect(toFmpTicker('BPA11')).toBeNull();    // BTG Pactual
+    expect(toFmpTicker('BBAS3')).toBeNull();    // Banco do Brasil
+    expect(toFmpTicker('HAPV3')).toBeNull();    // Hapvida
+    expect(toFmpTicker('LREN3')).toBeNull();    // Lojas Renner
+    expect(toFmpTicker('MGLU3')).toBeNull();    // Magazine Luiza
+    expect(toFmpTicker('PRIO3')).toBeNull();    // PetroRio
+    expect(toFmpTicker('RENT3')).toBeNull();    // Localiza
+    expect(toFmpTicker('SBSP3')).toBeNull();    // Cia Saneamento Básico SP
+    expect(toFmpTicker('WEGE3')).toBeNull();    // Weg
+    expect(toFmpTicker('RCTB4')).toBeNull();    // Telebras
+  });
+
+  it('returns null for non-US-listed European/Asian symbols', () => {
+    expect(toFmpTicker('ADS')).toBeNull();      // Adidas (XETRA)
+    expect(toFmpTicker('BAS')).toBeNull();      // BASF
+    expect(toFmpTicker('BAYN')).toBeNull();     // Bayer
+    expect(toFmpTicker('BSN')).toBeNull();      // Danone
+    expect(toFmpTicker('EOAN')).toBeNull();     // E.On
+    expect(toFmpTicker('MBG')).toBeNull();      // Mercedes-Benz
+    expect(toFmpTicker('NEC1')).toBeNull();     // NEC
+    expect(toFmpTicker('HHPD')).toBeNull();     // Hon Hai (London)
+    expect(toFmpTicker('SMSN')).toBeNull();     // Samsung (London)
+    expect(toFmpTicker('NLM')).toBeNull();      // Novolipetsk
+    expect(toFmpTicker('OGZD')).toBeNull();     // Gazprom
+    expect(toFmpTicker('LKOD')).toBeNull();     // Lukoil
+    expect(toFmpTicker('ATAD')).toBeNull();     // Tatneft
+    expect(toFmpTicker('IWDA')).toBeNull();     // iShares MSCI World UCITS
+  });
+
+  it('resolves common ETFs to themselves (identity)', () => {
+    // Sample across the ETF block — if any of these change shape on FMP,
+    // the dashboard's market-data window stops updating.
+    expect(toFmpTicker('SPY')).toBe('SPY');
+    expect(toFmpTicker('QQQ')).toBe('QQQ');
+    expect(toFmpTicker('GLD')).toBe('GLD');
+    expect(toFmpTicker('SLV')).toBe('SLV');
+    expect(toFmpTicker('EWZ')).toBe('EWZ');     // Brazil
+    expect(toFmpTicker('XLE')).toBe('XLE');     // Energy
+    expect(toFmpTicker('IBIT')).toBe('IBIT');   // Bitcoin trust
+    expect(toFmpTicker('ETHA')).toBe('ETHA');   // Ethereum trust
   });
 
   it('returns null for CSNA3 (no US equivalent)', () => {
@@ -180,5 +281,37 @@ describe('deduplicateIolSymbols', () => {
 
   it('returns empty array for empty input', () => {
     expect(deduplicateIolSymbols([])).toEqual([]);
+  });
+});
+
+// ── isEtf ───────────────────────────────────────────────────────────────────
+
+describe('isEtf', () => {
+  it('recognises ETFs by their bare symbol', () => {
+    expect(isEtf('SPY')).toBe(true);
+    expect(isEtf('QQQ')).toBe(true);
+    expect(isEtf('GLD')).toBe(true);
+    expect(isEtf('IBIT')).toBe(true);
+    expect(isEtf('XLE')).toBe(true);
+  });
+
+  it('recognises ETFs even when they arrive with C/D currency suffix', () => {
+    expect(isEtf('SPYC')).toBe(true);
+    expect(isEtf('SPYD')).toBe(true);
+    expect(isEtf('QQQC')).toBe(true);
+    expect(isEtf('GLDC')).toBe(true);
+  });
+
+  it('returns false for stocks (even those listed in IOL_TO_FMP)', () => {
+    expect(isEtf('AAPL')).toBe(false);
+    expect(isEtf('TSLA')).toBe(false);
+    expect(isEtf('XROX')).toBe(false);   // mapped exception, not an ETF
+    expect(isEtf('GOGL')).toBe(false);   // Alphabet, not the Golden Ocean ETF
+    expect(isEtf('JD')).toBe(false);     // natural C/D-ending stock
+  });
+
+  it('returns false for unknown symbols', () => {
+    expect(isEtf('')).toBe(false);
+    expect(isEtf('NOTREAL')).toBe(false);
   });
 });
