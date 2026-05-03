@@ -34,10 +34,37 @@ describe('stripCurrencySuffix', () => {
     expect(stripCurrencySuffix('')).toBe('');
   });
 
-  it('handles symbols ending in C that are real tickers (length > 1)', () => {
-    // "KOC" → strips to "KO" — this is expected behavior since
-    // IOL always appends C/D to CEDEAR symbols
+  it('strips KOC → KO (typical currency-variant pattern)', () => {
     expect(stripCurrencySuffix('KOC')).toBe('KO');
+  });
+
+  it('does NOT strip natural tickers ending in C/D registered in IOL_TO_FMP', () => {
+    // These are real US tickers that already end in C or D — IOL lists them
+    // bare (no currency suffix), so stripping would map to the wrong company.
+    expect(stripCurrencySuffix('JD')).toBe('JD');     // JD.com (was being stripped to "J" = Jacobs)
+    expect(stripCurrencySuffix('HD')).toBe('HD');     // Home Depot
+    expect(stripCurrencySuffix('AMD')).toBe('AMD');   // Advanced Micro Devices
+    expect(stripCurrencySuffix('BBD')).toBe('BBD');   // Banco Bradesco
+    expect(stripCurrencySuffix('DD')).toBe('DD');     // DuPont
+    expect(stripCurrencySuffix('GILD')).toBe('GILD'); // Gilead
+    expect(stripCurrencySuffix('HMC')).toBe('HMC');   // Honda
+    expect(stripCurrencySuffix('HOOD')).toBe('HOOD'); // Robinhood
+    expect(stripCurrencySuffix('HSBC')).toBe('HSBC'); // HSBC
+    expect(stripCurrencySuffix('INTC')).toBe('INTC'); // Intel
+    expect(stripCurrencySuffix('KGC')).toBe('KGC');   // Kinross Gold
+    expect(stripCurrencySuffix('LAC')).toBe('LAC');   // Lithium Americas
+    expect(stripCurrencySuffix('LND')).toBe('LND');   // BrasilAgro
+    expect(stripCurrencySuffix('MCD')).toBe('MCD');   // McDonald's
+    expect(stripCurrencySuffix('PAC')).toBe('PAC');   // Grupo Aeroport. Pacífico
+    expect(stripCurrencySuffix('PDD')).toBe('PDD');   // PDD Holdings
+    expect(stripCurrencySuffix('SID')).toBe('SID');   // CSN
+    expect(stripCurrencySuffix('VOD')).toBe('VOD');   // Vodafone
+    expect(stripCurrencySuffix('WFC')).toBe('WFC');   // Wells Fargo
+    expect(stripCurrencySuffix('ERIC')).toBe('ERIC'); // Ericsson
+  });
+
+  it('does NOT strip ETF symbols ending in D registered in IOL_TO_FMP', () => {
+    expect(stripCurrencySuffix('GLD')).toBe('GLD');   // SPDR Gold Shares
   });
 });
 
@@ -67,6 +94,40 @@ describe('toFmpTicker', () => {
   it('handles standard ticker with C/D suffix', () => {
     expect(toFmpTicker('AAPLC')).toBe('AAPL');
     expect(toFmpTicker('AAPLD')).toBe('AAPL');
+  });
+
+  it('resolves natural tickers ending in C/D to themselves (no strip)', () => {
+    expect(toFmpTicker('JD')).toBe('JD');       // JD.com — was returning "J" (Jacobs)
+    expect(toFmpTicker('HD')).toBe('HD');       // Home Depot
+    expect(toFmpTicker('AMD')).toBe('AMD');     // AMD
+    expect(toFmpTicker('GILD')).toBe('GILD');   // Gilead
+    expect(toFmpTicker('INTC')).toBe('INTC');   // Intel
+    expect(toFmpTicker('MCD')).toBe('MCD');     // McDonald's
+    expect(toFmpTicker('PDD')).toBe('PDD');     // PDD Holdings
+    expect(toFmpTicker('VOD')).toBe('VOD');     // Vodafone
+    expect(toFmpTicker('WFC')).toBe('WFC');     // Wells Fargo
+    expect(toFmpTicker('ERIC')).toBe('ERIC');   // Ericsson
+  });
+
+  it('resolves IOL-specific symbols to their FMP equivalents', () => {
+    expect(toFmpTicker('TEN')).toBe('TS');      // Tenaris
+    expect(toFmpTicker('BBV')).toBe('BBVA');    // BBVA
+    expect(toFmpTicker('BBVD')).toBe('BBVA');
+    expect(toFmpTicker('ALAD')).toBe('ALAB');   // Astera Labs
+    expect(toFmpTicker('PETR')).toBe('PBR');    // Petrobras ADR
+    expect(toFmpTicker('VAL3D')).toBe('VALE');  // Vale ADR
+    expect(toFmpTicker('NAT3D')).toBe('NTCO');  // Natura
+    expect(toFmpTicker('NATU3')).toBe('NTCO');
+    expect(toFmpTicker('BBDCD')).toBe('BBD');   // Bradesco D-suffix form
+  });
+
+  it('handles symbols with dots/dashes', () => {
+    expect(toFmpTicker('B.')).toBe('B');         // Barrick
+    expect(toFmpTicker('C.D')).toBe('C');        // Citigroup
+    expect(toFmpTicker('BB.D')).toBe('BB');      // BlackBerry
+    expect(toFmpTicker('CAR.')).toBe('CAR');     // Avis Budget
+    expect(toFmpTicker('AKO.B')).toBe('AKO-B');  // Embotelladora Andina
+    expect(toFmpTicker('AKOBD')).toBe('AKO-B');
   });
 });
 

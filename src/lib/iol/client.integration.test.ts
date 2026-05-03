@@ -294,9 +294,13 @@ describe.skipIf(SKIP)('IOL API integration', () => {
       expect(typeof detail.tipo).toBe('string');
       expect(typeof detail.fechaAlta).toBe('string');
       expect(typeof detail.estadoActual).toBe('string');
-      expect(typeof detail.precio).toBe('number');
-      expect(typeof detail.cantidad).toBe('number');
-      expect(typeof detail.monto).toBe('number');
+      // precio/cantidad/monto/fondosParaOperacion/fechaOperado are null until the
+      // order is executed (e.g. estadoActual === 'iniciada' with precio_Mercado).
+      expect(detail.precio === null || typeof detail.precio === 'number').toBe(true);
+      expect(detail.cantidad === null || typeof detail.cantidad === 'number').toBe(true);
+      expect(detail.monto === null || typeof detail.monto === 'number').toBe(true);
+      expect(detail.fondosParaOperacion === null || typeof detail.fondosParaOperacion === 'number').toBe(true);
+      expect(detail.fechaOperado === null || typeof detail.fechaOperado === 'string').toBe(true);
       expect(typeof detail.modalidad).toBe('string');
       expect(typeof detail.plazo).toBe('string');
     });

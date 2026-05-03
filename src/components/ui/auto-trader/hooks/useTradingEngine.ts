@@ -108,9 +108,12 @@ export function useTradingEngine({
     addLog('limit', t('engine.log.limit', { amount: fmtARS(dailyLimit), usd: (dailyLimit / effectiveMep).toFixed(0) }), 'ok');
     addLog('portfolio-tickers', t('engine.log.holdings', { count: holdingTickers.length, list: holdingTickers.join(', ') || t('engine.log.noPositions') }), 'ok');
     addLog('candidate-tickers', t('engine.log.candidates', { count: panelSymbols.length, list: panelSymbols.join(', ') || t('engine.log.none') }), 'ok');
-    const fmpMapped = fmpTickers.filter(tk => !holdingTickers.includes(tk) && !panelSymbols.includes(tk));
-    if (fmpMapped.length > 0) {
-      addLog('fmp-mapped', t('engine.log.mapped', { list: fmpMapped.join(', ') }), 'ok');
+    // Show explicit IOL→FMP pairs only when symbols actually differ
+    const mappingPairs = Object.entries(fmpToIol)
+      .filter(([fmp, iol]) => fmp !== iol)
+      .map(([fmp, iol]) => `${iol}→${fmp}`);
+    if (mappingPairs.length > 0) {
+      addLog('fmp-mapped', t('engine.log.mapped', { list: mappingPairs.join(', ') }), 'ok');
     }
     addLog('agents-info', t('engine.log.agents', { list: agentKeys.map(k => k.replace(/_/g, ' ')).join(', ') }), 'ok');
     addLog('start', t('engine.log.sending', { tickers: fmpTickers.length, agents: agentKeys.length }));
@@ -225,7 +228,9 @@ export function useTradingEngine({
               } else if (evt.event === 'progress') {
                 progressCount++;
                 const agent = (d.agent as string) || '';
-                const ticker = (d.ticker as string) || '';
+                const fmpTicker = (d.ticker as string) || '';
+                // Remap FMP → IOL so the user sees the symbol that matches their portfolio
+                const ticker = fmpTicker ? (fmpToIol[fmpTicker] ?? fmpTicker) : '';
                 const status = (d.status as string) || '';
                 const analysis = (d.analysis as string) || '';
                 const logId = `progress-${progressCount}`;

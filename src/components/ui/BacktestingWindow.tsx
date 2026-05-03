@@ -8,54 +8,12 @@ import {
   COL_HEADER_BASE, COL_RAISED, COLOR_LINK
 } from '@/lib/theme/win98';
 import { AgentSelector } from '@/components/ui/AgentSelector';
+import { Agent, BacktestDayResult, PerformanceMetrics, LogStatus, LogEntry } from '@/lib/backtesting/types';
+import { parseSSEChunk } from '@/lib/backtesting/sse';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 const API_URL = '/api/hedge-fund';
-
-interface Agent {
-  key: string;
-  display_name: string;
-  description: string;
-  investing_style: string;
-  order: number;
-}
-
-interface BacktestDayResult {
-  date: string;
-  portfolio_value: number;
-  cash: number;
-  decisions: Record<string, { action: string; quantity: number; confidence: number; reasoning: string }>;
-  executed_trades: Record<string, number>;
-  analyst_signals: Record<string, unknown>;
-  current_prices: Record<string, number>;
-  long_exposure: number;
-  short_exposure: number;
-  gross_exposure: number;
-  net_exposure: number;
-  long_short_ratio?: number;
-}
-
-interface PerformanceMetrics {
-  sharpe_ratio?: number;
-  sortino_ratio?: number;
-  max_drawdown?: number;
-  max_drawdown_date?: string;
-  long_short_ratio?: number;
-  gross_exposure?: number;
-  net_exposure?: number;
-}
-
-type LogStatus = 'running' | 'ok' | 'error';
-
-interface LogEntry {
-  id: string;
-  text: string;
-  status: LogStatus;
-  agent?: string;
-  ticker?: string;
-  detail?: string;
-}
 
 // ─── Presets ──────────────────────────────────────────────────────────────────
 
@@ -164,26 +122,6 @@ function renderAgentDetail(detail: string | undefined): React.ReactNode {
 }
 
 // ─── SSE parser ───────────────────────────────────────────────────────────────
-
-function parseSSEChunk(text: string): Array<{ event: string; data: unknown }> {
-  const events: Array<{ event: string; data: unknown }> = [];
-  const blocks = text.split('\n\n');
-  for (const block of blocks) {
-    if (!block.trim()) continue;
-    let eventType = '';
-    let dataStr = '';
-    for (const line of block.split('\n')) {
-      if (line.startsWith('event: ')) eventType = line.slice(7).trim();
-      else if (line.startsWith('data: ')) dataStr = line.slice(6);
-    }
-    if (eventType && dataStr) {
-      try {
-        events.push({ event: eventType, data: JSON.parse(dataStr) });
-      } catch { /* skip malformed */ }
-    }
-  }
-  return events;
-}
 
 // ─── Equity Curve (pure CSS/HTML, no chart lib) ───────────────────────────────
 

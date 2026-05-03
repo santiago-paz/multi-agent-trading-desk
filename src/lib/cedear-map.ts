@@ -14,8 +14,6 @@ const IOL_TO_FMP: Record<string, string | null> = {
   // ── BYMA code differs from US/FMP ticker ────────────────────────────────
   // Source: official BYMA CEDEAR list (updated 3/2/2026)
 
-  'BKC*': 'BK',    // Bank of New York Mellon (NYSE: BK)
-  BKC: 'BK',       // Bank of New York Mellon (NYSE: BK)
   XROX: 'XRX',     // Xerox Holdings (NYSE: XRX)
   ADGO: 'AGRO',    // Adecoagro S.A. (NYSE: AGRO)
   AOCA: 'ACH',     // Aluminum Corp of China (NYSE: ACH)
@@ -25,15 +23,58 @@ const IOL_TO_FMP: Record<string, string | null> = {
   BNG: 'BG',       // Bunge Limited (NYSE: BG)
   DISN: 'DIS',     // Walt Disney Co. (NYSE: DIS)
   DTEA: 'DTEGY',   // Deutsche Telekom (OTC: DTEGY)
+  GOGL: 'GOOGL',   // Legacy IOL Google CEDEAR — map to Alphabet Cl. A (FMP "GOGL" = Golden Ocean)
   KOFM: 'KOF',     // Coca-Cola Femsa (NYSE: KOF)
   NOKA: 'NOK',     // Nokia Corporation (NYSE: NOK)
   PKS: 'PKX',      // Posco Holdings (NYSE: PKX)
   TEFO: 'TEF',     // Telefonica S.A. (NYSE: TEF)
+  TEN: 'TS',       // Tenaris S.A. (NYSE: TS) — BYMA "TEN" collides with Tsakos Energy (FMP: TEN)
   TRVV: 'TRV',     // Travelers Cos. (NYSE: TRV)
   TXR: 'TX',       // Ternium S.A. (NYSE: TX)
   UN: 'NU',        // Nu Holdings (NYSE: NU)
   WBO: 'WB',       // Weibo Corporation (NASDAQ: WB)
   YZCA: 'YZC',     // Yanzhou Coal Mining (OTC: YZC)
+
+  // ── Natural tickers that already end in C or D ──────────────────────────
+  // These would be wrongly stripped to "X" if treated as currency variants.
+  // Identity mappings, but their presence in IOL_TO_FMP also tells
+  // stripCurrencySuffix() to leave them alone.
+  AMD: 'AMD',      // Advanced Micro Devices (NASDAQ: AMD)
+  BBD: 'BBD',      // Banco Bradesco (NYSE: BBD)
+  DD: 'DD',        // DuPont de Nemours (NYSE: DD)
+  ERIC: 'ERIC',    // Telefonaktiebolaget LM Ericsson (NASDAQ: ERIC)
+  GILD: 'GILD',    // Gilead Sciences (NASDAQ: GILD)
+  HD: 'HD',        // Home Depot (NYSE: HD)
+  HMC: 'HMC',      // Honda Motor (NYSE: HMC)
+  HOOD: 'HOOD',    // Robinhood Markets (NASDAQ: HOOD)
+  HSBC: 'HSBC',    // HSBC Holdings (NYSE: HSBC)
+  INTC: 'INTC',    // Intel Corporation (NASDAQ: INTC)
+  JD: 'JD',        // JD.com (NASDAQ: JD)
+  KGC: 'KGC',      // Kinross Gold (NYSE: KGC)
+  LAC: 'LAC',      // Lithium Americas (NYSE: LAC)
+  LND: 'LND',      // BrasilAgro (NYSE: LND)
+  MCD: 'MCD',      // McDonald's (NYSE: MCD)
+  PAC: 'PAC',      // Grupo Aeroportuario del Pacífico (NYSE: PAC)
+  PDD: 'PDD',      // PDD Holdings (NASDAQ: PDD)
+  SID: 'SID',      // Companhia Siderúrgica Nacional (NYSE: SID)
+  VOD: 'VOD',      // Vodafone Group (NASDAQ: VOD)
+  WFC: 'WFC',      // Wells Fargo (NYSE: WFC)
+
+  // ── Symbols with dots/dashes or D-suffixed forms IOL uses verbatim ──────
+  'B.': 'B',          // Barrick Mining (NYSE: B) — IOL writes "B."
+  'C.D': 'C',         // Citigroup (NYSE: C) — IOL appends ".D" to disambiguate
+  'BB.D': 'BB',       // BlackBerry (NYSE: BB)
+  'CAR.': 'CAR',      // Avis Budget Group (NASDAQ: CAR)
+  'AKO.B': 'AKO-B',   // Embotelladora Andina Class B (NYSE: AKO-B)
+  AKOBD: 'AKO-B',     // Embotelladora Andina Class B — D-suffixed form
+  BBV: 'BBVA',        // Banco Bilbao Vizcaya Argentaria (NYSE: BBVA)
+  BBVD: 'BBVA',       // Banco Bilbao Vizcaya Argentaria — D-suffixed form
+  ALAD: 'ALAB',       // Astera Labs (NASDAQ: ALAB) — IOL uses ALAD
+  PETR: 'PBR',        // Petrobras ADR (NYSE: PBR)
+  VAL3D: 'VALE',      // Vale ADR (NYSE: VALE)
+  NAT3D: 'NTCO',      // Natura &Co Holding (NYSE: NTCO)
+  NATU3: 'NTCO',      // Natura &Co Holding — alternate B3 form
+  BBDCD: 'BBD',       // Banco Bradesco — D-suffixed alternate form
 
   // ── Brazilian B3 tickers → NYSE/NASDAQ ADR ──────────────────────────────
   ABEV3: 'ABEV',   // Ambev S.A. (NASDAQ: ABEV)
@@ -145,10 +186,13 @@ export function isEtf(baseSymbol: string): boolean {
  *
  *   AAPLC → AAPL,  AAPLD → AAPL,  AAPL → AAPL
  *
- * When both the C and D variants exist in `allSymbols`, this ensures
- * we produce a single base symbol.
+ * Symbols registered in `IOL_TO_FMP` are returned verbatim — they are natural
+ * tickers (e.g. JD = JD.com, HD = Home Depot) that just happen to end in C/D
+ * and must NOT be treated as currency variants.
  */
 export function stripCurrencySuffix(symbol: string): string {
+  // Whitelist: registered symbols are never stripped.
+  if (symbol in IOL_TO_FMP) return symbol;
   // Only strip C/D suffix when preceded by an alphanumeric char (not a dot).
   // This avoids mangling tickers like "BA.C" (Bank of America on BYMA).
   if (symbol.length > 1 && /[A-Za-z0-9][CD]$/.test(symbol)) {

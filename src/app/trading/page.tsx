@@ -18,7 +18,10 @@ import {
   DraggableResizableWindow,
 } from '@/components/ui/DraggableResizableWindow';
 import { useNewsStore } from '@/lib/store/news-store';
-import { getPortfolioSummary, getMarketData, getOperations, getCedearsForTrading, placeBuyOrder, getCompanyDetail } from './actions';
+import { placeBuyOrder, getCompanyDetail } from './actions';
+import { usePortfolioData } from './hooks/usePortfolioData';
+import { useMarketData } from './hooks/useMarketData';
+import { useTradingOperations } from './hooks/useTradingOperations';
 import { PortfolioResponse, Operation, DatosPerfil, EstadoCuenta } from '@/lib/iol/types';
 import type { HistoricalRow } from '@/lib/fmp/types';
 import { DESKTOP_APP_ICONS } from '@/lib/win98se-icons';
@@ -123,28 +126,7 @@ import { useMepStore } from '@/lib/store/mep-store';
 export default function TradingDashboard() {
   const APP_LABELS = useAppLabels();
   const tw = useWindowsT();
-  const [portfolio, setPortfolio] = useState<PortfolioResponse | null>(null);
-  const [usdPrices, setUsdPrices] = useState<Record<string, { price: number; pct: number }>>({});
-  const [isLoadingPortfolio, setIsLoadingPortfolio] = useState(true);
 
-  const [marketData, setMarketData] = useState<{
-    marketData: { symbol: string; data: HistoricalRow[] }[];
-    ownedSymbols: string[];
-    companyNames: Record<string, string>;
-  } | null>(null);
-  const [isLoadingMarketData, setIsLoadingMarketData] = useState(false);
-
-  const [operations, setOperations] = useState<Operation[]>([]);
-  const [isLoadingOperations, setIsLoadingOperations] = useState(false);
-
-  const [quickTradeData, setQuickTradeData] = useState<{
-    cedears: TradableCedear[];
-    cash: number;
-    comprometido: number;
-    effectiveCash: number;
-    commissionRate: number;
-  } | null>(null);
-  const [isLoadingQuickTrade, setIsLoadingQuickTrade] = useState(false);
 
   const [companyDetailInstances, setCompanyDetailInstances] = useState<Record<string, CompanyDetailInstance>>({});
   /** Counter for staggering new window positions */
@@ -153,8 +135,7 @@ export default function TradingDashboard() {
   /** App currently shown in the AppManager's right panel. Lifted so lazy fetches can react to it. */
   const [managerSelectedId, setManagerSelectedId] = useState<AppId>('portfolio');
 
-  const [perfil, setPerfil] = useState<DatosPerfil | null>(null);
-  const [estadoCuenta, setEstadoCuenta] = useState<EstadoCuenta | null>(null);
+
 
   const generalNews = useNewsStore((s) => s.generalNews);
   const specificNews = useNewsStore((s) => s.specificNews);
@@ -179,6 +160,22 @@ export default function TradingDashboard() {
     toggleMinimize,
     arrangeWindows,
   } = useWindowManager();
+
+  const isManagerVisible = !!windows['appmanager'] && !windows['appmanager'].minimized;
+  const marketDataNeeded =
+    (!!windows['marketdata'] && !windows['marketdata'].minimized) ||
+    (isManagerVisible && managerSelectedId === 'marketdata');
+  const movementsNeeded =
+    (!!windows['movements'] && !windows['movements'].minimized) ||
+    (isManagerVisible && managerSelectedId === 'movements');
+
+  const { portfolio, usdPrices, isLoadingPortfolio, perfil, estadoCuenta, fetchPortfolio } = usePortfolioData();
+  const { marketData, isLoadingMarketData, fetchMarketData } = useMarketData(marketDataNeeded);
+  const {
+    operations, isLoadingOperations, fetchOperationsData,
+    quickTradeData, isLoadingQuickTrade, fetchQuickTradeData, quickTradeFetched
+  } = useTradingOperations(movementsNeeded, marketDataNeeded);
+
 
   const closeWindow = useCallback((id: string) => {
     rawCloseWindow(id);
@@ -431,23 +428,7 @@ export default function TradingDashboard() {
     setContextMenu(null);
   }, []);
 
-  const fetchOperationsData = useCallback(async () => {
-    setIsLoadingOperations(true);
-    const result = await getOperations();
-    if (result.success && result.data) {
-      setOperations(result.data as Operation[]);
-    }
-    setIsLoadingOperations(false);
-  }, []);
 
-  const fetchQuickTradeData = useCallback(async () => {
-    setIsLoadingQuickTrade(true);
-    const result = await getCedearsForTrading();
-    if (result.success && result.data) {
-      setQuickTradeData(result.data);
-    }
-    setIsLoadingQuickTrade(false);
-  }, []);
 
   const navigateCompanyDetail = useCallback(async (currentWindowId: string, newSymbol: string) => {
     // 1. Fetch new data
@@ -513,32 +494,8 @@ export default function TradingDashboard() {
     });
   }, [openDynamicWindow, companyDetailInstances]);
 
-  const marketDataFetched = useRef(false);
-  const operationsFetched = useRef(false);
-  const quickTradeFetched = useRef(false);
 
   const fetchMepRate = useMepStore((s) => s.fetchMepRate);
-
-  const fetchPortfolio = useCallback(async () => {
-    setIsLoadingPortfolio(true);
-    const result = await getPortfolioSummary();
-    if (result.success && result.data) {
-      setPortfolio(result.data.portfolio);
-      setUsdPrices(result.data.usdPrices ?? {});
-      if (result.data.estadoCuenta) setEstadoCuenta(result.data.estadoCuenta as EstadoCuenta);
-      if (result.data.perfil) setPerfil(result.data.perfil as DatosPerfil);
-    }
-    setIsLoadingPortfolio(false);
-  }, []);
-
-  const fetchMarketData = useCallback(async () => {
-    setIsLoadingMarketData(true);
-    const result = await getMarketData();
-    if (result.success && result.data) {
-      setMarketData(result.data as { marketData: { symbol: string; data: HistoricalRow[] }[]; ownedSymbols: string[]; companyNames: Record<string, string> });
-    }
-    setIsLoadingMarketData(false);
-  }, []);
 
   useEffect(() => {
     fetchNews();
@@ -551,56 +508,6 @@ export default function TradingDashboard() {
     return () => clearInterval(interval);
   }, [fetchNews, fetchMepRate]);
 
-  useEffect(() => {
-    fetchPortfolio(); // eslint-disable-line react-hooks/set-state-in-effect
-  }, [fetchPortfolio]);
-
-  // Lazy-load market data, operations, and quick trade. An app counts as "needed" when
-  // its standalone window is visible OR the AppManager is visible and showing it.
-  const isManagerVisible = !!windows['appmanager'] && !windows['appmanager'].minimized;
-  const marketDataNeeded =
-    (!!windows['marketdata'] && !windows['marketdata'].minimized) ||
-    (isManagerVisible && managerSelectedId === 'marketdata');
-  const movementsNeeded =
-    (!!windows['movements'] && !windows['movements'].minimized) ||
-    (isManagerVisible && managerSelectedId === 'movements');
-
-  useEffect(() => {
-    if (marketDataNeeded && !marketDataFetched.current) {
-      marketDataFetched.current = true;
-      fetchMarketData(); // eslint-disable-line react-hooks/set-state-in-effect
-    }
-  }, [marketDataNeeded, fetchMarketData]);
-
-  useEffect(() => {
-    let intervalId: NodeJS.Timeout;
-
-    if (movementsNeeded) {
-      if (!operationsFetched.current) {
-        operationsFetched.current = true;
-        fetchOperationsData(); // eslint-disable-line react-hooks/set-state-in-effect
-      }
-
-      intervalId = setInterval(() => {
-        fetchOperationsData();
-      }, 30 * 1000); // Actualiza cada 30 segundos
-    }
-
-    return () => {
-      if (intervalId) {
-        clearInterval(intervalId);
-      }
-    };
-  }, [movementsNeeded, fetchOperationsData]);
-
-  useEffect(() => {
-    if (marketDataNeeded && !quickTradeFetched.current) {
-      quickTradeFetched.current = true;
-      fetchQuickTradeData(); // eslint-disable-line react-hooks/set-state-in-effect
-    }
-  }, [marketDataNeeded, fetchQuickTradeData]);
-
-  // ── App Manager: derive list + bulk actions ────────────────────────────────
   const managedApps: ManagedApp[] = useMemo(() => {
     return MANAGED_APP_IDS.map((id) => {
       const w = windows[id];

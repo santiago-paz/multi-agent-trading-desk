@@ -1,0 +1,4550 @@
+{
+  "generatedAt": "2026-05-03T23:16:38.039Z",
+  "diagnoses": [
+    {
+      "iolBase": "AAL",
+      "iolDescription": "Cedear American Airlines Group",
+      "currentFmpTicker": "AAL",
+      "currentFmpName": "American Airlines Group Inc.",
+      "rawFmpName": "American Airlines Group Inc.",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "AAP",
+      "iolDescription": "Cedear Advance Auto Parts Inc",
+      "currentFmpTicker": "AAP",
+      "currentFmpName": "Advance Auto Parts, Inc.",
+      "rawFmpName": "Advance Auto Parts, Inc.",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "AAPL",
+      "iolDescription": "Cedear Apple Inc.",
+      "currentFmpTicker": "AAPL",
+      "currentFmpName": "Apple Inc.",
+      "rawFmpName": "Apple Inc.",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "ABBV",
+      "iolDescription": "Cedear Abbvie Inc.",
+      "currentFmpTicker": "ABBV",
+      "currentFmpName": "AbbVie Inc.",
+      "rawFmpName": "AbbVie Inc.",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "ABEV",
+      "iolDescription": "Cedear Ambev S.A.",
+      "currentFmpTicker": "ABEV",
+      "currentFmpName": "Ambev S.A.",
+      "rawFmpName": "Ambev S.A.",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "ABEV3",
+      "iolDescription": "Cedear Ambev S.A",
+      "currentFmpTicker": "ABEV",
+      "currentFmpName": "Ambev S.A.",
+      "rawFmpName": null,
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "ABNB",
+      "iolDescription": "Cedear Airbnb Inc.",
+      "currentFmpTicker": "ABNB",
+      "currentFmpName": "Airbnb, Inc.",
+      "rawFmpName": "Airbnb, Inc.",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "ABT",
+      "iolDescription": "Cedear Abbott Laboratories",
+      "currentFmpTicker": "ABT",
+      "currentFmpName": "Abbott Laboratories",
+      "rawFmpName": "Abbott Laboratories",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "ACN",
+      "iolDescription": "Cedear Accenture Plc",
+      "currentFmpTicker": "ACN",
+      "currentFmpName": "Accenture plc",
+      "rawFmpName": "Accenture plc",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "ACWI",
+      "iolDescription": "Cedear Ishares Msci Acwi Etf",
+      "currentFmpTicker": "ACWI",
+      "currentFmpName": "iShares MSCI ACWI ETF",
+      "rawFmpName": "iShares MSCI ACWI ETF",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "ADBE",
+      "iolDescription": "Cedear  Adobe Systems Incorporated",
+      "currentFmpTicker": "ADBE",
+      "currentFmpName": "Adobe Inc.",
+      "rawFmpName": "Adobe Inc.",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "ADGO",
+      "iolDescription": "Cedear Adecoagro S.A.",
+      "currentFmpTicker": "AGRO",
+      "currentFmpName": "Adecoagro S.A.",
+      "rawFmpName": "Advantego Corporation",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "ADGOD",
+      "iolDescription": "Cedear Adecoagro S.A.",
+      "currentFmpTicker": "AGRO",
+      "currentFmpName": "Adecoagro S.A.",
+      "rawFmpName": null,
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "ADI",
+      "iolDescription": "Cedear Analog Devices Inc.",
+      "currentFmpTicker": "ADI",
+      "currentFmpName": "Analog Devices, Inc.",
+      "rawFmpName": "Analog Devices, Inc.",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "ADID",
+      "iolDescription": "Cedear Analog Devices Inc.",
+      "currentFmpTicker": "ADI",
+      "currentFmpName": "Analog Devices, Inc.",
+      "rawFmpName": null,
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "ADP",
+      "iolDescription": "Cedear Automatic Data Processi",
+      "currentFmpTicker": "ADP",
+      "currentFmpName": "Automatic Data Processing, Inc.",
+      "rawFmpName": "Automatic Data Processing, Inc.",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "ADS",
+      "iolDescription": "Cedear Adidas Ag",
+      "currentFmpTicker": null,
+      "currentFmpName": null,
+      "rawFmpName": "Bread Financial Holdings, Inc.",
+      "status": "mapped_null_correct",
+      "suggestion": null
+    },
+    {
+      "iolBase": "AEG",
+      "iolDescription": "Cedear Aegon N.V. American Reg",
+      "currentFmpTicker": "AEG",
+      "currentFmpName": "Aegon Ltd.",
+      "rawFmpName": "Aegon Ltd.",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "AEM",
+      "iolDescription": "Cedear Agnico Eagle Mines Limi",
+      "currentFmpTicker": "AEM",
+      "currentFmpName": "Agnico Eagle Mines Limited",
+      "rawFmpName": "Agnico Eagle Mines Limited",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "AEMD",
+      "iolDescription": "Cedear Agnico-Eagle Mines Limi",
+      "currentFmpTicker": "AEM",
+      "currentFmpName": "Agnico Eagle Mines Limited",
+      "rawFmpName": "Aethlon Medical, Inc.",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "AI",
+      "iolDescription": "Cedear C3.Ai Inc",
+      "currentFmpTicker": "AI",
+      "currentFmpName": "C3.ai, Inc.",
+      "rawFmpName": "C3.ai, Inc.",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "AIG",
+      "iolDescription": "Cedear American International",
+      "currentFmpTicker": "AIG",
+      "currentFmpName": "American International Group, Inc.",
+      "rawFmpName": "American International Group, Inc.",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "AIGD",
+      "iolDescription": "Cedear American International",
+      "currentFmpTicker": "AIG",
+      "currentFmpName": "American International Group, Inc.",
+      "rawFmpName": null,
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "AKO.B",
+      "iolDescription": "Cedear Embotelladora Andina S.A",
+      "currentFmpTicker": "AKO-B",
+      "currentFmpName": "Embotelladora Andina S.A.",
+      "rawFmpName": null,
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "AKOBD",
+      "iolDescription": "Cedear Embotelladora Andina S.",
+      "currentFmpTicker": "AKO-B",
+      "currentFmpName": "Embotelladora Andina S.A.",
+      "rawFmpName": null,
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "ALAB",
+      "iolDescription": "CEDEAR ASTERA LABS INC.",
+      "currentFmpTicker": "ALAB",
+      "currentFmpName": "Astera Labs, Inc. Common Stock",
+      "rawFmpName": "Astera Labs, Inc. Common Stock",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "ALAD",
+      "iolDescription": "Cedear Astera Labs Inc.",
+      "currentFmpTicker": "ALAB",
+      "currentFmpName": "Astera Labs, Inc. Common Stock",
+      "rawFmpName": null,
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "AMAT",
+      "iolDescription": "Cedear Applied Materials Inc.",
+      "currentFmpTicker": "AMAT",
+      "currentFmpName": "Applied Materials, Inc.",
+      "rawFmpName": "Applied Materials, Inc.",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "AMD",
+      "iolDescription": "Cedear Advanced Micro Devices,",
+      "currentFmpTicker": "AMD",
+      "currentFmpName": "Advanced Micro Devices, Inc.",
+      "rawFmpName": "Advanced Micro Devices, Inc.",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "AMGN",
+      "iolDescription": "Cedear Amgen Inc.",
+      "currentFmpTicker": "AMGN",
+      "currentFmpName": "Amgen Inc.",
+      "rawFmpName": "Amgen Inc.",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "AMGND",
+      "iolDescription": "Cedear Amgen Inc.",
+      "currentFmpTicker": "AMGN",
+      "currentFmpName": "Amgen Inc.",
+      "rawFmpName": null,
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "AMX",
+      "iolDescription": "Cedear America Movil Sab De Cv",
+      "currentFmpTicker": "AMX",
+      "currentFmpName": "América Móvil, S.A.B. de C.V.",
+      "rawFmpName": "América Móvil, S.A.B. de C.V.",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "AMXD",
+      "iolDescription": "Cedear America Movil Sab De Cv",
+      "currentFmpTicker": "AMX",
+      "currentFmpName": "América Móvil, S.A.B. de C.V.",
+      "rawFmpName": null,
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "AMZN",
+      "iolDescription": "Cedear Amazon.Com, Inc",
+      "currentFmpTicker": "AMZN",
+      "currentFmpName": "Amazon.com, Inc.",
+      "rawFmpName": "Amazon.com, Inc.",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "ANF",
+      "iolDescription": "Cedear Abercrombie & Fitch Co.",
+      "currentFmpTicker": "ANF",
+      "currentFmpName": "Abercrombie & Fitch Co.",
+      "rawFmpName": "Abercrombie & Fitch Co.",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "ANFD",
+      "iolDescription": "Cedear Abercrombie & Fitch Co.",
+      "currentFmpTicker": "ANF",
+      "currentFmpName": "Abercrombie & Fitch Co.",
+      "rawFmpName": null,
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "ARCO",
+      "iolDescription": "Cedear Arcos Dorados Holdings",
+      "currentFmpTicker": "ARCO",
+      "currentFmpName": "Arcos Dorados Holdings Inc.",
+      "rawFmpName": "Arcos Dorados Holdings Inc.",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "ARKK",
+      "iolDescription": "Cedear Ark Innovetion",
+      "currentFmpTicker": "ARKK",
+      "currentFmpName": "ARK Innovation ETF",
+      "rawFmpName": "ARK Innovation ETF",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "ARM",
+      "iolDescription": "Cedear Arm Holdings Plc",
+      "currentFmpTicker": "ARM",
+      "currentFmpName": "Arm Holdings plc American Depositary Shares",
+      "rawFmpName": "Arm Holdings plc American Depositary Shares",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "ARMD",
+      "iolDescription": "Cedear Arm Holdings Plc",
+      "currentFmpTicker": "ARM",
+      "currentFmpName": "Arm Holdings plc American Depositary Shares",
+      "rawFmpName": null,
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "ASML",
+      "iolDescription": "Cedear Asml Holding Nv",
+      "currentFmpTicker": "ASML",
+      "currentFmpName": "ASML Holding N.V.",
+      "rawFmpName": "ASML Holding N.V.",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "ASR",
+      "iolDescription": "Cedear Grupo Aeroportuario Del Sureste",
+      "currentFmpTicker": "ASR",
+      "currentFmpName": "Grupo Aeroportuario del Sureste, S. A. B. de C. V.",
+      "rawFmpName": "Grupo Aeroportuario del Sureste, S. A. B. de C. V.",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "ASTS",
+      "iolDescription": "CEDEAR AST SPACEMOBILE INC.",
+      "currentFmpTicker": "ASTS",
+      "currentFmpName": "AST SpaceMobile, Inc.",
+      "rawFmpName": "AST SpaceMobile, Inc.",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "AVGO",
+      "iolDescription": "Cedear Broadcom Inc.",
+      "currentFmpTicker": "AVGO",
+      "currentFmpName": "Broadcom Inc.",
+      "rawFmpName": "Broadcom Inc.",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "AVY",
+      "iolDescription": "Cedear Avery Dennison Corporation",
+      "currentFmpTicker": "AVY",
+      "currentFmpName": "Avery Dennison Corporation",
+      "rawFmpName": "Avery Dennison Corporation",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "AVYD",
+      "iolDescription": "Cedear Avery Dennison Corporation",
+      "currentFmpTicker": "AVY",
+      "currentFmpName": "Avery Dennison Corporation",
+      "rawFmpName": null,
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "AXIA",
+      "iolDescription": "Cedear Axia Energia",
+      "currentFmpTicker": "AXIA",
+      "currentFmpName": "AXIA Energia S.A.",
+      "rawFmpName": "AXIA Energia S.A.",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "AXIAD",
+      "iolDescription": "Cedear Axia Energia",
+      "currentFmpTicker": "AXIA",
+      "currentFmpName": "AXIA Energia S.A.",
+      "rawFmpName": null,
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "AXP",
+      "iolDescription": "Cedear American Express Compan",
+      "currentFmpTicker": "AXP",
+      "currentFmpName": "American Express Company",
+      "rawFmpName": "American Express Company",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "AZN",
+      "iolDescription": "Cedear Astrazeneca Plc",
+      "currentFmpTicker": "AZN",
+      "currentFmpName": "AstraZeneca PLC",
+      "rawFmpName": "AstraZeneca PLC",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "B",
+      "iolDescription": "Cedear Barrick Mining Corporation",
+      "currentFmpTicker": "B",
+      "currentFmpName": "Barrick Mining Corporation",
+      "rawFmpName": "Barrick Mining Corporation",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "B.",
+      "iolDescription": "Cedear Barrick Mining Corporation",
+      "currentFmpTicker": "B",
+      "currentFmpName": "Barrick Mining Corporation",
+      "rawFmpName": null,
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "BA",
+      "iolDescription": "Cedear The Boeing Company",
+      "currentFmpTicker": "BA",
+      "currentFmpName": "The Boeing Company",
+      "rawFmpName": "The Boeing Company",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "BA.C",
+      "iolDescription": "Cedear Bank Of America Corpora",
+      "currentFmpTicker": "BAC",
+      "currentFmpName": "Bank of America Corporation",
+      "rawFmpName": null,
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "BABA",
+      "iolDescription": "Cedear Alibaba Group Holding L",
+      "currentFmpTicker": "BABA",
+      "currentFmpName": "Alibaba Group Holding Limited",
+      "rawFmpName": "Alibaba Group Holding Limited",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "BAK",
+      "iolDescription": "Cedear Braskem Sa",
+      "currentFmpTicker": "BAK",
+      "currentFmpName": "Braskem S.A.",
+      "rawFmpName": "Braskem S.A.",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "BAKD",
+      "iolDescription": "Cedear Braskem Sa",
+      "currentFmpTicker": "BAK",
+      "currentFmpName": "Braskem S.A.",
+      "rawFmpName": null,
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "BB",
+      "iolDescription": "Cedear Blackberry",
+      "currentFmpTicker": "BB",
+      "currentFmpName": "BlackBerry Limited",
+      "rawFmpName": "BlackBerry Limited",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "BB.D",
+      "iolDescription": "Cedear Blackberry",
+      "currentFmpTicker": "BB",
+      "currentFmpName": "BlackBerry Limited",
+      "rawFmpName": null,
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "BBAS3",
+      "iolDescription": "Cedear Banco Do Brasil S.A.",
+      "currentFmpTicker": null,
+      "currentFmpName": null,
+      "rawFmpName": null,
+      "status": "mapped_null_correct",
+      "suggestion": null
+    },
+    {
+      "iolBase": "BBD",
+      "iolDescription": "Cedear Banco Bradesco S.A.",
+      "currentFmpTicker": "BBD",
+      "currentFmpName": "Banco Bradesco S.A.",
+      "rawFmpName": "Banco Bradesco S.A.",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "BBDC3",
+      "iolDescription": "Cedear Banco Bradesco S.A.",
+      "currentFmpTicker": "BBD",
+      "currentFmpName": "Banco Bradesco S.A.",
+      "rawFmpName": null,
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "BBDCD",
+      "iolDescription": "Cedear Banco Bradesco S.A.",
+      "currentFmpTicker": "BBD",
+      "currentFmpName": "Banco Bradesco S.A.",
+      "rawFmpName": null,
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "BBV",
+      "iolDescription": "Cedear Banco Bilbao Vizcaya Sp",
+      "currentFmpTicker": "BBVA",
+      "currentFmpName": "Banco Bilbao Vizcaya Argentaria, S.A.",
+      "rawFmpName": null,
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "BBVD",
+      "iolDescription": "Cedear Banco Bilbao Vizcaya Sp",
+      "currentFmpTicker": "BBVA",
+      "currentFmpName": "Banco Bilbao Vizcaya Argentaria, S.A.",
+      "rawFmpName": null,
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "BCS",
+      "iolDescription": "Cedear Barclays Bank Plc Adr",
+      "currentFmpTicker": "BCS",
+      "currentFmpName": "Barclays PLC",
+      "rawFmpName": "Barclays PLC",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "BHP",
+      "iolDescription": "Cedear Bhp Billiton Limited",
+      "currentFmpTicker": "BHP",
+      "currentFmpName": "BHP Group Limited",
+      "rawFmpName": "BHP Group Limited",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "BHPD",
+      "iolDescription": "Cedear Bhp Billiton Limited",
+      "currentFmpTicker": "BHP",
+      "currentFmpName": "BHP Group Limited",
+      "rawFmpName": null,
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "BIDU",
+      "iolDescription": "Cedear Baidu, Inc.",
+      "currentFmpTicker": "BIDU",
+      "currentFmpName": "Baidu, Inc.",
+      "rawFmpName": "Baidu, Inc.",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "BIIB",
+      "iolDescription": "Cedear Biogen Inc.",
+      "currentFmpTicker": "BIIB",
+      "currentFmpName": "Biogen Inc.",
+      "rawFmpName": "Biogen Inc.",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "BIIBD",
+      "iolDescription": "Cedear Biogen Inc.",
+      "currentFmpTicker": "BIIB",
+      "currentFmpName": "Biogen Inc.",
+      "rawFmpName": null,
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "BIOX",
+      "iolDescription": "Cedear Bioceres Crop Solutions",
+      "currentFmpTicker": "BIOX",
+      "currentFmpName": "Bioceres Crop Solutions Corp.",
+      "rawFmpName": "Bioceres Crop Solutions Corp.",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "BK",
+      "iolDescription": "Cedear The Bank Of New York Mellon Corp.",
+      "currentFmpTicker": "BK",
+      "currentFmpName": "The Bank of New York Mellon Corporation",
+      "rawFmpName": "The Bank of New York Mellon Corporation",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "BKC*",
+      "iolDescription": "The Bank Of New York Cta.Ext.",
+      "currentFmpTicker": "BKC*",
+      "currentFmpName": null,
+      "rawFmpName": null,
+      "status": "mismatch_no_fmp",
+      "suggestion": "'BKC*': null,  // The Bank Of New York Cta.Ext. — no FMP profile found"
+    },
+    {
+      "iolBase": "BKD",
+      "iolDescription": "Cedear The Bank Of New York Mellon Corp.",
+      "currentFmpTicker": "BK",
+      "currentFmpName": "The Bank of New York Mellon Corporation",
+      "rawFmpName": "Brookdale Senior Living Inc.",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "BKNG",
+      "iolDescription": "Cedear Booking Holdings Inc.",
+      "currentFmpTicker": "BKNG",
+      "currentFmpName": "Booking Holdings Inc.",
+      "rawFmpName": "Booking Holdings Inc.",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "BKNGD",
+      "iolDescription": "Cedear Booking Holdings Inc.",
+      "currentFmpTicker": "BKNG",
+      "currentFmpName": "Booking Holdings Inc.",
+      "rawFmpName": null,
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "BKR",
+      "iolDescription": "Cedear Baker Hughes Co.",
+      "currentFmpTicker": "BKR",
+      "currentFmpName": "Baker Hughes Company",
+      "rawFmpName": "Baker Hughes Company",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "BKRD",
+      "iolDescription": "Cedear Baker Hughes Co.",
+      "currentFmpTicker": "BKR",
+      "currentFmpName": "Baker Hughes Company",
+      "rawFmpName": null,
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "BMNR",
+      "iolDescription": "Cedear Bitmine Inmersion Technologies Inc",
+      "currentFmpTicker": "BMNR",
+      "currentFmpName": "Bitmine Immersion Technologies, Inc.",
+      "rawFmpName": "Bitmine Immersion Technologies, Inc.",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "BMNRD",
+      "iolDescription": "CEDEAR BITMINE INMERSION TECHNOLOGIES INC",
+      "currentFmpTicker": "BMNR",
+      "currentFmpName": "Bitmine Immersion Technologies, Inc.",
+      "rawFmpName": null,
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "BMY",
+      "iolDescription": "Cedear Bristol-Myers Squibb Co",
+      "currentFmpTicker": "BMY",
+      "currentFmpName": "Bristol-Myers Squibb Company",
+      "rawFmpName": "Bristol-Myers Squibb Company",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "BMYD",
+      "iolDescription": "Cedear Bristol M. Squibb Co.",
+      "currentFmpTicker": "BMY",
+      "currentFmpName": "Bristol-Myers Squibb Company",
+      "rawFmpName": null,
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "BNG",
+      "iolDescription": "Cedear Bunge Limited",
+      "currentFmpTicker": "BG",
+      "currentFmpName": "Bunge Global S.A.",
+      "rawFmpName": null,
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "BNGD",
+      "iolDescription": "Cedear Bunge Limited",
+      "currentFmpTicker": "BG",
+      "currentFmpName": "Bunge Global S.A.",
+      "rawFmpName": null,
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "BP",
+      "iolDescription": "Cedear Bp P.L.C.",
+      "currentFmpTicker": "BP",
+      "currentFmpName": "BP p.l.c.",
+      "rawFmpName": "BP p.l.c.",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "BPA11",
+      "iolDescription": "Cedear Banco Btg Pactual S.A.",
+      "currentFmpTicker": null,
+      "currentFmpName": null,
+      "rawFmpName": null,
+      "status": "mapped_null_correct",
+      "suggestion": null
+    },
+    {
+      "iolBase": "BRKB",
+      "iolDescription": "Cedear Berkshire Hathaway Inc.",
+      "currentFmpTicker": "BRK-B",
+      "currentFmpName": "Berkshire Hathaway Inc.",
+      "rawFmpName": null,
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "BSBR",
+      "iolDescription": "Cedear Banco Santander (Brasil)",
+      "currentFmpTicker": "BSBR",
+      "currentFmpName": "Banco Santander (Brasil) S.A.",
+      "rawFmpName": "Banco Santander (Brasil) S.A.",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "BX",
+      "iolDescription": "Cedear Blackstone Inc",
+      "currentFmpTicker": "BX",
+      "currentFmpName": "Blackstone Inc.",
+      "rawFmpName": "Blackstone Inc.",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "BXD",
+      "iolDescription": "CEDEAR BLACKSTONE INC",
+      "currentFmpTicker": "BX",
+      "currentFmpName": "Blackstone Inc.",
+      "rawFmpName": null,
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "C",
+      "iolDescription": "Cedear Citigroup",
+      "currentFmpTicker": "C",
+      "currentFmpName": "Citigroup Inc.",
+      "rawFmpName": "Citigroup Inc.",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "C.D",
+      "iolDescription": "Cedear Citigroup",
+      "currentFmpTicker": "C",
+      "currentFmpName": "Citigroup Inc.",
+      "rawFmpName": null,
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "CAAP",
+      "iolDescription": "Cedear Corporacion America Air",
+      "currentFmpTicker": "CAAP",
+      "currentFmpName": "Corporación América Airports S.A.",
+      "rawFmpName": "Corporación América Airports S.A.",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "CAAPD",
+      "iolDescription": "Cedear Corporacion America Air",
+      "currentFmpTicker": "CAAP",
+      "currentFmpName": "Corporación América Airports S.A.",
+      "rawFmpName": null,
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "CAH",
+      "iolDescription": "Cedear Cardinal Health Inc.",
+      "currentFmpTicker": "CAH",
+      "currentFmpName": "Cardinal Health, Inc.",
+      "rawFmpName": "Cardinal Health, Inc.",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "CAHD",
+      "iolDescription": "Cedear Cardinal Health Inc.",
+      "currentFmpTicker": "CAH",
+      "currentFmpName": "Cardinal Health, Inc.",
+      "rawFmpName": null,
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "CAR",
+      "iolDescription": "Cedear Avis Budget Group Inc",
+      "currentFmpTicker": "CAR",
+      "currentFmpName": "Avis Budget Group, Inc.",
+      "rawFmpName": "Avis Budget Group, Inc.",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "CAR.",
+      "iolDescription": "Cedear Avis Budget Group Inc",
+      "currentFmpTicker": "CAR",
+      "currentFmpName": "Avis Budget Group, Inc.",
+      "rawFmpName": null,
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "CAT",
+      "iolDescription": "Cedear Caterpillar Inc.",
+      "currentFmpTicker": "CAT",
+      "currentFmpName": "Caterpillar Inc.",
+      "rawFmpName": "Caterpillar Inc.",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "CC",
+      "iolDescription": "Cedear Citigroup",
+      "currentFmpTicker": "C",
+      "currentFmpName": "Citigroup Inc.",
+      "rawFmpName": "The Chemours Company",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "CCL",
+      "iolDescription": "Cedear Carnival Corp.",
+      "currentFmpTicker": "CCL",
+      "currentFmpName": "Carnival Corporation & plc",
+      "rawFmpName": "Carnival Corporation & plc",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "CDE",
+      "iolDescription": "Cedear Coeur D'alene Mines Cor",
+      "currentFmpTicker": "CDE",
+      "currentFmpName": "Coeur Mining, Inc.",
+      "rawFmpName": "Coeur Mining, Inc.",
+      "status": "unknown",
+      "suggestion": "// MANUAL 'CDE' — IOL: \"Cedear Coeur D'alene Mines Cor\" | toFmpTicker→\"CDE\" → \"Coeur Mining, Inc.\" | raw \"CDE\" → \"Coeur Mining, Inc.\""
+    },
+    {
+      "iolBase": "CDED",
+      "iolDescription": "Cedear Coeur D'alene Mines Cor",
+      "currentFmpTicker": "CDE",
+      "currentFmpName": "Coeur Mining, Inc.",
+      "rawFmpName": null,
+      "status": "unknown",
+      "suggestion": "// MANUAL 'CDED' — IOL: \"Cedear Coeur D'alene Mines Cor\" | toFmpTicker→\"CDE\" → \"Coeur Mining, Inc.\" | raw \"CDED\" → \"(no profile)\""
+    },
+    {
+      "iolBase": "CEG",
+      "iolDescription": "Cedear Constellation Energy Corporation",
+      "currentFmpTicker": "CEG",
+      "currentFmpName": "Constellation Energy Corporation",
+      "rawFmpName": "Constellation Energy Corporation",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "CEGD",
+      "iolDescription": "Cedear Constellation Energy Co",
+      "currentFmpTicker": "CEG",
+      "currentFmpName": "Constellation Energy Corporation",
+      "rawFmpName": null,
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "CIBR",
+      "iolDescription": "Cedear First Trust Nasdaq Cybe",
+      "currentFmpTicker": "CIBR",
+      "currentFmpName": "First Trust Nasdaq Cybersecurity ETF",
+      "rawFmpName": "First Trust Nasdaq Cybersecurity ETF",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "CIBRD",
+      "iolDescription": "Cedear First Trust Nasdaq Cybe",
+      "currentFmpTicker": "CIBR",
+      "currentFmpName": "First Trust Nasdaq Cybersecurity ETF",
+      "rawFmpName": null,
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "CL",
+      "iolDescription": "Cedear Colgate Palmolive Compa",
+      "currentFmpTicker": "CL",
+      "currentFmpName": "Colgate-Palmolive Company",
+      "rawFmpName": "Colgate-Palmolive Company",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "CLD",
+      "iolDescription": "Cedear Colgate Palmolive",
+      "currentFmpTicker": "CL",
+      "currentFmpName": "Colgate-Palmolive Company",
+      "rawFmpName": null,
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "CLS",
+      "iolDescription": "Cedear Celestica Inc",
+      "currentFmpTicker": "CLS",
+      "currentFmpName": "Celestica Inc.",
+      "rawFmpName": "Celestica Inc.",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "CLSD",
+      "iolDescription": "Cedear Celestica Inc",
+      "currentFmpTicker": "CLS",
+      "currentFmpName": "Celestica Inc.",
+      "rawFmpName": "Clearside Biomedical, Inc.",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "COIN",
+      "iolDescription": "Cedear Coinbase Global Inc.",
+      "currentFmpTicker": "COIN",
+      "currentFmpName": "Coinbase Global, Inc.",
+      "rawFmpName": "Coinbase Global, Inc.",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "COPX",
+      "iolDescription": "CEDEAR GLOBAL X COPPER MINERS ETF",
+      "currentFmpTicker": "COPX",
+      "currentFmpName": "Global X - Copper Miners ETF",
+      "rawFmpName": "Global X - Copper Miners ETF",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "COST",
+      "iolDescription": "Cedear Costco Wholsale Corp.",
+      "currentFmpTicker": "COST",
+      "currentFmpName": "Costco Wholesale Corporation",
+      "rawFmpName": "Costco Wholesale Corporation",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "CRM",
+      "iolDescription": "Cedear Salesforce Inc",
+      "currentFmpTicker": "CRM",
+      "currentFmpName": "Salesforce, Inc.",
+      "rawFmpName": "Salesforce, Inc.",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "CRWV",
+      "iolDescription": "CEDEAR COREWEAVE INC.",
+      "currentFmpTicker": "CRWV",
+      "currentFmpName": "CoreWeave, Inc. Class A Common Stock",
+      "rawFmpName": "CoreWeave, Inc. Class A Common Stock",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "CRWVD",
+      "iolDescription": "Cedear Coreweave Inc.",
+      "currentFmpTicker": "CRWV",
+      "currentFmpName": "CoreWeave, Inc. Class A Common Stock",
+      "rawFmpName": null,
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "CSCO",
+      "iolDescription": "Cedear Cisco Systems Inc",
+      "currentFmpTicker": "CSCO",
+      "currentFmpName": "Cisco Systems, Inc.",
+      "rawFmpName": "Cisco Systems, Inc.",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "CSNA3",
+      "iolDescription": "Cedear Companhia Siderurgica Nacional",
+      "currentFmpTicker": null,
+      "currentFmpName": null,
+      "rawFmpName": null,
+      "status": "mapped_null_correct",
+      "suggestion": null
+    },
+    {
+      "iolBase": "CVS",
+      "iolDescription": "Cedear Cvs Health Corp.",
+      "currentFmpTicker": "CVS",
+      "currentFmpName": "CVS Health Corporation",
+      "rawFmpName": "CVS Health Corporation",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "CVSD",
+      "iolDescription": "Cedear Cvs Health Corp.",
+      "currentFmpTicker": "CVS",
+      "currentFmpName": "CVS Health Corporation",
+      "rawFmpName": null,
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "CVX",
+      "iolDescription": "Cedear Chevron Corp.",
+      "currentFmpTicker": "CVX",
+      "currentFmpName": "Chevron Corporation",
+      "rawFmpName": "Chevron Corporation",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "CX",
+      "iolDescription": "Cedear Cemex S.A.B. De C.V.",
+      "currentFmpTicker": "CX",
+      "currentFmpName": "CEMEX, S.A.B. de C.V.",
+      "rawFmpName": "CEMEX, S.A.B. de C.V.",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "CXD",
+      "iolDescription": "Cedear Cemex S.A.B. De C.V.",
+      "currentFmpTicker": "CX",
+      "currentFmpName": "CEMEX, S.A.B. de C.V.",
+      "rawFmpName": null,
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "DAL",
+      "iolDescription": "Cedear Delta Air Lines Inc.",
+      "currentFmpTicker": "DAL",
+      "currentFmpName": "Delta Air Lines, Inc.",
+      "rawFmpName": "Delta Air Lines, Inc.",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "DALD",
+      "iolDescription": "Cedear Delta Air Lines Inc.",
+      "currentFmpTicker": "DAL",
+      "currentFmpName": "Delta Air Lines, Inc.",
+      "rawFmpName": null,
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "DD",
+      "iolDescription": "Cedear E.I.Du Pont The Nemours",
+      "currentFmpTicker": "DD",
+      "currentFmpName": "DuPont de Nemours, Inc.",
+      "rawFmpName": "DuPont de Nemours, Inc.",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "DDD",
+      "iolDescription": "Cedear E.I.Du Pont The Nemours",
+      "currentFmpTicker": "DD",
+      "currentFmpName": "DuPont de Nemours, Inc.",
+      "rawFmpName": "3D Systems Corporation",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "DE",
+      "iolDescription": "Cedear Deere & Company",
+      "currentFmpTicker": "DE",
+      "currentFmpName": "Deere & Company",
+      "rawFmpName": "Deere & Company",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "DECK",
+      "iolDescription": "Cedear Deckers Outdoor Corporation",
+      "currentFmpTicker": "DECK",
+      "currentFmpName": "Deckers Outdoor Corporation",
+      "rawFmpName": "Deckers Outdoor Corporation",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "DECKD",
+      "iolDescription": "Cedear Deckers Outdoor Corpora",
+      "currentFmpTicker": "DECK",
+      "currentFmpName": "Deckers Outdoor Corporation",
+      "rawFmpName": null,
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "DEO",
+      "iolDescription": "Cedear Diageo Plc Adr",
+      "currentFmpTicker": "DEO",
+      "currentFmpName": "Diageo plc",
+      "rawFmpName": "Diageo plc",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "DHR",
+      "iolDescription": "Cedear Danaher Corp",
+      "currentFmpTicker": "DHR",
+      "currentFmpName": "Danaher Corporation",
+      "rawFmpName": "Danaher Corporation",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "DIA",
+      "iolDescription": "Cedear Spdr Dow Jones Industrial",
+      "currentFmpTicker": "DIA",
+      "currentFmpName": "State Street SPDR Dow Jones Industrial Average ETF Trust",
+      "rawFmpName": "State Street SPDR Dow Jones Industrial Average ETF Trust",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "DISN",
+      "iolDescription": "Cedear The Walt Disney Company",
+      "currentFmpTicker": "DIS",
+      "currentFmpName": "The Walt Disney Company",
+      "rawFmpName": null,
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "DOCU",
+      "iolDescription": "Cedear Docusing Inc.",
+      "currentFmpTicker": "DOCU",
+      "currentFmpName": "DocuSign, Inc.",
+      "rawFmpName": "DocuSign, Inc.",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "DOW",
+      "iolDescription": "Cedear Dow Inc.",
+      "currentFmpTicker": "DOW",
+      "currentFmpName": "Dow Inc.",
+      "rawFmpName": "Dow Inc.",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "E",
+      "iolDescription": "Cedear Eni Spa-Adr",
+      "currentFmpTicker": "E",
+      "currentFmpName": "Eni S.p.A.",
+      "rawFmpName": "Eni S.p.A.",
+      "status": "unknown",
+      "suggestion": "// MANUAL 'E' — IOL: \"Cedear Eni Spa-Adr\" | toFmpTicker→\"E\" → \"Eni S.p.A.\" | raw \"E\" → \"Eni S.p.A.\""
+    },
+    {
+      "iolBase": "EA",
+      "iolDescription": "Cedear Electronic Arts Inc.",
+      "currentFmpTicker": "EA",
+      "currentFmpName": "Electronic Arts Inc.",
+      "rawFmpName": "Electronic Arts Inc.",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "EAD",
+      "iolDescription": "Cedear Electronic Arts Inc.",
+      "currentFmpTicker": "EA",
+      "currentFmpName": "Electronic Arts Inc.",
+      "rawFmpName": "Wells Fargo Advantage Funds - Allspring Income Opportunities Fund",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "EBAY",
+      "iolDescription": "Cedear Ebay Inc.",
+      "currentFmpTicker": "EBAY",
+      "currentFmpName": "eBay Inc.",
+      "rawFmpName": "eBay Inc.",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "EBAYD",
+      "iolDescription": "Cedear Ebay Inc.",
+      "currentFmpTicker": "EBAY",
+      "currentFmpName": "eBay Inc.",
+      "rawFmpName": null,
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "ECL",
+      "iolDescription": "CEDEAR ECOLAB INC.",
+      "currentFmpTicker": "ECL",
+      "currentFmpName": "Ecolab Inc.",
+      "rawFmpName": "Ecolab Inc.",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "ECLD",
+      "iolDescription": "Cedear Ecolab Inc.",
+      "currentFmpTicker": "ECL",
+      "currentFmpName": "Ecolab Inc.",
+      "rawFmpName": null,
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "EEM",
+      "iolDescription": "Cedear Ishares Msci Emerging Market",
+      "currentFmpTicker": "EEM",
+      "currentFmpName": "iShares MSCI Emerging Markets ETF",
+      "rawFmpName": "iShares MSCI Emerging Markets ETF",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "EFA",
+      "iolDescription": "Cedear Ishares Msci Eafe Etf",
+      "currentFmpTicker": "EFA",
+      "currentFmpName": "iShares MSCI EAFE ETF",
+      "rawFmpName": "iShares MSCI EAFE ETF",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "EFAD",
+      "iolDescription": "Cedear Ishares Msci Eafe Etf",
+      "currentFmpTicker": "EFA",
+      "currentFmpName": "iShares MSCI EAFE ETF",
+      "rawFmpName": "ProShares - MSCI EAFE Dividend Growers ETF",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "EFX",
+      "iolDescription": "Cedear Equifax Inc.",
+      "currentFmpTicker": "EFX",
+      "currentFmpName": "Equifax Inc.",
+      "rawFmpName": "Equifax Inc.",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "EFXD",
+      "iolDescription": "Cedear Equifax Inc.",
+      "currentFmpTicker": "EFX",
+      "currentFmpName": "Equifax Inc.",
+      "rawFmpName": null,
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "ELPC",
+      "iolDescription": "Cedear Copel",
+      "currentFmpTicker": "ELP",
+      "currentFmpName": "Companhia Paranaense de Energia - COPEL",
+      "rawFmpName": "Companhia Paranaense de Energia",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "EMBJ",
+      "iolDescription": "Cedear Embraer",
+      "currentFmpTicker": "EMBJ",
+      "currentFmpName": "Embraer S.A.",
+      "rawFmpName": "Embraer S.A.",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "EQNR",
+      "iolDescription": "Cedear Equinor Asa",
+      "currentFmpTicker": "EQNR",
+      "currentFmpName": "Equinor ASA",
+      "rawFmpName": "Equinor ASA",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "ERIC",
+      "iolDescription": "Cedear L.M. Ericsson Telephone",
+      "currentFmpTicker": "ERIC",
+      "currentFmpName": "Telefonaktiebolaget LM Ericsson (publ)",
+      "rawFmpName": "Telefonaktiebolaget LM Ericsson (publ)",
+      "status": "unknown",
+      "suggestion": "// MANUAL 'ERIC' — IOL: \"Cedear L.M. Ericsson Telephone\" | toFmpTicker→\"ERIC\" → \"Telefonaktiebolaget LM Ericsson (publ)\" | raw \"ERIC\" → \"Telefonaktiebolaget LM Ericsson (publ)\""
+    },
+    {
+      "iolBase": "ESGU",
+      "iolDescription": "CEDEAR ISHARES ESG AWARE MSCI USA ETF",
+      "currentFmpTicker": "ESGU",
+      "currentFmpName": "iShares ESG Aware MSCI USA ETF",
+      "rawFmpName": "iShares ESG Aware MSCI USA ETF",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "ESGUD",
+      "iolDescription": "Cedear Ishares Esg Aware Msci Usa Etf",
+      "currentFmpTicker": "ESGU",
+      "currentFmpName": "iShares ESG Aware MSCI USA ETF",
+      "rawFmpName": null,
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "ETHA",
+      "iolDescription": "Cedear Ishares Ethereum Tr Etf",
+      "currentFmpTicker": "ETHA",
+      "currentFmpName": "iShares Ethereum Trust ETF",
+      "rawFmpName": "iShares Ethereum Trust ETF",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "ETSY",
+      "iolDescription": "Cedear Etsy Inc.",
+      "currentFmpTicker": "ETSY",
+      "currentFmpName": "Etsy, Inc.",
+      "rawFmpName": "Etsy, Inc.",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "ETSYD",
+      "iolDescription": "Cedear Etsy Inc.",
+      "currentFmpTicker": "ETSY",
+      "currentFmpName": "Etsy, Inc.",
+      "rawFmpName": null,
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "EWJ",
+      "iolDescription": "Cedear Etf Ishares Msci Japan",
+      "currentFmpTicker": "EWJ",
+      "currentFmpName": "iShares MSCI Japan ETF",
+      "rawFmpName": "iShares MSCI Japan ETF",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "EWY",
+      "iolDescription": "CEDEAR ISHARES MSCI SOUTH KOREA ETF",
+      "currentFmpTicker": "EWY",
+      "currentFmpName": "iShares MSCI South Korea ETF",
+      "rawFmpName": "iShares MSCI South Korea ETF",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "EWZ",
+      "iolDescription": "Cedear Ishares Msci Brazil Cap",
+      "currentFmpTicker": "EWZ",
+      "currentFmpName": "iShares MSCI Brazil ETF",
+      "rawFmpName": "iShares MSCI Brazil ETF",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "F",
+      "iolDescription": "Cedear Ford Motor Company",
+      "currentFmpTicker": "F",
+      "currentFmpName": "Ford Motor Company",
+      "rawFmpName": "Ford Motor Company",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "FCX",
+      "iolDescription": "Cedear Freeport Mcmoran Inc",
+      "currentFmpTicker": "FCX",
+      "currentFmpName": "Freeport-McMoRan Inc.",
+      "rawFmpName": "Freeport-McMoRan Inc.",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "FDX",
+      "iolDescription": "Cedear Federal Express Corp.",
+      "currentFmpTicker": "FDX",
+      "currentFmpName": "FedEx Corporation",
+      "rawFmpName": "FedEx Corporation",
+      "status": "unknown",
+      "suggestion": "// MANUAL 'FDX' — IOL: \"Cedear Federal Express Corp.\" | toFmpTicker→\"FDX\" → \"FedEx Corporation\" | raw \"FDX\" → \"FedEx Corporation\""
+    },
+    {
+      "iolBase": "FMX",
+      "iolDescription": "Cedear Fomento Ec.Mexicano Sab",
+      "currentFmpTicker": "FMX",
+      "currentFmpName": "Fomento Económico Mexicano, S.A.B. de C.V.",
+      "rawFmpName": "Fomento Económico Mexicano, S.A.B. de C.V.",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "FMXD",
+      "iolDescription": "Cedear Fomento Ec.Mexicano Sab",
+      "currentFmpTicker": "FMX",
+      "currentFmpName": "Fomento Económico Mexicano, S.A.B. de C.V.",
+      "rawFmpName": null,
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "FNMA",
+      "iolDescription": "Cedear Fed.Natl Mort-Fannie Mae Esc.",
+      "currentFmpTicker": "FNMA",
+      "currentFmpName": "Federal National Mortgage Association",
+      "rawFmpName": "Federal National Mortgage Association",
+      "status": "unknown",
+      "suggestion": "// MANUAL 'FNMA' — IOL: \"Cedear Fed.Natl Mort-Fannie Mae Esc.\" | toFmpTicker→\"FNMA\" → \"Federal National Mortgage Association\" | raw \"FNMA\" → \"Federal National Mortgage Association\""
+    },
+    {
+      "iolBase": "FSLR",
+      "iolDescription": "Cedear First Solar Inc.",
+      "currentFmpTicker": "FSLR",
+      "currentFmpName": "First Solar, Inc.",
+      "rawFmpName": "First Solar, Inc.",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "FSLRD",
+      "iolDescription": "Cedear First Solar Inc.",
+      "currentFmpTicker": "FSLR",
+      "currentFmpName": "First Solar, Inc.",
+      "rawFmpName": null,
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "FXI",
+      "iolDescription": "Cedear Ishares Trust Ftse Chin",
+      "currentFmpTicker": "FXI",
+      "currentFmpName": "iShares China Large-Cap ETF",
+      "rawFmpName": "iShares China Large-Cap ETF",
+      "status": "unknown",
+      "suggestion": "// MANUAL 'FXI' — IOL: \"Cedear Ishares Trust Ftse Chin\" | toFmpTicker→\"FXI\" → \"iShares China Large-Cap ETF\" | raw \"FXI\" → \"iShares China Large-Cap ETF\""
+    },
+    {
+      "iolBase": "GDX",
+      "iolDescription": "Cedear Van Eck Gold Miners Etf",
+      "currentFmpTicker": "GDX",
+      "currentFmpName": "VanEck Gold Miners ETF",
+      "rawFmpName": "VanEck Gold Miners ETF",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "GE",
+      "iolDescription": "Cedear Ge Aerospace",
+      "currentFmpTicker": "GE",
+      "currentFmpName": "GE Aerospace",
+      "rawFmpName": "GE Aerospace",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "GFI",
+      "iolDescription": "Cedear Gold Fields Ltd.",
+      "currentFmpTicker": "GFI",
+      "currentFmpName": "Gold Fields Limited",
+      "rawFmpName": "Gold Fields Limited",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "GGB",
+      "iolDescription": "Cedear Gerdau S.A.",
+      "currentFmpTicker": "GGB",
+      "currentFmpName": "Gerdau S.A.",
+      "rawFmpName": "Gerdau S.A.",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "GGBD",
+      "iolDescription": "Cedear Gerdau S.A.",
+      "currentFmpTicker": "GGB",
+      "currentFmpName": "Gerdau S.A.",
+      "rawFmpName": null,
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "GILD",
+      "iolDescription": "Cedear Gilead Sciences, Inc.",
+      "currentFmpTicker": "GILD",
+      "currentFmpName": "Gilead Sciences, Inc.",
+      "rawFmpName": "Gilead Sciences, Inc.",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "GLD",
+      "iolDescription": "Cedear Etf Spdr Gold Trust",
+      "currentFmpTicker": "GLD",
+      "currentFmpName": "SPDR Gold Shares",
+      "rawFmpName": "SPDR Gold Shares",
+      "status": "unknown",
+      "suggestion": "// MANUAL 'GLD' — IOL: \"Cedear Etf Spdr Gold Trust\" | toFmpTicker→\"GLD\" → \"SPDR Gold Shares\" | raw \"GLD\" → \"SPDR Gold Shares\""
+    },
+    {
+      "iolBase": "GLOB",
+      "iolDescription": "Cedear Globant S.A.",
+      "currentFmpTicker": "GLOB",
+      "currentFmpName": "Globant S.A.",
+      "rawFmpName": "Globant S.A.",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "GLW",
+      "iolDescription": "Cedear Corning Incorporated",
+      "currentFmpTicker": "GLW",
+      "currentFmpName": "Corning Incorporated",
+      "rawFmpName": "Corning Incorporated",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "GM",
+      "iolDescription": "Cedear General Motors Co.",
+      "currentFmpTicker": "GM",
+      "currentFmpName": "General Motors Company",
+      "rawFmpName": "General Motors Company",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "GMD",
+      "iolDescription": "Cedear General Motors Co.",
+      "currentFmpTicker": "GM",
+      "currentFmpName": "General Motors Company",
+      "rawFmpName": null,
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "GOGL",
+      "iolDescription": "Cedear Google Inc.",
+      "currentFmpTicker": "GOOGL",
+      "currentFmpName": "Alphabet Inc.",
+      "rawFmpName": "Golden Ocean Group Limited",
+      "status": "unknown",
+      "suggestion": "// MANUAL 'GOGL' — IOL: \"Cedear Google Inc.\" | toFmpTicker→\"GOOGL\" → \"Alphabet Inc.\" | raw \"GOGL\" → \"Golden Ocean Group Limited\""
+    },
+    {
+      "iolBase": "GOOGL",
+      "iolDescription": "Cedear Alphabet Inc. Cl. A",
+      "currentFmpTicker": "GOOGL",
+      "currentFmpName": "Alphabet Inc.",
+      "rawFmpName": "Alphabet Inc.",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "GPRK",
+      "iolDescription": "Cedear Geopark Ltd.",
+      "currentFmpTicker": "GPRK",
+      "currentFmpName": "GeoPark Limited",
+      "rawFmpName": "GeoPark Limited",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "GRMN",
+      "iolDescription": "Cedear Garmin Ltd.",
+      "currentFmpTicker": "GRMN",
+      "currentFmpName": "Garmin Ltd.",
+      "rawFmpName": "Garmin Ltd.",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "GRMND",
+      "iolDescription": "Cedear Garmin Ltd.",
+      "currentFmpTicker": "GRMN",
+      "currentFmpName": "Garmin Ltd.",
+      "rawFmpName": null,
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "GS",
+      "iolDescription": "Cedear The Goldman Sachs Group",
+      "currentFmpTicker": "GS",
+      "currentFmpName": "The Goldman Sachs Group, Inc.",
+      "rawFmpName": "The Goldman Sachs Group, Inc.",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "GSK",
+      "iolDescription": "Cedear Gsk Plc.",
+      "currentFmpTicker": "GSK",
+      "currentFmpName": "GSK plc",
+      "rawFmpName": "GSK plc",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "GT",
+      "iolDescription": "Cedear Goodyear Tire & Rubber",
+      "currentFmpTicker": "GT",
+      "currentFmpName": "The Goodyear Tire & Rubber Company",
+      "rawFmpName": "The Goodyear Tire & Rubber Company",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "HAL",
+      "iolDescription": "Cedear Halliburton Co.",
+      "currentFmpTicker": "HAL",
+      "currentFmpName": "Halliburton Company",
+      "rawFmpName": "Halliburton Company",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "HAPV3",
+      "iolDescription": "Cedear Hapvida Participacoes I Investimentos Sa",
+      "currentFmpTicker": null,
+      "currentFmpName": null,
+      "rawFmpName": null,
+      "status": "mapped_null_correct",
+      "suggestion": null
+    },
+    {
+      "iolBase": "HD",
+      "iolDescription": "Cedear The Home Depot Inc.",
+      "currentFmpTicker": "HD",
+      "currentFmpName": "The Home Depot, Inc.",
+      "rawFmpName": "The Home Depot, Inc.",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "HDB",
+      "iolDescription": "Cedear Hdfc Bank Limited",
+      "currentFmpTicker": "HDB",
+      "currentFmpName": "HDFC Bank Limited",
+      "rawFmpName": "HDFC Bank Limited",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "HL",
+      "iolDescription": "Cedear Hecla Mining Co",
+      "currentFmpTicker": "HL",
+      "currentFmpName": "Hecla Mining Company",
+      "rawFmpName": "Hecla Mining Company",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "HLD",
+      "iolDescription": "Cedear Hecla Mining Co.",
+      "currentFmpTicker": "HL",
+      "currentFmpName": "Hecla Mining Company",
+      "rawFmpName": null,
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "HMC",
+      "iolDescription": "Cedear Honda Motor Co. Ltd.",
+      "currentFmpTicker": "HMC",
+      "currentFmpName": "Honda Motor Co., Ltd.",
+      "rawFmpName": "Honda Motor Co., Ltd.",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "HMY",
+      "iolDescription": "Cedear Harmony Gold Mining Co",
+      "currentFmpTicker": "HMY",
+      "currentFmpName": "Harmony Gold Mining Company Limited",
+      "rawFmpName": "Harmony Gold Mining Company Limited",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "HOG",
+      "iolDescription": "Cedear Harley Davidson Inc",
+      "currentFmpTicker": "HOG",
+      "currentFmpName": "Harley-Davidson, Inc.",
+      "rawFmpName": "Harley-Davidson, Inc.",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "HON",
+      "iolDescription": "Cedear Honeywell International",
+      "currentFmpTicker": "HON",
+      "currentFmpName": "Honeywell International Inc.",
+      "rawFmpName": "Honeywell International Inc.",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "HOND",
+      "iolDescription": "Cedear Honeywell International",
+      "currentFmpTicker": "HON",
+      "currentFmpName": "Honeywell International Inc.",
+      "rawFmpName": "HCM II Acquisition Corp.",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "HOOD",
+      "iolDescription": "Cedear Robinhood Markets Inc.",
+      "currentFmpTicker": "HOOD",
+      "currentFmpName": "Robinhood Markets, Inc.",
+      "rawFmpName": "Robinhood Markets, Inc.",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "HOODD",
+      "iolDescription": "Cedear Robinhood Markets Inc.",
+      "currentFmpTicker": "HOOD",
+      "currentFmpName": "Robinhood Markets, Inc.",
+      "rawFmpName": null,
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "HPQ",
+      "iolDescription": "Cedear Hp Inc.",
+      "currentFmpTicker": "HPQ",
+      "currentFmpName": "HP Inc.",
+      "rawFmpName": "HP Inc.",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "HPQD",
+      "iolDescription": "Cedear Hp Inc.",
+      "currentFmpTicker": "HPQ",
+      "currentFmpName": "HP Inc.",
+      "rawFmpName": null,
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "HSBC",
+      "iolDescription": "Cedear Hsbc Holding Plc Adr",
+      "currentFmpTicker": "HSBC",
+      "currentFmpName": "HSBC Holdings plc",
+      "rawFmpName": "HSBC Holdings plc",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "HSY",
+      "iolDescription": "Cedear The Hershey Company",
+      "currentFmpTicker": "HSY",
+      "currentFmpName": "The Hershey Company",
+      "rawFmpName": "The Hershey Company",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "HUT",
+      "iolDescription": "Cedear Hut 8 Mining Corp.",
+      "currentFmpTicker": "HUT",
+      "currentFmpName": "Hut 8 Corp.",
+      "rawFmpName": "Hut 8 Corp.",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "HWM",
+      "iolDescription": "Cedear Howmet Aerospace Inc",
+      "currentFmpTicker": "HWM",
+      "currentFmpName": "Howmet Aerospace Inc.",
+      "rawFmpName": "Howmet Aerospace Inc.",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "HWMD",
+      "iolDescription": "Cedear Howmet Aerospace Inc",
+      "currentFmpTicker": "HWM",
+      "currentFmpName": "Howmet Aerospace Inc.",
+      "rawFmpName": null,
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "IBB",
+      "iolDescription": "Cedear Ishares Nasdaq Biotechn",
+      "currentFmpTicker": "IBB",
+      "currentFmpName": "iShares Biotechnology ETF",
+      "rawFmpName": "iShares Biotechnology ETF",
+      "status": "unknown",
+      "suggestion": "// MANUAL 'IBB' — IOL: \"Cedear Ishares Nasdaq Biotechn\" | toFmpTicker→\"IBB\" → \"iShares Biotechnology ETF\" | raw \"IBB\" → \"iShares Biotechnology ETF\""
+    },
+    {
+      "iolBase": "IBIT",
+      "iolDescription": "Cedear Ishares Bitcoin Tr (Ibi",
+      "currentFmpTicker": "IBIT",
+      "currentFmpName": "iShares Bitcoin Trust ETF",
+      "rawFmpName": "iShares Bitcoin Trust ETF",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "IBM",
+      "iolDescription": "Cedear Int.Business Machines (Ibm)",
+      "currentFmpTicker": "IBM",
+      "currentFmpName": "International Business Machines Corporation",
+      "rawFmpName": "International Business Machines Corporation",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "IBN",
+      "iolDescription": "Cedear Icici Bank Ltd.",
+      "currentFmpTicker": "IBN",
+      "currentFmpName": "ICICI Bank Limited",
+      "rawFmpName": "ICICI Bank Limited",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "ICLN",
+      "iolDescription": "CEDEAR ISHARES GLOBAL CLEAN ENERGY ETF",
+      "currentFmpTicker": "ICLN",
+      "currentFmpName": "iShares Global Clean Energy ETF",
+      "rawFmpName": "iShares Global Clean Energy ETF",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "IEMG",
+      "iolDescription": "Cedear Ishares Core Msci Emerg",
+      "currentFmpTicker": "IEMG",
+      "currentFmpName": "iShares Core MSCI Emerging Markets ETF",
+      "rawFmpName": "iShares Core MSCI Emerging Markets ETF",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "IEUR",
+      "iolDescription": "Cedear Ishares Core Msci Europ",
+      "currentFmpTicker": "IEUR",
+      "currentFmpName": "iShares Core MSCI Europe ETF",
+      "rawFmpName": "iShares Core MSCI Europe ETF",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "IFF",
+      "iolDescription": "Cedear Inter. Flavors&Fragance",
+      "currentFmpTicker": "IFF",
+      "currentFmpName": "International Flavors & Fragrances Inc.",
+      "rawFmpName": "International Flavors & Fragrances Inc.",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "IFFD",
+      "iolDescription": "Cedear International Flavors & Fragrance",
+      "currentFmpTicker": "IFF",
+      "currentFmpName": "International Flavors & Fragrances Inc.",
+      "rawFmpName": null,
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "IJH",
+      "iolDescription": "Cedear Etf Ishares Core S&P Mid - Cap",
+      "currentFmpTicker": "IJH",
+      "currentFmpName": "iShares Core S&P Mid-Cap ETF",
+      "rawFmpName": "iShares Core S&P Mid-Cap ETF",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "IJHD",
+      "iolDescription": "Cedear Etf Ishares Core S&P Mi",
+      "currentFmpTicker": "IJH",
+      "currentFmpName": "iShares Core S&P Mid-Cap ETF",
+      "rawFmpName": null,
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "ILF",
+      "iolDescription": "Cedear Ishares Latin America 40 Etf",
+      "currentFmpTicker": "ILF",
+      "currentFmpName": "iShares Latin America 40 ETF",
+      "rawFmpName": "iShares Latin America 40 ETF",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "INFY",
+      "iolDescription": "Cedear Infosys Limited",
+      "currentFmpTicker": "INFY",
+      "currentFmpName": "Infosys Limited",
+      "rawFmpName": "Infosys Limited",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "ING",
+      "iolDescription": "Cedear Ing Group Nv Adr",
+      "currentFmpTicker": "ING",
+      "currentFmpName": "ING Groep N.V.",
+      "rawFmpName": "ING Groep N.V.",
+      "status": "unknown",
+      "suggestion": "// MANUAL 'ING' — IOL: \"Cedear Ing Group Nv Adr\" | toFmpTicker→\"ING\" → \"ING Groep N.V.\" | raw \"ING\" → \"ING Groep N.V.\""
+    },
+    {
+      "iolBase": "INGD",
+      "iolDescription": "Cedear Ing Group Nv Adr",
+      "currentFmpTicker": "ING",
+      "currentFmpName": "ING Groep N.V.",
+      "rawFmpName": null,
+      "status": "unknown",
+      "suggestion": "// MANUAL 'INGD' — IOL: \"Cedear Ing Group Nv Adr\" | toFmpTicker→\"ING\" → \"ING Groep N.V.\" | raw \"INGD\" → \"(no profile)\""
+    },
+    {
+      "iolBase": "INTC",
+      "iolDescription": "Cedear Intel Corporation",
+      "currentFmpTicker": "INTC",
+      "currentFmpName": "Intel Corporation",
+      "rawFmpName": "Intel Corporation",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "IP",
+      "iolDescription": "Cedear International Paper Com",
+      "currentFmpTicker": "IP",
+      "currentFmpName": "International Paper Company",
+      "rawFmpName": "International Paper Company",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "IPD",
+      "iolDescription": "Cedear International Paper Com",
+      "currentFmpTicker": "IP",
+      "currentFmpName": "International Paper Company",
+      "rawFmpName": null,
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "IREN",
+      "iolDescription": "CEDEAR IREN LTD.",
+      "currentFmpTicker": "IREN",
+      "currentFmpName": "IREN Limited",
+      "rawFmpName": "IREN Limited",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "ISRG",
+      "iolDescription": "Cedear Intuitive Surgical Inc.",
+      "currentFmpTicker": "ISRG",
+      "currentFmpName": "Intuitive Surgical, Inc.",
+      "rawFmpName": "Intuitive Surgical, Inc.",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "ITA",
+      "iolDescription": "Cedear Ishares U.S. Aeropace & Defense Etf",
+      "currentFmpTicker": "ITA",
+      "currentFmpName": "iShares U.S. Aerospace & Defense ETF",
+      "rawFmpName": "iShares U.S. Aerospace & Defense ETF",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "ITAD",
+      "iolDescription": "CEDEAR ISHARES U.S. AEROPACE & DEFENSE ETF USD",
+      "currentFmpTicker": "ITA",
+      "currentFmpName": "iShares U.S. Aerospace & Defense ETF",
+      "rawFmpName": null,
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "ITUB",
+      "iolDescription": "Cedear Itau Unibanco Holding Sa",
+      "currentFmpTicker": "ITUB",
+      "currentFmpName": "Itaú Unibanco Holding S.A.",
+      "rawFmpName": "Itaú Unibanco Holding S.A.",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "ITUB3",
+      "iolDescription": "Cedear Banco Itau Unibanco Sa",
+      "currentFmpTicker": "ITUB",
+      "currentFmpName": "Itaú Unibanco Holding S.A.",
+      "rawFmpName": null,
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "IVE",
+      "iolDescription": "Cedear Ishares S&P 500 Value E",
+      "currentFmpTicker": "IVE",
+      "currentFmpName": "iShares S&P 500 Value ETF",
+      "rawFmpName": "iShares S&P 500 Value ETF",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "IVV",
+      "iolDescription": "CEDEAR ISHARES CORE S&P 500 ETF",
+      "currentFmpTicker": "IVV",
+      "currentFmpName": "iShares Core S&P 500 ETF",
+      "rawFmpName": "iShares Core S&P 500 ETF",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "IVW",
+      "iolDescription": "Cedear Ishares S&P 500 Growth",
+      "currentFmpTicker": "IVW",
+      "currentFmpName": "iShares S&P 500 Growth ETF",
+      "rawFmpName": "iShares S&P 500 Growth ETF",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "IWM",
+      "iolDescription": "Cedear Ishares Trust Russell 2000",
+      "currentFmpTicker": "IWM",
+      "currentFmpName": "iShares Russell 2000 ETF",
+      "rawFmpName": "iShares Russell 2000 ETF",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "JCI",
+      "iolDescription": "Cedear Johnson Controls Intern",
+      "currentFmpTicker": "JCI",
+      "currentFmpName": "Johnson Controls International plc",
+      "rawFmpName": "Johnson Controls International plc",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "JD",
+      "iolDescription": "Cedear Jd.Com, Inc.",
+      "currentFmpTicker": "JD",
+      "currentFmpName": "JD.com, Inc.",
+      "rawFmpName": "JD.com, Inc.",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "JMIA",
+      "iolDescription": "Cedear Jumia Technologies Ag",
+      "currentFmpTicker": "JMIA",
+      "currentFmpName": "Jumia Technologies AG",
+      "rawFmpName": "Jumia Technologies AG",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "JNJ",
+      "iolDescription": "Cedear Johnson & Johnson",
+      "currentFmpTicker": "JNJ",
+      "currentFmpName": "Johnson & Johnson",
+      "rawFmpName": "Johnson & Johnson",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "JOYY",
+      "iolDescription": "Cedear Joyy Inc.",
+      "currentFmpTicker": "JOYY",
+      "currentFmpName": "JOYY, Inc. Sponsored ADR Class A",
+      "rawFmpName": "JOYY, Inc. Sponsored ADR Class A",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "JOYYD",
+      "iolDescription": "Cedear Joyy Inc.",
+      "currentFmpTicker": "JOYY",
+      "currentFmpName": "JOYY, Inc. Sponsored ADR Class A",
+      "rawFmpName": null,
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "JPM",
+      "iolDescription": "Cedear Jpmorgan Chase & Co.",
+      "currentFmpTicker": "JPM",
+      "currentFmpName": "JPMorgan Chase & Co.",
+      "rawFmpName": "JPMorgan Chase & Co.",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "KB",
+      "iolDescription": "Cedear Kb Financial Group Inc.",
+      "currentFmpTicker": "KB",
+      "currentFmpName": "KB Financial Group Inc.",
+      "rawFmpName": "KB Financial Group Inc.",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "KEEL",
+      "iolDescription": "Cedear Keel Infrastructure",
+      "currentFmpTicker": "KEEL",
+      "currentFmpName": "Keel Infrastructure Corp.",
+      "rawFmpName": "Keel Infrastructure Corp.",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "KEP",
+      "iolDescription": "Cedear Korea Electronic Power",
+      "currentFmpTicker": "KEP",
+      "currentFmpName": "Korea Electric Power Corporation",
+      "rawFmpName": "Korea Electric Power Corporation",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "KGC",
+      "iolDescription": "Cedear Kinross Gold Corp",
+      "currentFmpTicker": "KGC",
+      "currentFmpName": "Kinross Gold Corporation",
+      "rawFmpName": "Kinross Gold Corporation",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "KMB",
+      "iolDescription": "Cedear Kimberly Clark Corporation",
+      "currentFmpTicker": "KMB",
+      "currentFmpName": "Kimberly-Clark Corporation",
+      "rawFmpName": "Kimberly-Clark Corporation",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "KO",
+      "iolDescription": "Cedear The Coca Cola Company",
+      "currentFmpTicker": "KO",
+      "currentFmpName": "The Coca-Cola Company",
+      "rawFmpName": "The Coca-Cola Company",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "KOFM",
+      "iolDescription": "Cedear Coca Cola Femsa Sab De",
+      "currentFmpTicker": "KOF",
+      "currentFmpName": "Coca-Cola FEMSA, S.A.B. de C.V.",
+      "rawFmpName": null,
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "LAC",
+      "iolDescription": "Cedear Lithium Americas Corp",
+      "currentFmpTicker": "LAC",
+      "currentFmpName": "Lithium Americas Corp.",
+      "rawFmpName": "Lithium Americas Corp.",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "LACD",
+      "iolDescription": "Cedear Lithium Americas Corp",
+      "currentFmpTicker": "LAC",
+      "currentFmpName": "Lithium Americas Corp.",
+      "rawFmpName": null,
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "LAR",
+      "iolDescription": "Cedear Lithium Argentina Ag.",
+      "currentFmpTicker": "LAR",
+      "currentFmpName": "Lithium Argentina AG",
+      "rawFmpName": "Lithium Argentina AG",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "LLY",
+      "iolDescription": "Cedear Elililly And Company",
+      "currentFmpTicker": "LLY",
+      "currentFmpName": "Eli Lilly and Company",
+      "rawFmpName": "Eli Lilly and Company",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "LMT",
+      "iolDescription": "Cedear Lockheed Martin Corporation",
+      "currentFmpTicker": "LMT",
+      "currentFmpName": "Lockheed Martin Corporation",
+      "rawFmpName": "Lockheed Martin Corporation",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "LND",
+      "iolDescription": "Cedear Brasilagro Com",
+      "currentFmpTicker": "LND",
+      "currentFmpName": "BrasilAgro - Companhia Brasileira de Propriedades Agrícolas",
+      "rawFmpName": "BrasilAgro - Companhia Brasileira de Propriedades Agrícolas",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "LRCX",
+      "iolDescription": "Cedear Lam Research Corp.",
+      "currentFmpTicker": "LRCX",
+      "currentFmpName": "Lam Research Corporation",
+      "rawFmpName": "Lam Research Corporation",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "LREN3",
+      "iolDescription": "Cedear Lojas Renner S.A.",
+      "currentFmpTicker": null,
+      "currentFmpName": null,
+      "rawFmpName": null,
+      "status": "mapped_null_correct",
+      "suggestion": null
+    },
+    {
+      "iolBase": "LVS",
+      "iolDescription": "Cedear Las Vegas Sands Corp.",
+      "currentFmpTicker": "LVS",
+      "currentFmpName": "Las Vegas Sands Corp.",
+      "rawFmpName": "Las Vegas Sands Corp.",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "LYG",
+      "iolDescription": "Cedear Lloyds Banking Group Pl",
+      "currentFmpTicker": "LYG",
+      "currentFmpName": "Lloyds Banking Group plc",
+      "rawFmpName": "Lloyds Banking Group plc",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "MA",
+      "iolDescription": "Cedear Mastercard Inc.",
+      "currentFmpTicker": "MA",
+      "currentFmpName": "Mastercard Incorporated",
+      "rawFmpName": "Mastercard Incorporated",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "MCD",
+      "iolDescription": "Cedear Mcdonald's Corporation",
+      "currentFmpTicker": "MCD",
+      "currentFmpName": "McDonald's Corporation",
+      "rawFmpName": "McDonald's Corporation",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "MDLZ",
+      "iolDescription": "Cedear Mondelez International",
+      "currentFmpTicker": "MDLZ",
+      "currentFmpName": "Mondelez International, Inc.",
+      "rawFmpName": "Mondelez International, Inc.",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "MDT",
+      "iolDescription": "Cedear Medtronic Plc",
+      "currentFmpTicker": "MDT",
+      "currentFmpName": "Medtronic plc",
+      "rawFmpName": "Medtronic plc",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "MDTD",
+      "iolDescription": "Cedear Medtronic Inc. Esc.",
+      "currentFmpTicker": "MDT",
+      "currentFmpName": "Medtronic plc",
+      "rawFmpName": null,
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "MELI",
+      "iolDescription": "Cedear Mercadolibre Inc.",
+      "currentFmpTicker": "MELI",
+      "currentFmpName": "MercadoLibre, Inc.",
+      "rawFmpName": "MercadoLibre, Inc.",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "META",
+      "iolDescription": "Cedear Facebook, Inc.",
+      "currentFmpTicker": "META",
+      "currentFmpName": "Meta Platforms, Inc.",
+      "rawFmpName": "Meta Platforms, Inc.",
+      "status": "unknown",
+      "suggestion": "// MANUAL 'META' — IOL: \"Cedear Facebook, Inc.\" | toFmpTicker→\"META\" → \"Meta Platforms, Inc.\" | raw \"META\" → \"Meta Platforms, Inc.\""
+    },
+    {
+      "iolBase": "MFG",
+      "iolDescription": "Cedear Mizuho Financial Group",
+      "currentFmpTicker": "MFG",
+      "currentFmpName": "Mizuho Financial Group, Inc.",
+      "rawFmpName": "Mizuho Financial Group, Inc.",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "MGLU3",
+      "iolDescription": "Cedear Magazine Luiza S.A.",
+      "currentFmpTicker": null,
+      "currentFmpName": null,
+      "rawFmpName": null,
+      "status": "mapped_null_correct",
+      "suggestion": null
+    },
+    {
+      "iolBase": "MMM",
+      "iolDescription": "Cedear 3 M Company",
+      "currentFmpTicker": "MMM",
+      "currentFmpName": "3M Company",
+      "rawFmpName": "3M Company",
+      "status": "unknown",
+      "suggestion": "// MANUAL 'MMM' — IOL: \"Cedear 3 M Company\" | toFmpTicker→\"MMM\" → \"3M Company\" | raw \"MMM\" → \"3M Company\""
+    },
+    {
+      "iolBase": "MO",
+      "iolDescription": "Cedear Altria Group Inc.",
+      "currentFmpTicker": "MO",
+      "currentFmpName": "Altria Group, Inc.",
+      "rawFmpName": "Altria Group, Inc.",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "MOS",
+      "iolDescription": "Cedear The Mosaic Co",
+      "currentFmpTicker": "MOS",
+      "currentFmpName": "The Mosaic Company",
+      "rawFmpName": "The Mosaic Company",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "MOSD",
+      "iolDescription": "Cedear The Mosaic Co",
+      "currentFmpTicker": "MOS",
+      "currentFmpName": "The Mosaic Company",
+      "rawFmpName": null,
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "MRK",
+      "iolDescription": "Cedear Merck & Co Inc.",
+      "currentFmpTicker": "MRK",
+      "currentFmpName": "Merck & Co., Inc.",
+      "rawFmpName": "Merck & Co., Inc.",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "MRNA",
+      "iolDescription": "Cedear Moderna Inc.",
+      "currentFmpTicker": "MRNA",
+      "currentFmpName": "Moderna, Inc.",
+      "rawFmpName": "Moderna, Inc.",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "MRSH",
+      "iolDescription": "Cedears Marsh",
+      "currentFmpTicker": "MRSH",
+      "currentFmpName": "Marsh & McLennan Companies, Inc.",
+      "rawFmpName": "Marsh & McLennan Companies, Inc.",
+      "status": "unknown",
+      "suggestion": "// MANUAL 'MRSH' — IOL: \"Cedears Marsh\" | toFmpTicker→\"MRSH\" → \"Marsh & McLennan Companies, Inc.\" | raw \"MRSH\" → \"Marsh & McLennan Companies, Inc.\""
+    },
+    {
+      "iolBase": "MRVL",
+      "iolDescription": "Cedear Marvell Technology Inc",
+      "currentFmpTicker": "MRVL",
+      "currentFmpName": "Marvell Technology, Inc.",
+      "rawFmpName": "Marvell Technology, Inc.",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "MRVLD",
+      "iolDescription": "Cedear Marvell Technology Inc",
+      "currentFmpTicker": "MRVL",
+      "currentFmpName": "Marvell Technology, Inc.",
+      "rawFmpName": null,
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "MSFT",
+      "iolDescription": "Cedear Microsoft Corp.",
+      "currentFmpTicker": "MSFT",
+      "currentFmpName": "Microsoft Corporation",
+      "rawFmpName": "Microsoft Corporation",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "MSI",
+      "iolDescription": "Cedear Motorola Inc. Escrit.",
+      "currentFmpTicker": "MSI",
+      "currentFmpName": "Motorola Solutions, Inc.",
+      "rawFmpName": "Motorola Solutions, Inc.",
+      "status": "unknown",
+      "suggestion": "// MANUAL 'MSI' — IOL: \"Cedear Motorola Inc. Escrit.\" | toFmpTicker→\"MSI\" → \"Motorola Solutions, Inc.\" | raw \"MSI\" → \"Motorola Solutions, Inc.\""
+    },
+    {
+      "iolBase": "MSTR",
+      "iolDescription": "Cedear Microstrategy Inc",
+      "currentFmpTicker": "MSTR",
+      "currentFmpName": "Strategy Inc",
+      "rawFmpName": "Strategy Inc",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "MU",
+      "iolDescription": "Cedear Micron Technology Inc",
+      "currentFmpTicker": "MU",
+      "currentFmpName": "Micron Technology, Inc.",
+      "rawFmpName": "Micron Technology, Inc.",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "MUFG",
+      "iolDescription": "Cedear Mitsubishi Ufj Financia",
+      "currentFmpTicker": "MUFG",
+      "currentFmpName": "Mitsubishi UFJ Financial Group, Inc.",
+      "rawFmpName": "Mitsubishi UFJ Financial Group, Inc.",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "MUFGD",
+      "iolDescription": "Cedear Mitsubishi Ufj Financia",
+      "currentFmpTicker": "MUFG",
+      "currentFmpName": "Mitsubishi UFJ Financial Group, Inc.",
+      "rawFmpName": null,
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "MUX",
+      "iolDescription": "Cedear Mcewen Mining Inc",
+      "currentFmpTicker": "MUX",
+      "currentFmpName": "McEwen Mining Inc.",
+      "rawFmpName": "McEwen Mining Inc.",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "NAT3D",
+      "iolDescription": "Cedear Natura Cosmeticos Sa",
+      "currentFmpTicker": "NTCO",
+      "currentFmpName": "Natura &Co Holding S.A.",
+      "rawFmpName": null,
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "NATU3",
+      "iolDescription": "Cedear Natura Cosmeticos Sa",
+      "currentFmpTicker": "NTCO",
+      "currentFmpName": "Natura &Co Holding S.A.",
+      "rawFmpName": null,
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "NEM",
+      "iolDescription": "Cedear Neyymont Mining Corp.",
+      "currentFmpTicker": "NEM",
+      "currentFmpName": "Newmont Corporation",
+      "rawFmpName": "Newmont Corporation",
+      "status": "unknown",
+      "suggestion": "// MANUAL 'NEM' — IOL: \"Cedear Neyymont Mining Corp.\" | toFmpTicker→\"NEM\" → \"Newmont Corporation\" | raw \"NEM\" → \"Newmont Corporation\""
+    },
+    {
+      "iolBase": "NEMD",
+      "iolDescription": "Cedear Neyymont Mining Corp.",
+      "currentFmpTicker": "NEM",
+      "currentFmpName": "Newmont Corporation",
+      "rawFmpName": "Neuberger Berman Emerging Markets Debt Hard Currency ETF",
+      "status": "unknown",
+      "suggestion": "// MANUAL 'NEMD' — IOL: \"Cedear Neyymont Mining Corp.\" | toFmpTicker→\"NEM\" → \"Newmont Corporation\" | raw \"NEMD\" → \"Neuberger Berman Emerging Markets Debt Hard Currency ETF\""
+    },
+    {
+      "iolBase": "NFLX",
+      "iolDescription": "Cedear Netflix, Inc.",
+      "currentFmpTicker": "NFLX",
+      "currentFmpName": "Netflix, Inc.",
+      "rawFmpName": "Netflix, Inc.",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "NG",
+      "iolDescription": "Cedear Novagold Resources Inc.",
+      "currentFmpTicker": "NG",
+      "currentFmpName": "NovaGold Resources Inc.",
+      "rawFmpName": "NovaGold Resources Inc.",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "NGD",
+      "iolDescription": "Cedear Novagold Resources Inc.",
+      "currentFmpTicker": "NG",
+      "currentFmpName": "NovaGold Resources Inc.",
+      "rawFmpName": "New Gold Inc.",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "NGG",
+      "iolDescription": "Cedears De National Grid Plc",
+      "currentFmpTicker": "NGG",
+      "currentFmpName": "National Grid plc",
+      "rawFmpName": "National Grid plc",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "NIO",
+      "iolDescription": "Cedear Nio Inc.",
+      "currentFmpTicker": "NIO",
+      "currentFmpName": "NIO Inc.",
+      "rawFmpName": "NIO Inc.",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "NKE",
+      "iolDescription": "Cedear Nike Inc.",
+      "currentFmpTicker": "NKE",
+      "currentFmpName": "NIKE, Inc.",
+      "rawFmpName": "NIKE, Inc.",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "NMR",
+      "iolDescription": "Cedear Nomura Holdings Inc",
+      "currentFmpTicker": "NMR",
+      "currentFmpName": "Nomura Holdings, Inc.",
+      "rawFmpName": "Nomura Holdings, Inc.",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "NOKA",
+      "iolDescription": "Cedear Nokia Corporation",
+      "currentFmpTicker": "NOK",
+      "currentFmpName": "Nokia Oyj",
+      "rawFmpName": null,
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "NOW",
+      "iolDescription": "Cedear Servicenow Inc",
+      "currentFmpTicker": "NOW",
+      "currentFmpName": "ServiceNow, Inc.",
+      "rawFmpName": "ServiceNow, Inc.",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "NOWD",
+      "iolDescription": "Cedear Servicenow Inc",
+      "currentFmpTicker": "NOW",
+      "currentFmpName": "ServiceNow, Inc.",
+      "rawFmpName": null,
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "NTES",
+      "iolDescription": "Cedear Netease, Inc.",
+      "currentFmpTicker": "NTES",
+      "currentFmpName": "NetEase, Inc.",
+      "rawFmpName": "NetEase, Inc.",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "NTESD",
+      "iolDescription": "Cedear Netease, Inc.",
+      "currentFmpTicker": "NTES",
+      "currentFmpName": "NetEase, Inc.",
+      "rawFmpName": null,
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "NU",
+      "iolDescription": "Cedear Nu Holdings Ltd/Cayman",
+      "currentFmpTicker": "NU",
+      "currentFmpName": "Nu Holdings Ltd.",
+      "rawFmpName": "Nu Holdings Ltd.",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "NUE",
+      "iolDescription": "Cedear Nucor Corporation",
+      "currentFmpTicker": "NUE",
+      "currentFmpName": "Nucor Corporation",
+      "rawFmpName": "Nucor Corporation",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "NVDA",
+      "iolDescription": "Cedear Nvidia Corporation",
+      "currentFmpTicker": "NVDA",
+      "currentFmpName": "NVIDIA Corporation",
+      "rawFmpName": "NVIDIA Corporation",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "NVS",
+      "iolDescription": "Cedear Novartis Ag-Adr",
+      "currentFmpTicker": "NVS",
+      "currentFmpName": "Novartis AG",
+      "rawFmpName": "Novartis AG",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "NXE",
+      "iolDescription": "Cedear Nexgen Energy",
+      "currentFmpTicker": "NXE",
+      "currentFmpName": "NexGen Energy Ltd.",
+      "rawFmpName": "NexGen Energy Ltd.",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "NXED",
+      "iolDescription": "Cedear Nexgen Energy",
+      "currentFmpTicker": "NXE",
+      "currentFmpName": "NexGen Energy Ltd.",
+      "rawFmpName": null,
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "OKLO",
+      "iolDescription": "CEDEAR OKLO INC.",
+      "currentFmpTicker": "OKLO",
+      "currentFmpName": "Oklo Inc.",
+      "rawFmpName": "Oklo Inc.",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "OKLOD",
+      "iolDescription": "Cedear Oklo Inc.",
+      "currentFmpTicker": "OKLO",
+      "currentFmpName": "Oklo Inc.",
+      "rawFmpName": null,
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "ORCL",
+      "iolDescription": "Cedear Oracle Corporation",
+      "currentFmpTicker": "ORCL",
+      "currentFmpName": "Oracle Corporation",
+      "rawFmpName": "Oracle Corporation",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "ORLY",
+      "iolDescription": "Cedear O'reilly Automotive Inc",
+      "currentFmpTicker": "ORLY",
+      "currentFmpName": "O'Reilly Automotive, Inc.",
+      "rawFmpName": "O'Reilly Automotive, Inc.",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "OXY",
+      "iolDescription": "Cedear Occidental Petroleum Corporation",
+      "currentFmpTicker": "OXY",
+      "currentFmpName": "Occidental Petroleum Corporation",
+      "rawFmpName": "Occidental Petroleum Corporation",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "PAAS",
+      "iolDescription": "Cedear Pan American Silver Cor",
+      "currentFmpTicker": "PAAS",
+      "currentFmpName": "Pan American Silver Corp.",
+      "rawFmpName": "Pan American Silver Corp.",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "PAC",
+      "iolDescription": "Cedear Grupo Aeroportuario Del",
+      "currentFmpTicker": "PAC",
+      "currentFmpName": "Grupo Aeroportuario del Pacífico, S.A.B. de C.V.",
+      "rawFmpName": "Grupo Aeroportuario del Pacífico, S.A.B. de C.V.",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "PAGS",
+      "iolDescription": "Cedear Pagseguro Digital Ltd",
+      "currentFmpTicker": "PAGS",
+      "currentFmpName": "PagSeguro Digital Ltd.",
+      "rawFmpName": "PagSeguro Digital Ltd.",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "PAGSD",
+      "iolDescription": "Cedear Pagseguro Digital Ltd",
+      "currentFmpTicker": "PAGS",
+      "currentFmpName": "PagSeguro Digital Ltd.",
+      "rawFmpName": null,
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "PANW",
+      "iolDescription": "Cedear Palo Alto Networks Inc.",
+      "currentFmpTicker": "PANW",
+      "currentFmpName": "Palo Alto Networks, Inc.",
+      "rawFmpName": "Palo Alto Networks, Inc.",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "PATH",
+      "iolDescription": "Cedear Uipath Inc",
+      "currentFmpTicker": "PATH",
+      "currentFmpName": "UiPath Inc.",
+      "rawFmpName": "UiPath Inc.",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "PATHD",
+      "iolDescription": "Cedear Uipath Inc",
+      "currentFmpTicker": "PATH",
+      "currentFmpName": "UiPath Inc.",
+      "rawFmpName": null,
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "PBI",
+      "iolDescription": "Cedear Pitney Bowes Inc.",
+      "currentFmpTicker": "PBI",
+      "currentFmpName": "Pitney Bowes Inc.",
+      "rawFmpName": "Pitney Bowes Inc.",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "PBR",
+      "iolDescription": "Cedear Petroleo Brasileiro S.A",
+      "currentFmpTicker": "PBR",
+      "currentFmpName": "Petróleo Brasileiro S.A. - Petrobras",
+      "rawFmpName": "Petróleo Brasileiro S.A. - Petrobras",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "PCAR",
+      "iolDescription": "Cedear Paccar Inc.",
+      "currentFmpTicker": "PCAR",
+      "currentFmpName": "PACCAR Inc",
+      "rawFmpName": "PACCAR Inc",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "PCARD",
+      "iolDescription": "Cedear Paccar Inc.",
+      "currentFmpTicker": "PCAR",
+      "currentFmpName": "PACCAR Inc",
+      "rawFmpName": null,
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "PDD",
+      "iolDescription": "Cedear Pdd Holdings Inc",
+      "currentFmpTicker": "PDD",
+      "currentFmpName": "PDD Holdings Inc.",
+      "rawFmpName": "PDD Holdings Inc.",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "PEP",
+      "iolDescription": "Cedear Pepsico Inc.",
+      "currentFmpTicker": "PEP",
+      "currentFmpName": "PepsiCo, Inc.",
+      "rawFmpName": "PepsiCo, Inc.",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "PETR",
+      "iolDescription": "Cedear Petroleo Brasileiro S.A",
+      "currentFmpTicker": "PBR",
+      "currentFmpName": "Petróleo Brasileiro S.A. - Petrobras",
+      "rawFmpName": null,
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "PETR3",
+      "iolDescription": "Cedear Petroleo Brasileiro S.A",
+      "currentFmpTicker": "PBR",
+      "currentFmpName": "Petróleo Brasileiro S.A. - Petrobras",
+      "rawFmpName": null,
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "PFE",
+      "iolDescription": "Cedear Pfizer Inc.",
+      "currentFmpTicker": "PFE",
+      "currentFmpName": "Pfizer Inc.",
+      "rawFmpName": "Pfizer Inc.",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "PG",
+      "iolDescription": "Cedear Procter & Gamble",
+      "currentFmpTicker": "PG",
+      "currentFmpName": "The Procter & Gamble Company",
+      "rawFmpName": "The Procter & Gamble Company",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "PHG",
+      "iolDescription": "Cedear Royal Philips Electronics",
+      "currentFmpTicker": "PHG",
+      "currentFmpName": "Koninklijke Philips N.V.",
+      "rawFmpName": "Koninklijke Philips N.V.",
+      "status": "unknown",
+      "suggestion": "// MANUAL 'PHG' — IOL: \"Cedear Royal Philips Electronics\" | toFmpTicker→\"PHG\" → \"Koninklijke Philips N.V.\" | raw \"PHG\" → \"Koninklijke Philips N.V.\""
+    },
+    {
+      "iolBase": "PINS",
+      "iolDescription": "Cedear Pinterest Inc.",
+      "currentFmpTicker": "PINS",
+      "currentFmpName": "Pinterest, Inc.",
+      "rawFmpName": "Pinterest, Inc.",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "PINSD",
+      "iolDescription": "Cedear Pinterest Inc.",
+      "currentFmpTicker": "PINS",
+      "currentFmpName": "Pinterest, Inc.",
+      "rawFmpName": null,
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "PKS",
+      "iolDescription": "Cedear Posco",
+      "currentFmpTicker": "PKX",
+      "currentFmpName": "POSCO Holdings Inc.",
+      "rawFmpName": null,
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "PLTR",
+      "iolDescription": "Cedear Palantir Technologies Inc",
+      "currentFmpTicker": "PLTR",
+      "currentFmpName": "Palantir Technologies Inc.",
+      "rawFmpName": "Palantir Technologies Inc.",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "PM",
+      "iolDescription": "Cedear Philip Morris International",
+      "currentFmpTicker": "PM",
+      "currentFmpName": "Philip Morris International Inc.",
+      "rawFmpName": "Philip Morris International Inc.",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "PMD",
+      "iolDescription": "Cedear Philip Morris Internati",
+      "currentFmpTicker": "PM",
+      "currentFmpName": "Philip Morris International Inc.",
+      "rawFmpName": "Psychemedics Corporation",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "PRIO3",
+      "iolDescription": "Cedear Petro Rio S.A.",
+      "currentFmpTicker": null,
+      "currentFmpName": null,
+      "rawFmpName": null,
+      "status": "mapped_null_correct",
+      "suggestion": null
+    },
+    {
+      "iolBase": "PSQ",
+      "iolDescription": "Cedear Etf Proshares Short Qqq",
+      "currentFmpTicker": "PSQ",
+      "currentFmpName": "ProShares - Short QQQ",
+      "rawFmpName": "ProShares - Short QQQ",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "PSQD",
+      "iolDescription": "Cedear Etf Proshares Short Qqq",
+      "currentFmpTicker": "PSQ",
+      "currentFmpName": "ProShares - Short QQQ",
+      "rawFmpName": null,
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "PSX",
+      "iolDescription": "Cedear Phillips 66",
+      "currentFmpTicker": "PSX",
+      "currentFmpName": "Phillips 66",
+      "rawFmpName": "Phillips 66",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "PSXD",
+      "iolDescription": "Cedear Phillips 66",
+      "currentFmpTicker": "PSX",
+      "currentFmpName": "Phillips 66",
+      "rawFmpName": null,
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "PYPL",
+      "iolDescription": "Cedear Paypal Holdings, Inc",
+      "currentFmpTicker": "PYPL",
+      "currentFmpName": "PayPal Holdings, Inc.",
+      "rawFmpName": "PayPal Holdings, Inc.",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "QCOM",
+      "iolDescription": "Cedear Qualcom Incorporated",
+      "currentFmpTicker": "QCOM",
+      "currentFmpName": "QUALCOMM Incorporated",
+      "rawFmpName": "QUALCOMM Incorporated",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "QQQ",
+      "iolDescription": "Cedear Invesco Qqq Trust",
+      "currentFmpTicker": "QQQ",
+      "currentFmpName": "Invesco QQQ Trust, Series 1",
+      "rawFmpName": "Invesco QQQ Trust, Series 1",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "RACE",
+      "iolDescription": "Cedear Ferrari Nv",
+      "currentFmpTicker": "RACE",
+      "currentFmpName": "Ferrari N.V.",
+      "rawFmpName": "Ferrari N.V.",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "RBLX",
+      "iolDescription": "Cedear Roblox Corp.",
+      "currentFmpTicker": "RBLX",
+      "currentFmpName": "Roblox Corporation",
+      "rawFmpName": "Roblox Corporation",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "RBLXD",
+      "iolDescription": "Cedear Roblox Corp.",
+      "currentFmpTicker": "RBLX",
+      "currentFmpName": "Roblox Corporation",
+      "rawFmpName": null,
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "RENT3",
+      "iolDescription": "Cedear Localiza Rent A Car S.A",
+      "currentFmpTicker": null,
+      "currentFmpName": null,
+      "rawFmpName": null,
+      "status": "mapped_null_correct",
+      "suggestion": null
+    },
+    {
+      "iolBase": "RGTI",
+      "iolDescription": "Cedear Rigetti Computing",
+      "currentFmpTicker": "RGTI",
+      "currentFmpName": "Rigetti Computing, Inc.",
+      "rawFmpName": "Rigetti Computing, Inc.",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "RIO",
+      "iolDescription": "Cedear Rio Tinto Plc Adr",
+      "currentFmpTicker": "RIO",
+      "currentFmpName": "Rio Tinto Group",
+      "rawFmpName": "Rio Tinto Group",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "RIOD",
+      "iolDescription": "Cedear Rio Tinto Plc - Adr",
+      "currentFmpTicker": "RIO",
+      "currentFmpName": "Rio Tinto Group",
+      "rawFmpName": null,
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "RIOT",
+      "iolDescription": "Cedear Riot Platforms Inc.",
+      "currentFmpTicker": "RIOT",
+      "currentFmpName": "Riot Platforms, Inc.",
+      "rawFmpName": "Riot Platforms, Inc.",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "RKLB",
+      "iolDescription": "CEDEAR ROCKET LAB CORP.",
+      "currentFmpTicker": "RKLB",
+      "currentFmpName": "Rocket Lab USA, Inc.",
+      "rawFmpName": "Rocket Lab USA, Inc.",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "RKLBD",
+      "iolDescription": "Cedear Rocket Lab Corp.",
+      "currentFmpTicker": "RKLB",
+      "currentFmpName": "Rocket Lab USA, Inc.",
+      "rawFmpName": null,
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "ROKU",
+      "iolDescription": "Cedear Roku Inc.",
+      "currentFmpTicker": "ROKU",
+      "currentFmpName": "Roku, Inc.",
+      "rawFmpName": "Roku, Inc.",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "ROKUD",
+      "iolDescription": "Cedear Roku Inc.",
+      "currentFmpTicker": "ROKU",
+      "currentFmpName": "Roku, Inc.",
+      "rawFmpName": null,
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "ROST",
+      "iolDescription": "Cedear Ross Stores, Inc.",
+      "currentFmpTicker": "ROST",
+      "currentFmpName": "Ross Stores, Inc.",
+      "rawFmpName": "Ross Stores, Inc.",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "ROSTD",
+      "iolDescription": "Cedear Ross Stores, Inc.",
+      "currentFmpTicker": "ROST",
+      "currentFmpName": "Ross Stores, Inc.",
+      "rawFmpName": null,
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "RSP",
+      "iolDescription": "CEDEAR INVESCO S&P 500 EQUAL WEIGHT ETF",
+      "currentFmpTicker": "RSP",
+      "currentFmpName": "Invesco S&P 500 Equal Weight ETF",
+      "rawFmpName": "Invesco S&P 500 Equal Weight ETF",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "RTX",
+      "iolDescription": "Cedear Rtx Corporation",
+      "currentFmpTicker": "RTX",
+      "currentFmpName": "RTX Corporation",
+      "rawFmpName": "RTX Corporation",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "RTXD",
+      "iolDescription": "Cedear Rtx Corporation",
+      "currentFmpTicker": "RTX",
+      "currentFmpName": "RTX Corporation",
+      "rawFmpName": null,
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "SAN",
+      "iolDescription": "Cedear Banco Santander S.A.",
+      "currentFmpTicker": "SAN",
+      "currentFmpName": "Banco Santander, S.A.",
+      "rawFmpName": "Banco Santander, S.A.",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "SAND",
+      "iolDescription": "Cedear Banco Santander S.A.",
+      "currentFmpTicker": "SAN",
+      "currentFmpName": "Banco Santander, S.A.",
+      "rawFmpName": "Sandstorm Gold Ltd.",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "SAP",
+      "iolDescription": "Cedear Sap Se",
+      "currentFmpTicker": "SAP",
+      "currentFmpName": "SAP SE",
+      "rawFmpName": "SAP SE",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "SAPD",
+      "iolDescription": "Cedear Sap Se",
+      "currentFmpTicker": "SAP",
+      "currentFmpName": "SAP SE",
+      "rawFmpName": null,
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "SATL",
+      "iolDescription": "Cedear Satellogic Inc.",
+      "currentFmpTicker": "SATL",
+      "currentFmpName": "Satellogic Inc.",
+      "rawFmpName": "Satellogic Inc.",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "SBS",
+      "iolDescription": "Cedear Cia Sabesp",
+      "currentFmpTicker": "SBS",
+      "currentFmpName": "Companhia de Saneamento Básico do Estado de São Paulo - SABESP",
+      "rawFmpName": "Companhia de Saneamento Básico do Estado de São Paulo - SABESP",
+      "status": "unknown",
+      "suggestion": "// MANUAL 'SBS' — IOL: \"Cedear Cia Sabesp\" | toFmpTicker→\"SBS\" → \"Companhia de Saneamento Básico do Estado de São Paulo - SABESP\" | raw \"SBS\" → \"Companhia de Saneamento Básico do Estado de São Paulo - SABESP\""
+    },
+    {
+      "iolBase": "SBSP3",
+      "iolDescription": "Cedear Cia De Saneamiento Basi",
+      "currentFmpTicker": null,
+      "currentFmpName": null,
+      "rawFmpName": null,
+      "status": "mapped_null_correct",
+      "suggestion": null
+    },
+    {
+      "iolBase": "SBUX",
+      "iolDescription": "Cedear Starbucks Corporation",
+      "currentFmpTicker": "SBUX",
+      "currentFmpName": "Starbucks Corporation",
+      "rawFmpName": "Starbucks Corporation",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "SCCO",
+      "iolDescription": "Cedear Southern Copper Corp.",
+      "currentFmpTicker": "SCCO",
+      "currentFmpName": "Southern Copper Corporation",
+      "rawFmpName": "Southern Copper Corporation",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "SCHW",
+      "iolDescription": "Cedear Charles Schwab Corp.",
+      "currentFmpTicker": "SCHW",
+      "currentFmpName": "The Charles Schwab Corporation",
+      "rawFmpName": "The Charles Schwab Corporation",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "SDA",
+      "iolDescription": "Cedear Suncar Technology Group",
+      "currentFmpTicker": "SDA",
+      "currentFmpName": "SunCar Technology Group Inc.",
+      "rawFmpName": "SunCar Technology Group Inc.",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "SE",
+      "iolDescription": "Cedear Sea Ltd.",
+      "currentFmpTicker": "SE",
+      "currentFmpName": "Sea Limited",
+      "rawFmpName": "Sea Limited",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "SH",
+      "iolDescription": "Cedear Proshares  Short S&P500",
+      "currentFmpTicker": "SH",
+      "currentFmpName": "ProShares - Short S&P500",
+      "rawFmpName": "ProShares - Short S&P500",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "SHEL",
+      "iolDescription": "Cedear Royal Dutch Shell Plc",
+      "currentFmpTicker": "SHEL",
+      "currentFmpName": "Shell plc",
+      "rawFmpName": "Shell plc",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "SHOP",
+      "iolDescription": "Cedear Shopify Inc.",
+      "currentFmpTicker": "SHOP",
+      "currentFmpName": "Shopify Inc.",
+      "rawFmpName": "Shopify Inc.",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "SID",
+      "iolDescription": "Cedear Companhia Siderurgica Nacional",
+      "currentFmpTicker": "SID",
+      "currentFmpName": "Companhia Siderúrgica Nacional",
+      "rawFmpName": "Companhia Siderúrgica Nacional",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "SIDD",
+      "iolDescription": "Cedear Companhia Siderurgica Nacional",
+      "currentFmpTicker": "SID",
+      "currentFmpName": "Companhia Siderúrgica Nacional",
+      "rawFmpName": null,
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "SIEGY",
+      "iolDescription": "Cedear Siemens Ag Adr",
+      "currentFmpTicker": "SIEGY",
+      "currentFmpName": "Siemens AG",
+      "rawFmpName": "Siemens AG",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "SLB",
+      "iolDescription": "Cedear Schlumberger Limited",
+      "currentFmpTicker": "SLB",
+      "currentFmpName": "SLB N.V.",
+      "rawFmpName": "SLB N.V.",
+      "status": "unknown",
+      "suggestion": "// MANUAL 'SLB' — IOL: \"Cedear Schlumberger Limited\" | toFmpTicker→\"SLB\" → \"SLB N.V.\" | raw \"SLB\" → \"SLB N.V.\""
+    },
+    {
+      "iolBase": "SLV",
+      "iolDescription": "Cedear Etf Ishares Silver Trus",
+      "currentFmpTicker": "SLV",
+      "currentFmpName": "iShares Silver Trust",
+      "rawFmpName": "iShares Silver Trust",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "SMH",
+      "iolDescription": "Cedear Van Eck Vectors Etf Tru",
+      "currentFmpTicker": "SMH",
+      "currentFmpName": "VanEck Semiconductor ETF",
+      "rawFmpName": "VanEck Semiconductor ETF",
+      "status": "unknown",
+      "suggestion": "// MANUAL 'SMH' — IOL: \"Cedear Van Eck Vectors Etf Tru\" | toFmpTicker→\"SMH\" → \"VanEck Semiconductor ETF\" | raw \"SMH\" → \"VanEck Semiconductor ETF\""
+    },
+    {
+      "iolBase": "SNA",
+      "iolDescription": "Cedear Snap-On Incorporated",
+      "currentFmpTicker": "SNA",
+      "currentFmpName": "Snap-on Incorporated",
+      "rawFmpName": "Snap-on Incorporated",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "SNAP",
+      "iolDescription": "Cedear Snap Inc.",
+      "currentFmpTicker": "SNAP",
+      "currentFmpName": "Snap Inc.",
+      "rawFmpName": "Snap Inc.",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "SNAPD",
+      "iolDescription": "Cedear Snap Inc.",
+      "currentFmpTicker": "SNAP",
+      "currentFmpName": "Snap Inc.",
+      "rawFmpName": null,
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "SNOW",
+      "iolDescription": "Cedear Snowflake Inc",
+      "currentFmpTicker": "SNOW",
+      "currentFmpName": "Snowflake Inc.",
+      "rawFmpName": "Snowflake Inc.",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "SONY",
+      "iolDescription": "Cedear Sony Corporation",
+      "currentFmpTicker": "SONY",
+      "currentFmpName": "Sony Group Corporation",
+      "rawFmpName": "Sony Group Corporation",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "SONYD",
+      "iolDescription": "Cedear Sony Corporation",
+      "currentFmpTicker": "SONY",
+      "currentFmpName": "Sony Group Corporation",
+      "rawFmpName": null,
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "SPCE",
+      "iolDescription": "Cedear Virgin Galactic Holdings Inc.",
+      "currentFmpTicker": "SPCE",
+      "currentFmpName": "Virgin Galactic Holdings, Inc.",
+      "rawFmpName": "Virgin Galactic Holdings, Inc.",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "SPGI",
+      "iolDescription": "Cedear S&P Global Inc.",
+      "currentFmpTicker": "SPGI",
+      "currentFmpName": "S&P Global Inc.",
+      "rawFmpName": "S&P Global Inc.",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "SPGID",
+      "iolDescription": "Cedear S&P Global Inc.",
+      "currentFmpTicker": "SPGI",
+      "currentFmpName": "S&P Global Inc.",
+      "rawFmpName": null,
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "SPHQ",
+      "iolDescription": "CEDEAR INVERSCO S&P 500 QUALITY ETF",
+      "currentFmpTicker": "SPHQ",
+      "currentFmpName": "Invesco S&P 500 Quality ETF",
+      "rawFmpName": "Invesco S&P 500 Quality ETF",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "SPOT",
+      "iolDescription": "Cedear Spotify Technology",
+      "currentFmpTicker": "SPOT",
+      "currentFmpName": "Spotify Technology S.A.",
+      "rawFmpName": "Spotify Technology S.A.",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "SPXL",
+      "iolDescription": "Cedear Direxion Daily S&P 500",
+      "currentFmpTicker": "SPXL",
+      "currentFmpName": "Direxion Daily S&P 500 Bull 3X ETF",
+      "rawFmpName": "Direxion Daily S&P 500 Bull 3X ETF",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "SPY",
+      "iolDescription": "Cedear Spdr S&P 500",
+      "currentFmpTicker": "SPY",
+      "currentFmpName": "State Street SPDR S&P 500 ETF Trust",
+      "rawFmpName": "State Street SPDR S&P 500 ETF Trust",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "STLA",
+      "iolDescription": "Cedear Stellantis Nv",
+      "currentFmpTicker": "STLA",
+      "currentFmpName": "Stellantis N.V.",
+      "rawFmpName": "Stellantis N.V.",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "STNE",
+      "iolDescription": "Cedear Stoneco Ltd",
+      "currentFmpTicker": "STNE",
+      "currentFmpName": "StoneCo Ltd.",
+      "rawFmpName": "StoneCo Ltd.",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "STNED",
+      "iolDescription": "Cedear Stoneco Ltd",
+      "currentFmpTicker": "STNE",
+      "currentFmpName": "StoneCo Ltd.",
+      "rawFmpName": null,
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "SUZ",
+      "iolDescription": "Cedear Suzano Papel E Celulose",
+      "currentFmpTicker": "SUZ",
+      "currentFmpName": "Suzano S.A.",
+      "rawFmpName": "Suzano S.A.",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "SUZB3",
+      "iolDescription": "CEDEAR SUZANO S.A",
+      "currentFmpTicker": "SUZ",
+      "currentFmpName": "Suzano S.A.",
+      "rawFmpName": null,
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "SUZD",
+      "iolDescription": "Cedear Suzano Papel E Celulose",
+      "currentFmpTicker": "SUZ",
+      "currentFmpName": "Suzano S.A.",
+      "rawFmpName": null,
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "SWKS",
+      "iolDescription": "Cedear Skyworks Solutions Inc.",
+      "currentFmpTicker": "SWKS",
+      "currentFmpName": "Skyworks Solutions, Inc.",
+      "rawFmpName": "Skyworks Solutions, Inc.",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "SWKSD",
+      "iolDescription": "Cedear Skyworks Solutions Inc.",
+      "currentFmpTicker": "SWKS",
+      "currentFmpName": "Skyworks Solutions, Inc.",
+      "rawFmpName": null,
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "SYY",
+      "iolDescription": "Cedear Sysco Corporation",
+      "currentFmpTicker": "SYY",
+      "currentFmpName": "Sysco Corporation",
+      "rawFmpName": "Sysco Corporation",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "SYYD",
+      "iolDescription": "Cedear Sysco Corporation",
+      "currentFmpTicker": "SYY",
+      "currentFmpName": "Sysco Corporation",
+      "rawFmpName": null,
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "T",
+      "iolDescription": "Cedear At & T Inc.",
+      "currentFmpTicker": "T",
+      "currentFmpName": "AT&T Inc.",
+      "rawFmpName": "AT&T Inc.",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "TCOM",
+      "iolDescription": "Cedear Ctrip.Com International",
+      "currentFmpTicker": "TCOM",
+      "currentFmpName": "Trip.com Group Limited",
+      "rawFmpName": "Trip.com Group Limited",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "TCOMD",
+      "iolDescription": "Cedear Ctrip.Com International",
+      "currentFmpTicker": "TCOM",
+      "currentFmpName": "Trip.com Group Limited",
+      "rawFmpName": null,
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "TEAM",
+      "iolDescription": "Cedear Atlassian Corporation",
+      "currentFmpTicker": "TEAM",
+      "currentFmpName": "Atlassian Corporation",
+      "rawFmpName": "Atlassian Corporation",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "TEAMD",
+      "iolDescription": "Cedear Atlassian Corporation",
+      "currentFmpTicker": "TEAM",
+      "currentFmpName": "Atlassian Corporation",
+      "rawFmpName": null,
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "TEM",
+      "iolDescription": "Cedear Tempus Ai Inc",
+      "currentFmpTicker": "TEM",
+      "currentFmpName": "Tempus AI, Inc.",
+      "rawFmpName": "Tempus AI, Inc.",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "TEMD",
+      "iolDescription": "Cedear Tempus Ai Inc",
+      "currentFmpTicker": "TEM",
+      "currentFmpName": "Tempus AI, Inc.",
+      "rawFmpName": "Templeton Emerging Markets Debt ETF",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "TEN",
+      "iolDescription": "Cedear Tenaris S.A. (Ads)",
+      "currentFmpTicker": "TS",
+      "currentFmpName": "Tenaris S.A.",
+      "rawFmpName": "Tsakos Energy Navigation Limited",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "TGT",
+      "iolDescription": "Cedear Target Corporation",
+      "currentFmpTicker": "TGT",
+      "currentFmpName": "Target Corporation",
+      "rawFmpName": "Target Corporation",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "TIMB",
+      "iolDescription": "Cedear Tim Participacoes S.A.",
+      "currentFmpTicker": "TIMB",
+      "currentFmpName": "TIM S.A.",
+      "rawFmpName": "TIM S.A.",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "TIMBD",
+      "iolDescription": "Cedear Tim Participacoes S.A.",
+      "currentFmpTicker": "TIMB",
+      "currentFmpName": "TIM S.A.",
+      "rawFmpName": null,
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "TIMS3",
+      "iolDescription": "Cedear Tim S.A.",
+      "currentFmpTicker": "TIMB",
+      "currentFmpName": "TIM S.A.",
+      "rawFmpName": null,
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "TJX",
+      "iolDescription": "Cedear Tjx Companies Inc.",
+      "currentFmpTicker": "TJX",
+      "currentFmpName": "The TJX Companies, Inc.",
+      "rawFmpName": "The TJX Companies, Inc.",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "TM",
+      "iolDescription": "Cedear Toyota Motor Corp.Adr",
+      "currentFmpTicker": "TM",
+      "currentFmpName": "Toyota Motor Corporation",
+      "rawFmpName": "Toyota Motor Corporation",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "TMO",
+      "iolDescription": "Cedear Thermo Fisher Scientific Inc",
+      "currentFmpTicker": "TMO",
+      "currentFmpName": "Thermo Fisher Scientific Inc.",
+      "rawFmpName": "Thermo Fisher Scientific Inc.",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "TMOD",
+      "iolDescription": "Cedear Thermo Fisher Scientifi",
+      "currentFmpTicker": "TMO",
+      "currentFmpName": "Thermo Fisher Scientific Inc.",
+      "rawFmpName": null,
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "TMUS",
+      "iolDescription": "Cedear T-Mobile Us Inc.",
+      "currentFmpTicker": "TMUS",
+      "currentFmpName": "T-Mobile US, Inc.",
+      "rawFmpName": "T-Mobile US, Inc.",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "TMUSD",
+      "iolDescription": "Cedear T-Mobile Us Inc.",
+      "currentFmpTicker": "TMUS",
+      "currentFmpName": "T-Mobile US, Inc.",
+      "rawFmpName": null,
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "TQQQ",
+      "iolDescription": "Cedear Proshares Ultrapro Qqq Etf",
+      "currentFmpTicker": "TQQQ",
+      "currentFmpName": "ProShares - UltraPro QQQ",
+      "rawFmpName": "ProShares - UltraPro QQQ",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "TRIP",
+      "iolDescription": "Cedear Tripadvisor, Inc.",
+      "currentFmpTicker": "TRIP",
+      "currentFmpName": "Tripadvisor, Inc.",
+      "rawFmpName": "Tripadvisor, Inc.",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "TRIPD",
+      "iolDescription": "Cedear Tripadvisor, Inc.",
+      "currentFmpTicker": "TRIP",
+      "currentFmpName": "Tripadvisor, Inc.",
+      "rawFmpName": null,
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "TRVV",
+      "iolDescription": "Cedear Travelers Cos. Inc.",
+      "currentFmpTicker": "TRV",
+      "currentFmpName": "The Travelers Companies, Inc.",
+      "rawFmpName": null,
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "TRVVD",
+      "iolDescription": "Cedear Travelers Cos. Inc.",
+      "currentFmpTicker": "TRV",
+      "currentFmpName": "The Travelers Companies, Inc.",
+      "rawFmpName": null,
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "TSLA",
+      "iolDescription": "Cedear Tesla, Inc.",
+      "currentFmpTicker": "TSLA",
+      "currentFmpName": "Tesla, Inc.",
+      "rawFmpName": "Tesla, Inc.",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "TSM",
+      "iolDescription": "Cedear Taiwan Semic. Manuf.",
+      "currentFmpTicker": "TSM",
+      "currentFmpName": "Taiwan Semiconductor Manufacturing Company Limited",
+      "rawFmpName": "Taiwan Semiconductor Manufacturing Company Limited",
+      "status": "unknown",
+      "suggestion": "// MANUAL 'TSM' — IOL: \"Cedear Taiwan Semic. Manuf.\" | toFmpTicker→\"TSM\" → \"Taiwan Semiconductor Manufacturing Company Limited\" | raw \"TSM\" → \"Taiwan Semiconductor Manufacturing Company Limited\""
+    },
+    {
+      "iolBase": "TTE",
+      "iolDescription": "Cedear Totalenergies  Se.",
+      "currentFmpTicker": "TTE",
+      "currentFmpName": "TotalEnergies SE",
+      "rawFmpName": "TotalEnergies SE",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "TTED",
+      "iolDescription": "Cedear Totalenergies  Se.",
+      "currentFmpTicker": "TTE",
+      "currentFmpName": "TotalEnergies SE",
+      "rawFmpName": null,
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "TV",
+      "iolDescription": "Cedear Grupo Televisa Sa Adr",
+      "currentFmpTicker": "TV",
+      "currentFmpName": "Grupo Televisa, S.A.B.",
+      "rawFmpName": "Grupo Televisa, S.A.B.",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "TVD",
+      "iolDescription": "Cedear Grupo Televisa Sa Adr",
+      "currentFmpTicker": "TV",
+      "currentFmpName": "Grupo Televisa, S.A.B.",
+      "rawFmpName": null,
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "TWLO",
+      "iolDescription": "Cedear Twilio Inc.",
+      "currentFmpTicker": "TWLO",
+      "currentFmpName": "Twilio Inc.",
+      "rawFmpName": "Twilio Inc.",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "TWLOD",
+      "iolDescription": "Cedear Twilio Inc.",
+      "currentFmpTicker": "TWLO",
+      "currentFmpName": "Twilio Inc.",
+      "rawFmpName": null,
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "TXN",
+      "iolDescription": "Cedear Texas Instruments Incor",
+      "currentFmpTicker": "TXN",
+      "currentFmpName": "Texas Instruments Incorporated",
+      "rawFmpName": "Texas Instruments Incorporated",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "TXND",
+      "iolDescription": "Cedear Texas Instruments Incor",
+      "currentFmpTicker": "TXN",
+      "currentFmpName": "Texas Instruments Incorporated",
+      "rawFmpName": null,
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "TXR",
+      "iolDescription": "Cedear Ternium S.A.",
+      "currentFmpTicker": "TX",
+      "currentFmpName": "Ternium S.A.",
+      "rawFmpName": null,
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "UAL",
+      "iolDescription": "Cedear United Airlines Holding",
+      "currentFmpTicker": "UAL",
+      "currentFmpName": "United Airlines Holdings, Inc.",
+      "rawFmpName": "United Airlines Holdings, Inc.",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "UBER",
+      "iolDescription": "Cedear Uber Technologies Inc.",
+      "currentFmpTicker": "UBER",
+      "currentFmpName": "Uber Technologies, Inc.",
+      "rawFmpName": "Uber Technologies, Inc.",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "UGP",
+      "iolDescription": "Cedear Ultrapar Participagues",
+      "currentFmpTicker": "UGP",
+      "currentFmpName": "Ultrapar Participações S.A.",
+      "rawFmpName": "Ultrapar Participações S.A.",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "UGPD",
+      "iolDescription": "Cedear Ultrapar Participacoes",
+      "currentFmpTicker": "UGP",
+      "currentFmpName": "Ultrapar Participações S.A.",
+      "rawFmpName": null,
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "UL",
+      "iolDescription": "Cedear Unilever N.V.Ny Reg.Sha",
+      "currentFmpTicker": "UL",
+      "currentFmpName": "Unilever PLC",
+      "rawFmpName": "Unilever PLC",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "ULD",
+      "iolDescription": "Cedear Unilever N.V.Ny Reg.Sha",
+      "currentFmpTicker": "UL",
+      "currentFmpName": "Unilever PLC",
+      "rawFmpName": null,
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "UNH",
+      "iolDescription": "Cedear Unitedhealth Group Inc.",
+      "currentFmpTicker": "UNH",
+      "currentFmpName": "UnitedHealth Group Incorporated",
+      "rawFmpName": "UnitedHealth Group Incorporated",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "UNP",
+      "iolDescription": "Cedear Union Pacific Corp",
+      "currentFmpTicker": "UNP",
+      "currentFmpName": "Union Pacific Corporation",
+      "rawFmpName": "Union Pacific Corporation",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "UNPD",
+      "iolDescription": "Cedear Union Pacific Corp",
+      "currentFmpTicker": "UNP",
+      "currentFmpName": "Union Pacific Corporation",
+      "rawFmpName": null,
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "UPST",
+      "iolDescription": "Cedear Upstart Holdings Inc.",
+      "currentFmpTicker": "UPST",
+      "currentFmpName": "Upstart Holdings, Inc.",
+      "rawFmpName": "Upstart Holdings, Inc.",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "URA",
+      "iolDescription": "Cedear Global X Uranium Etf",
+      "currentFmpTicker": "URA",
+      "currentFmpName": "Global X - Uranium ETF",
+      "rawFmpName": "Global X - Uranium ETF",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "URBN",
+      "iolDescription": "Cedear Urban Outfitters, Inc.",
+      "currentFmpTicker": "URBN",
+      "currentFmpName": "Urban Outfitters, Inc.",
+      "rawFmpName": "Urban Outfitters, Inc.",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "URBND",
+      "iolDescription": "Cedear Urban Outfitters, Inc.",
+      "currentFmpTicker": "URBN",
+      "currentFmpName": "Urban Outfitters, Inc.",
+      "rawFmpName": null,
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "USB",
+      "iolDescription": "Cedear U.S. Bancorp",
+      "currentFmpTicker": "USB",
+      "currentFmpName": "U.S. Bancorp",
+      "rawFmpName": "U.S. Bancorp",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "USO",
+      "iolDescription": "Cedear United State Oil Fund L",
+      "currentFmpTicker": "USO",
+      "currentFmpName": "United States Oil Fund LP",
+      "rawFmpName": "United States Oil Fund LP",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "USOD",
+      "iolDescription": "Cedear United State Oil Fund Lp",
+      "currentFmpTicker": "USO",
+      "currentFmpName": "United States Oil Fund LP",
+      "rawFmpName": "United States 3x Short Oil Fund",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "V",
+      "iolDescription": "Cedear Visa Inc",
+      "currentFmpTicker": "V",
+      "currentFmpName": "Visa Inc.",
+      "rawFmpName": "Visa Inc.",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "VAL3D",
+      "iolDescription": "Cedear Vale S.A.",
+      "currentFmpTicker": "VALE",
+      "currentFmpName": "Vale S.A.",
+      "rawFmpName": null,
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "VALE",
+      "iolDescription": "Cedear Vale",
+      "currentFmpTicker": "VALE",
+      "currentFmpName": "Vale S.A.",
+      "rawFmpName": "Vale S.A.",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "VALE3",
+      "iolDescription": "Cedear Vale S.A.",
+      "currentFmpTicker": "VALE",
+      "currentFmpName": "Vale S.A.",
+      "rawFmpName": null,
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "VEA",
+      "iolDescription": "Cedear Vanguard Ftse Developed",
+      "currentFmpTicker": "VEA",
+      "currentFmpName": "Vanguard FTSE Developed Markets ETF",
+      "rawFmpName": "Vanguard FTSE Developed Markets ETF",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "VIG",
+      "iolDescription": "Cedear Etf Vanguard Dividend Appreciation",
+      "currentFmpTicker": "VIG",
+      "currentFmpName": "Vanguard Dividend Appreciation ETF",
+      "rawFmpName": "Vanguard Dividend Appreciation ETF",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "VIST",
+      "iolDescription": "Cedear Vista Oil & Gas Sab De",
+      "currentFmpTicker": "VIST",
+      "currentFmpName": "Vista Energy, S.A.B. de C.V.",
+      "rawFmpName": "Vista Energy, S.A.B. de C.V.",
+      "status": "unknown",
+      "suggestion": "// MANUAL 'VIST' — IOL: \"Cedear Vista Oil & Gas Sab De\" | toFmpTicker→\"VIST\" → \"Vista Energy, S.A.B. de C.V.\" | raw \"VIST\" → \"Vista Energy, S.A.B. de C.V.\""
+    },
+    {
+      "iolBase": "VIV",
+      "iolDescription": "Cedear Telefonica Brasil S.A.",
+      "currentFmpTicker": "VIV",
+      "currentFmpName": "Telefônica Brasil S.A.",
+      "rawFmpName": "Telefônica Brasil S.A.",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "VIVD",
+      "iolDescription": "Cedear Telefonica Brasil S.A.",
+      "currentFmpTicker": "VIV",
+      "currentFmpName": "Telefônica Brasil S.A.",
+      "rawFmpName": null,
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "VIVT3",
+      "iolDescription": "Cedear Telefonica Brasil S.A.",
+      "currentFmpTicker": "VIV",
+      "currentFmpName": "Telefônica Brasil S.A.",
+      "rawFmpName": null,
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "VOD",
+      "iolDescription": "Cedear Vodafone Group Plc.",
+      "currentFmpTicker": "VOD",
+      "currentFmpName": "Vodafone Group Public Limited Company",
+      "rawFmpName": "Vodafone Group Public Limited Company",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "VODD",
+      "iolDescription": "Cedear Vodafone Group Plc.",
+      "currentFmpTicker": "VOD",
+      "currentFmpName": "Vodafone Group Public Limited Company",
+      "rawFmpName": null,
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "VRSN",
+      "iolDescription": "Cedear Verisign, Inc.",
+      "currentFmpTicker": "VRSN",
+      "currentFmpName": "VeriSign, Inc.",
+      "rawFmpName": "VeriSign, Inc.",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "VRSND",
+      "iolDescription": "Cedear Verisign, Inc.",
+      "currentFmpTicker": "VRSN",
+      "currentFmpName": "VeriSign, Inc.",
+      "rawFmpName": null,
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "VRTX",
+      "iolDescription": "Cedear Vertex Pharmaceuticals",
+      "currentFmpTicker": "VRTX",
+      "currentFmpName": "Vertex Pharmaceuticals Incorporated",
+      "rawFmpName": "Vertex Pharmaceuticals Incorporated",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "VRTXD",
+      "iolDescription": "Cedear Vertex Pharmaceuticals",
+      "currentFmpTicker": "VRTX",
+      "currentFmpName": "Vertex Pharmaceuticals Incorporated",
+      "rawFmpName": null,
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "VST",
+      "iolDescription": "Cedear Vistra Corporation",
+      "currentFmpTicker": "VST",
+      "currentFmpName": "Vistra Corp.",
+      "rawFmpName": "Vistra Corp.",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "VSTD",
+      "iolDescription": "Cedear Vistra Corporation",
+      "currentFmpTicker": "VST",
+      "currentFmpName": "Vistra Corp.",
+      "rawFmpName": "Vestand Inc.",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "VXX",
+      "iolDescription": "Cedear Ipath Series B S&P 500 Vix Etf",
+      "currentFmpTicker": "VXX",
+      "currentFmpName": "iPath Series B S&P 500 VIX Short-Term Futures ETN",
+      "rawFmpName": "iPath Series B S&P 500 VIX Short-Term Futures ETN",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "VXXD",
+      "iolDescription": "CEDEAR IPATH SERIES B S&P 500 VIX ETF USD",
+      "currentFmpTicker": "VXX",
+      "currentFmpName": "iPath Series B S&P 500 VIX Short-Term Futures ETN",
+      "rawFmpName": null,
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "VZ",
+      "iolDescription": "Cedear Verizon Communications",
+      "currentFmpTicker": "VZ",
+      "currentFmpName": "Verizon Communications Inc.",
+      "rawFmpName": "Verizon Communications Inc.",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "WBO",
+      "iolDescription": "Cedear Weibo Corporation",
+      "currentFmpTicker": "WB",
+      "currentFmpName": "Weibo Corporation",
+      "rawFmpName": null,
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "WBOD",
+      "iolDescription": "Cedear Weibo Corporation",
+      "currentFmpTicker": "WB",
+      "currentFmpName": "Weibo Corporation",
+      "rawFmpName": null,
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "WEGE3",
+      "iolDescription": "Cedear Weg S.A.",
+      "currentFmpTicker": null,
+      "currentFmpName": null,
+      "rawFmpName": null,
+      "status": "mapped_null_correct",
+      "suggestion": null
+    },
+    {
+      "iolBase": "WFC",
+      "iolDescription": "Cedear Wells Fargo & Co",
+      "currentFmpTicker": "WFC",
+      "currentFmpName": "Wells Fargo & Company",
+      "rawFmpName": "Wells Fargo & Company",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "WMT",
+      "iolDescription": "Cedear Walmart Inc.",
+      "currentFmpTicker": "WMT",
+      "currentFmpName": "Walmart Inc.",
+      "rawFmpName": "Walmart Inc.",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "XLB",
+      "iolDescription": "Cedear State Street Materials Select Sector Spdr E",
+      "currentFmpTicker": "XLB",
+      "currentFmpName": "State Street Materials Select Sector SPDR ETF",
+      "rawFmpName": "State Street Materials Select Sector SPDR ETF",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "XLC",
+      "iolDescription": "Cedear State Street Communication Services Select ",
+      "currentFmpTicker": "XLC",
+      "currentFmpName": "State Street Communication Services Select Sector SPDR ETF",
+      "rawFmpName": "State Street Communication Services Select Sector SPDR ETF",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "XLE",
+      "iolDescription": "Cedear Energy Select Sector Sp",
+      "currentFmpTicker": "XLE",
+      "currentFmpName": "State Street Energy Select Sector SPDR ETF",
+      "rawFmpName": "State Street Energy Select Sector SPDR ETF",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "XLF",
+      "iolDescription": "Cedear Financial Select Sector",
+      "currentFmpTicker": "XLF",
+      "currentFmpName": "State Street Financial Select Sector SPDR ETF",
+      "rawFmpName": "State Street Financial Select Sector SPDR ETF",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "XLI",
+      "iolDescription": "Cedear State Street Industrial Select Sector Spdr ",
+      "currentFmpTicker": "XLI",
+      "currentFmpName": "State Street Industrial Select Sector SPDR ETF",
+      "rawFmpName": "State Street Industrial Select Sector SPDR ETF",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "XLK",
+      "iolDescription": "Cedear State Street Technology Select Sector Spdr ",
+      "currentFmpTicker": "XLK",
+      "currentFmpName": "State Street Technology Select Sector SPDR ETF",
+      "rawFmpName": "State Street Technology Select Sector SPDR ETF",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "XLP",
+      "iolDescription": "Cedear State Street Consumer Staples Select Sector",
+      "currentFmpTicker": "XLP",
+      "currentFmpName": "State Street Consumer Staples Select Sector SPDR ETF",
+      "rawFmpName": "State Street Consumer Staples Select Sector SPDR ETF",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "XLRE",
+      "iolDescription": "Cedear State Street Real Estate Select Sector Spdr",
+      "currentFmpTicker": "XLRE",
+      "currentFmpName": "State Street Real Estate Select Sector SPDR ETF",
+      "rawFmpName": "State Street Real Estate Select Sector SPDR ETF",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "XLU",
+      "iolDescription": "Cedear Utilities Select Sector",
+      "currentFmpTicker": "XLU",
+      "currentFmpName": "State Street Utilities Select Sector SPDR ETF",
+      "rawFmpName": "State Street Utilities Select Sector SPDR ETF",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "XLV",
+      "iolDescription": "Cedear State Street Health Care Select Sector Spdr",
+      "currentFmpTicker": "XLV",
+      "currentFmpName": "State Street Health Care Select Sector SPDR ETF",
+      "rawFmpName": "State Street Health Care Select Sector SPDR ETF",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "XLY",
+      "iolDescription": "Cedear State Street Consumer Discretionary Select ",
+      "currentFmpTicker": "XLY",
+      "currentFmpName": "State Street Consumer Discretionary Select Sector SPDR ETF",
+      "rawFmpName": "State Street Consumer Discretionary Select Sector SPDR ETF",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "XME",
+      "iolDescription": "CEDEAR STATE STREET SPDR S&P METALS & MINING ETF",
+      "currentFmpTicker": "XME",
+      "currentFmpName": "State Street SPDR S&P Metals & Mining ETF",
+      "rawFmpName": "State Street SPDR S&P Metals & Mining ETF",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "XOM",
+      "iolDescription": "Cedear Exxon Mobil Corporation",
+      "currentFmpTicker": "XOM",
+      "currentFmpName": "Exxon Mobil Corporation",
+      "rawFmpName": "Exxon Mobil Corporation",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "XP",
+      "iolDescription": "Cedear Xp Inc.",
+      "currentFmpTicker": "XP",
+      "currentFmpName": "XP Inc.",
+      "rawFmpName": "XP Inc.",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "XPD",
+      "iolDescription": "Cedear Xp Inc.",
+      "currentFmpTicker": "XP",
+      "currentFmpName": "XP Inc.",
+      "rawFmpName": null,
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "XPEV",
+      "iolDescription": "Cedear Xpeng Inc",
+      "currentFmpTicker": "XPEV",
+      "currentFmpName": "XPeng Inc.",
+      "rawFmpName": "XPeng Inc.",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "XPEVD",
+      "iolDescription": "Cedear Xpeng Inc",
+      "currentFmpTicker": "XPEV",
+      "currentFmpName": "XPeng Inc.",
+      "rawFmpName": null,
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "XROX",
+      "iolDescription": "Cedear  Xerox Corporation",
+      "currentFmpTicker": "XRX",
+      "currentFmpName": "Xerox Holdings Corporation",
+      "rawFmpName": null,
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "XROXD",
+      "iolDescription": "Cedear  Xerox Corporation",
+      "currentFmpTicker": "XRX",
+      "currentFmpName": "Xerox Holdings Corporation",
+      "rawFmpName": null,
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "XYZ",
+      "iolDescription": "Cedear Block Inc.",
+      "currentFmpTicker": "XYZ",
+      "currentFmpName": "Block, Inc.",
+      "rawFmpName": "Block, Inc.",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "YELP",
+      "iolDescription": "Cedear Yelp Inc.",
+      "currentFmpTicker": "YELP",
+      "currentFmpName": "Yelp Inc.",
+      "rawFmpName": "Yelp Inc.",
+      "status": "match",
+      "suggestion": null
+    },
+    {
+      "iolBase": "ZM",
+      "iolDescription": "Cedear Zoom Communications Inc",
+      "currentFmpTicker": "ZM",
+      "currentFmpName": "Zoom Communications, Inc.",
+      "rawFmpName": "Zoom Communications, Inc.",
+      "status": "match",
+      "suggestion": null
+    }
+  ]
+}

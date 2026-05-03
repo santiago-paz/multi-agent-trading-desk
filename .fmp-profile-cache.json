@@ -1,0 +1,2732 @@
+{
+  "AAP": {
+    "companyName": "Advance Auto Parts, Inc.",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:51:10.962Z"
+  },
+  "AAPL": {
+    "companyName": "Apple Inc.",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:51:10.962Z"
+  },
+  "AAL": {
+    "companyName": "American Airlines Group Inc.",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:51:10.962Z"
+  },
+  "ABBV": {
+    "companyName": "AbbVie Inc.",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:51:10.965Z"
+  },
+  "ABNB": {
+    "companyName": "Airbnb, Inc.",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:51:10.965Z"
+  },
+  "ABEV": {
+    "companyName": "Ambev S.A.",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:51:10.965Z"
+  },
+  "ABT": {
+    "companyName": "Abbott Laboratories",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:51:10.965Z"
+  },
+  "ADI": {
+    "companyName": "Analog Devices, Inc.",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:51:11.094Z"
+  },
+  "ACN": {
+    "companyName": "Accenture plc",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:51:11.094Z"
+  },
+  "ADGO": {
+    "companyName": "Advantego Corporation",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:51:11.095Z"
+  },
+  "AGRO": {
+    "companyName": "Adecoagro S.A.",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:51:11.098Z"
+  },
+  "ADBE": {
+    "companyName": "Adobe Inc.",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:51:11.098Z"
+  },
+  "ACWI": {
+    "companyName": "iShares MSCI ACWI ETF",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:51:11.098Z"
+  },
+  "ADP": {
+    "companyName": "Automatic Data Processing, Inc.",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:51:11.240Z"
+  },
+  "ADS": {
+    "companyName": "Bread Financial Holdings, Inc.",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:51:11.240Z"
+  },
+  "AEMD": {
+    "companyName": "Aethlon Medical, Inc.",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:51:11.241Z"
+  },
+  "AI": {
+    "companyName": "C3.ai, Inc.",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:51:11.241Z"
+  },
+  "AIG": {
+    "companyName": "American International Group, Inc.",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:51:11.241Z"
+  },
+  "AEM": {
+    "companyName": "Agnico Eagle Mines Limited",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:51:11.241Z"
+  },
+  "AEG": {
+    "companyName": "Aegon Ltd.",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:51:11.241Z"
+  },
+  "AMAT": {
+    "companyName": "Applied Materials, Inc.",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:51:11.609Z"
+  },
+  "AM": {
+    "companyName": "Antero Midstream Corporation",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:51:11.611Z"
+  },
+  "ALAB": {
+    "companyName": "Astera Labs, Inc. Common Stock",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:51:11.614Z"
+  },
+  "AMZN": {
+    "companyName": "Amazon.com, Inc.",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:51:11.760Z"
+  },
+  "AMGN": {
+    "companyName": "Amgen Inc.",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:51:11.760Z"
+  },
+  "AMD": {
+    "companyName": "Advanced Micro Devices, Inc.",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:51:11.760Z"
+  },
+  "AMX": {
+    "companyName": "América Móvil, S.A.B. de C.V.",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:51:11.760Z"
+  },
+  "ANF": {
+    "companyName": "Abercrombie & Fitch Co.",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:51:11.760Z"
+  },
+  "ARCO": {
+    "companyName": "Arcos Dorados Holdings Inc.",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:51:11.888Z"
+  },
+  "ASTS": {
+    "companyName": "AST SpaceMobile, Inc.",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:51:11.891Z"
+  },
+  "AVGO": {
+    "companyName": "Broadcom Inc.",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:51:11.891Z"
+  },
+  "ASML": {
+    "companyName": "ASML Holding N.V.",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:51:11.891Z"
+  },
+  "ARM": {
+    "companyName": "Arm Holdings plc American Depositary Shares",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:51:11.891Z"
+  },
+  "ASR": {
+    "companyName": "Grupo Aeroportuario del Sureste, S. A. B. de C. V.",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:51:11.891Z"
+  },
+  "ARKK": {
+    "companyName": "ARK Innovation ETF",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:51:11.893Z"
+  },
+  "B": {
+    "companyName": "Barrick Mining Corporation",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:51:12.022Z"
+  },
+  "AZN": {
+    "companyName": "AstraZeneca PLC",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:51:12.024Z"
+  },
+  "AXIA": {
+    "companyName": "AXIA Energia S.A.",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:51:12.025Z"
+  },
+  "AXP": {
+    "companyName": "American Express Company",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:51:12.025Z"
+  },
+  "AVY": {
+    "companyName": "Avery Dennison Corporation",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:51:12.025Z"
+  },
+  "BA": {
+    "companyName": "The Boeing Company",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:51:12.154Z"
+  },
+  "BAC": {
+    "companyName": "Bank of America Corporation",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:51:12.158Z"
+  },
+  "BABA": {
+    "companyName": "Alibaba Group Holding Limited",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:51:12.158Z"
+  },
+  "BB": {
+    "companyName": "BlackBerry Limited",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:51:12.158Z"
+  },
+  "BAK": {
+    "companyName": "Braskem S.A.",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:51:12.158Z"
+  },
+  "BBDC": {
+    "companyName": "Barings BDC, Inc.",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:51:12.287Z"
+  },
+  "BCS": {
+    "companyName": "Barclays PLC",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:51:12.289Z"
+  },
+  "BBD": {
+    "companyName": "Banco Bradesco S.A.",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:51:12.290Z"
+  },
+  "BHP": {
+    "companyName": "BHP Group Limited",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:51:12.417Z"
+  },
+  "BIIB": {
+    "companyName": "Biogen Inc.",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:51:12.419Z"
+  },
+  "BIDU": {
+    "companyName": "Baidu, Inc.",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:51:12.419Z"
+  },
+  "BIOX": {
+    "companyName": "Bioceres Crop Solutions Corp.",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:51:12.419Z"
+  },
+  "BK": {
+    "companyName": "The Bank of New York Mellon Corporation",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:51:12.420Z"
+  },
+  "BKD": {
+    "companyName": "Brookdale Senior Living Inc.",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:51:12.552Z"
+  },
+  "BMNR": {
+    "companyName": "Bitmine Immersion Technologies, Inc.",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:51:12.553Z"
+  },
+  "BKNG": {
+    "companyName": "Booking Holdings Inc.",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:51:12.553Z"
+  },
+  "BKR": {
+    "companyName": "Baker Hughes Company",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:51:12.554Z"
+  },
+  "BMY": {
+    "companyName": "Bristol-Myers Squibb Company",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:51:12.554Z"
+  },
+  "BRK-B": {
+    "companyName": "Berkshire Hathaway Inc.",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:51:12.682Z"
+  },
+  "BG": {
+    "companyName": "Bunge Global S.A.",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:51:12.683Z"
+  },
+  "BP": {
+    "companyName": "BP p.l.c.",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:51:12.687Z"
+  },
+  "BX": {
+    "companyName": "Blackstone Inc.",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:51:12.934Z"
+  },
+  "CAAP": {
+    "companyName": "Corporación América Airports S.A.",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:51:12.934Z"
+  },
+  "CAH": {
+    "companyName": "Cardinal Health, Inc.",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:51:12.937Z"
+  },
+  "BSBR": {
+    "companyName": "Banco Santander (Brasil) S.A.",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:51:12.937Z"
+  },
+  "C": {
+    "companyName": "Citigroup Inc.",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:51:12.938Z"
+  },
+  "CCL": {
+    "companyName": "Carnival Corporation & plc",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:51:13.067Z"
+  },
+  "CDE": {
+    "companyName": "Coeur Mining, Inc.",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:51:13.069Z"
+  },
+  "CC": {
+    "companyName": "The Chemours Company",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:51:13.069Z"
+  },
+  "CAT": {
+    "companyName": "Caterpillar Inc.",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:51:13.069Z"
+  },
+  "CAR": {
+    "companyName": "Avis Budget Group, Inc.",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:51:13.070Z"
+  },
+  "CL": {
+    "companyName": "Colgate-Palmolive Company",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:51:13.199Z"
+  },
+  "CEG": {
+    "companyName": "Constellation Energy Corporation",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:51:13.199Z"
+  },
+  "CLS": {
+    "companyName": "Celestica Inc.",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:51:13.203Z"
+  },
+  "CIBR": {
+    "companyName": "First Trust Nasdaq Cybersecurity ETF",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:51:13.203Z"
+  },
+  "CLSD": {
+    "companyName": "Clearside Biomedical, Inc.",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:51:13.206Z"
+  },
+  "COPX": {
+    "companyName": "Global X - Copper Miners ETF",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:51:13.335Z"
+  },
+  "CRM": {
+    "companyName": "Salesforce, Inc.",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:51:13.338Z"
+  },
+  "COST": {
+    "companyName": "Costco Wholesale Corporation",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:51:13.338Z"
+  },
+  "CRWV": {
+    "companyName": "CoreWeave, Inc. Class A Common Stock",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:51:13.338Z"
+  },
+  "CSCO": {
+    "companyName": "Cisco Systems, Inc.",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:51:13.338Z"
+  },
+  "COIN": {
+    "companyName": "Coinbase Global, Inc.",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:51:13.390Z"
+  },
+  "CVS": {
+    "companyName": "CVS Health Corporation",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:51:13.517Z"
+  },
+  "CX": {
+    "companyName": "CEMEX, S.A.B. de C.V.",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:51:13.517Z"
+  },
+  "D": {
+    "companyName": "Dominion Energy, Inc.",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:51:13.520Z"
+  },
+  "CVX": {
+    "companyName": "Chevron Corporation",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:51:13.520Z"
+  },
+  "DAL": {
+    "companyName": "Delta Air Lines, Inc.",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:51:13.521Z"
+  },
+  "DEO": {
+    "companyName": "Diageo plc",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:51:13.654Z"
+  },
+  "DD": {
+    "companyName": "DuPont de Nemours, Inc.",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:51:13.654Z"
+  },
+  "DE": {
+    "companyName": "Deere & Company",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:51:13.654Z"
+  },
+  "DHR": {
+    "companyName": "Danaher Corporation",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:51:13.660Z"
+  },
+  "DECK": {
+    "companyName": "Deckers Outdoor Corporation",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:51:13.663Z"
+  },
+  "DIA": {
+    "companyName": "State Street SPDR Dow Jones Industrial Average ETF Trust",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:51:13.670Z"
+  },
+  "DDD": {
+    "companyName": "3D Systems Corporation",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:51:13.670Z"
+  },
+  "DOCU": {
+    "companyName": "DocuSign, Inc.",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:51:13.857Z"
+  },
+  "DIS": {
+    "companyName": "The Walt Disney Company",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:51:13.857Z"
+  },
+  "DOW": {
+    "companyName": "Dow Inc.",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:51:13.857Z"
+  },
+  "EA": {
+    "companyName": "Electronic Arts Inc.",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:51:13.858Z"
+  },
+  "E": {
+    "companyName": "Eni S.p.A.",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:51:13.858Z"
+  },
+  "EAD": {
+    "companyName": "Wells Fargo Advantage Funds - Allspring Income Opportunities Fund",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:51:13.858Z"
+  },
+  "EBAY": {
+    "companyName": "eBay Inc.",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:51:13.858Z"
+  },
+  "EFX": {
+    "companyName": "Equifax Inc.",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:51:13.988Z"
+  },
+  "EEM": {
+    "companyName": "iShares MSCI Emerging Markets ETF",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:51:13.988Z"
+  },
+  "EFA": {
+    "companyName": "iShares MSCI EAFE ETF",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:51:13.988Z"
+  },
+  "ECL": {
+    "companyName": "Ecolab Inc.",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:51:13.989Z"
+  },
+  "EFAD": {
+    "companyName": "ProShares - MSCI EAFE Dividend Growers ETF",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:51:13.989Z"
+  },
+  "EQNR": {
+    "companyName": "Equinor ASA",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:51:14.122Z"
+  },
+  "EMBJ": {
+    "companyName": "Embraer S.A.",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:51:14.122Z"
+  },
+  "ERIC": {
+    "companyName": "Telefonaktiebolaget LM Ericsson (publ)",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:51:14.122Z"
+  },
+  "ELPC": {
+    "companyName": "Companhia Paranaense de Energia",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:51:14.122Z"
+  },
+  "ESGU": {
+    "companyName": "iShares ESG Aware MSCI USA ETF",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:51:14.122Z"
+  },
+  "ELP": {
+    "companyName": "Companhia Paranaense de Energia - COPEL",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:51:14.122Z"
+  },
+  "EWJ": {
+    "companyName": "iShares MSCI Japan ETF",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:51:14.253Z"
+  },
+  "ETSY": {
+    "companyName": "Etsy, Inc.",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:51:14.253Z"
+  },
+  "EWY": {
+    "companyName": "iShares MSCI South Korea ETF",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:51:14.253Z"
+  },
+  "ETHA": {
+    "companyName": "iShares Ethereum Trust ETF",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:51:14.254Z"
+  },
+  "F": {
+    "companyName": "Ford Motor Company",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:51:14.254Z"
+  },
+  "FCX": {
+    "companyName": "Freeport-McMoRan Inc.",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:51:14.254Z"
+  },
+  "EWZ": {
+    "companyName": "iShares MSCI Brazil ETF",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:51:14.254Z"
+  },
+  "GDX": {
+    "companyName": "VanEck Gold Miners ETF",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:51:14.381Z"
+  },
+  "FSLR": {
+    "companyName": "First Solar, Inc.",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:51:14.383Z"
+  },
+  "FNMA": {
+    "companyName": "Federal National Mortgage Association",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:51:14.384Z"
+  },
+  "FXI": {
+    "companyName": "iShares China Large-Cap ETF",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:51:14.384Z"
+  },
+  "FDX": {
+    "companyName": "FedEx Corporation",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:51:14.385Z"
+  },
+  "FMX": {
+    "companyName": "Fomento Económico Mexicano, S.A.B. de C.V.",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:51:14.385Z"
+  },
+  "GGB": {
+    "companyName": "Gerdau S.A.",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:51:14.514Z"
+  },
+  "GILD": {
+    "companyName": "Gilead Sciences, Inc.",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:51:14.515Z"
+  },
+  "GIL": {
+    "companyName": "Gildan Activewear Inc.",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:51:14.515Z"
+  },
+  "GFI": {
+    "companyName": "Gold Fields Limited",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:51:14.515Z"
+  },
+  "GE": {
+    "companyName": "GE Aerospace",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:51:14.515Z"
+  },
+  "GLOB": {
+    "companyName": "Globant S.A.",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:51:14.517Z"
+  },
+  "GLD": {
+    "companyName": "SPDR Gold Shares",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:51:14.517Z"
+  },
+  "GLW": {
+    "companyName": "Corning Incorporated",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:51:14.648Z"
+  },
+  "GM": {
+    "companyName": "General Motors Company",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:51:14.648Z"
+  },
+  "GRMN": {
+    "companyName": "Garmin Ltd.",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:51:14.648Z"
+  },
+  "GOGL": {
+    "companyName": "Golden Ocean Group Limited",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:51:14.648Z"
+  },
+  "GOOGL": {
+    "companyName": "Alphabet Inc.",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:51:14.649Z"
+  },
+  "GPRK": {
+    "companyName": "GeoPark Limited",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:51:14.649Z"
+  },
+  "HD": {
+    "companyName": "The Home Depot, Inc.",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:51:14.777Z"
+  },
+  "HDB": {
+    "companyName": "HDFC Bank Limited",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:51:14.777Z"
+  },
+  "GT": {
+    "companyName": "The Goodyear Tire & Rubber Company",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:51:14.779Z"
+  },
+  "HAL": {
+    "companyName": "Halliburton Company",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:51:14.779Z"
+  },
+  "GS": {
+    "companyName": "The Goldman Sachs Group, Inc.",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:51:14.779Z"
+  },
+  "H": {
+    "companyName": "Hyatt Hotels Corporation",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:51:14.781Z"
+  },
+  "GSK": {
+    "companyName": "GSK plc",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:51:14.781Z"
+  },
+  "HOND": {
+    "companyName": "HCM II Acquisition Corp.",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:51:14.912Z"
+  },
+  "HOG": {
+    "companyName": "Harley-Davidson, Inc.",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:51:14.912Z"
+  },
+  "HMY": {
+    "companyName": "Harmony Gold Mining Company Limited",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:51:14.912Z"
+  },
+  "HON": {
+    "companyName": "Honeywell International Inc.",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:51:14.914Z"
+  },
+  "HMC": {
+    "companyName": "Honda Motor Co., Ltd.",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:51:14.914Z"
+  },
+  "HL": {
+    "companyName": "Hecla Mining Company",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:51:14.914Z"
+  },
+  "HOOD": {
+    "companyName": "Robinhood Markets, Inc.",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:51:15.043Z"
+  },
+  "HSBC": {
+    "companyName": "HSBC Holdings plc",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:51:15.046Z"
+  },
+  "HPQ": {
+    "companyName": "HP Inc.",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:51:15.046Z"
+  },
+  "HSY": {
+    "companyName": "The Hershey Company",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:51:15.046Z"
+  },
+  "IBB": {
+    "companyName": "iShares Biotechnology ETF",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:51:15.173Z"
+  },
+  "IBN": {
+    "companyName": "ICICI Bank Limited",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:51:15.175Z"
+  },
+  "IBM": {
+    "companyName": "International Business Machines Corporation",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:51:15.175Z"
+  },
+  "HUT": {
+    "companyName": "Hut 8 Corp.",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:51:15.175Z"
+  },
+  "HWM": {
+    "companyName": "Howmet Aerospace Inc.",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:51:15.177Z"
+  },
+  "ICLN": {
+    "companyName": "iShares Global Clean Energy ETF",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:51:15.179Z"
+  },
+  "IBIT": {
+    "companyName": "iShares Bitcoin Trust ETF",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:51:15.179Z"
+  },
+  "IFF": {
+    "companyName": "International Flavors & Fragrances Inc.",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:51:15.309Z"
+  },
+  "INFY": {
+    "companyName": "Infosys Limited",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:51:15.309Z"
+  },
+  "IEUR": {
+    "companyName": "iShares Core MSCI Europe ETF",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:51:15.309Z"
+  },
+  "IEMG": {
+    "companyName": "iShares Core MSCI Emerging Markets ETF",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:51:15.309Z"
+  },
+  "ILF": {
+    "companyName": "iShares Latin America 40 ETF",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:51:15.309Z"
+  },
+  "IJH": {
+    "companyName": "iShares Core S&P Mid-Cap ETF",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:51:15.310Z"
+  },
+  "IP": {
+    "companyName": "International Paper Company",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:51:15.438Z"
+  },
+  "INTC": {
+    "companyName": "Intel Corporation",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:51:15.440Z"
+  },
+  "IREN": {
+    "companyName": "IREN Limited",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:51:15.440Z"
+  },
+  "ISRG": {
+    "companyName": "Intuitive Surgical, Inc.",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:51:15.440Z"
+  },
+  "ING": {
+    "companyName": "ING Groep N.V.",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:51:15.440Z"
+  },
+  "INT": {
+    "companyName": "World Fuel Services Corporation",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:51:15.440Z"
+  },
+  "ITUB": {
+    "companyName": "Itaú Unibanco Holding S.A.",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:51:15.570Z"
+  },
+  "ITA": {
+    "companyName": "iShares U.S. Aerospace & Defense ETF",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:51:15.570Z"
+  },
+  "IVV": {
+    "companyName": "iShares Core S&P 500 ETF",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:51:15.571Z"
+  },
+  "IVW": {
+    "companyName": "iShares S&P 500 Growth ETF",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:51:15.571Z"
+  },
+  "IVE": {
+    "companyName": "iShares S&P 500 Value ETF",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:51:15.571Z"
+  },
+  "IWM": {
+    "companyName": "iShares Russell 2000 ETF",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:51:15.571Z"
+  },
+  "JNJ": {
+    "companyName": "Johnson & Johnson",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:51:15.701Z"
+  },
+  "JPM": {
+    "companyName": "JPMorgan Chase & Co.",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:51:15.701Z"
+  },
+  "JOYY": {
+    "companyName": "JOYY, Inc. Sponsored ADR Class A",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:51:15.701Z"
+  },
+  "JMIA": {
+    "companyName": "Jumia Technologies AG",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:51:15.701Z"
+  },
+  "JCI": {
+    "companyName": "Johnson Controls International plc",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:51:15.701Z"
+  },
+  "J": {
+    "companyName": "Jacobs Solutions Inc.",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:51:15.701Z"
+  },
+  "JD": {
+    "companyName": "JD.com, Inc.",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:51:15.701Z"
+  },
+  "KOF": {
+    "companyName": "Coca-Cola FEMSA, S.A.B. de C.V.",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:51:15.828Z"
+  },
+  "KO": {
+    "companyName": "The Coca-Cola Company",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:51:15.830Z"
+  },
+  "KG": {
+    "companyName": "Kestrel Group, Ltd.",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:51:15.830Z"
+  },
+  "KMB": {
+    "companyName": "Kimberly-Clark Corporation",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:51:15.832Z"
+  },
+  "KEP": {
+    "companyName": "Korea Electric Power Corporation",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:51:15.833Z"
+  },
+  "KB": {
+    "companyName": "KB Financial Group Inc.",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:51:15.833Z"
+  },
+  "KEEL": {
+    "companyName": "Keel Infrastructure Corp.",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:51:15.833Z"
+  },
+  "KGC": {
+    "companyName": "Kinross Gold Corporation",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:51:15.833Z"
+  },
+  "LAC": {
+    "companyName": "Lithium Americas Corp.",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:51:15.977Z"
+  },
+  "LLY": {
+    "companyName": "Eli Lilly and Company",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:51:15.977Z"
+  },
+  "LMT": {
+    "companyName": "Lockheed Martin Corporation",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:51:15.977Z"
+  },
+  "LAR": {
+    "companyName": "Lithium Argentina AG",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:51:15.977Z"
+  },
+  "MC": {
+    "companyName": "Moelis & Company",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:51:16.105Z"
+  },
+  "LND": {
+    "companyName": "BrasilAgro - Companhia Brasileira de Propriedades Agrícolas",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:51:16.106Z"
+  },
+  "LVS": {
+    "companyName": "Las Vegas Sands Corp.",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:51:16.106Z"
+  },
+  "MA": {
+    "companyName": "Mastercard Incorporated",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:51:16.107Z"
+  },
+  "MCD": {
+    "companyName": "McDonald's Corporation",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:51:16.108Z"
+  },
+  "LRCX": {
+    "companyName": "Lam Research Corporation",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:51:16.108Z"
+  },
+  "LYG": {
+    "companyName": "Lloyds Banking Group plc",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:51:16.108Z"
+  },
+  "MDLZ": {
+    "companyName": "Mondelez International, Inc.",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:51:16.238Z"
+  },
+  "MDT": {
+    "companyName": "Medtronic plc",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:51:16.238Z"
+  },
+  "MFG": {
+    "companyName": "Mizuho Financial Group, Inc.",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:51:16.238Z"
+  },
+  "MELI": {
+    "companyName": "MercadoLibre, Inc.",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:51:16.240Z"
+  },
+  "MMM": {
+    "companyName": "3M Company",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:51:16.240Z"
+  },
+  "META": {
+    "companyName": "Meta Platforms, Inc.",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:51:16.240Z"
+  },
+  "MRNA": {
+    "companyName": "Moderna, Inc.",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:51:16.372Z"
+  },
+  "MRK": {
+    "companyName": "Merck & Co., Inc.",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:51:16.372Z"
+  },
+  "MRSH": {
+    "companyName": "Marsh & McLennan Companies, Inc.",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:51:16.372Z"
+  },
+  "MOS": {
+    "companyName": "The Mosaic Company",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:51:16.372Z"
+  },
+  "MO": {
+    "companyName": "Altria Group, Inc.",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:51:16.372Z"
+  },
+  "ABEV3": {
+    "companyName": null,
+    "found": false,
+    "fetchedAt": "2026-05-03T22:54:01.757Z"
+  },
+  "ADID": {
+    "companyName": null,
+    "found": false,
+    "fetchedAt": "2026-05-03T22:54:01.759Z"
+  },
+  "ADGOD": {
+    "companyName": null,
+    "found": false,
+    "fetchedAt": "2026-05-03T22:54:01.760Z"
+  },
+  "AIGD": {
+    "companyName": null,
+    "found": false,
+    "fetchedAt": "2026-05-03T22:54:01.771Z"
+  },
+  "AKO.B": {
+    "companyName": null,
+    "found": false,
+    "fetchedAt": "2026-05-03T22:54:02.152Z"
+  },
+  "AKOB": {
+    "companyName": null,
+    "found": false,
+    "fetchedAt": "2026-05-03T22:54:02.152Z"
+  },
+  "AKOBD": {
+    "companyName": null,
+    "found": false,
+    "fetchedAt": "2026-05-03T22:54:02.152Z"
+  },
+  "ALA": {
+    "companyName": null,
+    "found": false,
+    "fetchedAt": "2026-05-03T22:54:02.322Z"
+  },
+  "AMXD": {
+    "companyName": null,
+    "found": false,
+    "fetchedAt": "2026-05-03T22:54:02.706Z"
+  },
+  "AMGND": {
+    "companyName": null,
+    "found": false,
+    "fetchedAt": "2026-05-03T22:54:02.706Z"
+  },
+  "ALAD": {
+    "companyName": null,
+    "found": false,
+    "fetchedAt": "2026-05-03T22:54:02.706Z"
+  },
+  "ANFD": {
+    "companyName": null,
+    "found": false,
+    "fetchedAt": "2026-05-03T22:54:02.826Z"
+  },
+  "AXIAD": {
+    "companyName": null,
+    "found": false,
+    "fetchedAt": "2026-05-03T22:54:03.212Z"
+  },
+  "AVYD": {
+    "companyName": null,
+    "found": false,
+    "fetchedAt": "2026-05-03T22:54:03.226Z"
+  },
+  "B.": {
+    "companyName": null,
+    "found": false,
+    "fetchedAt": "2026-05-03T22:54:03.290Z"
+  },
+  "ARMD": {
+    "companyName": null,
+    "found": false,
+    "fetchedAt": "2026-05-03T22:54:03.346Z"
+  },
+  "BBAS3": {
+    "companyName": null,
+    "found": false,
+    "fetchedAt": "2026-05-03T22:54:03.724Z"
+  },
+  "BB.D": {
+    "companyName": null,
+    "found": false,
+    "fetchedAt": "2026-05-03T22:54:03.726Z"
+  },
+  "BA.C": {
+    "companyName": null,
+    "found": false,
+    "fetchedAt": "2026-05-03T22:54:03.726Z"
+  },
+  "BAKD": {
+    "companyName": null,
+    "found": false,
+    "fetchedAt": "2026-05-03T22:54:03.729Z"
+  },
+  "BBDC3": {
+    "companyName": null,
+    "found": false,
+    "fetchedAt": "2026-05-03T22:54:04.249Z"
+  },
+  "BBDCD": {
+    "companyName": null,
+    "found": false,
+    "fetchedAt": "2026-05-03T22:54:04.250Z"
+  },
+  "BBV": {
+    "companyName": null,
+    "found": false,
+    "fetchedAt": "2026-05-03T22:54:04.250Z"
+  },
+  "BBVD": {
+    "companyName": null,
+    "found": false,
+    "fetchedAt": "2026-05-03T22:54:04.250Z"
+  },
+  "BHPD": {
+    "companyName": null,
+    "found": false,
+    "fetchedAt": "2026-05-03T22:54:04.628Z"
+  },
+  "BKNGD": {
+    "companyName": null,
+    "found": false,
+    "fetchedAt": "2026-05-03T22:54:04.628Z"
+  },
+  "BKC*": {
+    "companyName": null,
+    "found": false,
+    "fetchedAt": "2026-05-03T22:54:04.631Z"
+  },
+  "BIIBD": {
+    "companyName": null,
+    "found": false,
+    "fetchedAt": "2026-05-03T22:54:04.642Z"
+  },
+  "BKRD": {
+    "companyName": null,
+    "found": false,
+    "fetchedAt": "2026-05-03T22:54:05.023Z"
+  },
+  "BMYD": {
+    "companyName": null,
+    "found": false,
+    "fetchedAt": "2026-05-03T22:54:05.024Z"
+  },
+  "BNG": {
+    "companyName": null,
+    "found": false,
+    "fetchedAt": "2026-05-03T22:54:05.024Z"
+  },
+  "BMNRD": {
+    "companyName": null,
+    "found": false,
+    "fetchedAt": "2026-05-03T22:54:05.024Z"
+  },
+  "BNGD": {
+    "companyName": null,
+    "found": false,
+    "fetchedAt": "2026-05-03T22:54:05.422Z"
+  },
+  "BRKB": {
+    "companyName": null,
+    "found": false,
+    "fetchedAt": "2026-05-03T22:54:05.423Z"
+  },
+  "BPA11": {
+    "companyName": null,
+    "found": false,
+    "fetchedAt": "2026-05-03T22:54:05.423Z"
+  },
+  "BXD": {
+    "companyName": null,
+    "found": false,
+    "fetchedAt": "2026-05-03T22:54:05.424Z"
+  },
+  "C.D": {
+    "companyName": null,
+    "found": false,
+    "fetchedAt": "2026-05-03T22:54:05.824Z"
+  },
+  "CAHD": {
+    "companyName": null,
+    "found": false,
+    "fetchedAt": "2026-05-03T22:54:05.825Z"
+  },
+  "CAR.": {
+    "companyName": null,
+    "found": false,
+    "fetchedAt": "2026-05-03T22:54:05.825Z"
+  },
+  "CAAPD": {
+    "companyName": null,
+    "found": false,
+    "fetchedAt": "2026-05-03T22:54:05.825Z"
+  },
+  "CDED": {
+    "companyName": null,
+    "found": false,
+    "fetchedAt": "2026-05-03T22:54:06.204Z"
+  },
+  "CLD": {
+    "companyName": null,
+    "found": false,
+    "fetchedAt": "2026-05-03T22:54:06.205Z"
+  },
+  "CIBRD": {
+    "companyName": null,
+    "found": false,
+    "fetchedAt": "2026-05-03T22:54:06.206Z"
+  },
+  "CEGD": {
+    "companyName": null,
+    "found": false,
+    "fetchedAt": "2026-05-03T22:54:06.206Z"
+  },
+  "CRWVD": {
+    "companyName": null,
+    "found": false,
+    "fetchedAt": "2026-05-03T22:54:06.584Z"
+  },
+  "CXD": {
+    "companyName": null,
+    "found": false,
+    "fetchedAt": "2026-05-03T22:54:06.585Z"
+  },
+  "CSNA3": {
+    "companyName": null,
+    "found": false,
+    "fetchedAt": "2026-05-03T22:54:06.585Z"
+  },
+  "CVSD": {
+    "companyName": null,
+    "found": false,
+    "fetchedAt": "2026-05-03T22:54:06.585Z"
+  },
+  "EBAYD": {
+    "companyName": null,
+    "found": false,
+    "fetchedAt": "2026-05-03T22:54:06.995Z"
+  },
+  "DISN": {
+    "companyName": null,
+    "found": false,
+    "fetchedAt": "2026-05-03T22:54:06.995Z"
+  },
+  "DECKD": {
+    "companyName": null,
+    "found": false,
+    "fetchedAt": "2026-05-03T22:54:06.996Z"
+  },
+  "DALD": {
+    "companyName": null,
+    "found": false,
+    "fetchedAt": "2026-05-03T22:54:06.998Z"
+  },
+  "EFXD": {
+    "companyName": null,
+    "found": false,
+    "fetchedAt": "2026-05-03T22:54:07.396Z"
+  },
+  "ECLD": {
+    "companyName": null,
+    "found": false,
+    "fetchedAt": "2026-05-03T22:54:07.396Z"
+  },
+  "ERI": {
+    "companyName": null,
+    "found": false,
+    "fetchedAt": "2026-05-03T22:54:07.397Z"
+  },
+  "ESGUD": {
+    "companyName": null,
+    "found": false,
+    "fetchedAt": "2026-05-03T22:54:07.397Z"
+  },
+  "GGBD": {
+    "companyName": null,
+    "found": false,
+    "fetchedAt": "2026-05-03T22:54:07.778Z"
+  },
+  "FSLRD": {
+    "companyName": null,
+    "found": false,
+    "fetchedAt": "2026-05-03T22:54:07.778Z"
+  },
+  "FMXD": {
+    "companyName": null,
+    "found": false,
+    "fetchedAt": "2026-05-03T22:54:07.779Z"
+  },
+  "ETSYD": {
+    "companyName": null,
+    "found": false,
+    "fetchedAt": "2026-05-03T22:54:07.783Z"
+  },
+  "GMD": {
+    "companyName": null,
+    "found": false,
+    "fetchedAt": "2026-05-03T22:54:08.161Z"
+  },
+  "HLD": {
+    "companyName": null,
+    "found": false,
+    "fetchedAt": "2026-05-03T22:54:08.162Z"
+  },
+  "GRMND": {
+    "companyName": null,
+    "found": false,
+    "fetchedAt": "2026-05-03T22:54:08.162Z"
+  },
+  "HAPV3": {
+    "companyName": null,
+    "found": false,
+    "fetchedAt": "2026-05-03T22:54:08.165Z"
+  },
+  "HPQD": {
+    "companyName": null,
+    "found": false,
+    "fetchedAt": "2026-05-03T22:54:08.565Z"
+  },
+  "HOODD": {
+    "companyName": null,
+    "found": false,
+    "fetchedAt": "2026-05-03T22:54:08.565Z"
+  },
+  "HOO": {
+    "companyName": null,
+    "found": false,
+    "fetchedAt": "2026-05-03T22:54:08.566Z"
+  },
+  "HM": {
+    "companyName": null,
+    "found": false,
+    "fetchedAt": "2026-05-03T22:54:08.737Z"
+  },
+  "HSB": {
+    "companyName": null,
+    "found": false,
+    "fetchedAt": "2026-05-03T22:54:09.113Z"
+  },
+  "IFFD": {
+    "companyName": null,
+    "found": false,
+    "fetchedAt": "2026-05-03T22:54:09.113Z"
+  },
+  "HWMD": {
+    "companyName": null,
+    "found": false,
+    "fetchedAt": "2026-05-03T22:54:09.114Z"
+  },
+  "IJHD": {
+    "companyName": null,
+    "found": false,
+    "fetchedAt": "2026-05-03T22:54:09.115Z"
+  },
+  "INGD": {
+    "companyName": null,
+    "found": false,
+    "fetchedAt": "2026-05-03T22:54:09.495Z"
+  },
+  "IPD": {
+    "companyName": null,
+    "found": false,
+    "fetchedAt": "2026-05-03T22:54:09.498Z"
+  },
+  "ITAD": {
+    "companyName": null,
+    "found": false,
+    "fetchedAt": "2026-05-03T22:54:09.499Z"
+  },
+  "ITUB3": {
+    "companyName": null,
+    "found": false,
+    "fetchedAt": "2026-05-03T22:54:09.499Z"
+  },
+  "JOYYD": {
+    "companyName": null,
+    "found": false,
+    "fetchedAt": "2026-05-03T22:54:09.876Z"
+  },
+  "LACD": {
+    "companyName": null,
+    "found": false,
+    "fetchedAt": "2026-05-03T22:54:09.877Z"
+  },
+  "KOFM": {
+    "companyName": null,
+    "found": false,
+    "fetchedAt": "2026-05-03T22:54:09.877Z"
+  },
+  "LA": {
+    "companyName": null,
+    "found": false,
+    "fetchedAt": "2026-05-03T22:54:09.881Z"
+  },
+  "LN": {
+    "companyName": null,
+    "found": false,
+    "fetchedAt": "2026-05-03T22:54:10.369Z"
+  },
+  "MDTD": {
+    "companyName": null,
+    "found": false,
+    "fetchedAt": "2026-05-03T22:54:10.370Z"
+  },
+  "LREN3": {
+    "companyName": null,
+    "found": false,
+    "fetchedAt": "2026-05-03T22:54:10.370Z"
+  },
+  "MGLU3": {
+    "companyName": null,
+    "found": false,
+    "fetchedAt": "2026-05-03T22:54:10.370Z"
+  },
+  "MOSD": {
+    "companyName": null,
+    "found": false,
+    "fetchedAt": "2026-05-03T22:54:10.756Z"
+  },
+  "MRVL": {
+    "companyName": "Marvell Technology, Inc.",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:54:10.761Z"
+  },
+  "MRVLD": {
+    "companyName": null,
+    "found": false,
+    "fetchedAt": "2026-05-03T22:54:10.793Z"
+  },
+  "MSFT": {
+    "companyName": "Microsoft Corporation",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:54:10.795Z"
+  },
+  "MU": {
+    "companyName": "Micron Technology, Inc.",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:54:11.192Z"
+  },
+  "MUFG": {
+    "companyName": "Mitsubishi UFJ Financial Group, Inc.",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:54:11.192Z"
+  },
+  "MSTR": {
+    "companyName": "Strategy Inc",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:54:11.192Z"
+  },
+  "MSI": {
+    "companyName": "Motorola Solutions, Inc.",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:54:11.192Z"
+  },
+  "NAT3D": {
+    "companyName": null,
+    "found": false,
+    "fetchedAt": "2026-05-03T22:54:11.592Z"
+  },
+  "MUFGD": {
+    "companyName": null,
+    "found": false,
+    "fetchedAt": "2026-05-03T22:54:11.592Z"
+  },
+  "NAT3": {
+    "companyName": null,
+    "found": false,
+    "fetchedAt": "2026-05-03T22:54:11.592Z"
+  },
+  "MUX": {
+    "companyName": "McEwen Mining Inc.",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:54:11.594Z"
+  },
+  "NATU3": {
+    "companyName": null,
+    "found": false,
+    "fetchedAt": "2026-05-03T22:54:11.980Z"
+  },
+  "NEM": {
+    "companyName": "Newmont Corporation",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:54:11.982Z"
+  },
+  "NEMD": {
+    "companyName": "Neuberger Berman Emerging Markets Debt Hard Currency ETF",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:54:11.982Z"
+  },
+  "NFLX": {
+    "companyName": "Netflix, Inc.",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:54:11.982Z"
+  },
+  "NG": {
+    "companyName": "NovaGold Resources Inc.",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:54:12.359Z"
+  },
+  "NIO": {
+    "companyName": "NIO Inc.",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:54:12.360Z"
+  },
+  "NGD": {
+    "companyName": "New Gold Inc.",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:54:12.364Z"
+  },
+  "NGG": {
+    "companyName": "National Grid plc",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:54:12.364Z"
+  },
+  "NOKA": {
+    "companyName": null,
+    "found": false,
+    "fetchedAt": "2026-05-03T22:54:12.764Z"
+  },
+  "NMR": {
+    "companyName": "Nomura Holdings, Inc.",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:54:12.764Z"
+  },
+  "NOK": {
+    "companyName": "Nokia Oyj",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:54:12.764Z"
+  },
+  "NKE": {
+    "companyName": "NIKE, Inc.",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:54:12.764Z"
+  },
+  "NOWD": {
+    "companyName": null,
+    "found": false,
+    "fetchedAt": "2026-05-03T22:54:13.165Z"
+  },
+  "NTESD": {
+    "companyName": null,
+    "found": false,
+    "fetchedAt": "2026-05-03T22:54:13.165Z"
+  },
+  "NOW": {
+    "companyName": "ServiceNow, Inc.",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:54:13.166Z"
+  },
+  "NTES": {
+    "companyName": "NetEase, Inc.",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:54:13.166Z"
+  },
+  "NUE": {
+    "companyName": "Nucor Corporation",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:54:13.545Z"
+  },
+  "NU": {
+    "companyName": "Nu Holdings Ltd.",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:54:13.546Z"
+  },
+  "NVDA": {
+    "companyName": "NVIDIA Corporation",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:54:13.546Z"
+  },
+  "NVS": {
+    "companyName": "Novartis AG",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:54:13.546Z"
+  },
+  "NXED": {
+    "companyName": null,
+    "found": false,
+    "fetchedAt": "2026-05-03T22:54:13.927Z"
+  },
+  "OKLOD": {
+    "companyName": null,
+    "found": false,
+    "fetchedAt": "2026-05-03T22:54:13.929Z"
+  },
+  "OKLO": {
+    "companyName": "Oklo Inc.",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:54:13.931Z"
+  },
+  "NXE": {
+    "companyName": "NexGen Energy Ltd.",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:54:14.214Z"
+  },
+  "ORCL": {
+    "companyName": "Oracle Corporation",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:54:14.614Z"
+  },
+  "ORLY": {
+    "companyName": "O'Reilly Automotive, Inc.",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:54:14.614Z"
+  },
+  "OXY": {
+    "companyName": "Occidental Petroleum Corporation",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:54:14.614Z"
+  },
+  "PAAS": {
+    "companyName": "Pan American Silver Corp.",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:54:14.614Z"
+  },
+  "PA": {
+    "companyName": null,
+    "found": false,
+    "fetchedAt": "2026-05-03T22:54:14.993Z"
+  },
+  "PAGS": {
+    "companyName": "PagSeguro Digital Ltd.",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:54:14.994Z"
+  },
+  "PAC": {
+    "companyName": "Grupo Aeroportuario del Pacífico, S.A.B. de C.V.",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:54:14.994Z"
+  },
+  "PAGSD": {
+    "companyName": null,
+    "found": false,
+    "fetchedAt": "2026-05-03T22:54:14.995Z"
+  },
+  "PATHD": {
+    "companyName": null,
+    "found": false,
+    "fetchedAt": "2026-05-03T22:54:15.381Z"
+  },
+  "PANW": {
+    "companyName": "Palo Alto Networks, Inc.",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:54:15.383Z"
+  },
+  "PATH": {
+    "companyName": "UiPath Inc.",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:54:15.383Z"
+  },
+  "PBI": {
+    "companyName": "Pitney Bowes Inc.",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:54:15.391Z"
+  },
+  "PCARD": {
+    "companyName": null,
+    "found": false,
+    "fetchedAt": "2026-05-03T22:54:15.799Z"
+  },
+  "PBR": {
+    "companyName": "Petróleo Brasileiro S.A. - Petrobras",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:54:15.801Z"
+  },
+  "PCAR": {
+    "companyName": "PACCAR Inc",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:54:15.801Z"
+  },
+  "PD": {
+    "companyName": "PagerDuty, Inc.",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:54:15.801Z"
+  },
+  "PETR": {
+    "companyName": null,
+    "found": false,
+    "fetchedAt": "2026-05-03T22:54:16.179Z"
+  },
+  "PETR3": {
+    "companyName": null,
+    "found": false,
+    "fetchedAt": "2026-05-03T22:54:16.180Z"
+  },
+  "PDD": {
+    "companyName": "PDD Holdings Inc.",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:54:16.180Z"
+  },
+  "PEP": {
+    "companyName": "PepsiCo, Inc.",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:54:16.180Z"
+  },
+  "PINS": {
+    "companyName": "Pinterest, Inc.",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:54:16.600Z"
+  },
+  "PFE": {
+    "companyName": "Pfizer Inc.",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:54:16.601Z"
+  },
+  "PHG": {
+    "companyName": "Koninklijke Philips N.V.",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:54:16.601Z"
+  },
+  "PG": {
+    "companyName": "The Procter & Gamble Company",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:54:16.601Z"
+  },
+  "PKS": {
+    "companyName": null,
+    "found": false,
+    "fetchedAt": "2026-05-03T22:54:16.979Z"
+  },
+  "PINSD": {
+    "companyName": null,
+    "found": false,
+    "fetchedAt": "2026-05-03T22:54:16.980Z"
+  },
+  "PLTR": {
+    "companyName": "Palantir Technologies Inc.",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:54:16.981Z"
+  },
+  "PKX": {
+    "companyName": "POSCO Holdings Inc.",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:54:16.981Z"
+  },
+  "PM": {
+    "companyName": "Philip Morris International Inc.",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:54:17.358Z"
+  },
+  "PRIO3": {
+    "companyName": null,
+    "found": false,
+    "fetchedAt": "2026-05-03T22:54:17.360Z"
+  },
+  "PMD": {
+    "companyName": "Psychemedics Corporation",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:54:17.366Z"
+  },
+  "PSQ": {
+    "companyName": "ProShares - Short QQQ",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:54:17.366Z"
+  },
+  "PSQD": {
+    "companyName": null,
+    "found": false,
+    "fetchedAt": "2026-05-03T22:54:17.744Z"
+  },
+  "PYPL": {
+    "companyName": "PayPal Holdings, Inc.",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:54:17.744Z"
+  },
+  "PSX": {
+    "companyName": "Phillips 66",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:54:17.745Z"
+  },
+  "PSXD": {
+    "companyName": null,
+    "found": false,
+    "fetchedAt": "2026-05-03T22:54:17.745Z"
+  },
+  "QCOM": {
+    "companyName": "QUALCOMM Incorporated",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:54:18.123Z"
+  },
+  "RACE": {
+    "companyName": "Ferrari N.V.",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:54:18.123Z"
+  },
+  "QQQ": {
+    "companyName": "Invesco QQQ Trust, Series 1",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:54:18.124Z"
+  },
+  "RBLX": {
+    "companyName": "Roblox Corporation",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:54:18.126Z"
+  },
+  "RBLXD": {
+    "companyName": null,
+    "found": false,
+    "fetchedAt": "2026-05-03T22:54:18.528Z"
+  },
+  "RENT3": {
+    "companyName": null,
+    "found": false,
+    "fetchedAt": "2026-05-03T22:54:18.529Z"
+  },
+  "RIO": {
+    "companyName": "Rio Tinto Group",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:54:18.529Z"
+  },
+  "RGTI": {
+    "companyName": "Rigetti Computing, Inc.",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:54:18.529Z"
+  },
+  "RIOD": {
+    "companyName": null,
+    "found": false,
+    "fetchedAt": "2026-05-03T22:54:18.934Z"
+  },
+  "RKLBD": {
+    "companyName": null,
+    "found": false,
+    "fetchedAt": "2026-05-03T22:54:18.935Z"
+  },
+  "RIOT": {
+    "companyName": "Riot Platforms, Inc.",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:54:18.936Z"
+  },
+  "RKLB": {
+    "companyName": "Rocket Lab USA, Inc.",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:54:18.936Z"
+  },
+  "ROKUD": {
+    "companyName": null,
+    "found": false,
+    "fetchedAt": "2026-05-03T22:54:19.316Z"
+  },
+  "ROKU": {
+    "companyName": "Roku, Inc.",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:54:19.317Z"
+  },
+  "ROST": {
+    "companyName": "Ross Stores, Inc.",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:54:19.318Z"
+  },
+  "ROSTD": {
+    "companyName": null,
+    "found": false,
+    "fetchedAt": "2026-05-03T22:54:19.333Z"
+  },
+  "RTXD": {
+    "companyName": null,
+    "found": false,
+    "fetchedAt": "2026-05-03T22:54:19.712Z"
+  },
+  "RSP": {
+    "companyName": "Invesco S&P 500 Equal Weight ETF",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:54:19.713Z"
+  },
+  "SAN": {
+    "companyName": "Banco Santander, S.A.",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:54:19.713Z"
+  },
+  "RTX": {
+    "companyName": "RTX Corporation",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:54:19.713Z"
+  },
+  "SATL": {
+    "companyName": "Satellogic Inc.",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:54:20.101Z"
+  },
+  "SAPD": {
+    "companyName": null,
+    "found": false,
+    "fetchedAt": "2026-05-03T22:54:20.102Z"
+  },
+  "SAP": {
+    "companyName": "SAP SE",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:54:20.103Z"
+  },
+  "SAND": {
+    "companyName": "Sandstorm Gold Ltd.",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:54:20.103Z"
+  },
+  "SBSP3": {
+    "companyName": null,
+    "found": false,
+    "fetchedAt": "2026-05-03T22:54:20.505Z"
+  },
+  "SBS": {
+    "companyName": "Companhia de Saneamento Básico do Estado de São Paulo - SABESP",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:54:20.506Z"
+  },
+  "SBUX": {
+    "companyName": "Starbucks Corporation",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:54:20.506Z"
+  },
+  "SCCO": {
+    "companyName": "Southern Copper Corporation",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:54:20.506Z"
+  },
+  "SE": {
+    "companyName": "Sea Limited",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:54:20.890Z"
+  },
+  "SH": {
+    "companyName": "ProShares - Short S&P500",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:54:20.890Z"
+  },
+  "SCHW": {
+    "companyName": "The Charles Schwab Corporation",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:54:20.891Z"
+  },
+  "SDA": {
+    "companyName": "SunCar Technology Group Inc.",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:54:20.891Z"
+  },
+  "SID": {
+    "companyName": "Companhia Siderúrgica Nacional",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:54:21.271Z"
+  },
+  "SI": {
+    "companyName": "Shoulder Innovations, Inc.",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:54:21.271Z"
+  },
+  "SHOP": {
+    "companyName": "Shopify Inc.",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:54:21.271Z"
+  },
+  "SHEL": {
+    "companyName": "Shell plc",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:54:21.271Z"
+  },
+  "SIDD": {
+    "companyName": null,
+    "found": false,
+    "fetchedAt": "2026-05-03T22:54:21.673Z"
+  },
+  "SLV": {
+    "companyName": "iShares Silver Trust",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:54:21.674Z"
+  },
+  "SLB": {
+    "companyName": "SLB N.V.",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:54:21.674Z"
+  },
+  "SIEGY": {
+    "companyName": "Siemens AG",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:54:21.674Z"
+  },
+  "SNAPD": {
+    "companyName": null,
+    "found": false,
+    "fetchedAt": "2026-05-03T22:54:22.266Z"
+  },
+  "SNA": {
+    "companyName": "Snap-on Incorporated",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:54:22.266Z"
+  },
+  "SNAP": {
+    "companyName": "Snap Inc.",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:54:22.266Z"
+  },
+  "SMH": {
+    "companyName": "VanEck Semiconductor ETF",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:54:22.266Z"
+  },
+  "SPCE": {
+    "companyName": "Virgin Galactic Holdings, Inc.",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:54:22.724Z"
+  },
+  "SNOW": {
+    "companyName": "Snowflake Inc.",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:54:22.724Z"
+  },
+  "SONY": {
+    "companyName": "Sony Group Corporation",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:54:22.726Z"
+  },
+  "SONYD": {
+    "companyName": null,
+    "found": false,
+    "fetchedAt": "2026-05-03T22:54:22.727Z"
+  },
+  "SPGID": {
+    "companyName": null,
+    "found": false,
+    "fetchedAt": "2026-05-03T22:54:23.127Z"
+  },
+  "SPGI": {
+    "companyName": "S&P Global Inc.",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:54:23.129Z"
+  },
+  "SPHQ": {
+    "companyName": "Invesco S&P 500 Quality ETF",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:54:23.129Z"
+  },
+  "SPOT": {
+    "companyName": "Spotify Technology S.A.",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:54:23.129Z"
+  },
+  "STNE": {
+    "companyName": "StoneCo Ltd.",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:54:23.506Z"
+  },
+  "STLA": {
+    "companyName": "Stellantis N.V.",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:54:23.506Z"
+  },
+  "SPXL": {
+    "companyName": "Direxion Daily S&P 500 Bull 3X ETF",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:54:23.510Z"
+  },
+  "SPY": {
+    "companyName": "State Street SPDR S&P 500 ETF Trust",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:54:23.510Z"
+  },
+  "STNED": {
+    "companyName": null,
+    "found": false,
+    "fetchedAt": "2026-05-03T22:54:23.887Z"
+  },
+  "SUZB3": {
+    "companyName": null,
+    "found": false,
+    "fetchedAt": "2026-05-03T22:54:23.887Z"
+  },
+  "SUZD": {
+    "companyName": null,
+    "found": false,
+    "fetchedAt": "2026-05-03T22:54:23.889Z"
+  },
+  "SUZ": {
+    "companyName": "Suzano S.A.",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:54:23.890Z"
+  },
+  "SYYD": {
+    "companyName": null,
+    "found": false,
+    "fetchedAt": "2026-05-03T22:54:24.295Z"
+  },
+  "SWKSD": {
+    "companyName": null,
+    "found": false,
+    "fetchedAt": "2026-05-03T22:54:24.295Z"
+  },
+  "SYY": {
+    "companyName": "Sysco Corporation",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:54:24.295Z"
+  },
+  "SWKS": {
+    "companyName": "Skyworks Solutions, Inc.",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:54:24.296Z"
+  },
+  "TCOMD": {
+    "companyName": null,
+    "found": false,
+    "fetchedAt": "2026-05-03T22:54:24.699Z"
+  },
+  "T": {
+    "companyName": "AT&T Inc.",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:54:24.701Z"
+  },
+  "TEAM": {
+    "companyName": "Atlassian Corporation",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:54:24.701Z"
+  },
+  "TCOM": {
+    "companyName": "Trip.com Group Limited",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:54:24.701Z"
+  },
+  "TEAMD": {
+    "companyName": null,
+    "found": false,
+    "fetchedAt": "2026-05-03T22:54:25.088Z"
+  },
+  "TEMD": {
+    "companyName": "Templeton Emerging Markets Debt ETF",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:54:25.088Z"
+  },
+  "TEM": {
+    "companyName": "Tempus AI, Inc.",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:54:25.088Z"
+  },
+  "TEN": {
+    "companyName": "Tsakos Energy Navigation Limited",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:54:25.088Z"
+  },
+  "TIMS3": {
+    "companyName": null,
+    "found": false,
+    "fetchedAt": "2026-05-03T22:54:25.464Z"
+  },
+  "TGT": {
+    "companyName": "Target Corporation",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:54:25.465Z"
+  },
+  "TIMBD": {
+    "companyName": null,
+    "found": false,
+    "fetchedAt": "2026-05-03T22:54:25.465Z"
+  },
+  "TIMB": {
+    "companyName": "TIM S.A.",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:54:25.468Z"
+  },
+  "TMOD": {
+    "companyName": null,
+    "found": false,
+    "fetchedAt": "2026-05-03T22:54:25.868Z"
+  },
+  "TM": {
+    "companyName": "Toyota Motor Corporation",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:54:25.870Z"
+  },
+  "TJX": {
+    "companyName": "The TJX Companies, Inc.",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:54:25.870Z"
+  },
+  "TMO": {
+    "companyName": "Thermo Fisher Scientific Inc.",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:54:25.870Z"
+  },
+  "TMUSD": {
+    "companyName": null,
+    "found": false,
+    "fetchedAt": "2026-05-03T22:54:26.273Z"
+  },
+  "TQQQ": {
+    "companyName": "ProShares - UltraPro QQQ",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:54:26.273Z"
+  },
+  "TRIP": {
+    "companyName": "Tripadvisor, Inc.",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:54:26.273Z"
+  },
+  "TMUS": {
+    "companyName": "T-Mobile US, Inc.",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:54:26.273Z"
+  },
+  "TRIPD": {
+    "companyName": null,
+    "found": false,
+    "fetchedAt": "2026-05-03T22:54:26.653Z"
+  },
+  "TRVVD": {
+    "companyName": null,
+    "found": false,
+    "fetchedAt": "2026-05-03T22:54:26.653Z"
+  },
+  "TRVV": {
+    "companyName": null,
+    "found": false,
+    "fetchedAt": "2026-05-03T22:54:26.656Z"
+  },
+  "TRV": {
+    "companyName": "The Travelers Companies, Inc.",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:54:26.656Z"
+  },
+  "TTED": {
+    "companyName": null,
+    "found": false,
+    "fetchedAt": "2026-05-03T22:54:27.036Z"
+  },
+  "TSLA": {
+    "companyName": "Tesla, Inc.",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:54:27.037Z"
+  },
+  "TTE": {
+    "companyName": "TotalEnergies SE",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:54:27.038Z"
+  },
+  "TSM": {
+    "companyName": "Taiwan Semiconductor Manufacturing Company Limited",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:54:27.038Z"
+  },
+  "TVD": {
+    "companyName": null,
+    "found": false,
+    "fetchedAt": "2026-05-03T22:54:27.440Z"
+  },
+  "TWLOD": {
+    "companyName": null,
+    "found": false,
+    "fetchedAt": "2026-05-03T22:54:27.442Z"
+  },
+  "TWLO": {
+    "companyName": "Twilio Inc.",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:54:27.442Z"
+  },
+  "TV": {
+    "companyName": "Grupo Televisa, S.A.B.",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:54:27.442Z"
+  },
+  "TXR": {
+    "companyName": null,
+    "found": false,
+    "fetchedAt": "2026-05-03T22:54:27.846Z"
+  },
+  "TXND": {
+    "companyName": null,
+    "found": false,
+    "fetchedAt": "2026-05-03T22:54:27.846Z"
+  },
+  "TXN": {
+    "companyName": "Texas Instruments Incorporated",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:54:27.847Z"
+  },
+  "TX": {
+    "companyName": "Ternium S.A.",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:54:27.847Z"
+  },
+  "UGP": {
+    "companyName": "Ultrapar Participações S.A.",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:54:28.614Z"
+  },
+  "UGPD": {
+    "companyName": null,
+    "found": false,
+    "fetchedAt": "2026-05-03T22:54:28.617Z"
+  },
+  "UAL": {
+    "companyName": "United Airlines Holdings, Inc.",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:54:28.617Z"
+  },
+  "UBER": {
+    "companyName": "Uber Technologies, Inc.",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:54:28.617Z"
+  },
+  "UNP": {
+    "companyName": "Union Pacific Corporation",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:54:29.015Z"
+  },
+  "ULD": {
+    "companyName": null,
+    "found": false,
+    "fetchedAt": "2026-05-03T22:54:29.017Z"
+  },
+  "UL": {
+    "companyName": "Unilever PLC",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:54:29.018Z"
+  },
+  "UNH": {
+    "companyName": "UnitedHealth Group Incorporated",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:54:29.018Z"
+  },
+  "UNPD": {
+    "companyName": null,
+    "found": false,
+    "fetchedAt": "2026-05-03T22:54:29.418Z"
+  },
+  "UPST": {
+    "companyName": "Upstart Holdings, Inc.",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:54:29.420Z"
+  },
+  "URA": {
+    "companyName": "Global X - Uranium ETF",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:54:29.420Z"
+  },
+  "URBN": {
+    "companyName": "Urban Outfitters, Inc.",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:54:29.420Z"
+  },
+  "URBND": {
+    "companyName": null,
+    "found": false,
+    "fetchedAt": "2026-05-03T22:54:29.800Z"
+  },
+  "USB": {
+    "companyName": "U.S. Bancorp",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:54:29.800Z"
+  },
+  "USO": {
+    "companyName": "United States Oil Fund LP",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:54:29.800Z"
+  },
+  "USOD": {
+    "companyName": "United States 3x Short Oil Fund",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:54:29.800Z"
+  },
+  "V": {
+    "companyName": "Visa Inc.",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:54:30.177Z"
+  },
+  "VAL3D": {
+    "companyName": null,
+    "found": false,
+    "fetchedAt": "2026-05-03T22:54:30.178Z"
+  },
+  "VAL3": {
+    "companyName": null,
+    "found": false,
+    "fetchedAt": "2026-05-03T22:54:30.180Z"
+  },
+  "VALE": {
+    "companyName": "Vale S.A.",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:54:30.180Z"
+  },
+  "VALE3": {
+    "companyName": null,
+    "found": false,
+    "fetchedAt": "2026-05-03T22:54:30.588Z"
+  },
+  "VIST": {
+    "companyName": "Vista Energy, S.A.B. de C.V.",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:54:30.588Z"
+  },
+  "VEA": {
+    "companyName": "Vanguard FTSE Developed Markets ETF",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:54:30.588Z"
+  },
+  "VIG": {
+    "companyName": "Vanguard Dividend Appreciation ETF",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:54:30.591Z"
+  },
+  "VIVT3": {
+    "companyName": null,
+    "found": false,
+    "fetchedAt": "2026-05-03T22:54:30.991Z"
+  },
+  "VIVD": {
+    "companyName": null,
+    "found": false,
+    "fetchedAt": "2026-05-03T22:54:30.992Z"
+  },
+  "VO": {
+    "companyName": "Vanguard Mid-Cap ETF",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:54:30.993Z"
+  },
+  "VIV": {
+    "companyName": "Telefônica Brasil S.A.",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:54:30.993Z"
+  },
+  "VODD": {
+    "companyName": null,
+    "found": false,
+    "fetchedAt": "2026-05-03T22:54:31.370Z"
+  },
+  "VOD": {
+    "companyName": "Vodafone Group Public Limited Company",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:54:31.372Z"
+  },
+  "VRSN": {
+    "companyName": "VeriSign, Inc.",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:54:31.372Z"
+  },
+  "VRSND": {
+    "companyName": null,
+    "found": false,
+    "fetchedAt": "2026-05-03T22:54:31.514Z"
+  },
+  "VRTXD": {
+    "companyName": null,
+    "found": false,
+    "fetchedAt": "2026-05-03T22:54:31.893Z"
+  },
+  "VRTX": {
+    "companyName": "Vertex Pharmaceuticals Incorporated",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:54:31.894Z"
+  },
+  "VST": {
+    "companyName": "Vistra Corp.",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:54:31.894Z"
+  },
+  "VSTD": {
+    "companyName": "Vestand Inc.",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:54:31.894Z"
+  },
+  "VXXD": {
+    "companyName": null,
+    "found": false,
+    "fetchedAt": "2026-05-03T22:54:32.274Z"
+  },
+  "VXX": {
+    "companyName": "iPath Series B S&P 500 VIX Short-Term Futures ETN",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:54:32.275Z"
+  },
+  "VZ": {
+    "companyName": "Verizon Communications Inc.",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:54:32.276Z"
+  },
+  "WB": {
+    "companyName": "Weibo Corporation",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:54:32.276Z"
+  },
+  "WEGE3": {
+    "companyName": null,
+    "found": false,
+    "fetchedAt": "2026-05-03T22:54:32.687Z"
+  },
+  "WBOD": {
+    "companyName": null,
+    "found": false,
+    "fetchedAt": "2026-05-03T22:54:32.689Z"
+  },
+  "WBO": {
+    "companyName": null,
+    "found": false,
+    "fetchedAt": "2026-05-03T22:54:32.689Z"
+  },
+  "WF": {
+    "companyName": "Woori Financial Group Inc.",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:54:32.689Z"
+  },
+  "XLK": {
+    "companyName": "State Street Technology Select Sector SPDR ETF",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:55:05.600Z"
+  },
+  "XLI": {
+    "companyName": "State Street Industrial Select Sector SPDR ETF",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:55:05.600Z"
+  },
+  "XLF": {
+    "companyName": "State Street Financial Select Sector SPDR ETF",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:55:05.957Z"
+  },
+  "XLE": {
+    "companyName": "State Street Energy Select Sector SPDR ETF",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:55:05.958Z"
+  },
+  "XLU": {
+    "companyName": "State Street Utilities Select Sector SPDR ETF",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:55:06.338Z"
+  },
+  "XLRE": {
+    "companyName": "State Street Real Estate Select Sector SPDR ETF",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:55:06.338Z"
+  },
+  "XLV": {
+    "companyName": "State Street Health Care Select Sector SPDR ETF",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:55:06.342Z"
+  },
+  "XLP": {
+    "companyName": "State Street Consumer Staples Select Sector SPDR ETF",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:55:06.346Z"
+  },
+  "XOM": {
+    "companyName": "Exxon Mobil Corporation",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:55:06.769Z"
+  },
+  "XP": {
+    "companyName": "XP Inc.",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:55:06.769Z"
+  },
+  "XME": {
+    "companyName": "State Street SPDR S&P Metals & Mining ETF",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:55:06.769Z"
+  },
+  "XLY": {
+    "companyName": "State Street Consumer Discretionary Select Sector SPDR ETF",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:55:06.769Z"
+  },
+  "XPEVD": {
+    "companyName": null,
+    "found": false,
+    "fetchedAt": "2026-05-03T22:55:07.167Z"
+  },
+  "XPD": {
+    "companyName": null,
+    "found": false,
+    "fetchedAt": "2026-05-03T22:55:07.168Z"
+  },
+  "XRX": {
+    "companyName": "Xerox Holdings Corporation",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:55:07.169Z"
+  },
+  "XPEV": {
+    "companyName": "XPeng Inc.",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:55:07.169Z"
+  },
+  "XROX": {
+    "companyName": null,
+    "found": false,
+    "fetchedAt": "2026-05-03T22:55:07.549Z"
+  },
+  "XROXD": {
+    "companyName": null,
+    "found": false,
+    "fetchedAt": "2026-05-03T22:55:07.550Z"
+  },
+  "YELP": {
+    "companyName": "Yelp Inc.",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:55:07.551Z"
+  },
+  "XYZ": {
+    "companyName": "Block, Inc.",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:55:07.553Z"
+  },
+  "ZM": {
+    "companyName": "Zoom Communications, Inc.",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:55:07.932Z"
+  },
+  "XLC": {
+    "companyName": "State Street Communication Services Select Sector SPDR ETF",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:58:01.073Z"
+  },
+  "WMT": {
+    "companyName": "Walmart Inc.",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:58:01.074Z"
+  },
+  "WFC": {
+    "companyName": "Wells Fargo & Company",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:58:01.234Z"
+  },
+  "XLB": {
+    "companyName": "State Street Materials Select Sector SPDR ETF",
+    "found": true,
+    "fetchedAt": "2026-05-03T22:58:02.004Z"
+  },
+  "BBVA": {
+    "companyName": "Banco Bilbao Vizcaya Argentaria, S.A.",
+    "found": true,
+    "fetchedAt": "2026-05-03T23:15:10.669Z"
+  },
+  "AKO-B": {
+    "companyName": "Embotelladora Andina S.A.",
+    "found": true,
+    "fetchedAt": "2026-05-03T23:15:10.672Z"
+  },
+  "NTCO": {
+    "companyName": "Natura &Co Holding S.A.",
+    "found": true,
+    "fetchedAt": "2026-05-03T23:15:10.672Z"
+  },
+  "TS": {
+    "companyName": "Tenaris S.A.",
+    "found": true,
+    "fetchedAt": "2026-05-03T23:15:10.674Z"
+  }
+}
