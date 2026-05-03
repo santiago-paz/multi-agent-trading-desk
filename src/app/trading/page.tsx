@@ -86,6 +86,28 @@ const MANAGED_APP_IDS = [
 const LONG_RUNNING_APPS = new Set<AppId>(['autotrader', 'backtesting']);
 
 const TASKBAR_HEIGHT = 32;
+
+/** Inline overrides for start menu items — beats 98.css default button chrome. */
+const START_MENU_ITEM_STYLE: React.CSSProperties = {
+  display: 'flex',
+  alignItems: 'center',
+  gap: 8,
+  width: '100%',
+  textAlign: 'left',
+  padding: '4px 24px 4px 6px',
+  background: 'transparent',
+  border: 'none',
+  boxShadow: 'none',
+  minWidth: 0,
+  minHeight: 0,
+  cursor: 'default',
+  fontFamily: '"Pixelated MS Sans Serif", "MS Sans Serif", Arial, sans-serif',
+  fontSize: 11,
+  color: '#000',
+  textShadow: 'none',
+  whiteSpace: 'nowrap',
+};
+
 const CASCADE_OFFSET = 28;
 const CASCADE_ORIGIN = 24;
 const CASCADE_W = 600;
@@ -184,6 +206,8 @@ export default function TradingDashboard() {
   const [selectedIconIds, setSelectedIconIds] = useState<Set<string>>(new Set());
   const [rubberBandRect, setRubberBandRect] = useState<{ left: number; top: number; width: number; height: number } | null>(null);
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number } | null>(null);
+  const [startMenuOpen, setStartMenuOpen] = useState(false);
+  const [clockNow, setClockNow] = useState<Date | null>(null);
 
   // Mutable refs to avoid stale closures in event handlers
   const desktopRef = useRef<HTMLDivElement>(null);
@@ -274,12 +298,13 @@ export default function TradingDashboard() {
 
   useEffect(() => { liveSelectionRef.current = effectiveSelectedIds; });
 
-  // ── ESC clears selection / context menu ─────────────────────────────────────
+  // ── ESC clears selection / context menu / start menu ────────────────────────
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         setSelectedIconIds(new Set());
         setContextMenu(null);
+        setStartMenuOpen(false);
       }
     };
     window.addEventListener('keydown', handleKeyDown);
@@ -293,6 +318,21 @@ export default function TradingDashboard() {
     window.addEventListener('mousedown', close);
     return () => window.removeEventListener('mousedown', close);
   }, [contextMenu]);
+
+  // ── Close start menu on any global mousedown outside it ─────────────────────
+  useEffect(() => {
+    if (!startMenuOpen) return;
+    const close = () => setStartMenuOpen(false);
+    window.addEventListener('mousedown', close);
+    return () => window.removeEventListener('mousedown', close);
+  }, [startMenuOpen]);
+
+  // ── Taskbar clock: tick every 30s; null on first SSR pass to avoid hydration mismatch
+  useEffect(() => {
+    setClockNow(new Date()); // eslint-disable-line react-hooks/set-state-in-effect
+    const id = setInterval(() => setClockNow(new Date()), 30_000);
+    return () => clearInterval(id);
+  }, []);
 
   const handleDesktopMouseDown = useCallback((e: React.MouseEvent) => {
     if (e.button !== 0) return;
@@ -796,43 +836,90 @@ export default function TradingDashboard() {
       <div className="taskbar">
         <button
           type="button"
-          className="taskbar-button"
-          style={{ cursor: 'default' }}
+          className={`taskbar-button ${startMenuOpen ? 'active' : ''}`}
+          onMouseDown={(e) => {
+            e.stopPropagation();
+            setStartMenuOpen((v) => !v);
+          }}
+          style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontWeight: 'bold' }}
         >
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={DESKTOP_APP_ICONS.start}
+            alt=""
+            width={16}
+            height={16}
+            style={{ flexShrink: 0, pointerEvents: 'none' }}
+          />
           {tw('start')}
         </button>
-        {allOpenWindows.map(([id]) => {
-          const isCd = id.startsWith(COMPANY_DETAIL_PREFIX);
-          const label = isCd
-            ? tw('companyDetail', { symbol: id.slice(COMPANY_DETAIL_PREFIX.length) })
-            : APP_LABELS[id as AppId];
-          const iconSrc = isCd
-            ? DESKTOP_APP_ICONS.analysis
-            : DESKTOP_APP_ICONS[id as keyof typeof DESKTOP_APP_ICONS];
-          return (
-            <button
-              key={id}
-              type="button"
-              className={`taskbar-button ${focusedId === id ? 'active' : ''}`}
-              onClick={() => toggleMinimize(id)}
-              style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}
-            >
-              {iconSrc && (
-                /* eslint-disable-next-line @next/next/no-img-element */
-                <img
-                  src={iconSrc}
-                  alt=""
-                  width={16}
-                  height={16}
-                  style={{ flexShrink: 0, pointerEvents: 'none' }}
-                />
-              )}
-              <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                {label}
-              </span>
-            </button>
-          );
-        })}
+
+        <div className="taskbar-separator" />
+
+        {/* Quick Launch */}
+        {(['portfolio', 'marketdata', 'news', 'backtesting'] as AppId[]).map((id) => (
+          <button
+            key={`ql-${id}`}
+            type="button"
+            className="taskbar-quick-launch"
+            title={APP_LABELS[id]}
+            onClick={() => openOrFocusWindow(id)}
+          >
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={DESKTOP_APP_ICONS[id]}
+              alt={APP_LABELS[id]}
+              width={16}
+              height={16}
+              style={{ pointerEvents: 'none' }}
+            />
+          </button>
+        ))}
+
+        <div className="taskbar-separator" />
+
+        {/* Open windows */}
+        <div className="taskbar-windows">
+          {allOpenWindows.map(([id]) => {
+            const isCd = id.startsWith(COMPANY_DETAIL_PREFIX);
+            const label = isCd
+              ? tw('companyDetail', { symbol: id.slice(COMPANY_DETAIL_PREFIX.length) })
+              : APP_LABELS[id as AppId];
+            const iconSrc = isCd
+              ? DESKTOP_APP_ICONS.analysis
+              : DESKTOP_APP_ICONS[id as keyof typeof DESKTOP_APP_ICONS];
+            return (
+              <button
+                key={id}
+                type="button"
+                className={`taskbar-button ${focusedId === id ? 'active' : ''}`}
+                onClick={() => toggleMinimize(id)}
+                style={{ display: 'inline-flex', alignItems: 'center', gap: 4, minWidth: 0, maxWidth: 160 }}
+              >
+                {iconSrc && (
+                  /* eslint-disable-next-line @next/next/no-img-element */
+                  <img
+                    src={iconSrc}
+                    alt=""
+                    width={16}
+                    height={16}
+                    style={{ flexShrink: 0, pointerEvents: 'none' }}
+                  />
+                )}
+                <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  {label}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+
+        {/* System tray with clock */}
+        <div className="taskbar-tray">
+          <span className="taskbar-clock" suppressHydrationWarning>
+            {clockNow ? clockNow.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''}
+          </span>
+        </div>
       </div>
 
       {/* Win98-style desktop context menu */}
@@ -880,6 +967,126 @@ export default function TradingDashboard() {
           >
             Alinear Iconos
           </button>
+        </div>
+      )}
+
+      {/* Win98-style start menu */}
+      {startMenuOpen && (
+        <div
+          onMouseDown={(e) => e.stopPropagation()}
+          style={{
+            position: 'fixed',
+            left: 0,
+            bottom: TASKBAR_HEIGHT,
+            zIndex: 10000,
+            backgroundColor: '#c0c0c0',
+            border: '2px solid',
+            borderColor: '#ffffff #808080 #808080 #ffffff',
+            boxShadow: '2px 2px 0 #000000',
+            fontFamily: '"Pixelated MS Sans Serif", "MS Sans Serif", Arial, sans-serif',
+            fontSize: '11px',
+            display: 'flex',
+            minWidth: 200,
+            padding: 2,
+          }}
+        >
+          {/* Vertical banner */}
+          <div
+            style={{
+              width: 22,
+              background: 'linear-gradient(to top, #000080 0%, #1084d0 100%)',
+              display: 'flex',
+              alignItems: 'flex-end',
+              justifyContent: 'center',
+              padding: '8px 0',
+              flexShrink: 0,
+            }}
+          >
+            <span
+              style={{
+                writingMode: 'vertical-rl',
+                transform: 'rotate(180deg)',
+                color: '#ffffff',
+                fontWeight: 'bold',
+                fontSize: 14,
+                letterSpacing: 1,
+                whiteSpace: 'nowrap',
+              }}
+            >
+              {tw('start.bannerTitle')}
+            </span>
+          </div>
+
+          {/* Items */}
+          <div style={{ flex: 1, padding: '2px 0', display: 'flex', flexDirection: 'column' }}>
+            {(['portfolio', 'news', 'marketdata', 'movements', 'backtesting', 'autotrader', 'displayproperties', 'appmanager'] as AppId[]).map((id) => (
+              <button
+                key={id}
+                type="button"
+                className="start-menu-item"
+                onClick={() => {
+                  setStartMenuOpen(false);
+                  openOrFocusWindow(id);
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = '#000080';
+                  e.currentTarget.style.color = '#fff';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = 'transparent';
+                  e.currentTarget.style.color = '#000';
+                }}
+                style={START_MENU_ITEM_STYLE}
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={DESKTOP_APP_ICONS[id]}
+                  alt=""
+                  width={24}
+                  height={24}
+                  style={{ flexShrink: 0, pointerEvents: 'none' }}
+                />
+                <span>{APP_LABELS[id]}</span>
+              </button>
+            ))}
+
+            {/* Separator */}
+            <div
+              style={{
+                margin: '3px 4px',
+                borderTop: '1px solid #808080',
+                borderBottom: '1px solid #ffffff',
+              }}
+            />
+
+            <button
+              type="button"
+              className="start-menu-item"
+              onClick={() => {
+                setStartMenuOpen(false);
+                window.location.href = '/';
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = '#000080';
+                e.currentTarget.style.color = '#fff';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = 'transparent';
+                e.currentTarget.style.color = '#000';
+              }}
+              style={START_MENU_ITEM_STYLE}
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={DESKTOP_APP_ICONS.start}
+                alt=""
+                width={24}
+                height={24}
+                style={{ flexShrink: 0, pointerEvents: 'none' }}
+              />
+              <span>{tw('start.shutdown')}</span>
+            </button>
+          </div>
         </div>
       )}
     </div>

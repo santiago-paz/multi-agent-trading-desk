@@ -120,6 +120,34 @@ button.desktop-icon:active span:last-child {
   color: #fff;
 }
 
+/* Start menu item: NO 98.css button chrome, full-width hover bar */
+button.start-menu-item {
+  background: transparent !important;
+  box-shadow: none !important;
+  border: none !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+  padding: 4px 24px 4px 6px !important;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  text-align: left;
+  color: #000 !important;
+  text-shadow: none !important;
+  font-family: "Pixelated MS Sans Serif", "MS Sans Serif", Arial, sans-serif;
+  font-size: 11px;
+  cursor: default;
+  white-space: nowrap;
+}
+
+button.start-menu-item:hover,
+button.start-menu-item:focus {
+  background: #000080 !important;
+  color: #fff !important;
+  outline: none;
+}
+
 /* Windows 98 Cursors */
 *, *::before, *::after {
   cursor: url('/win-98-cursors/Cursor79.cur'), default;
@@ -218,6 +246,71 @@ input[type="crosshair"] {
 
 .taskbar-button.active {
   box-shadow: inset 1px 1px 0 #0a0a0a, inset -1px -1px 0 #fff;
+}
+
+/* Vertical groove separator (Win98 style: dark line + light line) */
+.taskbar-separator {
+  width: 2px;
+  align-self: stretch;
+  margin: 2px 3px;
+  border-left: 1px solid #808080;
+  border-right: 1px solid #fff;
+  flex-shrink: 0;
+}
+
+/* Quick Launch icon-only button — flat by default, raised on hover, sunken on active */
+.taskbar-quick-launch {
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  min-width: 0;
+}
+
+.taskbar-quick-launch:hover {
+  box-shadow: inset 1px 1px 0 #fff, inset -1px -1px 0 #0a0a0a;
+}
+
+.taskbar-quick-launch:active {
+  box-shadow: inset 1px 1px 0 #0a0a0a, inset -1px -1px 0 #fff;
+}
+
+/* Window list area — takes remaining space, left-aligned */
+.taskbar-windows {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: stretch;
+  gap: 2px;
+  overflow: hidden;
+}
+
+/* System tray (notification area) — sunken inset bezel */
+.taskbar-tray {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0 6px;
+  height: calc(100% - 4px);
+  align-self: center;
+  box-shadow: inset 1px 1px 0 #0a0a0a, inset -1px -1px 0 #fff;
+  flex-shrink: 0;
+}
+
+.taskbar-clock {
+  font-family: "Pixelated MS Sans Serif", "MS Sans Serif", Arial, sans-serif;
+  font-size: 11px;
+  color: #000;
+  white-space: nowrap;
+  min-width: 48px;
+  text-align: center;
 }
 
 /* Windows 98 Custom Scrollbar */

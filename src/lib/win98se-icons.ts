@@ -25,6 +25,7 @@ export const DESKTOP_APP_ICONS = {
   autotrader: url('apps/32/utilities-system-monitor.png'),
   displayproperties: url('apps/32/preferences-desktop-wallpaper.png'),
   appmanager: url('categories/32/applications-other.png'),
+  start: url('places/16/start-here.png'),
 } as const;
 
 export type DesktopAppId = keyof typeof DESKTOP_APP_ICONS;

@@ -12,6 +12,8 @@ export const windowsEn: Record<WindowsKey, string> = {
   'appmanager': 'My Applications',
   'companyDetail': '{symbol} — Detail',
   'start': 'Start',
+  'start.bannerTitle': 'Hedge Fund 98',
+  'start.shutdown': 'Shut Down...',
   // Desktop icon labels
   'icon.portfolio': 'Portfolio',
   'icon.news': 'News',

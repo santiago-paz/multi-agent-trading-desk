@@ -10,6 +10,8 @@ export const windowsEs = {
   'appmanager': 'Mis Aplicaciones',
   'companyDetail': '{symbol} — Detalle',
   'start': 'Inicio',
+  'start.bannerTitle': 'Hedge Fund 98',
+  'start.shutdown': 'Apagar...',
   // Desktop icon labels
   'icon.portfolio': 'Portafolio',
   'icon.news': 'Noticias',
