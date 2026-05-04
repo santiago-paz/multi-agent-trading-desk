@@ -1,4 +1,4 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import { FONT, COL_HEADER_BASE, COL_RAISED, CELL, CELL_RIGHT, COLOR_POSITIVE, COLOR_NEGATIVE, COLOR_SECONDARY } from '@/lib/theme/win98';
 import { LogEntry, Phase, AgentSignal, Decision } from '../types';
 import { TickerAccordion } from '../components/TickerAccordion';
@@ -15,6 +15,7 @@ interface AITabProps {
   candidateDecisions: Record<string, Decision> | null;
   arsPrices: Record<string, number>;
   companyNames?: Record<string, string>;
+  onCompanyDetail?: (symbol: string) => void;
 }
 
 export function AITab({
@@ -26,10 +27,13 @@ export function AITab({
   candidateDecisions,
   arsPrices,
   companyNames,
+  onCompanyDetail,
 }: AITabProps) {
   const t = useAutoTraderT();
   const logBodyRef = useRef<HTMLDivElement>(null);
   const autoScrollRef = useRef(true);
+  const [selectedSignal, setSelectedSignal] = useState<string | null>(null);
+  const [selectedCandidate, setSelectedCandidate] = useState<string | null>(null);
 
   useEffect(() => {
     if (autoScrollRef.current && logBodyRef.current) {
@@ -84,25 +88,36 @@ export function AITab({
                           Object.entries(tickers).map(([ticker, sig]) => ({ agent, ticker, sig }))
                         )
                         .sort((a, b) => a.ticker.localeCompare(b.ticker) || a.agent.localeCompare(b.agent))
-                        .map(({ agent, ticker, sig }, i) => (
-                          <tr key={i} style={{
-                            backgroundColor: i % 2 === 0 ? '#ffffff' : '#f0f0f0',
-                            cursor: 'default',
-                          }}>
-                            <td style={CELL}>
-                              <TickerCell ticker={ticker} company={companyNames?.[ticker]} />
-                            </td>
-                            <td style={CELL}>{agent.replace(/_/g, ' ')}</td>
-                            <td style={{
-                              ...CELL,
-                              color: sig.signal === 'bullish' ? COLOR_POSITIVE
-                                : sig.signal === 'bearish' ? COLOR_NEGATIVE : COLOR_SECONDARY,
-                            }}>
-                              {sig.signal}
-                            </td>
-                            <td style={{ ...CELL_RIGHT, borderRight: 'none' }}>{sig.confidence}%</td>
-                          </tr>
-                        ))}
+                        .map(({ agent, ticker, sig }, i) => {
+                          const rowKey = `${ticker}:${agent}`;
+                          const isSelected = selectedSignal === rowKey;
+                          return (
+                            <tr
+                              key={rowKey}
+                              onClick={() => setSelectedSignal(rowKey)}
+                              onDoubleClick={() => onCompanyDetail?.(ticker)}
+                              style={{
+                                backgroundColor: isSelected ? '#000080' : (i % 2 === 0 ? '#ffffff' : '#f0f0f0'),
+                                color: isSelected ? '#ffffff' : 'inherit',
+                                cursor: 'default',
+                                userSelect: 'none',
+                              }}
+                            >
+                              <td style={CELL}>
+                                <TickerCell ticker={ticker} company={companyNames?.[ticker]} selected={isSelected} />
+                              </td>
+                              <td style={CELL}>{agent.replace(/_/g, ' ')}</td>
+                              <td style={{
+                                ...CELL,
+                                color: isSelected ? '#ffffff' : (sig.signal === 'bullish' ? COLOR_POSITIVE
+                                  : sig.signal === 'bearish' ? COLOR_NEGATIVE : COLOR_SECONDARY),
+                              }}>
+                                {sig.signal}
+                              </td>
+                              <td style={{ ...CELL_RIGHT, borderRight: 'none' }}>{sig.confidence}%</td>
+                            </tr>
+                          );
+                        })}
                     </tbody>
                   </table>
                 </div>
@@ -126,32 +141,42 @@ export function AITab({
                     <tbody>
                       {Object.entries(candidateDecisions)
                         .sort(([, a], [, b]) => b.confidence - a.confidence)
-                        .map(([ticker, dec], i) => (
-                          <tr key={ticker} style={{
-                            backgroundColor: i % 2 === 0 ? '#ffffff' : '#f0f0f0',
-                            cursor: 'default',
-                          }}>
-                            <td style={CELL}>
-                              <TickerCell ticker={ticker} company={companyNames?.[ticker]} />
-                            </td>
-                            <td style={{
-                              ...CELL,
-                              color: dec.action === 'buy' ? COLOR_POSITIVE
-                                : dec.action === 'sell' ? COLOR_NEGATIVE : COLOR_SECONDARY,
-                              fontWeight: dec.action !== 'hold' ? 'bold' : 'normal',
-                            }}>
-                              {dec.action.toUpperCase()}
-                            </td>
-                            <td style={CELL_RIGHT}>{dec.confidence}%</td>
-                            <td style={CELL_RIGHT}>
-                              {arsPrices[ticker] ? `$${fmtARS2(arsPrices[ticker])}` : '—'}
-                            </td>
-                            <td style={{ ...CELL, maxWidth: 200, overflow: 'hidden', textOverflow: 'ellipsis', borderRight: 'none' }}
-                                title={dec.reasoning}>
-                              {dec.reasoning}
-                            </td>
-                          </tr>
-                        ))}
+                        .map(([ticker, dec], i) => {
+                          const isSelected = selectedCandidate === ticker;
+                          return (
+                            <tr
+                              key={ticker}
+                              onClick={() => setSelectedCandidate(ticker)}
+                              onDoubleClick={() => onCompanyDetail?.(ticker)}
+                              style={{
+                                backgroundColor: isSelected ? '#000080' : (i % 2 === 0 ? '#ffffff' : '#f0f0f0'),
+                                color: isSelected ? '#ffffff' : 'inherit',
+                                cursor: 'default',
+                                userSelect: 'none',
+                              }}
+                            >
+                              <td style={CELL}>
+                                <TickerCell ticker={ticker} company={companyNames?.[ticker]} selected={isSelected} />
+                              </td>
+                              <td style={{
+                                ...CELL,
+                                color: isSelected ? '#ffffff' : (dec.action === 'buy' ? COLOR_POSITIVE
+                                  : dec.action === 'sell' ? COLOR_NEGATIVE : COLOR_SECONDARY),
+                                fontWeight: dec.action !== 'hold' ? 'bold' : 'normal',
+                              }}>
+                                {dec.action.toUpperCase()}
+                              </td>
+                              <td style={CELL_RIGHT}>{dec.confidence}%</td>
+                              <td style={CELL_RIGHT}>
+                                {arsPrices[ticker] ? `$${fmtARS2(arsPrices[ticker])}` : '—'}
+                              </td>
+                              <td style={{ ...CELL, maxWidth: 200, overflow: 'hidden', textOverflow: 'ellipsis', borderRight: 'none' }}
+                                  title={dec.reasoning}>
+                                {dec.reasoning}
+                              </td>
+                            </tr>
+                          );
+                        })}
                     </tbody>
                   </table>
                 </div>

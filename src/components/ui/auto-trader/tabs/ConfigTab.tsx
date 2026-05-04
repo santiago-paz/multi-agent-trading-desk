@@ -18,6 +18,7 @@ interface ConfigTabProps {
   setModelName: (val: AIModelId) => void;
   holdingTickers: string[];
   holdings: Record<string, number>;
+  panelSymbols: string[];
   companyNames?: Record<string, string>;
   arsPrices: Record<string, number>;
   portfolioError: string | null;
@@ -35,6 +36,7 @@ interface ConfigTabProps {
   handleAnalyze: () => void;
   fmpTickers: string[];
   abortEngine: () => void;
+  onCompanyDetail?: (symbol: string) => void;
 }
 
 export function ConfigTab({
@@ -48,6 +50,7 @@ export function ConfigTab({
   setModelName,
   holdingTickers,
   holdings,
+  panelSymbols,
   companyNames,
   arsPrices,
   portfolioError,
@@ -64,11 +67,13 @@ export function ConfigTab({
   loadPortfolio,
   handleAnalyze,
   fmpTickers,
-  abortEngine
+  abortEngine,
+  onCompanyDetail,
 }: ConfigTabProps) {
   const t = useAutoTraderT();
   const [pSortKey, setPSortKey] = useState<PortfolioSortKey>('ticker');
   const [pSortDir, setPSortDir] = useState<'asc' | 'desc'>('asc');
+  const [selectedTicker, setSelectedTicker] = useState<string | null>(null);
   const marketStatus = useMemo(() => isMarketOpen(), []);
   const helpRef = useRef<HTMLSpanElement>(null);
   const [helpPos, setHelpPos] = useState<{ top: number; left: number } | null>(null);
@@ -164,13 +169,21 @@ export function ConfigTab({
                     const qty = holdings[ticker] ?? 0;
                     const price = arsPrices[ticker] ?? 0;
                     const priceUsd = price / effectiveMep;
+                    const isSelected = selectedTicker === ticker;
                     return (
-                      <tr key={ticker} style={{
-                        backgroundColor: idx % 2 === 0 ? '#ffffff' : '#f0f0f0',
-                        cursor: 'default',
-                      }}>
+                      <tr
+                        key={ticker}
+                        onClick={() => setSelectedTicker(ticker)}
+                        onDoubleClick={() => onCompanyDetail?.(ticker)}
+                        style={{
+                          backgroundColor: isSelected ? '#000080' : (idx % 2 === 0 ? '#ffffff' : '#f0f0f0'),
+                          color: isSelected ? '#ffffff' : 'inherit',
+                          cursor: 'default',
+                          userSelect: 'none',
+                        }}
+                      >
                         <td style={CELL}>
-                          <TickerCell ticker={ticker} company={companyNames?.[ticker]} />
+                          <TickerCell ticker={ticker} company={companyNames?.[ticker]} selected={isSelected} />
                         </td>
                         <td style={CELL_RIGHT}>{qty}</td>
                         <td style={CELL_RIGHT}>${fmtARS2(price)}</td>
@@ -185,6 +198,24 @@ export function ConfigTab({
           ) : (
             <div style={{ ...FONT, color: portfolioError ? COLOR_NEGATIVE : COLOR_DISABLED, padding: '4px 0' }}>
               {isLoadingPortfolio ? t('config.portfolio.loading') : portfolioError ? portfolioError : t('config.portfolio.empty')}
+            </div>
+          )}
+          {panelSymbols.length > 0 && (
+            <div
+              title={panelSymbols.map(s => companyNames?.[s] ? `${s} — ${companyNames[s]}` : s).join('\n')}
+              style={{
+                ...FONT,
+                color: COLOR_SECONDARY,
+                paddingTop: 4,
+                marginTop: 4,
+                borderTop: '1px solid #808080',
+                whiteSpace: 'nowrap',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                flexShrink: 0,
+              }}
+            >
+              {t('config.portfolio.candidates', { count: panelSymbols.length, list: panelSymbols.join(', ') })}
             </div>
           )}
         </fieldset>

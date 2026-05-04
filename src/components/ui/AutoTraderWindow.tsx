@@ -13,7 +13,11 @@ import { COMMISSION_RATE } from '@/lib/trading/quick-trade';
 import { DEFAULT_MODEL, type AIModelId } from './auto-trader/market-hours';
 import { useAutoTraderT } from '@/lib/i18n';
 
-export function AutoTraderWindow() {
+interface AutoTraderWindowProps {
+  onCompanyDetail?: (symbol: string) => void;
+}
+
+export function AutoTraderWindow({ onCompanyDetail }: AutoTraderWindowProps = {}) {
   const [activeTab, setActiveTab] = useState<'config' | 'ai' | 'plan' | 'history'>('config');
   const [dailyLimit, setDailyLimit] = useState(100000);
   const [modelName, setModelName] = useState<AIModelId>(DEFAULT_MODEL);
@@ -86,6 +90,7 @@ export function AutoTraderWindow() {
               setModelName={setModelName}
               holdingTickers={portfolio.holdingTickers}
               holdings={portfolio.holdings}
+              panelSymbols={portfolio.panelSymbols}
               companyNames={portfolio.companyNames}
               arsPrices={portfolio.arsPrices}
               portfolioError={portfolio.portfolioError}
@@ -103,6 +108,7 @@ export function AutoTraderWindow() {
               handleAnalyze={() => engine.handleAnalyze(setActiveTab)}
               fmpTickers={portfolio.fmpTickers}
               abortEngine={engine.abortEngine}
+              onCompanyDetail={onCompanyDetail}
             />
           )}
 
@@ -116,6 +122,7 @@ export function AutoTraderWindow() {
               candidateDecisions={engine.candidateDecisions}
               arsPrices={portfolio.arsPrices}
               companyNames={portfolio.companyNames}
+              onCompanyDetail={onCompanyDetail}
             />
           )}
 

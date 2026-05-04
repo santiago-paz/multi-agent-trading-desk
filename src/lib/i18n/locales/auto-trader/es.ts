@@ -32,6 +32,7 @@ export const autoTraderEs = {
   'config.portfolio.total': 'Total portfolio: ',
   'config.portfolio.loading': 'Cargando...',
   'config.portfolio.empty': 'Sin posiciones en CEDEARs',
+  'config.portfolio.candidates': 'Candidatos (top {count} líquidos): {list}',
   'config.settings.title': 'Configuraci\u00f3n',
   'config.settings.dailyLimit': 'Tope diario:',
   'config.settings.dailyLimitHint': 'Tope tanto al volumen de ventas como a la plata nueva que sale del cash.',

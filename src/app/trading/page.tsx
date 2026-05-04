@@ -689,7 +689,7 @@ export default function TradingDashboard() {
             />
           ),
           backtesting: <BacktestingWindow />,
-          autotrader: <AutoTraderWindow />,
+          autotrader: <AutoTraderWindow onCompanyDetail={openCompanyDetail} />,
           displayproperties: <DisplayPropertiesWindow onClose={() => closeWindow('displayproperties')} />,
         };
 

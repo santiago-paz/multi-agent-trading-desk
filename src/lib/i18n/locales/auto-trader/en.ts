@@ -34,6 +34,7 @@ export const autoTraderEn: Record<AutoTraderKey, string> = {
   'config.portfolio.total': 'Total portfolio: ',
   'config.portfolio.loading': 'Loading...',
   'config.portfolio.empty': 'No CEDEAR positions',
+  'config.portfolio.candidates': 'Candidates (top {count} liquid): {list}',
   'config.settings.title': 'Configuration',
   'config.settings.dailyLimit': 'Daily cap:',
   'config.settings.dailyLimitHint': 'Caps both sell volume and new cash deployed in buys.',
