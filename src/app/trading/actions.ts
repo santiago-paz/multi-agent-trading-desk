@@ -5,7 +5,14 @@ import { iolClient } from '@/lib/iol/client';
 import { extractCashArs, extractComprometidoArs, effectiveCashAfterCommission, filterAffordableCedears, COMMISSION_RATE } from '@/lib/trading/quick-trade';
 
 import type { HistoricalRow, CompanyProfile, IncomeStatementRow, KeyMetricsRow, CashFlowRow, BalanceSheetRow, FinancialScores, DCFValue, NewsItem, SymbolSearchHit } from '@/lib/fmp/types';
-import { getHistoricalData, getAllNews, getCompanyNames, getCompanyProfile, getIncomeStatements, getKeyMetrics, getCashFlowStatements, getBalanceSheetStatements, getFinancialScores, getDCFValue, getTickerNews, searchSymbolHits } from '@/lib/fmp/market-data';
+import { getHistoricalData, getAllNews, getCompanyNames, getCompanyProfile, getIncomeStatements, getKeyMetrics, getCashFlowStatements, getBalanceSheetStatements, getFinancialScores, getDCFValue, getTickerNews, searchSymbolHits, FmpRateLimitError } from '@/lib/fmp/market-data';
+
+const FMP_RATE_LIMIT_MESSAGE = 'Límite de uso de FMP alcanzado. Esperá unos minutos o ampliá tu plan.';
+
+/** True if a rejected `Promise.allSettled` reason is the FMP rate-limit signal. */
+function isFmpRateLimitRejection(r: PromiseSettledResult<unknown>): boolean {
+  return r.status === 'rejected' && r.reason instanceof FmpRateLimitError;
+}
 import { stripCurrencySuffix, toFmpTicker, isEtf } from '@/lib/cedear-map';
 import { DEMO_MODE, DEMO_MEP_RATE, DEMO_PERFIL, DEMO_ESTADO_CUENTA, DEMO_PORTFOLIO, DEMO_USD_PRICES, DEMO_VALUE_USD, DEMO_OPERATIONS, DEMO_NEWS_GENERAL, DEMO_NEWS_SPECIFIC, getDemoMarketData, getDemoCedearsForTrading, getDemoFullPortfolioContext } from '@/lib/demo/data';
 
@@ -308,6 +315,33 @@ export async function placeOrder(params: {
 }
 
 /**
+ * Fetches the current status of an IOL operation by its number.
+ * Used to poll until a sell is filled before chaining buys.
+ */
+export async function getOrderStatus(numero: number) {
+  if (DEMO_MODE) {
+    return { success: true as const, data: { estadoActual: 'terminada', cantidadOperada: undefined as number | undefined, montoOperado: undefined as number | undefined } };
+  }
+  try {
+    const detail = await iolClient.getOperationDetail(numero);
+    const filledQty = detail.operaciones?.reduce((sum, op) => sum + (op.cantidad ?? 0), 0);
+    const filledAmount = detail.operaciones?.reduce((sum, op) => sum + (op.cantidad ?? 0) * (op.precio ?? 0), 0);
+    return {
+      success: true as const,
+      data: {
+        estadoActual: detail.estadoActual,
+        cantidadOperada: filledQty,
+        montoOperado: filledAmount,
+      },
+    };
+  } catch (error) {
+    console.error(`getOrderStatus(${numero}) failed:`, error);
+    const msg = error instanceof Error ? error.message : 'Error al consultar la orden';
+    return { success: false as const, error: msg };
+  }
+}
+
+/**
  * Returns full portfolio context for the Auto Trader window.
  * Unlike getAffordableCedears(), this does NOT filter by affordability.
  * Returns ALL CEDEARs in the panel + all current holdings.
@@ -499,7 +533,9 @@ export async function searchTickerSymbols(
   }
 }
 
-export async function getCompanyDetail(iolBaseSymbol: string): Promise<{ success: true; data: CompanyDetailResult } | { success: false; error: string }> {
+export type ActionErrorCode = 'fmpRateLimit';
+
+export async function getCompanyDetail(iolBaseSymbol: string): Promise<{ success: true; data: CompanyDetailResult } | { success: false; error: string; errorCode?: ActionErrorCode }> {
   try {
     const etf = isEtf(iolBaseSymbol);
     const fmpTicker = toFmpTicker(iolBaseSymbol);
@@ -513,6 +549,10 @@ export async function getCompanyDetail(iolBaseSymbol: string): Promise<{ success
       getHistoricalData(fmpTicker, 365),
       getIncomeStatements(fmpTicker, 'annual'),
     ]);
+
+    if ([profile, history, income].some(isFmpRateLimitRejection)) {
+      return { success: false, error: FMP_RATE_LIMIT_MESSAGE, errorCode: 'fmpRateLimit' };
+    }
 
     const profileData = profile.status === 'fulfilled' ? profile.value : null;
     const historyData = history.status === 'fulfilled' ? history.value : [];
@@ -547,7 +587,7 @@ export interface AdvancedDetailResult {
   dcf: DCFValue | null;
 }
 
-export async function getCompanyAdvancedData(fmpTicker: string): Promise<{ success: true; data: AdvancedDetailResult } | { success: false; error: string }> {
+export async function getCompanyAdvancedData(fmpTicker: string): Promise<{ success: true; data: AdvancedDetailResult } | { success: false; error: string; errorCode?: ActionErrorCode }> {
   try {
     const [metrics, cashFlow, balanceSheet, scores, dcf] = await Promise.allSettled([
       getKeyMetrics(fmpTicker, 'annual'),
@@ -556,6 +596,10 @@ export async function getCompanyAdvancedData(fmpTicker: string): Promise<{ succe
       getFinancialScores(fmpTicker),
       getDCFValue(fmpTicker),
     ]);
+
+    if ([metrics, cashFlow, balanceSheet, scores, dcf].some(isFmpRateLimitRejection)) {
+      return { success: false, error: FMP_RATE_LIMIT_MESSAGE, errorCode: 'fmpRateLimit' };
+    }
 
     return {
       success: true,
@@ -573,11 +617,14 @@ export async function getCompanyAdvancedData(fmpTicker: string): Promise<{ succe
   }
 }
 
-export async function getCompanyNews(fmpTicker: string): Promise<{ success: true; data: NewsItem[] } | { success: false; error: string }> {
+export async function getCompanyNews(fmpTicker: string): Promise<{ success: true; data: NewsItem[] } | { success: false; error: string; errorCode?: ActionErrorCode }> {
   try {
     const news = await getTickerNews(fmpTicker, 20);
     return { success: true, data: news };
   } catch (error) {
+    if (error instanceof FmpRateLimitError) {
+      return { success: false, error: FMP_RATE_LIMIT_MESSAGE, errorCode: 'fmpRateLimit' };
+    }
     console.error('getCompanyNews failed:', error);
     return { success: false, error: 'No se pudieron obtener noticias' };
   }

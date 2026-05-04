@@ -53,6 +53,41 @@ function getFMPApiKey(): string {
   return key;
 }
 
+/**
+ * Thrown when FMP responds with HTTP 200 but a body like
+ * `{ "Error Message": "Limit Reach ..." }` — i.e. the API key has hit its
+ * plan quota. Callers should treat this as a transient/billing error
+ * distinct from "ticker not found".
+ */
+export class FmpRateLimitError extends Error {
+  constructor(public readonly originalMessage: string) {
+    super('FMP rate limit reached');
+    this.name = 'FmpRateLimitError';
+  }
+}
+
+/**
+ * FMP signals plan-quota exhaustion via HTTP 429 with a body like
+ * `{ "Error Message": "Limit Reach ..." }`. Some endpoints occasionally
+ * return 200 with the same body. Wrappers must short-circuit BEFORE the
+ * usual `!res.ok` fallback (which would otherwise collapse 429 to `null`
+ * and surface as "ticker not found" in the UI).
+ */
+function throwIfRateLimited(res: Response): void {
+  if (res.status === 429) {
+    throw new FmpRateLimitError('FMP rate limit (HTTP 429)');
+  }
+}
+
+function checkFmpError(data: unknown): void {
+  if (data && typeof data === 'object' && 'Error Message' in data) {
+    const msg = (data as Record<string, unknown>)['Error Message'];
+    if (typeof msg === 'string' && /limit reach/i.test(msg)) {
+      throw new FmpRateLimitError(msg);
+    }
+  }
+}
+
 const US_PRIMARY_EXCHANGES = new Set(['NASDAQ', 'NYSE', 'AMEX', 'NYSEARCA', 'BATS']);
 
 /**
@@ -66,12 +101,14 @@ export async function searchSymbolHits(query: string, limit = 15): Promise<Symbo
   const apiKey = getFMPApiKey();
   const url = `https://financialmodelingprep.com/stable/search-symbol?query=${encodeURIComponent(q)}&limit=${limit * 3}&apikey=${apiKey}`;
   const res = await fetch(url);
+  throwIfRateLimited(res);
   if (!res.ok) {
     console.warn('FMP search-symbol HTTP', res.status);
     return [];
   }
 
   const data: unknown = await res.json();
+  checkFmpError(data);
   if (!Array.isArray(data)) return [];
 
   const mapped: SymbolSearchHit[] = [];
@@ -111,6 +148,7 @@ export async function getCompanyNames(symbols: string[]): Promise<Record<string,
       missing.map(async (symbol) => {
         const url = `https://financialmodelingprep.com/stable/profile?symbol=${encodeURIComponent(symbol)}&apikey=${apiKey}`;
         const res = await fetch(url);
+        throwIfRateLimited(res);
         if (!res.ok) return null;
         const data = await res.json();
         if (Array.isArray(data) && data.length > 0 && data[0].companyName) {
@@ -134,8 +172,10 @@ export async function getCompanyProfile(fmpTicker: string): Promise<CompanyProfi
   const apiKey = getFMPApiKey();
   const url = `https://financialmodelingprep.com/stable/profile?symbol=${encodeURIComponent(fmpTicker)}&apikey=${apiKey}`;
   const res = await fetch(url);
+  throwIfRateLimited(res);
   if (!res.ok) return null;
   const data = await res.json();
+  checkFmpError(data);
   if (Array.isArray(data) && data.length > 0) {
     return data[0] as CompanyProfile;
   }
@@ -146,8 +186,10 @@ export async function getIncomeStatements(fmpTicker: string, period: 'annual' | 
   const apiKey = getFMPApiKey();
   const url = `https://financialmodelingprep.com/stable/income-statement?symbol=${encodeURIComponent(fmpTicker)}&period=${period}&apikey=${apiKey}`;
   const res = await fetch(url);
+  throwIfRateLimited(res);
   if (!res.ok) return [];
   const data = await res.json();
+  checkFmpError(data);
   if (!Array.isArray(data)) return [];
   return data.map((row: Record<string, unknown>) => ({
     date: row.date as string,
@@ -171,13 +213,17 @@ export async function getHistoricalData(symbol: string, days: number = 30): Prom
 
     const url = `https://financialmodelingprep.com/stable/historical-price-eod/full?symbol=${encodeURIComponent(symbol)}&from=${from}&to=${to}&apikey=${apiKey}`;
     const res = await fetch(url);
+    throwIfRateLimited(res);
     if (!res.ok) throw new Error(`FMP API error: ${res.status}`);
 
-    const data: { date: string; open: number; high: number; low: number; close: number; volume: number }[] = await res.json();
+    const json: unknown = await res.json();
+    checkFmpError(json);
 
-    if (!Array.isArray(data) || data.length === 0) {
+    if (!Array.isArray(json) || json.length === 0) {
       throw new Error(`No data returned from FMP for ${symbol}`);
     }
+
+    const data = json as { date: string; open: number; high: number; low: number; close: number; volume: number }[];
 
     // FMP returns newest-first; reverse to chronological order
     return data
@@ -239,8 +285,10 @@ async function fetchFMPLatestNews(limit: number = 200): Promise<FMPNewsArticle[]
   if (!apiKey) throw new Error('FMP_API_KEY not set');
   const url = `https://financialmodelingprep.com/stable/news/stock-latest?limit=${limit}&apikey=${apiKey}`;
   const res = await fetch(url);
+  throwIfRateLimited(res);
   if (!res.ok) throw new Error(`FMP API error: ${res.status}`);
   const data: unknown = await res.json();
+  checkFmpError(data);
   return Array.isArray(data) ? data : [];
 }
 
@@ -250,8 +298,10 @@ async function fetchFMPGeneralLatestNews(limit: number = 200): Promise<FMPNewsAr
   if (!apiKey) throw new Error('FMP_API_KEY not set');
   const url = `https://financialmodelingprep.com/stable/news/general-latest?limit=${limit}&apikey=${apiKey}`;
   const res = await fetch(url);
+  throwIfRateLimited(res);
   if (!res.ok) throw new Error(`FMP API error: ${res.status}`);
   const data: unknown = await res.json();
+  checkFmpError(data);
   return Array.isArray(data) ? data : [];
 }
 
@@ -330,8 +380,10 @@ export async function getKeyMetrics(fmpTicker: string, period: 'annual' | 'quart
   const apiKey = getFMPApiKey();
   const url = `https://financialmodelingprep.com/stable/key-metrics?symbol=${encodeURIComponent(fmpTicker)}&period=${period}&apikey=${apiKey}`;
   const res = await fetch(url);
+  throwIfRateLimited(res);
   if (!res.ok) return [];
   const data = await res.json();
+  checkFmpError(data);
   if (!Array.isArray(data)) return [];
   return data.map((row: Record<string, unknown>) => ({
     date: row.date as string,
@@ -351,8 +403,10 @@ export async function getCashFlowStatements(fmpTicker: string, period: 'annual' 
   const apiKey = getFMPApiKey();
   const url = `https://financialmodelingprep.com/stable/cash-flow-statement?symbol=${encodeURIComponent(fmpTicker)}&period=${period}&apikey=${apiKey}`;
   const res = await fetch(url);
+  throwIfRateLimited(res);
   if (!res.ok) return [];
   const data = await res.json();
+  checkFmpError(data);
   if (!Array.isArray(data)) return [];
   return data.map((row: Record<string, unknown>) => ({
     date: row.date as string,
@@ -367,8 +421,10 @@ export async function getBalanceSheetStatements(fmpTicker: string, period: 'annu
   const apiKey = getFMPApiKey();
   const url = `https://financialmodelingprep.com/stable/balance-sheet-statement?symbol=${encodeURIComponent(fmpTicker)}&period=${period}&apikey=${apiKey}`;
   const res = await fetch(url);
+  throwIfRateLimited(res);
   if (!res.ok) return [];
   const data = await res.json();
+  checkFmpError(data);
   if (!Array.isArray(data)) return [];
   return data.map((row: Record<string, unknown>) => ({
     date: row.date as string,
@@ -385,8 +441,10 @@ export async function getFinancialScores(fmpTicker: string): Promise<FinancialSc
   const apiKey = getFMPApiKey();
   const url = `https://financialmodelingprep.com/stable/financial-scores?symbol=${encodeURIComponent(fmpTicker)}&apikey=${apiKey}`;
   const res = await fetch(url);
+  throwIfRateLimited(res);
   if (!res.ok) return null;
   const data = await res.json();
+  checkFmpError(data);
   if (Array.isArray(data) && data.length > 0) {
     const row = data[0];
     return {
@@ -402,8 +460,10 @@ export async function getDCFValue(fmpTicker: string): Promise<DCFValue | null> {
   const apiKey = getFMPApiKey();
   const url = `https://financialmodelingprep.com/stable/discounted-cash-flow?symbol=${encodeURIComponent(fmpTicker)}&apikey=${apiKey}`;
   const res = await fetch(url);
+  throwIfRateLimited(res);
   if (!res.ok) return null;
   const data = await res.json();
+  checkFmpError(data);
   if (Array.isArray(data) && data.length > 0) {
     const row = data[0];
     return {
@@ -420,8 +480,10 @@ export async function getTickerNews(fmpTicker: string, limit: number = 20): Prom
   const apiKey = getFMPApiKey();
   const url = `https://financialmodelingprep.com/stable/news/stock?symbols=${encodeURIComponent(fmpTicker)}&limit=${limit}&apikey=${apiKey}`;
   const res = await fetch(url);
+  throwIfRateLimited(res);
   if (!res.ok) return [];
   const data: unknown = await res.json();
+  checkFmpError(data);
   if (!Array.isArray(data)) return [];
   return data.map((a: FMPNewsArticle) => mapFMPToNewsItem(a));
 }

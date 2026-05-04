@@ -1,9 +1,10 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { LogEntry, LogStatus, Phase, OrderResult, AgentSignal, Decision, HistoricalRun } from '../types';
 import { computeRebalancePlan, RebalancePlan } from '@/lib/trading/rebalance-engine';
-import { placeOrder } from '@/app/trading/actions';
+import { placeOrder, getOrderStatus } from '@/app/trading/actions';
 import { parseSSEChunk, remapToIol, fmtARS } from '../utils';
 import { COMMISSION_RATE } from '@/lib/trading/quick-trade';
+import { waitForOrderSettlement } from '@/lib/trading/order-polling';
 import { useHistoryStore } from '@/lib/store/history-store';
 import { useAutoTraderT } from '@/lib/i18n';
 
@@ -96,11 +97,17 @@ export function useTradingEngine({
     const budgetArs = cashArs + dailyLimit + holdingsValueArs;
     const budgetUsd = effectiveMep > 0 ? budgetArs / effectiveMep : 100000;
 
+    const today = new Date();
+    const oneYearAgo = new Date(today);
+    oneYearAgo.setFullYear(today.getFullYear() - 1);
+
     const body = {
       tickers: fmpTickers,
       model_name: modelName,
       model_provider: 'Anthropic',
       initial_cash: Math.round(budgetUsd * 100) / 100,
+      start_date: oneYearAgo.toISOString().slice(0, 10),
+      end_date: today.toISOString().slice(0, 10),
       portfolio_positions: portfolioPositions.length > 0 ? portfolioPositions : undefined,
       graph_nodes: graphNodes,
       graph_edges: graphEdges,
@@ -290,6 +297,9 @@ export function useTradingEngine({
     setOrderResults([]);
     const results: OrderResult[] = [];
 
+    const SELL_POLL_TIMEOUT_MS = 60_000;
+    const SELL_POLL_INTERVAL_MS = 5_000;
+
     for (const order of plan.sells) {
       const res = await placeOrder({
         simbolo: order.ticker,
@@ -307,6 +317,28 @@ export function useTradingEngine({
           : (res.error || 'Error'),
       });
       setOrderResults([...results]);
+
+      // IOL releases sell proceeds to buying power only once the order is filled
+      // (intraday settlement). Poll until terminal state before chaining buys —
+      // otherwise buys may be rejected for "saldo insuficiente".
+      const numeroOperacion = res.success ? res.data?.numeroOperacion : undefined;
+      if (typeof numeroOperacion === 'number') {
+        const outcome = await waitForOrderSettlement(numeroOperacion, {
+          getStatus: getOrderStatus,
+          timeoutMs: SELL_POLL_TIMEOUT_MS,
+          pollMs: SELL_POLL_INTERVAL_MS,
+        });
+        const logId = `sell-poll-${numeroOperacion}`;
+        if (outcome.kind === 'filled') {
+          addLog(logId, t('engine.log.sellFilled', { ticker: order.ticker }), 'ok');
+        } else if (outcome.kind === 'partial') {
+          addLog(logId, t('engine.log.sellPartial', { ticker: order.ticker }), 'ok');
+        } else if (outcome.kind === 'cancelled') {
+          addLog(logId, t('engine.log.sellCancelled', { ticker: order.ticker }), 'error');
+        } else {
+          addLog(logId, t('engine.log.sellTimeout', { ticker: order.ticker, seconds: SELL_POLL_TIMEOUT_MS / 1000 }), 'error');
+        }
+      }
     }
 
     for (const order of plan.buys) {

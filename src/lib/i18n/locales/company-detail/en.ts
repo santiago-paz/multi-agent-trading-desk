@@ -12,6 +12,7 @@ export const companyDetailEn: Record<CompanyDetailKey, string> = {
   'noUsEquivalent': 'This CEDEAR has no US-listed equivalent.',
   'noUsEquivalentSub': 'Cannot retrieve information from FMP.',
   'noProfile': 'No information found for {symbol}.',
+  'fmpRateLimit': 'FMP usage limit reached. Wait a few minutes or upgrade your plan.',
 
   // ── Tabs ──
   'tabs.info': 'Info',

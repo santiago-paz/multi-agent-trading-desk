@@ -275,4 +275,8 @@ export const autoTraderEn: Record<AutoTraderKey, string> = {
   'engine.log.cancelled': 'Analysis cancelled by user',
   'engine.log.operationNum': 'Operation #{num}',
   'engine.log.orderSent': 'Order sent',
+  'engine.log.sellFilled': 'Sell {ticker} filled — proceeds available for buys',
+  'engine.log.sellPartial': 'Sell {ticker} partially filled — proceeding with available proceeds',
+  'engine.log.sellCancelled': 'Sell {ticker} was cancelled by the broker — its proceeds will not be available',
+  'engine.log.sellTimeout': 'Sell {ticker} not yet confirmed after {seconds}s — proceeding anyway, buys may be rejected for insufficient balance',
 };

@@ -9,7 +9,7 @@ import {
 } from '@/lib/theme/win98';
 import { useCompanyDetailT } from '@/lib/i18n';
 import type { CompanyProfile, IncomeStatementRow, NewsItem } from '@/lib/fmp/types';
-import { getCompanyAdvancedData, getCompanyNews, AdvancedDetailResult } from '@/app/trading/actions';
+import { getCompanyAdvancedData, getCompanyNews, AdvancedDetailResult, type ActionErrorCode } from '@/app/trading/actions';
 
 import { SearchBar } from './company-detail/components/SearchBar';
 import { InfoTab } from './company-detail/tabs/InfoTab';
@@ -30,6 +30,7 @@ interface CompanyDetailWindowProps {
   iolSymbol: string;
   isLoading: boolean;
   error: string | null;
+  errorCode?: ActionErrorCode | null;
   data: CompanyDetailData | null;
   onSearch?: (symbol: string) => void;
 }
@@ -40,6 +41,7 @@ export const CompanyDetailWindow: React.FC<CompanyDetailWindowProps> = ({
   iolSymbol,
   isLoading,
   error,
+  errorCode,
   data,
   onSearch,
 }) => {
@@ -113,9 +115,10 @@ export const CompanyDetailWindow: React.FC<CompanyDetailWindowProps> = ({
   }
 
   if (error) {
+    const errorText = errorCode ? t(errorCode) : error;
     return (
       <div style={{ ...WINDOW_CONTAINER, padding: '6px' }}>
-        <p style={{ ...FONT, margin: 0, padding: '4px', color: '#800000' }}>{error}</p>
+        <p style={{ ...FONT, margin: 0, padding: '4px', color: '#800000' }}>{errorText}</p>
       </div>
     );
   }

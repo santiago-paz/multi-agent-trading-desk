@@ -18,7 +18,7 @@ import {
   DraggableResizableWindow,
 } from '@/components/ui/DraggableResizableWindow';
 import { useNewsStore } from '@/lib/store/news-store';
-import { placeBuyOrder, getCompanyDetail } from './actions';
+import { placeBuyOrder, getCompanyDetail, type ActionErrorCode } from './actions';
 import { usePortfolioData } from './hooks/usePortfolioData';
 import { useMarketData } from './hooks/useMarketData';
 import { useTradingOperations } from './hooks/useTradingOperations';
@@ -33,6 +33,7 @@ interface CompanyDetailInstance {
   data: CompanyDetailData | null;
   isLoading: boolean;
   error: string | null;
+  errorCode?: ActionErrorCode | null;
 }
 
 const COMPANY_DETAIL_PREFIX = 'companydetail-';
@@ -434,7 +435,7 @@ export default function TradingDashboard() {
     // 1. Fetch new data
     setCompanyDetailInstances((prev) => ({
       ...prev,
-      [currentWindowId]: { ...prev[currentWindowId], isLoading: true, error: null },
+      [currentWindowId]: { ...prev[currentWindowId], isLoading: true, error: null, errorCode: null },
     }));
 
     const result = await getCompanyDetail(newSymbol);
@@ -450,6 +451,7 @@ export default function TradingDashboard() {
             data: result.data,
             isLoading: false,
             error: null,
+            errorCode: null,
           }
         };
       }
@@ -460,6 +462,7 @@ export default function TradingDashboard() {
           data: null,
           isLoading: false,
           error: result.error,
+          errorCode: result.errorCode ?? null,
         }
       };
     });
@@ -481,7 +484,7 @@ export default function TradingDashboard() {
 
     setCompanyDetailInstances((prev) => ({
       ...prev,
-      [windowId]: { symbol, data: null, isLoading: true, error: null },
+      [windowId]: { symbol, data: null, isLoading: true, error: null, errorCode: null },
     }));
 
     const result = await getCompanyDetail(symbol);
@@ -490,7 +493,7 @@ export default function TradingDashboard() {
       if (result.success) {
         return { ...prev, [windowId]: { ...prev[windowId], data: result.data, isLoading: false } };
       }
-      return { ...prev, [windowId]: { ...prev[windowId], error: result.error, isLoading: false } };
+      return { ...prev, [windowId]: { ...prev[windowId], error: result.error, errorCode: result.errorCode ?? null, isLoading: false } };
     });
   }, [openDynamicWindow, companyDetailInstances]);
 
@@ -716,6 +719,7 @@ export default function TradingDashboard() {
                   iolSymbol={cdInstance.symbol}
                   isLoading={cdInstance.isLoading}
                   error={cdInstance.error}
+                  errorCode={cdInstance.errorCode ?? null}
                   data={cdInstance.data}
                   onSearch={(sym) => navigateCompanyDetail(id, sym)}
                 />

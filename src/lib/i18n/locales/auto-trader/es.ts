@@ -273,6 +273,10 @@ export const autoTraderEs = {
   'engine.log.cancelled': 'Análisis cancelado por el usuario',
   'engine.log.operationNum': 'Operación #{num}',
   'engine.log.orderSent': 'Orden enviada',
+  'engine.log.sellFilled': 'Venta de {ticker} ejecutada — fondos disponibles para compras',
+  'engine.log.sellPartial': 'Venta de {ticker} parcialmente ejecutada — continuando con los fondos liberados',
+  'engine.log.sellCancelled': 'Venta de {ticker} cancelada por el bróker — esos fondos no se acreditarán',
+  'engine.log.sellTimeout': 'Venta de {ticker} sin confirmar tras {seconds}s — continuando, las compras pueden rechazarse por saldo insuficiente',
 } as const;
 
 export type AutoTraderKey = keyof typeof autoTraderEs;

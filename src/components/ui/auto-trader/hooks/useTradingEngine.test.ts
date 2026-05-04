@@ -3,9 +3,12 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { renderHook, act, waitFor } from '@testing-library/react';
 
 const placeOrder = vi.fn();
+const getOrderStatus = vi.fn();
+const waitForOrderSettlement = vi.fn();
 const computeRebalancePlan = vi.fn();
 
-vi.mock('@/app/trading/actions', () => ({ placeOrder }));
+vi.mock('@/app/trading/actions', () => ({ placeOrder, getOrderStatus }));
+vi.mock('@/lib/trading/order-polling', () => ({ waitForOrderSettlement }));
 vi.mock('@/lib/trading/rebalance-engine', async (orig) => {
   const actual = await orig<typeof import('@/lib/trading/rebalance-engine')>();
   return { ...actual, computeRebalancePlan };
@@ -34,6 +37,11 @@ function setActiveTab() { /* no-op */ }
 
 beforeEach(() => {
   placeOrder.mockReset();
+  getOrderStatus.mockReset();
+  waitForOrderSettlement.mockReset();
+  // Default: settlement resolves instantly as filled so existing tests don't
+  // need to know about the polling step. Tests that care override this.
+  waitForOrderSettlement.mockResolvedValue({ kind: 'filled', estado: 'terminada' });
   computeRebalancePlan.mockReset();
   localStorage.clear();
   useHistoryStore.setState({ runs: [] });
@@ -216,6 +224,53 @@ describe('useTradingEngine — handleAnalyze SSE complete event', () => {
   });
 });
 
+describe('useTradingEngine — handleAnalyze request body', () => {
+  function captureBody() {
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: false,
+      status: 500,
+      text: async () => 'stop here',
+    });
+    vi.stubGlobal('fetch', fetchMock);
+    return fetchMock;
+  }
+
+  function parseBody(fetchMock: ReturnType<typeof vi.fn>) {
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    const [, init] = fetchMock.mock.calls[0];
+    return JSON.parse(init.body as string);
+  }
+
+  it('sends start_date and end_date in YYYY-MM-DD format', async () => {
+    const fetchMock = captureBody();
+    const { result } = renderHook(() => useTradingEngine(baseProps));
+    await act(async () => {
+      await result.current.handleAnalyze(setActiveTab);
+    });
+    const body = parseBody(fetchMock);
+    expect(body.start_date).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+    expect(body.end_date).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+  });
+
+  it('sets end_date to today and start_date to one year before', async () => {
+    const fixedNow = new Date('2026-05-04T10:00:00Z');
+    vi.useFakeTimers();
+    vi.setSystemTime(fixedNow);
+    try {
+      const fetchMock = captureBody();
+      const { result } = renderHook(() => useTradingEngine(baseProps));
+      await act(async () => {
+        await result.current.handleAnalyze(setActiveTab);
+      });
+      const body = parseBody(fetchMock);
+      expect(body.end_date).toBe('2026-05-04');
+      expect(body.start_date).toBe('2025-05-04');
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+});
+
 describe('useTradingEngine — handleExecuteOrders', () => {
   it('places sells then buys, updates orderResults and history.executed=true', async () => {
     const fakePlan = {
@@ -270,5 +325,113 @@ describe('useTradingEngine — handleExecuteOrders', () => {
     const runs = useHistoryStore.getState().runs;
     expect(runs[0].executed).toBe(true);
     expect(runs[0].orderResults).toHaveLength(2);
+  });
+
+  it('waits for each sell to settle before submitting any buys', async () => {
+    const fakePlan = {
+      sells: [{ ticker: 'AAPLC', quantity: 2, priceArs: 1000, volumeArs: 2000, estimatedCostArs: 0, reasoning: '', confidence: 90 }],
+      buys: [{ ticker: 'KOC', quantity: 3, priceArs: 500, volumeArs: 1500, estimatedCostArs: 1507.5, reasoning: '', confidence: 80 }],
+      totalSellVolume: 2000,
+      totalBuyVolume: 1500,
+      estimatedSellProceeds: 1990,
+      warnings: [],
+    };
+    computeRebalancePlan.mockReturnValue(fakePlan);
+
+    const sseResponse = (() => {
+      const payload = 'event: complete\ndata: ' + JSON.stringify({
+        data: { analyst_signals: {}, decisions: {} },
+      }) + '\n\n';
+      const stream = new ReadableStream({
+        start(c) { c.enqueue(new TextEncoder().encode(payload)); c.close(); },
+      });
+      return new Response(stream, { status: 200 });
+    })();
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(sseResponse));
+
+    // Order of side effects across mocks — the buy must come strictly AFTER
+    // waitForOrderSettlement resolves for the sell (i.e. the broker has
+    // confirmed the sale is filled and proceeds are liberated).
+    const callOrder: string[] = [];
+    placeOrder.mockImplementation(async (args: { side: string; simbolo: string }) => {
+      callOrder.push(`order:${args.side}:${args.simbolo}`);
+      if (args.side === 'sell') return { success: true, data: { ok: true, numeroOperacion: 9001 } };
+      return { success: true, data: { ok: true, numeroOperacion: 9002 } };
+    });
+    waitForOrderSettlement.mockImplementation(async (numero: number) => {
+      callOrder.push(`wait:${numero}`);
+      return { kind: 'filled', estado: 'terminada' };
+    });
+
+    const { result } = renderHook(() => useTradingEngine(baseProps));
+    await act(async () => {
+      await result.current.handleAnalyze(setActiveTab);
+    });
+    await waitFor(() => expect(result.current.phase).toBe('planned'));
+
+    await act(async () => {
+      await result.current.handleExecuteOrders();
+    });
+
+    expect(callOrder).toEqual([
+      'order:sell:AAPLC',
+      'wait:9001',
+      'order:buy:KOC',
+    ]);
+
+    // waitForOrderSettlement was called with the production timeout/poll cadence.
+    expect(waitForOrderSettlement).toHaveBeenCalledWith(
+      9001,
+      expect.objectContaining({ timeoutMs: 60_000, pollMs: 5_000, getStatus: getOrderStatus }),
+    );
+
+    // Surfaced to the user via a log entry.
+    const sellPollLog = result.current.logs.find(l => l.id === 'sell-poll-9001');
+    expect(sellPollLog?.status).toBe('ok');
+    expect(sellPollLog?.text).toContain('AAPLC');
+  });
+
+  it('logs an error and still proceeds with buys when a sell is cancelled', async () => {
+    const fakePlan = {
+      sells: [{ ticker: 'AAPLC', quantity: 2, priceArs: 1000, volumeArs: 2000, estimatedCostArs: 0, reasoning: '', confidence: 90 }],
+      buys: [{ ticker: 'KOC', quantity: 3, priceArs: 500, volumeArs: 1500, estimatedCostArs: 1507.5, reasoning: '', confidence: 80 }],
+      totalSellVolume: 2000,
+      totalBuyVolume: 1500,
+      estimatedSellProceeds: 1990,
+      warnings: [],
+    };
+    computeRebalancePlan.mockReturnValue(fakePlan);
+
+    const sseResponse = (() => {
+      const payload = 'event: complete\ndata: ' + JSON.stringify({
+        data: { analyst_signals: {}, decisions: {} },
+      }) + '\n\n';
+      const stream = new ReadableStream({
+        start(c) { c.enqueue(new TextEncoder().encode(payload)); c.close(); },
+      });
+      return new Response(stream, { status: 200 });
+    })();
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(sseResponse));
+
+    placeOrder
+      .mockResolvedValueOnce({ success: true, data: { ok: true, numeroOperacion: 4242 } }) // sell
+      .mockResolvedValueOnce({ success: true, data: { ok: true, numeroOperacion: 4243 } }); // buy
+    waitForOrderSettlement.mockResolvedValueOnce({ kind: 'cancelled', estado: 'cancelada' });
+
+    const { result } = renderHook(() => useTradingEngine(baseProps));
+    await act(async () => {
+      await result.current.handleAnalyze(setActiveTab);
+    });
+    await waitFor(() => expect(result.current.phase).toBe('planned'));
+    await act(async () => {
+      await result.current.handleExecuteOrders();
+    });
+
+    const log = result.current.logs.find(l => l.id === 'sell-poll-4242');
+    expect(log?.status).toBe('error');
+    // Buy still got attempted — the user is informed via the log but the
+    // engine doesn't unilaterally skip planned buys.
+    expect(placeOrder).toHaveBeenCalledTimes(2);
+    expect(placeOrder.mock.calls[1][0]).toMatchObject({ side: 'buy', simbolo: 'KOC' });
   });
 });

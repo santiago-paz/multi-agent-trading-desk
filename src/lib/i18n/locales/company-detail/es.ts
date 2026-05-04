@@ -10,6 +10,7 @@ export const companyDetailEs = {
   'noUsEquivalent': 'Este CEDEAR no tiene equivalente listado en EE.UU.',
   'noUsEquivalentSub': 'No se puede obtener información desde FMP.',
   'noProfile': 'No se encontró información para {symbol}.',
+  'fmpRateLimit': 'Límite de uso de FMP alcanzado. Esperá unos minutos o ampliá tu plan.',
 
   // ── Tabs ──
   'tabs.info': 'Info',
