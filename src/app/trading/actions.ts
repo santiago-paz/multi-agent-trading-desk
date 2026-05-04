@@ -9,6 +9,33 @@ import { getHistoricalData, getAllNews, getCompanyNames, getCompanyProfile, getI
 import { stripCurrencySuffix, toFmpTicker, isEtf } from '@/lib/cedear-map';
 import { DEMO_MODE, DEMO_MEP_RATE, DEMO_PERFIL, DEMO_ESTADO_CUENTA, DEMO_PORTFOLIO, DEMO_USD_PRICES, DEMO_VALUE_USD, DEMO_OPERATIONS, DEMO_NEWS_GENERAL, DEMO_NEWS_SPECIFIC, getDemoMarketData, getDemoCedearsForTrading, getDemoFullPortfolioContext } from '@/lib/demo/data';
 
+// Cap on simultaneous outbound FMP fetches. Without this, firing 200+ parallel
+// requests saturates undici's socket pool and trips FMP rate-limiting, surfacing
+// as opaque `fetch failed` errors on most of the batch.
+const FMP_FETCH_CONCURRENCY = 8;
+
+async function mapWithConcurrency<T, R>(
+  items: T[],
+  concurrency: number,
+  worker: (item: T, index: number) => Promise<R>,
+): Promise<PromiseSettledResult<R>[]> {
+  const results: PromiseSettledResult<R>[] = new Array(items.length);
+  let cursor = 0;
+  const runners = Array.from({ length: Math.min(concurrency, items.length) }, async () => {
+    while (true) {
+      const idx = cursor++;
+      if (idx >= items.length) return;
+      try {
+        results[idx] = { status: 'fulfilled', value: await worker(items[idx], idx) };
+      } catch (reason) {
+        results[idx] = { status: 'rejected', reason };
+      }
+    }
+  });
+  await Promise.all(runners);
+  return results;
+}
+
 export async function getMarketData() {
   if (DEMO_MODE) return { success: true, data: getDemoMarketData() };
   try {
@@ -38,18 +65,16 @@ export async function getMarketData() {
     // 3. Union of symbols (owned first), no cap
     const allSymbols = Array.from(new Set([...ownedSymbols, ...panelSymbols]));
 
-    // 4. Fetch 7-day historical data in parallel, tolerating individual failures.
+    // 4. Fetch 7-day historical data with bounded concurrency, tolerating individual failures.
     //    Use toFmpTicker() to translate IOL symbols (e.g. XROX → XRX) for the FMP API.
     //    For symbols where FMP has no data, fall back to IOL price as a 2-point entry
     //    so the symbol still appears in the table with its current price and daily % change.
-    const settled = await Promise.allSettled(
-      allSymbols.map(async (symbol) => {
-        const fmpTicker = toFmpTicker(symbol);
-        if (!fmpTicker) return { symbol, data: [] as HistoricalRow[] };
-        const data = await getHistoricalData(fmpTicker, 7);
-        return { symbol, data };
-      })
-    );
+    const settled = await mapWithConcurrency(allSymbols, FMP_FETCH_CONCURRENCY, async (symbol) => {
+      const fmpTicker = toFmpTicker(symbol);
+      if (!fmpTicker) return { symbol, data: [] as HistoricalRow[] };
+      const data = await getHistoricalData(fmpTicker, 7);
+      return { symbol, data };
+    });
 
     const marketData: { symbol: string; data: HistoricalRow[] }[] = [];
     for (let i = 0; i < settled.length; i++) {
@@ -239,14 +264,14 @@ export async function placeOrder(params: {
     today.setHours(23, 59, 59, 0);
     const validez = today.toISOString();
 
-    let { cantidad, monto } = params;
+    let cantidad: number | undefined = params.cantidad;
+    let { monto } = params;
 
-    // IOL API requires 'monto' > 0 and frequently 'cantidad' = 0 for Market Buys.
+    // For market buys, IOL rejects bodies that include `cantidad` at all
+    // ("Precio mercado no debe tener cantidad") — send only `monto`.
     if (params.side === 'buy' && params.tipoOrden === 'precioMercado') {
-      if (!monto) {
-        monto = cantidad * params.precio;
-      }
-      cantidad = 0;
+      monto = monto ?? cantidad * params.precio;
+      cantidad = undefined;
     }
 
     const result = await iolClient.placeOrder({
@@ -369,6 +394,19 @@ export async function getFullPortfolioContext() {
       }
     }
 
+    // Resolve company names so the UI can show the underlying business
+    // alongside the IOL ticker (lets the user verify the CEDEAR mapping).
+    const companyNames: Record<string, string> = {};
+    try {
+      const fmpNames = (await getCompanyNames(fmpTickers)) ?? {};
+      for (const [iol, fmp] of Object.entries(iolToFmp)) {
+        const name = fmpNames[fmp];
+        if (name && name !== fmp) companyNames[iol] = name;
+      }
+    } catch (err) {
+      console.warn('[AutoTrader] getCompanyNames failed; continuing without names:', err);
+    }
+
     // ── Verbose logging ────────────────────────────────────────────────────
     console.log('\n╔══════════════════════════════════════════════════════════════╗');
     console.log('║              AUTO TRADER — PORTFOLIO CONTEXT                ║');
@@ -425,6 +463,7 @@ export async function getFullPortfolioContext() {
       fmpTickers,
       iolToFmp,
       fmpToIol,
+      companyNames,
       cashArs,
       comprometidoArs,
       arsPrices,

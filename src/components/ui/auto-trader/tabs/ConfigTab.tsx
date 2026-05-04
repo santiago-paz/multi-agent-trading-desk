@@ -3,6 +3,7 @@ import { FONT, COL_HEADER_BASE, COL_RAISED, COL_SUNKEN, CELL, CELL_RIGHT, COLOR_
 import { AgentSelector } from '@/components/ui/AgentSelector';
 import { fmtARS, fmtARS2 } from '../utils';
 import { Agent, PortfolioSortKey } from '../types';
+import { TickerCell } from '../components/TickerCell';
 import { AI_MODELS, type AIModelId, isMarketOpen } from '../market-hours';
 import { useAutoTraderT } from '@/lib/i18n';
 
@@ -17,6 +18,7 @@ interface ConfigTabProps {
   setModelName: (val: AIModelId) => void;
   holdingTickers: string[];
   holdings: Record<string, number>;
+  companyNames?: Record<string, string>;
   arsPrices: Record<string, number>;
   portfolioError: string | null;
   isLoadingPortfolio: boolean;
@@ -46,6 +48,7 @@ export function ConfigTab({
   setModelName,
   holdingTickers,
   holdings,
+  companyNames,
   arsPrices,
   portfolioError,
   isLoadingPortfolio,
@@ -166,7 +169,9 @@ export function ConfigTab({
                         backgroundColor: idx % 2 === 0 ? '#ffffff' : '#f0f0f0',
                         cursor: 'default',
                       }}>
-                        <td style={CELL}>{ticker}</td>
+                        <td style={CELL}>
+                          <TickerCell ticker={ticker} company={companyNames?.[ticker]} />
+                        </td>
                         <td style={CELL_RIGHT}>{qty}</td>
                         <td style={CELL_RIGHT}>${fmtARS2(price)}</td>
                         <td style={CELL_RIGHT}>${fmtARS2(priceUsd)}</td>

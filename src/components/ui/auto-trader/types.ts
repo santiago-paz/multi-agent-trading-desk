@@ -67,4 +67,6 @@ export interface HistoricalRun {
     holdings: Record<string, number>;
     dailyLimit: number;
   };
+  /** IOL ticker → company name, captured at run time so historical runs stay readable. */
+  companyNames?: Record<string, string>;
 }

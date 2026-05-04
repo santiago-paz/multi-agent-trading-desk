@@ -12,6 +12,7 @@ export function usePortfolio() {
   const [fmpTickers, setFmpTickers] = useState<string[]>([]);
   const [iolToFmp, setIolToFmp] = useState<Record<string, string>>({});
   const [fmpToIol, setFmpToIol] = useState<Record<string, string>>({});
+  const [companyNames, setCompanyNames] = useState<Record<string, string>>({});
   const [cashArs, setCashArs] = useState(0);
   const [comprometidoArs, setComprometidoArs] = useState(0);
   const [arsPrices, setArsPrices] = useState<Record<string, number>>({});
@@ -33,6 +34,7 @@ export function usePortfolio() {
         setFmpTickers(result.fmpTickers);
         setIolToFmp(result.iolToFmp);
         setFmpToIol(result.fmpToIol);
+        setCompanyNames(result.companyNames ?? {});
         setCashArs(result.cashArs);
         setComprometidoArs(result.comprometidoArs);
         setArsPrices(result.arsPrices);
@@ -69,6 +71,7 @@ export function usePortfolio() {
     fmpTickers,
     iolToFmp,
     fmpToIol,
+    companyNames,
     cashArs,
     comprometidoArs,
     arsPrices,

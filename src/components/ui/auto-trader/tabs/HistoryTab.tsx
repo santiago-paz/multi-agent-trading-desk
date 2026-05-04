@@ -7,6 +7,7 @@ import { useHistoryStore } from '@/lib/store/history-store';
 import type { HistoricalRun } from '../types';
 import { fmtARS, fmtARS2 } from '../utils';
 import { useAutoTraderT } from '@/lib/i18n';
+import { TickerCell } from '../components/TickerCell';
 
 interface HistoryTabProps {
   onRerun: (agentKeys: string[]) => void;
@@ -63,7 +64,9 @@ function RunDetail({ run }: { run: HistoricalRun }) {
                   <tbody>
                     {run.plan.sells.map((o, i) => (
                       <tr key={o.ticker} style={{ backgroundColor: i % 2 === 0 ? '#fff' : '#f0f0f0' }}>
-                        <td style={CELL}>{o.ticker}</td>
+                        <td style={CELL}>
+                          <TickerCell ticker={o.ticker} company={run.companyNames?.[o.ticker]} />
+                        </td>
                         <td style={CELL_RIGHT}>{o.quantity}</td>
                         <td style={CELL_RIGHT}>${fmtARS2(o.priceArs)}</td>
                         <td style={CELL_RIGHT}>{o.confidence}%</td>
@@ -101,7 +104,9 @@ function RunDetail({ run }: { run: HistoricalRun }) {
                   <tbody>
                     {run.plan.buys.map((o, i) => (
                       <tr key={o.ticker} style={{ backgroundColor: i % 2 === 0 ? '#fff' : '#f0f0f0' }}>
-                        <td style={CELL}>{o.ticker}</td>
+                        <td style={CELL}>
+                          <TickerCell ticker={o.ticker} company={run.companyNames?.[o.ticker]} />
+                        </td>
                         <td style={CELL_RIGHT}>{o.quantity}</td>
                         <td style={CELL_RIGHT}>${fmtARS2(o.priceArs)}</td>
                         <td style={CELL_RIGHT}>{o.confidence}%</td>
@@ -191,7 +196,9 @@ function RunDetail({ run }: { run: HistoricalRun }) {
                   const dec = run.decisions[ticker];
                   return (
                     <tr key={i} style={{ backgroundColor: i % 2 === 0 ? '#fff' : '#f0f0f0' }}>
-                      <td style={CELL}>{ticker}</td>
+                      <td style={CELL}>
+                        <TickerCell ticker={ticker} company={run.companyNames?.[ticker]} />
+                      </td>
                       <td style={CELL}>{agent.replace(/_/g, ' ')}</td>
                       <td style={{
                         ...CELL,

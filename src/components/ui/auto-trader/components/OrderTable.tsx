@@ -3,8 +3,15 @@ import { FONT, COL_HEADER_BASE, COL_RAISED, CELL, CELL_RIGHT } from '@/lib/theme
 import { RebalanceOrder } from '@/lib/trading/rebalance-engine';
 import { fmtARS, fmtARS2 } from '../utils';
 import { useAutoTraderT } from '@/lib/i18n';
+import { TickerCell } from './TickerCell';
 
-export function OrderTable({ orders }: { orders: RebalanceOrder[] }) {
+export function OrderTable({
+  orders,
+  companyNames,
+}: {
+  orders: RebalanceOrder[];
+  companyNames?: Record<string, string>;
+}) {
   const t = useAutoTraderT();
   return (
     <div className="sunken-panel win98-scrollbar" style={{ flex: 1, overflow: 'auto', margin: 0, minHeight: 0 }}>
@@ -25,7 +32,9 @@ export function OrderTable({ orders }: { orders: RebalanceOrder[] }) {
               backgroundColor: idx % 2 === 0 ? '#ffffff' : '#f0f0f0',
               cursor: 'default',
             }}>
-              <td style={CELL}>{o.ticker}</td>
+              <td style={CELL}>
+                <TickerCell ticker={o.ticker} company={companyNames?.[o.ticker]} />
+              </td>
               <td style={CELL_RIGHT}>{o.quantity}</td>
               <td style={CELL_RIGHT}>${fmtARS2(o.priceArs)}</td>
               <td style={CELL_RIGHT}>${fmtARS(o.volumeArs)}</td>

@@ -119,7 +119,7 @@ export interface OrderResponse {
 export interface OrderRequest {
   mercado: string;
   simbolo: string;
-  cantidad: number;
+  cantidad?: number;
   precio: number;
   plazo: 't0' | 't1' | 't2'; // t0 = CI, t1 = 24hs, t2 = 48hs
   validez: string; // ISO date-time

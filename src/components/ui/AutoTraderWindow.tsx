@@ -35,6 +35,7 @@ export function AutoTraderWindow() {
     panelSymbols: portfolio.panelSymbols,
     selectedAgents: agents.selectedAgents,
     modelName,
+    companyNames: portfolio.companyNames,
   });
 
   const isLoading = portfolio.isLoadingPortfolio || agents.isLoadingAgents;
@@ -85,6 +86,7 @@ export function AutoTraderWindow() {
               setModelName={setModelName}
               holdingTickers={portfolio.holdingTickers}
               holdings={portfolio.holdings}
+              companyNames={portfolio.companyNames}
               arsPrices={portfolio.arsPrices}
               portfolioError={portfolio.portfolioError}
               isLoadingPortfolio={portfolio.isLoadingPortfolio}
@@ -113,6 +115,7 @@ export function AutoTraderWindow() {
               analystSignals={engine.analystSignals}
               candidateDecisions={engine.candidateDecisions}
               arsPrices={portfolio.arsPrices}
+              companyNames={portfolio.companyNames}
             />
           )}
 
@@ -132,6 +135,7 @@ export function AutoTraderWindow() {
               phase={engine.phase}
               dailyLimit={dailyLimit}
               cashArs={portfolio.cashArs}
+              companyNames={portfolio.companyNames}
               orderResults={engine.orderResults}
               handleExecuteOrders={engine.handleExecuteOrders}
               setPhase={engine.setPhase}

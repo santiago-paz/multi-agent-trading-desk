@@ -11,6 +11,7 @@ interface PlanTabProps {
   phase: Phase;
   dailyLimit: number;
   cashArs: number;
+  companyNames?: Record<string, string>;
   orderResults: OrderResult[];
   handleExecuteOrders: () => void;
   setPhase: (phase: Phase) => void;
@@ -22,6 +23,7 @@ export function PlanTab({
   phase,
   dailyLimit,
   cashArs,
+  companyNames,
   orderResults,
   handleExecuteOrders,
   setPhase,
@@ -46,7 +48,7 @@ export function PlanTab({
                       <div style={{ ...FONT, fontWeight: 'bold', color: COLOR_NEGATIVE, margin: '4px 0 2px', flexShrink: 0 }}>
                         {t('plan.sells')}
                       </div>
-                      <OrderTable orders={plan.sells} />
+                      <OrderTable orders={plan.sells} companyNames={companyNames} />
                       <div style={{
                         ...FONT, padding: '3px 6px', marginTop: 2,
                         background: '#f8f0f0', border: '1px solid #dfdfdf', flexShrink: 0,
@@ -77,7 +79,7 @@ export function PlanTab({
                       <div style={{ ...FONT, fontWeight: 'bold', color: COLOR_POSITIVE, margin: '4px 0 2px', marginTop: plan.sells.length > 0 ? 8 : 4, flexShrink: 0 }}>
                         {t('plan.buys')}
                       </div>
-                      <OrderTable orders={plan.buys} />
+                      <OrderTable orders={plan.buys} companyNames={companyNames} />
                       <div style={{
                         ...FONT, padding: '3px 6px', marginTop: 2,
                         background: '#f0f8f0', border: '1px solid #dfdfdf', flexShrink: 0,
@@ -177,12 +179,20 @@ export function PlanTab({
                 <div className="sunken-panel" style={{ padding: 4, margin: '4px 0' }}>
                   {plan.sells.map(o => (
                     <div key={`sell-${o.ticker}`} style={{ ...FONT, color: COLOR_NEGATIVE }}>
-                      {t('plan.confirm.sell')} {o.ticker} x{o.quantity} @ ${fmtARS2(o.priceArs)}
+                      {t('plan.confirm.sell')} {o.ticker}
+                      {companyNames?.[o.ticker] && (
+                        <span style={{ color: COLOR_SECONDARY }}> ({companyNames[o.ticker]})</span>
+                      )}
+                      {' '}x{o.quantity} @ ${fmtARS2(o.priceArs)}
                     </div>
                   ))}
                   {plan.buys.map(o => (
                     <div key={`buy-${o.ticker}`} style={{ ...FONT, color: COLOR_POSITIVE }}>
-                      {t('plan.confirm.buy')} {o.ticker} x{o.quantity} @ ${fmtARS2(o.priceArs)}
+                      {t('plan.confirm.buy')} {o.ticker}
+                      {companyNames?.[o.ticker] && (
+                        <span style={{ color: COLOR_SECONDARY }}> ({companyNames[o.ticker]})</span>
+                      )}
+                      {' '}x{o.quantity} @ ${fmtARS2(o.priceArs)}
                     </div>
                   ))}
                 </div>

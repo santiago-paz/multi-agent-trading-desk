@@ -2,6 +2,7 @@ import React, { useRef, useEffect } from 'react';
 import { FONT, COL_HEADER_BASE, COL_RAISED, CELL, CELL_RIGHT, COLOR_POSITIVE, COLOR_NEGATIVE, COLOR_SECONDARY } from '@/lib/theme/win98';
 import { LogEntry, Phase, AgentSignal, Decision } from '../types';
 import { TickerAccordion } from '../components/TickerAccordion';
+import { TickerCell } from '../components/TickerCell';
 import { fmtARS2 } from '../utils';
 import { useAutoTraderT } from '@/lib/i18n';
 
@@ -13,6 +14,7 @@ interface AITabProps {
   analystSignals: Record<string, Record<string, AgentSignal>> | null;
   candidateDecisions: Record<string, Decision> | null;
   arsPrices: Record<string, number>;
+  companyNames?: Record<string, string>;
 }
 
 export function AITab({
@@ -22,7 +24,8 @@ export function AITab({
   progress,
   analystSignals,
   candidateDecisions,
-  arsPrices
+  arsPrices,
+  companyNames,
 }: AITabProps) {
   const t = useAutoTraderT();
   const logBodyRef = useRef<HTMLDivElement>(null);
@@ -86,7 +89,9 @@ export function AITab({
                             backgroundColor: i % 2 === 0 ? '#ffffff' : '#f0f0f0',
                             cursor: 'default',
                           }}>
-                            <td style={CELL}>{ticker}</td>
+                            <td style={CELL}>
+                              <TickerCell ticker={ticker} company={companyNames?.[ticker]} />
+                            </td>
                             <td style={CELL}>{agent.replace(/_/g, ' ')}</td>
                             <td style={{
                               ...CELL,
@@ -126,7 +131,9 @@ export function AITab({
                             backgroundColor: i % 2 === 0 ? '#ffffff' : '#f0f0f0',
                             cursor: 'default',
                           }}>
-                            <td style={CELL}>{ticker}</td>
+                            <td style={CELL}>
+                              <TickerCell ticker={ticker} company={companyNames?.[ticker]} />
+                            </td>
                             <td style={{
                               ...CELL,
                               color: dec.action === 'buy' ? COLOR_POSITIVE

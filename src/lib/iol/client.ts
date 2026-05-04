@@ -155,18 +155,21 @@ export class IOLClient {
 
     if (!response.ok) {
       const errorText = await response.text();
-      // Try to parse as JSON to extract IOL's specific error messages
+      let detail: string | null = null;
       try {
         const errorJson = JSON.parse(errorText);
-        if (errorJson.messages && Array.isArray(errorJson.messages)) {
-          const detail = errorJson.messages.map((m: any) => m.description || m.title).filter(Boolean).join('. ');
-          if (detail) {
-            console.warn(`[IOL API] Request to ${endpoint} failed with ${response.status}: ${detail}`);
-            throw new Error(detail);
-          }
+        if (Array.isArray(errorJson.messages)) {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          detail = errorJson.messages.map((m: any) => m.description || m.title).filter(Boolean).join('. ') || null;
+        } else if (typeof errorJson.message === 'string') {
+          detail = errorJson.message;
         }
-      } catch (e) {
-        // Not JSON or no messages, fallback to generic error
+      } catch {
+        // Not JSON — fall through to generic error
+      }
+      if (detail) {
+        console.warn(`[IOL API] Request to ${endpoint} failed with ${response.status}: ${detail}`);
+        throw new Error(detail);
       }
       const shortError = errorText.includes('<html') ? `[HTML error page]` : errorText.slice(0, 200);
       console.warn(`[IOL API] Request to ${endpoint} failed with ${response.status}: ${shortError}`);

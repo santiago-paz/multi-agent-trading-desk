@@ -22,6 +22,7 @@ export function useTradingEngine({
   panelSymbols,
   selectedAgents,
   modelName,
+  companyNames,
 }: {
   cashArs: number;
   effectiveMep: number;
@@ -35,6 +36,7 @@ export function useTradingEngine({
   panelSymbols: string[];
   selectedAgents: Set<string>;
   modelName: string;
+  companyNames?: Record<string, string>;
 }) {
   const t = useAutoTraderT();
   const [phase, setPhase] = useState<Phase>('idle');
@@ -189,6 +191,7 @@ export function useTradingEngine({
           executed: false,
           orderResults: [],
           snapshot: { cashArs, holdings: { ...holdings }, dailyLimit },
+          companyNames: companyNames ? { ...companyNames } : undefined,
         };
         useHistoryStore.getState().addRun(historicalRun);
 

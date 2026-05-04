@@ -22,6 +22,7 @@ type SuccessShape = {
   fmpTickers: string[];
   iolToFmp: Record<string, string>;
   fmpToIol: Record<string, string>;
+  companyNames: Record<string, string>;
   cashArs: number;
   comprometidoArs: number;
   arsPrices: Record<string, number>;
@@ -39,6 +40,7 @@ function makeContext(overrides: Partial<SuccessShape> = {}): SuccessShape {
     fmpTickers: ['AAPL', 'KO'],
     iolToFmp: { AAPLC: 'AAPL', KOC: 'KO' },
     fmpToIol: { AAPL: 'AAPLC', KO: 'KOC' },
+    companyNames: { AAPL: 'Apple Inc.', KO: 'The Coca-Cola Company' },
     cashArs: 100000,
     comprometidoArs: 5000,
     arsPrices: { AAPL: 200, KO: 50 },
@@ -79,6 +81,7 @@ describe('usePortfolio', () => {
     expect(result.current.panelSymbols).toEqual(['AAPLC', 'KOC']);
     expect(result.current.fmpTickers).toEqual(['AAPL', 'KO']);
     expect(result.current.iolToFmp).toEqual({ AAPLC: 'AAPL', KOC: 'KO' });
+    expect(result.current.companyNames).toEqual({ AAPL: 'Apple Inc.', KO: 'The Coca-Cola Company' });
     expect(result.current.cashArs).toBe(100000);
     expect(result.current.comprometidoArs).toBe(5000);
     expect(result.current.mepRateLocal).toBe(1300);

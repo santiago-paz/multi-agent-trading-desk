@@ -314,6 +314,11 @@ export function getDemoFullPortfolioContext() {
     fmpToIol[s] = s;
   }
 
+  const companyNames: Record<string, string> = {};
+  for (const s of allIolSymbols) {
+    if (DEMO_COMPANY_NAMES[s]) companyNames[s] = DEMO_COMPANY_NAMES[s];
+  }
+
   return {
     success: true as const,
     holdings,
@@ -323,6 +328,7 @@ export function getDemoFullPortfolioContext() {
     fmpTickers: allIolSymbols,
     iolToFmp,
     fmpToIol,
+    companyNames,
     cashArs: 350_000,
     comprometidoArs: 28_000,
     arsPrices,

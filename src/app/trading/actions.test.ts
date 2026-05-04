@@ -421,11 +421,11 @@ describe('placeOrder', () => {
     if (r.success) expect(r.data.ok).toBe(true);
   });
 
-  it('rewrites a market BUY: cantidad=0 and monto = qty * precio when not provided', async () => {
+  it('rewrites a market BUY: omits cantidad and sets monto = qty * precio when not provided', async () => {
     iol.placeOrder.mockResolvedValueOnce({ numeroOperacion: 1 });
     await actions.placeOrder({ ...baseParams, tipoOrden: 'precioMercado', cantidad: 4, precio: 250 });
     const sent = iol.placeOrder.mock.calls[0][0];
-    expect(sent.cantidad).toBe(0);
+    expect(sent.cantidad).toBeUndefined();
     expect(sent.monto).toBe(1000); // 4 * 250
   });
 
@@ -433,7 +433,7 @@ describe('placeOrder', () => {
     iol.placeOrder.mockResolvedValueOnce({ numeroOperacion: 1 });
     await actions.placeOrder({ ...baseParams, tipoOrden: 'precioMercado', cantidad: 4, monto: 999 });
     const sent = iol.placeOrder.mock.calls[0][0];
-    expect(sent.cantidad).toBe(0);
+    expect(sent.cantidad).toBeUndefined();
     expect(sent.monto).toBe(999);
   });
 
@@ -534,6 +534,7 @@ describe('getFullPortfolioContext', () => {
         panelTitulo({ simbolo: 'BAD', ultimoPrecio: 0 }),
       ],
     } as PanelResponse);
+    fmp.getCompanyNames.mockResolvedValueOnce({ AAPL: 'Apple Inc.', KO: 'The Coca-Cola Company' });
 
     const r = await actions.getFullPortfolioContext();
     if (!r.success) throw new Error('expected success');
@@ -546,6 +547,7 @@ describe('getFullPortfolioContext', () => {
     expect(r.arsPrices.TSLA).toBeUndefined();
     expect(r.panelSymbols).toEqual(['KO']); // AAPL excluded (in portfolio)
     expect(r.fmpToIol.AAPL).toBe('AAPL');
+    expect(r.companyNames).toEqual({ AAPL: 'Apple Inc.', KO: 'The Coca-Cola Company' });
   });
 
   it('returns failure when getPortfolio throws', async () => {

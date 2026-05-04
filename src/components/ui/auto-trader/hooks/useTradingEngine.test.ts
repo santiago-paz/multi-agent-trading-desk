@@ -27,6 +27,7 @@ const baseProps = {
   panelSymbols: ['AAPLC', 'KOC'],
   selectedAgents: new Set<string>(['warren_buffett']),
   modelName: 'claude-opus-4-7',
+  companyNames: { AAPLC: 'Apple Inc.', KOC: 'Coca-Cola Company' } as Record<string, string>,
 };
 
 function setActiveTab() { /* no-op */ }
@@ -209,6 +210,9 @@ describe('useTradingEngine — handleAnalyze SSE complete event', () => {
     expect(runs[0].executed).toBe(false);
     expect(runs[0].agentKeys).toEqual(['warren_buffett']);
     expect(runs[0].tickers).toEqual(['AAPL', 'KO']);
+    // Company names were captured into the run snapshot so the History tab
+    // can render them later without re-fetching from FMP.
+    expect(runs[0].companyNames).toEqual({ AAPLC: 'Apple Inc.', KOC: 'Coca-Cola Company' });
   });
 });
 
