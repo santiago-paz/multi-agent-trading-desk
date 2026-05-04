@@ -19,20 +19,29 @@ const iol = vi.hoisted(() => ({
   placeOrder: vi.fn(),
 }));
 
-const fmp = vi.hoisted(() => ({
-  getHistoricalData: vi.fn(),
-  getAllNews: vi.fn(),
-  getCompanyNames: vi.fn(),
-  getCompanyProfile: vi.fn(),
-  getIncomeStatements: vi.fn(),
-  getKeyMetrics: vi.fn(),
-  getCashFlowStatements: vi.fn(),
-  getBalanceSheetStatements: vi.fn(),
-  getFinancialScores: vi.fn(),
-  getDCFValue: vi.fn(),
-  getTickerNews: vi.fn(),
-  searchSymbolHits: vi.fn(),
-}));
+const fmp = vi.hoisted(() => {
+  class FmpRateLimitError extends Error {
+    constructor(public readonly originalMessage: string) {
+      super('FMP rate limit reached');
+      this.name = 'FmpRateLimitError';
+    }
+  }
+  return {
+    getHistoricalData: vi.fn(),
+    getAllNews: vi.fn(),
+    getCompanyNames: vi.fn(),
+    getCompanyProfile: vi.fn(),
+    getIncomeStatements: vi.fn(),
+    getKeyMetrics: vi.fn(),
+    getCashFlowStatements: vi.fn(),
+    getBalanceSheetStatements: vi.fn(),
+    getFinancialScores: vi.fn(),
+    getDCFValue: vi.fn(),
+    getTickerNews: vi.fn(),
+    searchSymbolHits: vi.fn(),
+    FmpRateLimitError,
+  };
+});
 
 vi.mock('@/lib/iol/client', () => ({ iolClient: iol }));
 vi.mock('@/lib/fmp/market-data', () => fmp);
@@ -60,7 +69,10 @@ beforeEach(() => {
   vi.spyOn(console, 'warn').mockImplementation(() => {});
   ctl.DEMO_MODE = false;
   for (const fn of Object.values(iol)) fn.mockReset();
-  for (const fn of Object.values(fmp)) fn.mockReset();
+  for (const [key, val] of Object.entries(fmp)) {
+    if (key === 'FmpRateLimitError') continue;
+    (val as ReturnType<typeof vi.fn>).mockReset();
+  }
 });
 
 // ─── Module under test (imported AFTER mocks are registered) ────────────────
