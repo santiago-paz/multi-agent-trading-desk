@@ -9,7 +9,7 @@ import {
 } from '@/lib/theme/win98';
 import { AgentSelector } from '@/components/ui/AgentSelector';
 import { Agent, BacktestDayResult, PerformanceMetrics, LogStatus, LogEntry } from '@/lib/backtesting/types';
-import { parseSSEChunk } from '@/lib/backtesting/sse';
+import { parseSSEChunk } from '@/lib/sse';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 

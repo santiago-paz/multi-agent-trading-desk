@@ -1,6 +1,34 @@
 import { describe, it, expect } from 'vitest';
-import { getSortValue, getCashUSD } from './usePortfolioSort';
+import { getSortValue, getCashUSD, getCashARS, getComprometidoUSD, getComprometidoARS } from './usePortfolioSort';
 import { PortfolioAsset, EstadoCuenta } from '@/lib/iol/types';
+
+// ── Helper: minimal Cuenta factory ──────────────────────────────────────────
+
+type CuentaInput = {
+  moneda: string;
+  disponible: number;
+  comprometido?: number;
+};
+
+function makeEstado(cuentas: CuentaInput[]): EstadoCuenta {
+  return {
+    cuentas: cuentas.map((c, i) => ({
+      numero: String(i + 1),
+      tipo: 'inversion',
+      moneda: c.moneda,
+      disponible: c.disponible,
+      comprometido: c.comprometido ?? 0,
+      saldo: c.disponible,
+      titulosValorizados: 0,
+      total: c.disponible,
+      margenDescubierto: 0,
+      saldos: [],
+      estado: 'activa',
+    })),
+    estadisticas: [],
+    totalEnPesos: 0,
+  };
+}
 
 // ── Helper: minimal PortfolioAsset factory ──────────────────────────────────
 
@@ -69,6 +97,11 @@ describe('getSortValue', () => {
 
   it('returns gananciaDinero for sort key "gananciaDinero"', () => {
     expect(getSortValue(asset, 'gananciaDinero')).toBe(2500);
+  });
+
+  it('returns gananciaPorcentaje for sort key "gananciaPorcentaje"', () => {
+    const a = makeAsset({ gananciaPorcentaje: 12.5 });
+    expect(getSortValue(a, 'gananciaPorcentaje')).toBe(12.5);
   });
 });
 
@@ -149,5 +182,119 @@ describe('getCashUSD', () => {
     };
     // (6000 + 6000) / 1200 = 10
     expect(getCashUSD(estado, MEP)).toBe(10);
+  });
+});
+
+// ── getCashARS ──────────────────────────────────────────────────────────────
+
+describe('getCashARS', () => {
+  const MEP = 1200;
+
+  it('returns ARS cash as-is', () => {
+    const e = makeEstado([{ moneda: 'peso_Argentino', disponible: 50000 }]);
+    expect(getCashARS(e, MEP)).toBe(50000);
+  });
+
+  it('converts USD cash to ARS via MEP rate', () => {
+    const e = makeEstado([{ moneda: 'dolar_Estadounidense', disponible: 100 }]);
+    // 100 * 1200 = 120000
+    expect(getCashARS(e, MEP)).toBe(120000);
+  });
+
+  it('combines ARS and USD accounts', () => {
+    const e = makeEstado([
+      { moneda: 'peso_Argentino', disponible: 50000 },
+      { moneda: 'dolar_Estadounidense', disponible: 50 },
+    ]);
+    // 50000 + 50 * 1200 = 110000
+    expect(getCashARS(e, MEP)).toBe(110000);
+  });
+
+  it('returns 0 for null estadoCuenta', () => {
+    expect(getCashARS(null, MEP)).toBe(0);
+  });
+
+  it('returns 0 when cuentas is null', () => {
+    const e = { cuentas: null, estadisticas: [], totalEnPesos: 0 } as unknown as EstadoCuenta;
+    expect(getCashARS(e, MEP)).toBe(0);
+  });
+
+  it('ignores unknown currencies', () => {
+    const e = makeEstado([{ moneda: 'euro', disponible: 1000 }]);
+    expect(getCashARS(e, MEP)).toBe(0);
+  });
+});
+
+// ── getComprometidoUSD ──────────────────────────────────────────────────────
+
+describe('getComprometidoUSD', () => {
+  const MEP = 1200;
+
+  it('converts ARS comprometido to USD via MEP rate', () => {
+    const e = makeEstado([{ moneda: 'peso_Argentino', disponible: 0, comprometido: 60000 }]);
+    expect(getComprometidoUSD(e, MEP)).toBe(50);
+  });
+
+  it('returns USD comprometido as-is', () => {
+    const e = makeEstado([{ moneda: 'dolar_Estadounidense', disponible: 0, comprometido: 25 }]);
+    expect(getComprometidoUSD(e, MEP)).toBe(25);
+  });
+
+  it('combines ARS and USD comprometido', () => {
+    const e = makeEstado([
+      { moneda: 'peso_Argentino', disponible: 0, comprometido: 12000 },
+      { moneda: 'dolar_Estadounidense', disponible: 0, comprometido: 30 },
+    ]);
+    // 12000/1200 + 30 = 40
+    expect(getComprometidoUSD(e, MEP)).toBe(40);
+  });
+
+  it('treats missing comprometido (falsy) as 0', () => {
+    const e = makeEstado([{ moneda: 'peso_Argentino', disponible: 1000, comprometido: 0 }]);
+    expect(getComprometidoUSD(e, MEP)).toBe(0);
+  });
+
+  it('returns 0 for null estadoCuenta', () => {
+    expect(getComprometidoUSD(null, MEP)).toBe(0);
+  });
+
+  it('ignores unknown currencies', () => {
+    const e = makeEstado([{ moneda: 'euro', disponible: 0, comprometido: 5000 }]);
+    expect(getComprometidoUSD(e, MEP)).toBe(0);
+  });
+});
+
+// ── getComprometidoARS ──────────────────────────────────────────────────────
+
+describe('getComprometidoARS', () => {
+  const MEP = 1200;
+
+  it('returns ARS comprometido as-is', () => {
+    const e = makeEstado([{ moneda: 'peso_Argentino', disponible: 0, comprometido: 75000 }]);
+    expect(getComprometidoARS(e, MEP)).toBe(75000);
+  });
+
+  it('converts USD comprometido to ARS via MEP', () => {
+    const e = makeEstado([{ moneda: 'dolar_Estadounidense', disponible: 0, comprometido: 25 }]);
+    // 25 * 1200 = 30000
+    expect(getComprometidoARS(e, MEP)).toBe(30000);
+  });
+
+  it('combines ARS and USD comprometido', () => {
+    const e = makeEstado([
+      { moneda: 'peso_Argentino', disponible: 0, comprometido: 12000 },
+      { moneda: 'dolar_Estadounidense', disponible: 0, comprometido: 10 },
+    ]);
+    // 12000 + 10 * 1200 = 24000
+    expect(getComprometidoARS(e, MEP)).toBe(24000);
+  });
+
+  it('returns 0 for null estadoCuenta', () => {
+    expect(getComprometidoARS(null, MEP)).toBe(0);
+  });
+
+  it('ignores unknown currencies', () => {
+    const e = makeEstado([{ moneda: 'euro', disponible: 0, comprometido: 1000 }]);
+    expect(getComprometidoARS(e, MEP)).toBe(0);
   });
 });
