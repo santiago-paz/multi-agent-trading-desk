@@ -12,7 +12,7 @@
  */
 const IOL_TO_FMP: Record<string, string | null> = {
   // ── BYMA code differs from US/FMP ticker ────────────────────────────────
-  // Source: official BYMA CEDEAR list (updated 3/2/2026)
+  // Source: official BYMA CEDEAR list (updated 16/4/2026)
 
   XROX: 'XRX',     // Xerox Holdings (NYSE: XRX)
   ADGO: 'AGRO',    // Adecoagro S.A. (NYSE: AGRO)
@@ -26,6 +26,8 @@ const IOL_TO_FMP: Record<string, string | null> = {
   GOGL: 'GOOGL',   // Legacy IOL Google CEDEAR — map to Alphabet Cl. A (FMP "GOGL" = Golden Ocean)
   KOFM: 'KOF',     // Coca-Cola Femsa (NYSE: KOF)
   NOKA: 'NOK',     // Nokia Corporation (NYSE: NOK)
+  NSAN: 'NSANY',   // Nissan Motor Co. — BYMA "NSAN" maps to FMP 5-letter ADR (OTC: NSANY)
+  PCRF: 'PCRFY',   // Panasonic Corporation — BYMA "PCRF" maps to FMP 5-letter ADR (OTC: PCRFY)
   PKS: 'PKX',      // Posco Holdings (NYSE: PKX)
   TEFO: 'TEF',     // Telefonica S.A. (NYSE: TEF)
   TEN: 'TS',       // Tenaris S.A. (NYSE: TS) — BYMA "TEN" collides with Tsakos Energy (FMP: TEN)
@@ -109,12 +111,14 @@ const IOL_TO_FMP: Record<string, string | null> = {
   ESGU: 'ESGU',     // iShares ESG Aware MSCI USA ETF
   ETHA: 'ETHA',     // iShares Ethereum Trust ETF
   EWJ: 'EWJ',       // iShares MSCI Japan ETF
+  EWY: 'EWY',       // iShares MSCI South Korea ETF
   EWZ: 'EWZ',       // iShares MSCI Brazil ETF
   FXI: 'FXI',       // iShares China Large-Cap ETF
   GDX: 'GDX',       // VanEck Gold Miners ETF
   GLD: 'GLD',       // SPDR Gold Shares
   IBB: 'IBB',       // iShares Biotechnology ETF
   IBIT: 'IBIT',     // iShares Bitcoin Trust ETF
+  ICLN: 'ICLN',     // iShares Global Clean Energy ETF
   IEMG: 'IEMG',     // iShares Core MSCI Emerging Markets ETF
   IEUR: 'IEUR',     // iShares Core MSCI Europe ETF
   IJH: 'IJH',       // iShares Core S&P Mid-Cap ETF
@@ -126,6 +130,7 @@ const IOL_TO_FMP: Record<string, string | null> = {
   IWM: 'IWM',       // iShares Russell 2000 ETF
   PSQ: 'PSQ',       // ProShares Short QQQ
   QQQ: 'QQQ',       // Invesco QQQ Trust
+  RSP: 'RSP',       // Invesco S&P 500 Equal Weight ETF
   SH: 'SH',         // ProShares Short S&P500
   SLV: 'SLV',       // iShares Silver Trust
   SMH: 'SMH',       // VanEck Semiconductor ETF
@@ -150,6 +155,7 @@ const IOL_TO_FMP: Record<string, string | null> = {
   XLU: 'XLU',       // Utilities Select Sector SPDR ETF
   XLV: 'XLV',       // Health Care Select Sector SPDR ETF
   XLY: 'XLY',       // Consumer Discretionary Select Sector SPDR ETF
+  XME: 'XME',       // SPDR S&P Metals & Mining ETF
 
   // ── Non-US exchanges (London, Frankfurt, etc.) ──────────────────────────
   ADS: null,        // Adidas (XETRA only — no US ADR)
@@ -170,10 +176,10 @@ const IOL_TO_FMP: Record<string, string | null> = {
 
 /** Set of base symbols that are ETFs/ETNs/Funds (extracted from IOL_TO_FMP). */
 const ETF_SYMBOLS = new Set([
-  'ACWI','ARKK','CIBR','COPX','DIA','EEM','EFA','ESGU','ETHA','EWJ','EWZ','FXI',
-  'GDX','GLD','IBB','IBIT','IEMG','IEUR','IJH','ILF','ITA','IVE','IVV','IVW','IWM',
-  'PSQ','QQQ','SH','SLV','SMH','SPHQ','SPXL','SPY','TQQQ','URA','USO','VEA','VIG',
-  'VO','VXX','XLB','XLC','XLE','XLF','XLI','XLK','XLP','XLRE','XLU','XLV','XLY',
+  'ACWI','ARKK','CIBR','COPX','DIA','EEM','EFA','ESGU','ETHA','EWJ','EWY','EWZ','FXI',
+  'GDX','GLD','IBB','IBIT','ICLN','IEMG','IEUR','IJH','ILF','ITA','IVE','IVV','IVW','IWM',
+  'PSQ','QQQ','RSP','SH','SLV','SMH','SPHQ','SPXL','SPY','TQQQ','URA','USO','VEA','VIG',
+  'VO','VXX','XLB','XLC','XLE','XLF','XLI','XLK','XLP','XLRE','XLU','XLV','XLY','XME',
 ]);
 
 /** Check if a base IOL symbol is an ETF/ETN/Fund. */
