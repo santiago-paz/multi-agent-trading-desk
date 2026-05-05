@@ -5,85 +5,141 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Commands
 
 ```bash
-npm run dev       # Start development server
-npm run build     # Production build
-npm run start     # Production server
-npm run lint      # Run ESLint
+npm run dev            # Start development server (with --inspect)
+npm run build          # Production build
+npm run start          # Production server
+npm run lint           # ESLint
+npm run lint:fix       # ESLint with auto-fix
+npm test               # Run all vitest unit tests once
+npm run test:coverage  # Run tests with v8 coverage
 ```
 
-No test runner is configured.
+Run a single test file or filter:
+
+```bash
+npx vitest run src/lib/trading/engine.test.ts
+npx vitest run -t "places buy order"
+```
+
+Integration tests hit live APIs and are **skipped by default**. Opt in via env flag:
+
+```bash
+IOL_INTEGRATION=1 npx vitest run src/lib/iol/client.integration.test.ts
+FMP_INTEGRATION=1 npx vitest run src/lib/fmp/market-data.integration.test.ts
+```
+
+`vitest.config.ts` loads `.env.local` automatically (no `VITE_` prefix needed) so credentials are picked up without being passed on the CLI.
 
 ## Architecture
 
-This is a **Win98-themed AI hedge fund dashboard** for trading CEDEARs (Argentine depository receipts for international stocks like AAPL, KO, TSLA) via the InvertirOnline (IOL) broker API.
+A **Win98-themed AI hedge fund dashboard** for trading CEDEARs (Argentine depository receipts for international stocks like AAPL, KO, TSLA) via the InvertirOnline (IOL) broker API. Built on Next.js 16 (App Router) + React 19.
 
-### App Structure
+### Two-repo system
+
+| Repo | Stack | Role |
+|------|-------|------|
+| **this repo** | Next.js, React 19, 98.css | Win98 desktop UI, broker integration, market data, trading engines |
+| **ai-hedge-fund** (`/Users/santiago/GitHub/ai-hedge-fund`) | Python, FastAPI, LangGraph | AI analyst agents, portfolio management, backtesting |
+
+The Next.js app proxies all `/api/hedge-fund/*` requests to the Python backend through `src/app/api/hedge-fund/[...path]/route.ts` (Node runtime, SSE-friendly streaming, attaches `x-api-key`). The browser never talks to the Python service directly.
+
+### App entrypoints
 
 - **`/`** — Landing page with "Enter Dashboard" button
-- **`/trading`** — Main Win98-style desktop environment with draggable windows
+- **`/trading`** — Win98 desktop environment (large client component, `src/app/trading/page.tsx`)
+- **`src/proxy.ts`** — Next.js middleware enforcing optional HTTP Basic Auth on all non-API routes
 
-The trading page is a large client component (`src/app/trading/page.tsx`) that coordinates window visibility and data fetching. Heavy logic lives in server actions (`src/app/trading/actions.ts`).
+The trading page is the orchestrator: it owns window visibility, desktop icon state, and top-level data fetching. Heavy server logic lives in `src/app/trading/actions.ts` (server actions), not in the page.
 
-### Desktop Windows
+### Desktop windows
 
-Six draggable windows managed by `useWindowManager` hook (`src/hooks/useWindowManager.ts`):
+All windows share `DraggableResizableWindow.tsx` (drag/resize shell) and are managed by `useWindowManager` (`src/hooks/useWindowManager.ts`), which owns position, z-index, and minimize state. Window IDs are enumerated in `APP_IDS`. Each window component lives in `src/components/ui/`:
 
-| Window | Component | Description |
-|--------|-----------|-------------|
-| Portfolio | `PortfolioWindow.tsx` | Portfolio holdings, account data (`AccountData.tsx`), summary (`PortfolioSummary.tsx`) |
-| News | `NewsFeed.tsx` | Market intelligence feed with sentiment |
-| Market Data | `MarketDataWindow.tsx` | OHLCV charts with sparklines (`Sparkline.tsx`) |
-| Movimientos | `OperationsFeed.tsx` | Recent broker operations/movements |
-| AI Hedge Fund | `AiHedgeFundWindow.tsx` | External Python backend integration for AI-driven analysis |
-| Backtesting | `BacktestingWindow.tsx` | Strategy backtesting engine |
+- **Portfolio** (`PortfolioWindow.tsx` + `AccountData.tsx`, `PortfolioSummary.tsx`)
+- **Market Data** (`MarketDataWindow.tsx` + `Sparkline.tsx`)
+- **News** (`NewsFeed.tsx`)
+- **Movimientos** (`OperationsFeed.tsx`)
+- **Backtesting** (`BacktestingWindow.tsx`)
+- **Auto Trader** (`AutoTraderWindow.tsx` + `auto-trader/` subdir)
+- **Company Detail** (`CompanyDetailWindow.tsx` + `company-detail/` subdir; supports multiple instances keyed by `companydetail-<symbol>`)
+- **Quick Trade** (`QuickTradePanel.tsx` + `OrderReview.tsx`)
+- **Display Properties** (`DisplayPropertiesWindow.tsx` — wallpaper / screensaver settings)
+- **App Manager** (`AppManagerWindow.tsx` — Win98 task manager equivalent)
 
-Shared UI primitives: `DraggableResizableWindow.tsx` (drag/resize shell), `DesktopIcon.tsx` (desktop shortcuts), `OrderReview.tsx` (trade confirmation), `RiskGauge.tsx` (risk visualization).
+Desktop icon positions are persisted to localStorage. Screensavers live in `src/components/screensavers/` and are dispatched by `ScreenSaverRenderer.tsx`.
 
-### AI Hedge Fund Backend
+### Data layer
 
-The "AI Hedge Fund" window connects to a separate Python backend located at `/Users/santiago/GitHub/ai-hedge-fund`. The frontend calls it via `NEXT_PUBLIC_AI_HEDGE_FUND_API_URL` (defaults to `http://localhost:8000`). Endpoints used: `GET /hedge-fund/agents` and `POST /hedge-fund/run`.
+**IOL broker client** (`src/lib/iol/client.ts`) — see [`docs/iol-api.md`](docs/iol-api.md).
+- Token cached to `.iol_token_cache.json` on disk (gitignored), auto-refreshed 60s before expiry, falls back to username/password.
 
-### IOL Client (`src/lib/iol/client.ts`) — see [`docs/iol-api.md`](docs/iol-api.md) for full API reference
+**FMP market data** (`src/lib/fmp/market-data.ts`) — see [`docs/fmp-api.md`](docs/fmp-api.md).
+- Historical OHLCV, company profiles, financials (income/cash-flow/balance), key metrics, DCF, news, symbol search.
+- Company names cached to `.company-names-cache.json`; FMP profile responses cached to `.fmp-profile-cache.json` (FMP profile endpoint doesn't support batching).
+- Throws `FmpRateLimitError` on 429s; server actions have a `FMP_FETCH_CONCURRENCY` cap (8) to avoid saturating undici's socket pool. Treat rate-limit errors as a distinct user-facing condition, not generic failures.
 
-Broker API integration with:
-- Token caching to `.iol_token_cache.json` on disk
-- Auto-refresh 60s before expiry, fallback to username/password
+**CEDEAR symbol translation** is critical and lives in two files:
+- `src/lib/cedear-map.ts` — IOL ticker ↔ FMP ticker mapping (e.g. `KO` → `KO`, `SPY` → `SPY`), plus ETF detection.
+- `src/lib/cedear-ratios.ts` — BYMA conversion ratios (e.g. 10 CEDEAR shares = 1 underlying US share). Quantity/valuation logic must apply ratios; portfolio holdings are decoupled from free-cash calculations.
 
-### Market Data (`src/lib/market-data.ts`)
+**MEP rate** (ARS/USD) is fetched separately and polled every 10 minutes via `src/lib/store/mep-store.ts`.
 
-- FMP (Financial Modeling Prep) API for historical OHLCV data, company profiles, and news
-- Company names cached to `.company-names-cache.json` on disk (FMP profile endpoint doesn't support batch)
-- MEP rate (ARS/USD) fetched separately, polled every 10 minutes
+### Trading engines
 
-### Styling & Theme
+Pure modules in `src/lib/trading/`:
+- `engine.ts` — core order placement / lifecycle
+- `quick-trade.ts` — affordability filtering + commission math (`COMMISSION_RATE`, `effectiveCashAfterCommission`, `filterAffordableCedears`)
+- `rebalance-engine.ts` — Auto Trader's portfolio rebalancing
+- `order-polling.ts` — polls IOL for order status after submission
 
-- **98.css** library for Win98 look-and-feel
+Backtesting types live in `src/lib/backtesting/types.ts`. The actual backtest execution is delegated to the Python backend.
+
+### State management
+
+- **Zustand** stores in `src/lib/store/`: `news-store`, `mep-store`, `display-store`, `history-store`. News + display state are persisted to localStorage.
+- **No Redux, no Context API for app state.** The only React Context is `LocaleProvider` (i18n).
+- Per-window data hooks live next to the trading page in `src/app/trading/hooks/`: `usePortfolioData`, `useMarketData`, `useTradingOperations`. Use these instead of fetching directly from window components.
+
+### Internationalization
+
+Spanish (`es`) is the default locale; English (`en`) is supported. The system is in `src/lib/i18n/`:
+- `LocaleProvider` (Context) + `useLocale` hook
+- One subdir per feature area (`auto-trader/`, `company-detail/`, `market-data/`, `portfolio/`, `windows/`), each with `es.ts`, `en.ts`, and an `index.ts` exposing a `useXxxT()` hook
+- Translation keys are typed (e.g. `AutoTraderKey`, `WindowsKey`) — adding a key to one locale requires adding it to the other or TS will fail
+- `t(key, params)` supports `{placeholder}` interpolation
+
+### Demo mode
+
+Setting `NEXT_PUBLIC_DEMO_MODE=true` swaps real IOL/FMP data for fixtures from `src/lib/demo/data.ts` (DEMO_PORTFOLIO, DEMO_OPERATIONS, DEMO_NEWS_*, etc.). Used for screenshots and social media without exposing real account data. Server actions check `DEMO_MODE` and short-circuit to demo getters before hitting any external API.
+
+### Styling & theme
+
+- **98.css** library for the Win98 look-and-feel
 - `src/lib/theme/win98.ts` — shared inline style constants (FONT, LABEL, etc.) used across all window components
-- `src/lib/win98se-icons.ts` — Win98SE icon URLs from CDN (jsDelivr), only verified real PNGs (not symlinks)
+- `src/lib/win98se-icons.ts` — Win98SE icon URLs from CDN (jsDelivr); only verified real PNGs (no symlinks)
+- Tailwind v4 is also configured for utility classes alongside 98.css
 
-### State Management
+### Path aliases
 
-- **Zustand** stores for news (`src/lib/store/news-store.ts`, persisted to localStorage) and MEP rate (`src/lib/store/mep-store.ts`)
-- **`useWindowManager`** hook manages Win98 window positions, z-index, and minimize state
-- Desktop icon positions saved to localStorage
-- No Redux or Context API
+`@/*` → `./src/*` (configured in `tsconfig.json` and mirrored in `vitest.config.ts`).
 
-### Required Environment Variables
+## Environment variables
 
 ```
-IOL_USERNAME          # InvertirOnline broker login
+IOL_USERNAME                 # InvertirOnline broker login
 IOL_PASSWORD
 IOL_REFRESH_TOKEN
-FMP_API_KEY           # Financial Modeling Prep (market data, news, profiles)
-BASIC_AUTH_USER       # Optional HTTP basic auth
+FMP_API_KEY                  # Financial Modeling Prep
+AI_HEDGE_FUND_API_URL        # URL of the Python ai-hedge-fund backend (server-side only)
+AI_HEDGE_FUND_API_KEY        # Auth header forwarded by the proxy route
+BASIC_AUTH_USER              # Optional HTTP basic auth (enforced by src/proxy.ts)
 BASIC_AUTH_PASSWORD
+NEXT_PUBLIC_DEMO_MODE        # 'true' to use demo fixtures instead of live data
+IOL_INTEGRATION              # '1' to enable IOL integration tests
+FMP_INTEGRATION              # '1' to enable FMP integration tests
 ```
 
-### Path Aliases
-
-`@/*` maps to `./src/*` (configured in `tsconfig.json`).
-
-## Win98 UI Guidelines
+## Win98 UI guidelines
 
 Two documents together cover everything needed for UI work:
 
