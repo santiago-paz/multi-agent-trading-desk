@@ -14,6 +14,7 @@ import { DisplayPropertiesWindow } from '@/components/ui/DisplayPropertiesWindow
 import { AppManagerWindow, ManagedApp, AppStatus } from '@/components/ui/AppManagerWindow';
 import { useDisplayStore } from '@/lib/store/display-store';
 import { DesktopIcon } from '@/components/ui/DesktopIcon';
+import { ActiveDesktopWidget } from '@/components/ui/ActiveDesktopWidget';
 import {
   DraggableResizableWindow,
 } from '@/components/ui/DraggableResizableWindow';
@@ -638,6 +639,9 @@ export default function TradingDashboard() {
           />
         ))}
       </div>
+
+      {/* Active Desktop Distraction Widget */}
+      <ActiveDesktopWidget />
 
       {(() => {
         // Built once per render; reused by both standalone draggable windows and the AppManager's
