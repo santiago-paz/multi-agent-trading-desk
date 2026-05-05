@@ -1,7 +1,6 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { LogEntry, LogStatus, Phase, OrderResult, AgentSignal, Decision, HistoricalRun } from '../types';
 import { computeRebalancePlan, RebalancePlan } from '@/lib/trading/rebalance-engine';
-import { sharesToCedears } from '@/lib/cedear-ratios';
 import { placeOrder, getOrderStatus } from '@/app/trading/actions';
 import { parseSSEChunk, remapToIol, fmtARS } from '../utils';
 import { COMMISSION_RATE } from '@/lib/trading/quick-trade';
@@ -18,6 +17,7 @@ export function useTradingEngine({
   holdings,
   holdingTickers,
   portfolioPositions,
+  cedearRatios,
   arsPrices,
   fmpTickers,
   fmpToIol,
@@ -32,6 +32,7 @@ export function useTradingEngine({
   holdings: Record<string, number>;
   holdingTickers: string[];
   portfolioPositions: Array<{ ticker: string; quantity: number; trade_price: number }>;
+  cedearRatios: Record<string, number>;
   arsPrices: Record<string, number>;
   fmpTickers: string[];
   fmpToIol: Record<string, string>;
@@ -92,12 +93,12 @@ export function useTradingEngine({
     }));
 
     const cashUsd = effectiveMep > 0 ? cashArs / effectiveMep : 100000;
-    // Backend already values holdings via portfolio_positions (priced from FMP);
-    // initial_cash must be ONLY free buying power so the risk manager doesn't
-    // double-count the portfolio. Holdings used to be folded in here, which
-    // inflated total_portfolio_value ~13× and broke position-limit math.
-    const dailyLimitUsd = effectiveMep > 0 ? dailyLimit / effectiveMep : 100000;
-    const budgetUsd = cashUsd + dailyLimitUsd;
+    // initial_cash is the *real* free buying power the backend can plan against.
+    // dailyLimit is a frontend-only activity cap (max sell rotation + max new
+    // money) enforced later in computeRebalancePlan; folding it in here would
+    // make the risk manager double-count it as available liquidity, leading
+    // to plans that the rebalance engine then silently trims.
+    const budgetUsd = cashUsd;
 
     const today = new Date();
     const oneYearAgo = new Date(today);
@@ -111,6 +112,10 @@ export function useTradingEngine({
       start_date: oneYearAgo.toISOString().slice(0, 10),
       end_date: today.toISOString().slice(0, 10),
       portfolio_positions: portfolioPositions.length > 0 ? portfolioPositions : undefined,
+      // Tells the backend to size positions in CEDEAR units (what the broker
+      // actually trades) instead of underlying shares. quantities in
+      // portfolio_positions and decisions[*].quantity share this same unit.
+      cedear_ratios: Object.keys(cedearRatios).length > 0 ? cedearRatios : undefined,
       graph_nodes: graphNodes,
       graph_edges: graphEdges,
     };
@@ -169,20 +174,12 @@ export function useTradingEngine({
         }
         setCandidateDecisions(candidates);
 
-        // Translate the LLM's per-SHARE quantities back into CEDEAR units —
-        // the rebalance engine, holdings map and IOL all speak in CEDEARs.
-        // Floor the conversion so we never plan to sell more CEDEARs than the
-        // user owns (or buy more than the cap allows).
-        const cedearDecisions: Record<string, Decision> = {};
-        for (const [ticker, dec] of Object.entries(iolDecisions)) {
-          cedearDecisions[ticker] = {
-            ...dec,
-            quantity: dec.quantity > 0 ? sharesToCedears(dec.quantity, ticker, 'floor') : dec.quantity,
-          };
-        }
-
+        // The backend now returns decision.quantity already in CEDEAR units
+        // (matches what the broker trades). The rebalance engine, holdings
+        // map and IOL all speak in CEDEARs, so we pass the decisions through
+        // unchanged.
         const rebalancePlan = computeRebalancePlan({
-          decisions: cedearDecisions,
+          decisions: iolDecisions,
           holdings,
           arsPrices,
           cashArs,
@@ -225,6 +222,14 @@ export function useTradingEngine({
           t('engine.log.planSummary', { sells: nSells, buys: nBuys }),
           nCandidates > 0 ? t('engine.log.candidateSummary', { buyCount: nCandBuys, totalCount: nCandidates }) : '',
         ].filter(Boolean).join(' '), 'ok');
+        // Surface every reason the engine had to drop or trim an order from
+        // the LLM's plan. Without this, users only see the final counts and
+        // can't tell that e.g. 3 sells were silently skipped for hitting the
+        // dailyLimit cap.
+        if (rebalancePlan.warnings.length > 0) {
+          addLog('warnings-header', t('engine.log.warningsHeader', { count: rebalancePlan.warnings.length }), 'warn');
+          rebalancePlan.warnings.forEach((w, i) => addLog(`warning-${i}`, w, 'warn'));
+        }
         setProgress(100);
         setPhase('planned');
         setActiveTab('plan');

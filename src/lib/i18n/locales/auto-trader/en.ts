@@ -272,6 +272,7 @@ export const autoTraderEn: Record<AutoTraderKey, string> = {
   'engine.log.completed': 'Analysis completed.',
   'engine.log.planSummary': 'Plan: {sells} sell(s), {buys} buy(s).',
   'engine.log.candidateSummary': '{buyCount}/{totalCount} candidates recommended for buying.',
+  'engine.log.warningsHeader': 'Notice: the rebalance engine dropped or trimmed {count} order(s) from the LLM\'s original plan:',
   'engine.log.cancelled': 'Analysis cancelled by user',
   'engine.log.operationNum': 'Operation #{num}',
   'engine.log.orderSent': 'Order sent',

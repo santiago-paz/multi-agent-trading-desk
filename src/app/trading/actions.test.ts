@@ -573,9 +573,11 @@ describe('getFullPortfolioContext', () => {
     if (!r.success) expect(r.error).toContain('iol-down');
   });
 
-  it('converts CEDEAR holdings to underlying-share quantities and per-share USD prices', async () => {
-    // Two real BYMA ratios: ADBE 44:1, GOOGL 58:1. Holdings from the user's
-    // actual portfolio on the day we caught the unit-mismatch bug.
+  it('reports CEDEAR holdings in CEDEAR units with per-CEDEAR USD prices, plus the BYMA ratios', async () => {
+    // The backend is ratio-aware now: it receives `cedear_ratios` and computes
+    // lot prices internally. So we ship quantities in CEDEARs and prices in
+    // USD/CEDEAR — that matches what the broker actually trades and avoids the
+    // "Insufficient cash to buy 1 share ($1,807 underlying)" prefill bug.
     iol.getPortfolio.mockResolvedValueOnce({
       pais: 'argentina',
       activos: [
@@ -603,15 +605,18 @@ describe('getFullPortfolioContext', () => {
     const adbe = positions.find(p => p.ticker === 'ADBE')!;
     const googl = positions.find(p => p.ticker === 'GOOGL')!;
 
-    // 1 CEDEAR / 44 = 0.02272... shares
-    expect(adbe.quantity).toBeCloseTo(1 / 44, 6);
-    // PPC ARS × ratio / MEP = 11275 × 44 / 1429 ≈ $347 per share
-    expect(adbe.trade_price).toBeCloseTo((11275 * 44) / 1429, 1);
+    // Quantity stays in CEDEARs (what IOL holds + what the broker trades).
+    expect(adbe.quantity).toBe(1);
+    expect(googl.quantity).toBe(101);
 
-    // 101 CEDEARs / 58 ≈ 1.741 shares
-    expect(googl.quantity).toBeCloseTo(101 / 58, 6);
-    // PPC × 58 / 1429 ≈ $307.5 per share
-    expect(googl.trade_price).toBeCloseTo((7577.13 * 58) / 1429, 1);
+    // trade_price is now USD per CEDEAR (PPC ARS / MEP), no ratio applied.
+    expect(adbe.trade_price).toBeCloseTo(11275 / 1429, 1);
+    expect(googl.trade_price).toBeCloseTo(7577.13 / 1429, 1);
+
+    // BYMA ratios accompany the positions so the backend can compute
+    // lot_price = underlying_price / ratio internally.
+    expect(r.cedearRatios.ADBE).toBe(44);
+    expect(r.cedearRatios.GOOGL).toBe(58);
   });
 });
 

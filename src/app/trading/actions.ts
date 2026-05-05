@@ -389,26 +389,29 @@ export async function getFullPortfolioContext() {
         holdings[base] = (holdings[base] || 0) + asset.cantidad;
         if (!holdingTickers.includes(base)) holdingTickers.push(base);
 
-        // Also build backend-compatible positions
+        // Also build backend-compatible positions in CEDEAR units. The backend
+        // is now ratio-aware (`cedear_ratios` field): quantities are CEDEARs,
+        // trade_price is USD/CEDEAR. The risk manager translates underlying
+        // FMP prices to CEDEAR lot-prices internally so sizing, cash checks
+        // and trim math all work in the unit the broker actually trades.
         const fmp = toFmpTicker(base);
         if (!fmp) continue;
         const tradePriceArs = asset.ppc > 0 ? asset.ppc : asset.ultimoPrecio;
         if (tradePriceArs <= 0) continue;
-        // The backend models positions in *underlying shares* (FMP unit), but
-        // IOL holds them as *CEDEARs*. Convert using the official BYMA ratio
-        // so quantity and price share the same per-share basis as the live
-        // FMP feed the agents reason against.
-        const ratio = getCedearRatio(base);
-        const cedearsPerShare = ratio ? ratio[0] / ratio[1] : 1;
-        const shares = asset.cantidad / cedearsPerShare;
-        const tradePriceUsdPerShare = (tradePriceArs * cedearsPerShare) / mepRate;
+        const tradePriceUsdPerCedear = tradePriceArs / mepRate;
         portfolioPositions.push({
           ticker: fmp,
-          quantity: shares,
-          trade_price: Math.round(tradePriceUsdPerShare * 100) / 100,
+          quantity: asset.cantidad,
+          trade_price: Math.round(tradePriceUsdPerCedear * 100) / 100,
         });
       }
     }
+
+    // CEDEARs-per-underlying-share for every FMP ticker we'll send. Built
+    // after `iolToFmp` is known (see below). Backend uses this as the
+    // ratio in `lot_price = underlying_price / ratio`.
+    // (filled in after the fmpToIol loop)
+    const cedearRatios: Record<string, number> = {};
 
     // Top 10 most liquid CEDEARs (by volume/operations), excluding those already in portfolio
     const panelSymbols = Object.keys(liquidityMap)
@@ -433,6 +436,13 @@ export async function getFullPortfolioContext() {
           fmpTickerSet.add(fmp);
           fmpTickers.push(fmp);
           fmpToIol[fmp] = sym;
+          // Capture the CEDEARs-per-underlying ratio for the backend. Skip
+          // tickers without a known BYMA entry — the backend falls back to
+          // 1:1 for any ticker missing from this map.
+          const ratio = getCedearRatio(sym);
+          if (ratio) {
+            cedearRatios[fmp] = ratio[0] / ratio[1];
+          }
         }
       }
     }
@@ -512,6 +522,7 @@ export async function getFullPortfolioContext() {
       arsPrices,
       mepRate,
       portfolioPositions,
+      cedearRatios,
     };
   } catch (error) {
     const msg = error instanceof Error ? error.message : String(error);

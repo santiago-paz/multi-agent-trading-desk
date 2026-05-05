@@ -23,7 +23,8 @@ const baseProps = {
   dailyLimit: 50_000,
   holdings: { AAPLC: 5 } as Record<string, number>,
   holdingTickers: ['AAPLC'],
-  portfolioPositions: [{ ticker: 'AAPLC', quantity: 5, trade_price: 1000 }],
+  portfolioPositions: [{ ticker: 'AAPL', quantity: 5, trade_price: 1 }],
+  cedearRatios: { AAPL: 10, KO: 5 } as Record<string, number>,
   arsPrices: { AAPLC: 1000, KOC: 500 } as Record<string, number>,
   fmpTickers: ['AAPL', 'KO'],
   fmpToIol: { AAPL: 'AAPLC', KO: 'KOC' } as Record<string, string>,
@@ -252,11 +253,15 @@ describe('useTradingEngine — handleAnalyze request body', () => {
     expect(body.end_date).toMatch(/^\d{4}-\d{2}-\d{2}$/);
   });
 
-  it('initial_cash carries only cash + dailyLimit in USD — never the holdings value', async () => {
-    // The pre-fix bug folded portfolio holdings into initial_cash, which made
-    // the backend's risk manager think the portfolio was ~13× larger than it
-    // really was. Holdings travel via `portfolio_positions`; `initial_cash`
-    // must stay scoped to free buying power.
+  it('initial_cash carries only the user real cash in USD — never holdings nor dailyLimit', async () => {
+    // Two prior bugs folded extra value into initial_cash:
+    //  (a) holdings were summed in, inflating total_portfolio_value ~13× and
+    //      breaking position-limit math;
+    //  (b) dailyLimit was summed in too, so the risk manager planned buys
+    //      against money that wasn't actually liquid — the rebalance engine
+    //      then silently trimmed those orders.
+    // Holdings travel via `portfolio_positions`; dailyLimit stays as a
+    // frontend-only activity cap enforced in computeRebalancePlan.
     const fetchMock = captureBody();
     const props = {
       ...baseProps,
@@ -264,22 +269,22 @@ describe('useTradingEngine — handleAnalyze request body', () => {
       dailyLimit: 1_000_000,
       effectiveMep: 1000,
       // Real CEDEAR holding worth ~1M ARS at the panel ARS price; if it
-      // leaked into initial_cash, USD would be ~$3000 instead of $2000.
+      // leaked into initial_cash, USD would be much higher than $1000.
       portfolioPositions: [{ ticker: 'AAPL', quantity: 50, trade_price: 200 }],
       arsPrices: { AAPLC: 20_000 },
     };
     const { result } = renderHook(() => useTradingEngine(props));
     await act(async () => { await result.current.handleAnalyze(setActiveTab); });
     const body = parseBody(fetchMock);
-    // (1M cash + 1M dailyLimit) / 1000 MEP = $2000 USD exactly
-    expect(body.initial_cash).toBe(2000);
+    // 1M cash / 1000 MEP = $1000 USD exactly. dailyLimit is not folded in.
+    expect(body.initial_cash).toBe(1000);
   });
 
-  it('translates per-share LLM decisions back into CEDEARs before sizing the rebalance plan', async () => {
-    // The LLM reasons in shares (FMP unit). `computeRebalancePlan` and IOL
-    // both operate on CEDEARs, so we floor-convert via the BYMA ratio. This
-    // is the path that prevents "sell 85 GOOGL shares" (≈4930 CEDEARs the
-    // user does not own) from being passed downstream.
+  it('passes backend decisions through to the rebalance engine without unit conversion', async () => {
+    // The backend now sizes orders in CEDEAR units directly (it receives the
+    // BYMA ratios in `cedear_ratios` and computes lot prices). So the LLM
+    // already returns CEDEAR quantities — no client-side share→CEDEAR
+    // translation, just remap FMP→IOL.
     const fakePlan = {
       sells: [], buys: [], totalSellVolume: 0, totalBuyVolume: 0,
       estimatedSellProceeds: 0, warnings: [],
@@ -291,11 +296,8 @@ describe('useTradingEngine — handleAnalyze request body', () => {
         data: {
           analyst_signals: {},
           decisions: {
-            // 2 shares of NVDA → 2 × 24 = 48 CEDEARs
-            NVDA: { action: 'sell', quantity: 2, confidence: 90, reasoning: '' },
-            // 1 share of ORLY → 1 × 222 = 222 CEDEARs
-            ORLY: { action: 'buy', quantity: 1, confidence: 80, reasoning: '' },
-            // hold passes through unchanged
+            NVDA: { action: 'sell', quantity: 48, confidence: 90, reasoning: '' },
+            ORLY: { action: 'buy', quantity: 222, confidence: 80, reasoning: '' },
             KO: { action: 'hold', quantity: 0, confidence: 50, reasoning: '' },
           },
         },
@@ -307,11 +309,10 @@ describe('useTradingEngine — handleAnalyze request body', () => {
     })();
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue(sseResponse));
 
-    // fmpToIol must remap so the engine sees IOL keys, matching the BYMA
-    // ratio table. NVDA, ORLY, KO are identity-mapped (IOL == FMP).
     const props = {
       ...baseProps,
       fmpToIol: { NVDA: 'NVDA', ORLY: 'ORLY', KO: 'KO' },
+      cedearRatios: { NVDA: 24, ORLY: 222, KO: 5 },
       holdingTickers: ['NVDA'],
       holdings: { NVDA: 100 },
     };
@@ -321,9 +322,27 @@ describe('useTradingEngine — handleAnalyze request body', () => {
 
     expect(computeRebalancePlan).toHaveBeenCalledTimes(1);
     const [planArgs] = computeRebalancePlan.mock.calls[0];
-    expect(planArgs.decisions.NVDA.quantity).toBe(48);   // 2 shares × ratio 24
-    expect(planArgs.decisions.ORLY.quantity).toBe(222);  // 1 share × ratio 222
-    expect(planArgs.decisions.KO.quantity).toBe(0);      // hold preserved
+    expect(planArgs.decisions.NVDA.quantity).toBe(48);
+    expect(planArgs.decisions.ORLY.quantity).toBe(222);
+    expect(planArgs.decisions.KO.quantity).toBe(0);
+  });
+
+  it('sends cedear_ratios in the request body so the backend can size in CEDEAR units', async () => {
+    const fetchMock = captureBody();
+    const props = { ...baseProps, cedearRatios: { AAPL: 10, KO: 5 } };
+    const { result } = renderHook(() => useTradingEngine(props));
+    await act(async () => { await result.current.handleAnalyze(setActiveTab); });
+    const body = parseBody(fetchMock);
+    expect(body.cedear_ratios).toEqual({ AAPL: 10, KO: 5 });
+  });
+
+  it('omits cedear_ratios from the body when none are known (backend falls back to underlying)', async () => {
+    const fetchMock = captureBody();
+    const props = { ...baseProps, cedearRatios: {} };
+    const { result } = renderHook(() => useTradingEngine(props));
+    await act(async () => { await result.current.handleAnalyze(setActiveTab); });
+    const body = parseBody(fetchMock);
+    expect(body.cedear_ratios).toBeUndefined();
   });
 
   it('sets end_date to today and start_date to one year before', async () => {

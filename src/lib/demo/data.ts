@@ -307,6 +307,9 @@ export function getDemoFullPortfolioContext() {
     trade_price: Math.round((a.ppc / DEMO_MEP_RATE) * 100) / 100,
   }));
 
+  // Demo backend doesn't model BYMA ratios — fall back to 1:1 across the board.
+  const cedearRatios: Record<string, number> = {};
+
   const iolToFmp: Record<string, string> = {};
   const fmpToIol: Record<string, string> = {};
   for (const s of allIolSymbols) {
@@ -334,6 +337,7 @@ export function getDemoFullPortfolioContext() {
     arsPrices,
     mepRate: DEMO_MEP_RATE,
     portfolioPositions,
+    cedearRatios,
   };
 }
 

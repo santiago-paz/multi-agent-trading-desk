@@ -90,6 +90,7 @@ export const HR98: React.CSSProperties = {
 /* ─── Semantic colors ────────────────────────────────────────────────────── */
 export const COLOR_POSITIVE = '#008000';
 export const COLOR_NEGATIVE = '#800000';
+export const COLOR_WARNING = '#b35f00';
 export const COLOR_LINK = '#0000ff';
 export const COLOR_SECONDARY = '#555555';
 export const COLOR_DISABLED = '#808080';

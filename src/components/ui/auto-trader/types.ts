@@ -21,7 +21,7 @@ export interface Decision {
   reasoning: string;
 }
 
-export type LogStatus = 'running' | 'ok' | 'error';
+export type LogStatus = 'running' | 'ok' | 'warn' | 'error';
 export interface LogEntry { id: string; text: string; status: LogStatus; agent?: string; ticker?: string; detail?: string; }
 
 export interface OrderResult {

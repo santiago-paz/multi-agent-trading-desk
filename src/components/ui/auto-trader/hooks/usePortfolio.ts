@@ -18,6 +18,7 @@ export function usePortfolio() {
   const [arsPrices, setArsPrices] = useState<Record<string, number>>({});
   const [mepRateLocal, setMepRateLocal] = useState<number | null>(null);
   const [portfolioPositions, setPortfolioPositions] = useState<Array<{ ticker: string; quantity: number; trade_price: number }>>([]);
+  const [cedearRatios, setCedearRatios] = useState<Record<string, number>>({});
   const [isLoadingPortfolio, setIsLoadingPortfolio] = useState(true);
   const [portfolioError, setPortfolioError] = useState<string | null>(null);
 
@@ -40,6 +41,7 @@ export function usePortfolio() {
         setArsPrices(result.arsPrices);
         setMepRateLocal(result.mepRate);
         setPortfolioPositions(result.portfolioPositions);
+        setCedearRatios(result.cedearRatios ?? {});
       } else {
         const errMsg = 'error' in result ? result.error : 'Error desconocido';
         setPortfolioError(errMsg ?? 'Error desconocido al obtener portfolio');
@@ -77,6 +79,7 @@ export function usePortfolio() {
     arsPrices,
     mepRateLocal,
     portfolioPositions,
+    cedearRatios,
     isLoadingPortfolio,
     portfolioError,
     loadPortfolio,

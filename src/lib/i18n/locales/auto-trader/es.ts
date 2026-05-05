@@ -270,6 +270,7 @@ export const autoTraderEs = {
   'engine.log.completed': 'Análisis completado.',
   'engine.log.planSummary': 'Plan: {sells} venta(s), {buys} compra(s).',
   'engine.log.candidateSummary': '{buyCount}/{totalCount} candidatos recomendados para compra.',
+  'engine.log.warningsHeader': 'Aviso: el motor de rebalanceo descartó o recortó {count} orden(es) del plan original del LLM:',
   'engine.log.cancelled': 'Análisis cancelado por el usuario',
   'engine.log.operationNum': 'Operación #{num}',
   'engine.log.orderSent': 'Orden enviada',
