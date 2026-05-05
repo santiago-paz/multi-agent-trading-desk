@@ -3,6 +3,7 @@ import { BlankScreen } from './BlankScreen';
 import { Mystery } from './Mystery';
 import { Text3D } from './Text3D';
 import { Pipes3D } from './Pipes3D';
+import { Maze3D } from './Maze3D';
 
 interface ScreenSaverRendererProps {
   name: string;
@@ -20,6 +21,8 @@ export function ScreenSaverRenderer({ name, text, isFullScreen = false }: Screen
       return <Text3D text={text} isFullScreen={isFullScreen} />;
     case '3D Pipes':
       return <Pipes3D isFullScreen={isFullScreen} />;
+    case '3D Maze':
+      return <Maze3D isFullScreen={isFullScreen} />;
     case '(None)':
       return null;
     default:
