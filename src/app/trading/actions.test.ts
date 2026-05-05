@@ -572,6 +572,47 @@ describe('getFullPortfolioContext', () => {
     expect(r.success).toBe(false);
     if (!r.success) expect(r.error).toContain('iol-down');
   });
+
+  it('converts CEDEAR holdings to underlying-share quantities and per-share USD prices', async () => {
+    // Two real BYMA ratios: ADBE 44:1, GOOGL 58:1. Holdings from the user's
+    // actual portfolio on the day we caught the unit-mismatch bug.
+    iol.getPortfolio.mockResolvedValueOnce({
+      pais: 'argentina',
+      activos: [
+        asset({ titulo: { ...asset().titulo, simbolo: 'ADBE', tipo: 'CEDEARS' }, cantidad: 1, ppc: 11275 }),
+        asset({ titulo: { ...asset().titulo, simbolo: 'GOOGL', tipo: 'CEDEARS' }, cantidad: 101, ppc: 7577.13 }),
+      ],
+    } as PortfolioResponse);
+    iol.getEstadoCuenta.mockResolvedValueOnce({
+      cuentas: [{
+        numero: '1', tipo: 'inv', moneda: 'peso_Argentino',
+        disponible: 1_000_000, comprometido: 0,
+        saldo: 1_000_000, titulosValorizados: 0, total: 1_000_000,
+        margenDescubierto: 0, saldos: [], estado: 'operable',
+      }],
+      estadisticas: [], totalEnPesos: 1_000_000,
+    } as EstadoCuenta);
+    iol.getMEP.mockResolvedValueOnce(1429);
+    iol.getPanelQuotes.mockResolvedValueOnce(emptyPanel());
+    fmp.getCompanyNames.mockResolvedValueOnce({});
+
+    const r = await actions.getFullPortfolioContext();
+    if (!r.success) throw new Error('expected success');
+
+    const positions = r.portfolioPositions;
+    const adbe = positions.find(p => p.ticker === 'ADBE')!;
+    const googl = positions.find(p => p.ticker === 'GOOGL')!;
+
+    // 1 CEDEAR / 44 = 0.02272... shares
+    expect(adbe.quantity).toBeCloseTo(1 / 44, 6);
+    // PPC ARS × ratio / MEP = 11275 × 44 / 1429 ≈ $347 per share
+    expect(adbe.trade_price).toBeCloseTo((11275 * 44) / 1429, 1);
+
+    // 101 CEDEARs / 58 ≈ 1.741 shares
+    expect(googl.quantity).toBeCloseTo(101 / 58, 6);
+    // PPC × 58 / 1429 ≈ $307.5 per share
+    expect(googl.trade_price).toBeCloseTo((7577.13 * 58) / 1429, 1);
+  });
 });
 
 // ════════════════════════════════════════════════════════════════════════════

@@ -1,6 +1,7 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { LogEntry, LogStatus, Phase, OrderResult, AgentSignal, Decision, HistoricalRun } from '../types';
 import { computeRebalancePlan, RebalancePlan } from '@/lib/trading/rebalance-engine';
+import { sharesToCedears } from '@/lib/cedear-ratios';
 import { placeOrder, getOrderStatus } from '@/app/trading/actions';
 import { parseSSEChunk, remapToIol, fmtARS } from '../utils';
 import { COMMISSION_RATE } from '@/lib/trading/quick-trade';
@@ -91,11 +92,12 @@ export function useTradingEngine({
     }));
 
     const cashUsd = effectiveMep > 0 ? cashArs / effectiveMep : 100000;
-    const holdingsValueArs = portfolioPositions.reduce(
-      (sum, p) => sum + (arsPrices[p.ticker] ?? p.trade_price) * p.quantity, 0
-    );
-    const budgetArs = cashArs + dailyLimit + holdingsValueArs;
-    const budgetUsd = effectiveMep > 0 ? budgetArs / effectiveMep : 100000;
+    // Backend already values holdings via portfolio_positions (priced from FMP);
+    // initial_cash must be ONLY free buying power so the risk manager doesn't
+    // double-count the portfolio. Holdings used to be folded in here, which
+    // inflated total_portfolio_value ~13× and broke position-limit math.
+    const dailyLimitUsd = effectiveMep > 0 ? dailyLimit / effectiveMep : 100000;
+    const budgetUsd = cashUsd + dailyLimitUsd;
 
     const today = new Date();
     const oneYearAgo = new Date(today);
@@ -167,8 +169,20 @@ export function useTradingEngine({
         }
         setCandidateDecisions(candidates);
 
+        // Translate the LLM's per-SHARE quantities back into CEDEAR units —
+        // the rebalance engine, holdings map and IOL all speak in CEDEARs.
+        // Floor the conversion so we never plan to sell more CEDEARs than the
+        // user owns (or buy more than the cap allows).
+        const cedearDecisions: Record<string, Decision> = {};
+        for (const [ticker, dec] of Object.entries(iolDecisions)) {
+          cedearDecisions[ticker] = {
+            ...dec,
+            quantity: dec.quantity > 0 ? sharesToCedears(dec.quantity, ticker, 'floor') : dec.quantity,
+          };
+        }
+
         const rebalancePlan = computeRebalancePlan({
-          decisions: iolDecisions,
+          decisions: cedearDecisions,
           holdings,
           arsPrices,
           cashArs,

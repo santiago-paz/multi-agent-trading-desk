@@ -14,6 +14,7 @@ function isFmpRateLimitRejection(r: PromiseSettledResult<unknown>): boolean {
   return r.status === 'rejected' && r.reason instanceof FmpRateLimitError;
 }
 import { stripCurrencySuffix, toFmpTicker, isEtf } from '@/lib/cedear-map';
+import { getCedearRatio } from '@/lib/cedear-ratios';
 import { DEMO_MODE, DEMO_MEP_RATE, DEMO_PERFIL, DEMO_ESTADO_CUENTA, DEMO_PORTFOLIO, DEMO_USD_PRICES, DEMO_VALUE_USD, DEMO_OPERATIONS, DEMO_NEWS_GENERAL, DEMO_NEWS_SPECIFIC, getDemoMarketData, getDemoCedearsForTrading, getDemoFullPortfolioContext } from '@/lib/demo/data';
 
 // Cap on simultaneous outbound FMP fetches. Without this, firing 200+ parallel
@@ -393,10 +394,18 @@ export async function getFullPortfolioContext() {
         if (!fmp) continue;
         const tradePriceArs = asset.ppc > 0 ? asset.ppc : asset.ultimoPrecio;
         if (tradePriceArs <= 0) continue;
+        // The backend models positions in *underlying shares* (FMP unit), but
+        // IOL holds them as *CEDEARs*. Convert using the official BYMA ratio
+        // so quantity and price share the same per-share basis as the live
+        // FMP feed the agents reason against.
+        const ratio = getCedearRatio(base);
+        const cedearsPerShare = ratio ? ratio[0] / ratio[1] : 1;
+        const shares = asset.cantidad / cedearsPerShare;
+        const tradePriceUsdPerShare = (tradePriceArs * cedearsPerShare) / mepRate;
         portfolioPositions.push({
           ticker: fmp,
-          quantity: asset.cantidad,
-          trade_price: Math.round((tradePriceArs / mepRate) * 100) / 100,
+          quantity: shares,
+          trade_price: Math.round(tradePriceUsdPerShare * 100) / 100,
         });
       }
     }

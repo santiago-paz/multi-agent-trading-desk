@@ -252,6 +252,80 @@ describe('useTradingEngine — handleAnalyze request body', () => {
     expect(body.end_date).toMatch(/^\d{4}-\d{2}-\d{2}$/);
   });
 
+  it('initial_cash carries only cash + dailyLimit in USD — never the holdings value', async () => {
+    // The pre-fix bug folded portfolio holdings into initial_cash, which made
+    // the backend's risk manager think the portfolio was ~13× larger than it
+    // really was. Holdings travel via `portfolio_positions`; `initial_cash`
+    // must stay scoped to free buying power.
+    const fetchMock = captureBody();
+    const props = {
+      ...baseProps,
+      cashArs: 1_000_000,
+      dailyLimit: 1_000_000,
+      effectiveMep: 1000,
+      // Real CEDEAR holding worth ~1M ARS at the panel ARS price; if it
+      // leaked into initial_cash, USD would be ~$3000 instead of $2000.
+      portfolioPositions: [{ ticker: 'AAPL', quantity: 50, trade_price: 200 }],
+      arsPrices: { AAPLC: 20_000 },
+    };
+    const { result } = renderHook(() => useTradingEngine(props));
+    await act(async () => { await result.current.handleAnalyze(setActiveTab); });
+    const body = parseBody(fetchMock);
+    // (1M cash + 1M dailyLimit) / 1000 MEP = $2000 USD exactly
+    expect(body.initial_cash).toBe(2000);
+  });
+
+  it('translates per-share LLM decisions back into CEDEARs before sizing the rebalance plan', async () => {
+    // The LLM reasons in shares (FMP unit). `computeRebalancePlan` and IOL
+    // both operate on CEDEARs, so we floor-convert via the BYMA ratio. This
+    // is the path that prevents "sell 85 GOOGL shares" (≈4930 CEDEARs the
+    // user does not own) from being passed downstream.
+    const fakePlan = {
+      sells: [], buys: [], totalSellVolume: 0, totalBuyVolume: 0,
+      estimatedSellProceeds: 0, warnings: [],
+    };
+    computeRebalancePlan.mockReturnValue(fakePlan);
+
+    const sseResponse = (() => {
+      const payload = 'event: complete\ndata: ' + JSON.stringify({
+        data: {
+          analyst_signals: {},
+          decisions: {
+            // 2 shares of NVDA → 2 × 24 = 48 CEDEARs
+            NVDA: { action: 'sell', quantity: 2, confidence: 90, reasoning: '' },
+            // 1 share of ORLY → 1 × 222 = 222 CEDEARs
+            ORLY: { action: 'buy', quantity: 1, confidence: 80, reasoning: '' },
+            // hold passes through unchanged
+            KO: { action: 'hold', quantity: 0, confidence: 50, reasoning: '' },
+          },
+        },
+      }) + '\n\n';
+      const stream = new ReadableStream({
+        start(c) { c.enqueue(new TextEncoder().encode(payload)); c.close(); },
+      });
+      return new Response(stream, { status: 200 });
+    })();
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(sseResponse));
+
+    // fmpToIol must remap so the engine sees IOL keys, matching the BYMA
+    // ratio table. NVDA, ORLY, KO are identity-mapped (IOL == FMP).
+    const props = {
+      ...baseProps,
+      fmpToIol: { NVDA: 'NVDA', ORLY: 'ORLY', KO: 'KO' },
+      holdingTickers: ['NVDA'],
+      holdings: { NVDA: 100 },
+    };
+    const { result } = renderHook(() => useTradingEngine(props));
+    await act(async () => { await result.current.handleAnalyze(setActiveTab); });
+    await waitFor(() => expect(result.current.phase).toBe('planned'));
+
+    expect(computeRebalancePlan).toHaveBeenCalledTimes(1);
+    const [planArgs] = computeRebalancePlan.mock.calls[0];
+    expect(planArgs.decisions.NVDA.quantity).toBe(48);   // 2 shares × ratio 24
+    expect(planArgs.decisions.ORLY.quantity).toBe(222);  // 1 share × ratio 222
+    expect(planArgs.decisions.KO.quantity).toBe(0);      // hold preserved
+  });
+
   it('sets end_date to today and start_date to one year before', async () => {
     const fixedNow = new Date('2026-05-04T10:00:00Z');
     vi.useFakeTimers();
