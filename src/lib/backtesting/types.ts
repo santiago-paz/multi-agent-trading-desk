@@ -19,6 +19,7 @@ export interface BacktestDayResult {
   gross_exposure: number;
   net_exposure: number;
   long_short_ratio?: number;
+  benchmark_return_pct?: number | null;
 }
 
 export interface PerformanceMetrics {
@@ -31,7 +32,7 @@ export interface PerformanceMetrics {
   net_exposure?: number;
 }
 
-export type LogStatus = 'running' | 'ok' | 'error';
+export type LogStatus = 'running' | 'ok' | 'warn' | 'error';
 
 export interface LogEntry {
   id: string;
@@ -40,4 +41,18 @@ export interface LogEntry {
   agent?: string;
   ticker?: string;
   detail?: string;
+}
+
+export interface HistoricalBacktestRun {
+  id: string;
+  timestamp: number;
+  config: {
+    startDate: string;
+    endDate: string;
+    initialCapital: number;
+    tickers: string[];
+    agentKeys: string[];
+  };
+  dayResults: BacktestDayResult[];
+  metrics: PerformanceMetrics | null;
 }

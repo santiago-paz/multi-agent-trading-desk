@@ -1,15 +1,79 @@
 'use client';
 
 import React, { useState, useRef, useEffect, useCallback } from 'react';
+import { createPortal } from 'react-dom';
+import {
+  ResponsiveContainer,
+  ComposedChart, AreaChart, Area, Line,
+  XAxis, YAxis, Tooltip, CartesianGrid,
+  ReferenceLine,
+} from 'recharts';
 import {
   FONT, COL_HEADER, COL_HEADER_RIGHT, CELL, CELL_RIGHT,
   WINDOW_CONTAINER, SCROLLABLE_BODY, STATUS_BAR_STYLE,
-  COLOR_POSITIVE, COLOR_NEGATIVE, COLOR_SECONDARY,
+  COLOR_POSITIVE, COLOR_NEGATIVE, COLOR_SECONDARY, COLOR_WARNING,
   COL_HEADER_BASE, COL_RAISED, COLOR_LINK
 } from '@/lib/theme/win98';
 import { AgentSelector } from '@/components/ui/AgentSelector';
-import { Agent, BacktestDayResult, PerformanceMetrics, LogStatus, LogEntry } from '@/lib/backtesting/types';
+import { LogIcon } from '@/components/ui/auto-trader/components/LogIcon';
+import { Agent, BacktestDayResult, PerformanceMetrics, LogStatus, LogEntry, HistoricalBacktestRun } from '@/lib/backtesting/types';
+import { useBacktestHistoryStore } from '@/lib/store/backtest-history-store';
 import { parseSSEChunk } from '@/lib/sse';
+
+const CHART_FONT = { fontFamily: '"Pixelated MS Sans Serif", Arial, sans-serif', fontSize: 9 };
+const TOOLTIP_STYLE: React.CSSProperties = {
+  ...FONT, background: '#ffffcc', border: '1px solid #000', padding: '2px 6px',
+};
+
+// ─── HelpHover ────────────────────────────────────────────────────────────────
+// Wraps a label with a subtle dotted underline + cursor:help, showing a tooltip
+// on hover. No extra icon — meant for table cells where the "?" badge would be
+// too noisy.
+
+function HelpHover({ tooltip, children }: { tooltip: string; children: React.ReactNode }) {
+  const [show, setShow] = useState(false);
+  const ref = useRef<HTMLSpanElement>(null);
+  const [pos, setPos] = useState({ top: 0, left: 0 });
+
+  useEffect(() => {
+    if (show && ref.current) {
+      const rect = ref.current.getBoundingClientRect();
+      setPos({ top: rect.bottom + 4, left: rect.left + rect.width / 2 });
+    }
+  }, [show]);
+
+  return (
+    <span
+      ref={ref}
+      onMouseEnter={() => setShow(true)}
+      onMouseLeave={() => setShow(false)}
+      style={{ borderBottom: '1px dotted #808080', cursor: 'help' }}
+    >
+      {children}
+      {show && createPortal(
+        <div style={{
+          ...FONT,
+          position: 'fixed',
+          top: pos.top,
+          left: pos.left,
+          transform: 'translateX(-50%)',
+          background: '#ffffcc',
+          border: '1px solid #000',
+          padding: '3px 6px',
+          whiteSpace: 'normal',
+          width: 240,
+          zIndex: 99999,
+          lineHeight: '1.3',
+          boxShadow: '2px 2px 0 rgba(0,0,0,0.15)',
+          pointerEvents: 'none',
+        }}>
+          {tooltip}
+        </div>,
+        document.body,
+      )}
+    </span>
+  );
+}
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -37,13 +101,13 @@ function subtractMonths(date: Date, months: number): Date {
 const fmtUSD = (n: number) => n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const fmtPct = (n: number) => (n * 100).toFixed(2) + '%';
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
-
-function LogIcon({ status }: { status: LogStatus }) {
-  if (status === 'running') return <span style={{ color: COLOR_SECONDARY }}>►</span>;
-  if (status === 'ok')      return <span style={{ color: COLOR_POSITIVE }}>■</span>;
-  return                           <span style={{ color: COLOR_NEGATIVE }}>✕</span>;
+function formatRunDate(ts: number): string {
+  const d = new Date(ts);
+  return d.toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: '2-digit' })
+    + ' ' + d.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' });
 }
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function renderAgentDetail(detail: string | undefined): React.ReactNode {
   if (!detail) return null;
@@ -123,69 +187,366 @@ function renderAgentDetail(detail: string | undefined): React.ReactNode {
 
 // ─── SSE parser ───────────────────────────────────────────────────────────────
 
-// ─── Equity Curve (pure CSS/HTML, no chart lib) ───────────────────────────────
+// ─── Equity Curve ─────────────────────────────────────────────────────────────
+
+function fmtAxisUSD(v: number): string {
+  const abs = Math.abs(v);
+  if (abs >= 1e6) return `$${(v / 1e6).toFixed(1)}M`;
+  if (abs >= 1e3) return `$${(v / 1e3).toFixed(0)}K`;
+  return `$${v.toFixed(0)}`;
+}
 
 function EquityCurve({ results, initialCapital }: { results: BacktestDayResult[]; initialCapital: number }) {
   if (results.length < 2) return null;
 
-  const values = results.map(r => r.portfolio_value);
-  const min = Math.min(...values, initialCapital);
-  const max = Math.max(...values, initialCapital);
-  const range = max - min || 1;
+  // Project benchmark return % onto the same dollar scale so both lines share the y-axis.
+  const chartData = results.map(r => ({
+    date: r.date,
+    portfolio: r.portfolio_value,
+    benchmark: r.benchmark_return_pct != null
+      ? initialCapital * (1 + r.benchmark_return_pct / 100)
+      : null,
+  }));
 
-  const W = 100; // viewBox width percentage
-  const H = 80;  // viewBox height
-
-  const points = results.map((r, i) => {
-    const x = (i / (results.length - 1)) * W;
-    const y = H - ((r.portfolio_value - min) / range) * H;
-    return `${x},${y}`;
-  }).join(' ');
-
-  // Baseline (initial capital)
-  const baselineY = H - ((initialCapital - min) / range) * H;
-
-  const finalValue = values[values.length - 1];
+  const finalValue = chartData[chartData.length - 1].portfolio;
   const returnPct = ((finalValue - initialCapital) / initialCapital) * 100;
   const isPositive = returnPct >= 0;
+  const portfolioColor = isPositive ? COLOR_POSITIVE : COLOR_NEGATIVE;
+
+  const lastBenchmark = [...chartData].reverse().find(d => d.benchmark != null)?.benchmark ?? null;
+  const benchmarkPct = lastBenchmark != null
+    ? ((lastBenchmark - initialCapital) / initialCapital) * 100
+    : null;
+
+  const hasBenchmark = chartData.some(d => d.benchmark != null);
 
   return (
     <div>
       <div style={{ ...FONT, marginBottom: '4px', display: 'flex', justifyContent: 'space-between' }}>
         <span>
           <strong>Retorno total:</strong>{' '}
-          <span style={{ color: isPositive ? COLOR_POSITIVE : COLOR_NEGATIVE, fontWeight: 'bold' }}>
+          <span style={{ color: portfolioColor, fontWeight: 'bold' }}>
             {isPositive ? '+' : ''}{returnPct.toFixed(2)}%
           </span>
           {' '}(${fmtUSD(initialCapital)} → ${fmtUSD(finalValue)})
+          {benchmarkPct != null && (
+            <>
+              {' '}<span style={{ color: COLOR_SECONDARY }}>·</span>{' '}
+              <span style={{ color: COLOR_SECONDARY }}>SPY:</span>{' '}
+              <span style={{ color: benchmarkPct >= 0 ? COLOR_POSITIVE : COLOR_NEGATIVE }}>
+                {benchmarkPct >= 0 ? '+' : ''}{benchmarkPct.toFixed(2)}%
+              </span>
+            </>
+          )}
         </span>
         <span style={{ color: COLOR_SECONDARY }}>{results.length} días</span>
       </div>
       <div className="sunken-panel" style={{ padding: '4px', background: '#ffffff' }}>
-        <svg
-          viewBox={`-2 -2 ${W + 4} ${H + 4}`}
-          preserveAspectRatio="none"
-          style={{ width: '100%', height: '120px', display: 'block' }}
-        >
-          {/* Baseline */}
-          <line
-            x1={0} y1={baselineY} x2={W} y2={baselineY}
-            stroke="#c0c0c0" strokeWidth="0.3" strokeDasharray="2,2"
-          />
-          {/* Equity curve */}
-          <polyline
-            points={points}
-            fill="none"
-            stroke={isPositive ? COLOR_POSITIVE : COLOR_NEGATIVE}
-            strokeWidth="0.8"
-          />
-        </svg>
-        <div style={{ ...FONT, fontSize: '10px', display: 'flex', justifyContent: 'space-between', color: COLOR_SECONDARY }}>
-          <span>{results[0].date}</span>
-          <span style={{ color: '#c0c0c0' }}>--- ${fmtUSD(initialCapital)} (capital inicial)</span>
-          <span>{results[results.length - 1].date}</span>
-        </div>
+        <ResponsiveContainer width="100%" height={180}>
+          <ComposedChart data={chartData} margin={{ top: 6, right: 12, bottom: 0, left: 0 }}>
+            <defs>
+              <linearGradient id="equityGrad" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%" stopColor={portfolioColor} stopOpacity={0.3} />
+                <stop offset="95%" stopColor={portfolioColor} stopOpacity={0.02} />
+              </linearGradient>
+            </defs>
+            <CartesianGrid strokeDasharray="3 3" stroke="#c0c0c0" />
+            <XAxis
+              dataKey="date"
+              tick={CHART_FONT}
+              tickFormatter={(d: string) => d.slice(5)}
+              interval="preserveStartEnd"
+              minTickGap={40}
+            />
+            <YAxis
+              tick={CHART_FONT}
+              domain={['auto', 'auto']}
+              tickFormatter={fmtAxisUSD}
+              width={52}
+            />
+            <Tooltip
+              contentStyle={TOOLTIP_STYLE}
+              formatter={(value, name) => {
+                const label = name === 'portfolio' ? 'Portfolio' : 'SPY (B&H)';
+                return [`$${fmtUSD(Number(value))}`, label];
+              }}
+              labelFormatter={(label) => String(label)}
+            />
+            <ReferenceLine
+              y={initialCapital}
+              stroke="#a0a0a0"
+              strokeDasharray="2 2"
+              strokeWidth={1}
+              ifOverflow="extendDomain"
+              label={{
+                value: `inicial $${fmtUSD(initialCapital)}`,
+                position: 'insideTopRight',
+                fill: COLOR_SECONDARY,
+                ...CHART_FONT,
+              }}
+            />
+            {hasBenchmark && (
+              <Line
+                type="monotone"
+                dataKey="benchmark"
+                stroke="#808080"
+                strokeWidth={1}
+                strokeDasharray="3 3"
+                dot={false}
+                name="benchmark"
+                connectNulls
+                isAnimationActive={false}
+              />
+            )}
+            <Area
+              type="monotone"
+              dataKey="portfolio"
+              stroke={portfolioColor}
+              strokeWidth={1.5}
+              fill="url(#equityGrad)"
+              dot={false}
+              name="portfolio"
+              isAnimationActive={false}
+            />
+          </ComposedChart>
+        </ResponsiveContainer>
       </div>
+    </div>
+  );
+}
+
+// ─── Exposure Curve ───────────────────────────────────────────────────────────
+
+function ExposureCurve({ results }: { results: BacktestDayResult[] }) {
+  if (results.length < 2) return null;
+
+  // gross_exposure comes from the backend as the absolute dollar value of
+  // long+short positions; convert to a fraction of portfolio_value for display.
+  const chartData = results.map(r => ({
+    date: r.date,
+    exposure: r.portfolio_value > 0 ? r.gross_exposure / r.portfolio_value : 0,
+  }));
+
+  const values = chartData.map(d => d.exposure);
+  const finalValue = values[values.length - 1];
+  const max = Math.max(...values, 0);
+
+  return (
+    <div>
+      <div style={{ ...FONT, marginBottom: '4px', display: 'flex', justifyContent: 'space-between' }}>
+        <span>
+          <strong>Exposición bruta actual:</strong>{' '}
+          <span style={{ fontWeight: 'bold' }}>{fmtPct(finalValue)}</span>
+        </span>
+        <span style={{ color: COLOR_SECONDARY }}>máx {fmtPct(max)}</span>
+      </div>
+      <div className="sunken-panel" style={{ padding: '4px', background: '#ffffff' }}>
+        <ResponsiveContainer width="100%" height={100}>
+          <AreaChart data={chartData} margin={{ top: 6, right: 12, bottom: 0, left: 0 }}>
+            <defs>
+              <linearGradient id="exposureGrad" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%" stopColor="#000080" stopOpacity={0.25} />
+                <stop offset="95%" stopColor="#000080" stopOpacity={0.02} />
+              </linearGradient>
+            </defs>
+            <CartesianGrid strokeDasharray="3 3" stroke="#c0c0c0" />
+            <XAxis
+              dataKey="date"
+              tick={CHART_FONT}
+              tickFormatter={(d: string) => d.slice(5)}
+              interval="preserveStartEnd"
+              minTickGap={40}
+            />
+            <YAxis
+              tick={CHART_FONT}
+              domain={[0, 'auto']}
+              tickFormatter={(v: number) => `${(v * 100).toFixed(0)}%`}
+              width={42}
+            />
+            <Tooltip
+              contentStyle={TOOLTIP_STYLE}
+              formatter={(value) => [fmtPct(Number(value)), 'Exposición']}
+              labelFormatter={(label) => String(label)}
+            />
+            <ReferenceLine
+              y={1}
+              stroke="#a0a0a0"
+              strokeDasharray="2 2"
+              strokeWidth={1}
+              ifOverflow="extendDomain"
+              label={{ value: '100%', position: 'insideTopRight', fill: COLOR_SECONDARY, ...CHART_FONT }}
+            />
+            <Area
+              type="monotone"
+              dataKey="exposure"
+              stroke="#000080"
+              strokeWidth={1.5}
+              fill="url(#exposureGrad)"
+              dot={false}
+              isAnimationActive={false}
+            />
+          </AreaChart>
+        </ResponsiveContainer>
+      </div>
+    </div>
+  );
+}
+
+// ─── Metrics Table ────────────────────────────────────────────────────────────
+
+interface MetricRowProps {
+  label: string;
+  tooltip: string;
+  value: React.ReactNode;
+  valueColor?: string;
+  zebra: 'a' | 'b';
+}
+
+function MetricRow({ label, tooltip, value, valueColor, zebra }: MetricRowProps) {
+  return (
+    <tr style={{ background: zebra === 'a' ? '#ffffff' : '#f0f0f0' }}>
+      <td style={CELL}>
+        <HelpHover tooltip={tooltip}>{label}</HelpHover>
+      </td>
+      <td style={{ ...CELL_RIGHT, fontWeight: valueColor ? 'bold' : 'normal', color: valueColor, borderRight: 'none' }}>
+        {value}
+      </td>
+    </tr>
+  );
+}
+
+function MetricsTable({
+  metrics, dayResults, initialCapital,
+}: {
+  metrics: PerformanceMetrics;
+  dayResults: BacktestDayResult[];
+  initialCapital: number;
+}) {
+  const lastValue = dayResults[dayResults.length - 1]?.portfolio_value ?? 0;
+  // Backend returns gross_exposure / net_exposure as absolute USD values
+  // (long+short / long-short). Convert to fraction of the final portfolio
+  // value so fmtPct produces a sensible %.
+  const grossPct = metrics.gross_exposure != null && lastValue > 0
+    ? metrics.gross_exposure / lastValue : null;
+  const netPct = metrics.net_exposure != null && lastValue > 0
+    ? metrics.net_exposure / lastValue : null;
+  // Backend returns max_drawdown already in percentage points
+  // (e.g. -9.77 means -9.77%). Don't multiply by 100 again.
+  const ddText = metrics.max_drawdown != null
+    ? `${metrics.max_drawdown.toFixed(2)}%` : null;
+  const totalReturn = lastValue > 0
+    ? (lastValue - initialCapital) / initialCapital : 0;
+  const avgCashPct = dayResults.length > 0
+    ? dayResults.reduce((sum, r) => sum + (r.portfolio_value > 0 ? r.cash / r.portfolio_value : 0), 0) / dayResults.length
+    : null;
+
+  const ratioColor = (v: number) => v >= 1 ? COLOR_POSITIVE : v >= 0 ? COLOR_SECONDARY : COLOR_NEGATIVE;
+
+  const rows: React.ReactNode[] = [];
+  let zebra: 'a' | 'b' = 'a';
+  const flip = () => { zebra = zebra === 'a' ? 'b' : 'a'; };
+
+  if (metrics.sharpe_ratio != null) {
+    rows.push(
+      <MetricRow
+        key="sharpe" zebra={zebra}
+        label="Sharpe Ratio"
+        tooltip="Retorno ajustado por riesgo: (retorno − tasa libre de riesgo) / desvío estándar. > 1 es bueno, > 2 muy bueno, negativo significa que perdiste contra el cash."
+        value={metrics.sharpe_ratio.toFixed(3)}
+        valueColor={ratioColor(metrics.sharpe_ratio)}
+      />
+    );
+    flip();
+  }
+  if (metrics.sortino_ratio != null) {
+    rows.push(
+      <MetricRow
+        key="sortino" zebra={zebra}
+        label="Sortino Ratio"
+        tooltip="Como Sharpe, pero solo penaliza la volatilidad a la baja. Más representativo cuando los retornos no son simétricos."
+        value={metrics.sortino_ratio.toFixed(3)}
+        valueColor={ratioColor(metrics.sortino_ratio)}
+      />
+    );
+    flip();
+  }
+  if (ddText) {
+    rows.push(
+      <MetricRow
+        key="dd" zebra={zebra}
+        label="Max Drawdown"
+        tooltip="Mayor caída desde un pico hasta un valle del valor del portfolio durante el backtest. Cuanto más cercano a 0%, mejor."
+        value={<>{ddText}{metrics.max_drawdown_date ? ` (${metrics.max_drawdown_date})` : ''}</>}
+        valueColor={COLOR_NEGATIVE}
+      />
+    );
+    flip();
+  }
+  if (dayResults.length > 0) {
+    rows.push(
+      <MetricRow
+        key="ret" zebra={zebra}
+        label="Retorno Total"
+        tooltip="Variación porcentual entre el capital inicial y el valor final del portfolio."
+        value={fmtPct(totalReturn)}
+        valueColor={lastValue >= initialCapital ? COLOR_POSITIVE : COLOR_NEGATIVE}
+      />
+    );
+    flip();
+    rows.push(
+      <MetricRow
+        key="final" zebra={zebra}
+        label="Valor Final del Portfolio"
+        tooltip="Valor total (cash + posiciones) al cierre del último día del backtest."
+        value={`$${fmtUSD(lastValue)}`}
+      />
+    );
+    flip();
+  }
+  if (grossPct != null) {
+    rows.push(
+      <MetricRow
+        key="gross" zebra={zebra}
+        label="Exposición Bruta"
+        tooltip="(longs + |shorts|) / valor del portfolio al cierre. Mide cuánto del capital está invertido — 100% = totalmente invertido, > 100% = apalancado."
+        value={fmtPct(grossPct)}
+      />
+    );
+    flip();
+  }
+  if (netPct != null) {
+    rows.push(
+      <MetricRow
+        key="net" zebra={zebra}
+        label="Exposición Neta"
+        tooltip="(longs − shorts) / valor del portfolio al cierre. Mide la dirección neta: cercano a 100% = sesgo alcista, cercano a 0% = neutral al mercado."
+        value={fmtPct(netPct)}
+      />
+    );
+    flip();
+  }
+  if (avgCashPct != null) {
+    rows.push(
+      <MetricRow
+        key="cash" zebra={zebra}
+        label="Cash Promedio"
+        tooltip="Porcentaje promedio del portfolio mantenido en efectivo a lo largo del backtest. Alto = estrategia defensiva o pocas oportunidades; bajo = capital constantemente desplegado."
+        value={fmtPct(avgCashPct)}
+      />
+    );
+  }
+
+  return (
+    <div className="sunken-panel" style={{ padding: 0 }}>
+      <table style={{ ...FONT, width: '100%', borderCollapse: 'collapse', borderSpacing: 0 }}>
+        <thead>
+          <tr>
+            <th style={{ ...COL_HEADER_BASE, ...COL_RAISED, textAlign: 'left' }}>Métrica</th>
+            <th style={{ ...COL_HEADER_BASE, ...COL_RAISED, textAlign: 'right' }}>Valor</th>
+          </tr>
+        </thead>
+        <tbody>{rows}</tbody>
+      </table>
     </div>
   );
 }
@@ -209,7 +570,7 @@ export function BacktestingWindow() {
   const [tickerInput, setTickerInput] = useState(DEFAULT_TICKERS.join(', '));
 
   // Run state
-  const [activeTab, setActiveTab] = useState<'config' | 'run' | 'results'>('config');
+  const [activeTab, setActiveTab] = useState<'config' | 'run' | 'results' | 'history'>('config');
   const [phase, setPhase] = useState<'idle' | 'running' | 'done' | 'error'>('idle');
   const [logs, setLogs] = useState<LogEntry[]>([]);
   const [progress, setProgress] = useState(0);
@@ -224,6 +585,12 @@ export function BacktestingWindow() {
   const logBodyRef = useRef<HTMLDivElement>(null);
   const abortRef = useRef<AbortController | null>(null);
   const logCounter = useRef(0);
+
+  // History (persisted)
+  const historyRuns = useBacktestHistoryStore(s => s.runs);
+  const addRunToHistory = useBacktestHistoryStore(s => s.addRun);
+  const deleteRunFromHistory = useBacktestHistoryStore(s => s.deleteRun);
+  const clearHistory = useBacktestHistoryStore(s => s.clearAll);
 
   // Auto-scroll logs
   useEffect(() => {
@@ -248,6 +615,48 @@ export function BacktestingWindow() {
         setIsLoadingAgents(false);
       }
     })();
+  }, []);
+
+  // ── Persist run to history when backtest completes ─────────────────────────
+
+  const savedRunIdRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (phase !== 'done' || dayResults.length === 0) return;
+    // Use the first day as a stable id so we don't double-save on re-renders.
+    const runId = `bt-${dayResults[0].date}-${dayResults[dayResults.length - 1].date}-${dayResults.length}`;
+    if (savedRunIdRef.current === runId) return;
+    savedRunIdRef.current = runId;
+    addRunToHistory({
+      id: `bt-${Date.now()}`,
+      timestamp: Date.now(),
+      config: {
+        startDate, endDate, initialCapital,
+        tickers: parsedTickers,
+        agentKeys: Array.from(selectedAgents),
+      },
+      dayResults,
+      metrics,
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [phase, dayResults]);
+
+  // ── Load a historical run into the Results tab ────────────────────────────
+
+  const loadHistoricalRun = useCallback((run: HistoricalBacktestRun) => {
+    setStartDate(run.config.startDate);
+    setEndDate(run.config.endDate);
+    setInitialCapital(run.config.initialCapital);
+    setTickerInput(run.config.tickers.join(', '));
+    setSelectedAgents(new Set(run.config.agentKeys));
+    setDayResults(run.dayResults);
+    setMetrics(run.metrics);
+    setExpandedDay(null);
+    setPhase('done');
+    setActiveTab('results');
+    // Mark as saved so the effect above doesn't re-add it.
+    if (run.dayResults.length > 0) {
+      savedRunIdRef.current = `bt-${run.dayResults[0].date}-${run.dayResults[run.dayResults.length - 1].date}-${run.dayResults.length}`;
+    }
   }, []);
 
   // ── Log helpers ────────────────────────────────────────────────────────────
@@ -383,6 +792,26 @@ export function BacktestingWindow() {
                   }
 
                   addLog(`day-${dayResult.date}`, `${dayResult.date}: $${fmtUSD(dayResult.portfolio_value)}`, 'ok', agent, '', `${dayResult.date}: $${fmtUSD(dayResult.portfolio_value)}`);
+
+                  // Surface tiny trades (< 0.5% of portfolio value) as warnings.
+                  // Backend should already be suppressing these via MIN_TRADE_PCT,
+                  // but if any slip through they're visible here as 'warn'.
+                  const minTrade = dayResult.portfolio_value * 0.005;
+                  for (const [ticker, qty] of Object.entries(dayResult.executed_trades)) {
+                    if (!qty) continue;
+                    const price = dayResult.current_prices[ticker] ?? 0;
+                    const tradeValue = Math.abs(qty * price);
+                    if (tradeValue > 0 && tradeValue < minTrade) {
+                      addLog(
+                        `tiny-${dayResult.date}-${ticker}`,
+                        `${dayResult.date}: ${ticker} trade minúsculo ($${tradeValue.toFixed(0)})`,
+                        'warn',
+                        agent,
+                        ticker,
+                        `${qty > 0 ? '+' : ''}${qty} ${ticker} = $${tradeValue.toFixed(0)} (<0.5% portfolio)`,
+                      );
+                    }
+                  }
                 } catch {
                   // Not a day result JSON, just a status
                   addLog(`progress-${++logCounter.current}`, `${agent}: ${status}`, 'running', agent, '', status);
@@ -493,6 +922,11 @@ export function BacktestingWindow() {
         </li>
         <li role="tab" aria-selected={activeTab === 'results'}>
           <a href="#results" onClick={(e) => { e.preventDefault(); setActiveTab('results'); }}>3. Resultados</a>
+        </li>
+        <li role="tab" aria-selected={activeTab === 'history'}>
+          <a href="#history" onClick={(e) => { e.preventDefault(); setActiveTab('history'); }}>
+            4. Histórico{historyRuns.length > 0 ? ` (${historyRuns.length})` : ''}
+          </a>
         </li>
       </menu>
 
@@ -634,7 +1068,7 @@ export function BacktestingWindow() {
                           display: 'flex',
                           gap: '5px',
                           lineHeight: '16px',
-                          color: log.status === 'error' ? COLOR_NEGATIVE : log.status === 'running' ? COLOR_SECONDARY : 'inherit',
+                          color: log.status === 'error' ? COLOR_NEGATIVE : log.status === 'warn' ? COLOR_WARNING : log.status === 'running' ? COLOR_SECONDARY : 'inherit',
                         }}
                       >
                         <LogIcon status={log.status} />
@@ -659,107 +1093,65 @@ export function BacktestingWindow() {
           {/* TAB 3: RESULTADOS */}
           {activeTab === 'results' && (
             <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0, gap: 8 }}>
-              <div className="win98-scrollbar" style={{ flex: 1, overflowY: 'auto', padding: 2, display: 'flex', flexDirection: 'column', gap: 6 }}>
-                {dayResults.length < 2 ? (
-                  <div style={{ ...FONT, padding: 16, textAlign: 'center', color: COLOR_SECONDARY }}>
-                    Los resultados aparecerán aquí cuando el backtest haya procesado al menos 2 días.
-                  </div>
-                ) : (
-                  <>
-                    {/* ── Equity Curve ──────────────────────────────────────────────── */}
+              {dayResults.length < 2 ? (
+                <div style={{ ...FONT, padding: 16, textAlign: 'center', color: COLOR_SECONDARY }}>
+                  Los resultados aparecerán aquí cuando el backtest haya procesado al menos 2 días.
+                </div>
+              ) : (
+                <>
+                  {/* ── Upper region: charts + métricas (scrollable, capped height) ── */}
+                  <div className="win98-scrollbar" style={{
+                    flex: '0 1 auto', maxHeight: '55%', overflowY: 'auto', padding: 2,
+                    display: 'flex', flexDirection: 'column', gap: 6,
+                  }}>
                     <fieldset style={{ margin: 0, flexShrink: 0 }}>
                       <legend>Curva de Equity</legend>
                       <EquityCurve results={dayResults} initialCapital={initialCapital} />
                     </fieldset>
 
-                    {/* ── Performance Metrics ───────────────────────────────────────── */}
+                    <fieldset style={{ margin: 0, flexShrink: 0 }}>
+                      <legend>Exposición</legend>
+                      <ExposureCurve results={dayResults} />
+                    </fieldset>
+
                     {metrics && (
                       <fieldset style={{ margin: 0, flexShrink: 0 }}>
                         <legend>Métricas de Rendimiento</legend>
-                        <div className="sunken-panel win98-scrollbar" style={{ padding: 0, overflow: 'auto', maxHeight: '200px' }}>
-                          <table style={{ ...FONT, width: '100%', borderCollapse: 'collapse', borderSpacing: 0 }}>
-                            <thead>
-                              <tr>
-                                <th style={{ ...COL_HEADER_BASE, ...COL_RAISED, textAlign: 'left', position: 'sticky', top: 0, zIndex: 1 }}>Métrica</th>
-                                <th style={{ ...COL_HEADER_BASE, ...COL_RAISED, textAlign: 'right', position: 'sticky', top: 0, zIndex: 1 }}>Valor</th>
-                              </tr>
-                            </thead>
-                            <tbody>
-                              {metrics.sharpe_ratio != null && (
-                                <tr style={{ background: '#ffffff' }}>
-                                  <td style={CELL} title="Risk-adjusted return measure. > 1 is good, > 2 is very good">Sharpe Ratio</td>
-                                  <td style={{ ...CELL_RIGHT, fontWeight: 'bold', color: metrics.sharpe_ratio >= 1 ? COLOR_POSITIVE : metrics.sharpe_ratio >= 0 ? COLOR_SECONDARY : COLOR_NEGATIVE, borderRight: 'none' }}>
-                                    {metrics.sharpe_ratio.toFixed(3)}
-                                  </td>
-                                </tr>
-                              )}
-                              {metrics.sortino_ratio != null && (
-                                <tr style={{ background: '#f0f0f0' }}>
-                                  <td style={CELL} title="Like Sharpe but only penalizes downside volatility">Sortino Ratio</td>
-                                  <td style={{ ...CELL_RIGHT, fontWeight: 'bold', color: metrics.sortino_ratio >= 1 ? COLOR_POSITIVE : metrics.sortino_ratio >= 0 ? COLOR_SECONDARY : COLOR_NEGATIVE, borderRight: 'none' }}>
-                                    {metrics.sortino_ratio.toFixed(3)}
-                                  </td>
-                                </tr>
-                              )}
-                              {metrics.max_drawdown != null && (
-                                <tr style={{ background: '#ffffff' }}>
-                                  <td style={CELL} title="Largest peak-to-trough decline">Max Drawdown</td>
-                                  <td style={{ ...CELL_RIGHT, fontWeight: 'bold', color: COLOR_NEGATIVE, borderRight: 'none' }}>
-                                    {fmtPct(metrics.max_drawdown)}
-                                    {metrics.max_drawdown_date ? ` (${metrics.max_drawdown_date})` : ''}
-                                  </td>
-                                </tr>
-                              )}
-                              {dayResults.length > 0 && (
-                                <tr style={{ background: '#f0f0f0' }}>
-                                  <td style={CELL}>Retorno Total</td>
-                                  <td style={{
-                                    ...CELL_RIGHT,
-                                    fontWeight: 'bold',
-                                    color: dayResults[dayResults.length - 1].portfolio_value >= initialCapital ? COLOR_POSITIVE : COLOR_NEGATIVE,
-                                    borderRight: 'none'
-                                  }}>
-                                    {fmtPct((dayResults[dayResults.length - 1].portfolio_value - initialCapital) / initialCapital)}
-                                  </td>
-                                </tr>
-                              )}
-                              {dayResults.length > 0 && (
-                                <tr style={{ background: '#ffffff' }}>
-                                  <td style={CELL}>Valor Final del Portfolio</td>
-                                  <td style={{ ...CELL_RIGHT, borderRight: 'none' }}>${fmtUSD(dayResults[dayResults.length - 1].portfolio_value)}</td>
-                                </tr>
-                              )}
-                              {metrics.gross_exposure != null && (
-                                <tr style={{ background: '#f0f0f0' }}>
-                                  <td style={CELL}>Exposición Bruta</td>
-                                  <td style={{ ...CELL_RIGHT, borderRight: 'none' }}>{fmtPct(metrics.gross_exposure)}</td>
-                                </tr>
-                              )}
-                              {metrics.net_exposure != null && (
-                                <tr style={{ background: '#ffffff' }}>
-                                  <td style={CELL}>Exposición Neta</td>
-                                  <td style={{ ...CELL_RIGHT, borderRight: 'none' }}>{fmtPct(metrics.net_exposure)}</td>
-                                </tr>
-                              )}
-                            </tbody>
-                          </table>
-                        </div>
+                        <MetricsTable
+                          metrics={metrics}
+                          dayResults={dayResults}
+                          initialCapital={initialCapital}
+                        />
                       </fieldset>
                     )}
+                  </div>
 
-                    {/* ── Daily Results Table ───────────────────────────────────────── */}
-                    {dayResults.length > 0 && (
-                      <fieldset style={{ margin: 0, flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
-                        <legend>Resultados Diarios ({dayResults.length} días)</legend>
-                        <div className="sunken-panel win98-scrollbar" style={{ flex: 1, padding: 0, overflow: 'auto', minHeight: 0 }}>
+                  {/* ── Lower region: Resultados Diarios (fills remaining space) ──── */}
+                  {dayResults.length > 0 && (
+                    <fieldset style={{ margin: 0, flex: 1, display: 'flex', flexDirection: 'column', minHeight: 200 }}>
+                      <legend>Resultados Diarios ({dayResults.length} días)</legend>
+                      <div className="sunken-panel win98-scrollbar" style={{ flex: 1, padding: 0, overflow: 'auto', minHeight: 0 }}>
                           <table style={{ ...FONT, width: '100%', borderCollapse: 'collapse', borderSpacing: 0 }}>
                             <thead>
                               <tr>
-                                <th style={{ ...COL_HEADER_BASE, ...COL_RAISED, textAlign: 'left', position: 'sticky', top: 0, zIndex: 1 }}>Fecha</th>
-                                <th style={{ ...COL_HEADER_BASE, ...COL_RAISED, textAlign: 'right', position: 'sticky', top: 0, zIndex: 1 }}>Valor Portfolio</th>
-                                <th style={{ ...COL_HEADER_BASE, ...COL_RAISED, textAlign: 'right', position: 'sticky', top: 0, zIndex: 1 }}>Cambio</th>
-                                <th style={{ ...COL_HEADER_BASE, ...COL_RAISED, textAlign: 'right', position: 'sticky', top: 0, zIndex: 1 }}>Cash</th>
-                                <th style={{ ...COL_HEADER_BASE, ...COL_RAISED, textAlign: 'left', position: 'sticky', top: 0, zIndex: 1 }}>Trades</th>
+                                <th style={{ ...COL_HEADER_BASE, ...COL_RAISED, textAlign: 'left', position: 'sticky', top: 0, zIndex: 1 }}>
+                                  <HelpHover tooltip="Día calendario simulado. Click en una fila con ► para expandir las decisiones de los agentes ese día.">Fecha</HelpHover>
+                                </th>
+                                <th style={{ ...COL_HEADER_BASE, ...COL_RAISED, textAlign: 'right', position: 'sticky', top: 0, zIndex: 1 }}>
+                                  <HelpHover tooltip="Cash + valor de mercado de las posiciones al cierre del día (en USD).">Valor Portfolio</HelpHover>
+                                </th>
+                                <th style={{ ...COL_HEADER_BASE, ...COL_RAISED, textAlign: 'right', position: 'sticky', top: 0, zIndex: 1 }}>
+                                  <HelpHover tooltip="Variación porcentual del valor del portfolio respecto al día anterior (o respecto al capital inicial el primer día).">Cambio</HelpHover>
+                                </th>
+                                <th style={{ ...COL_HEADER_BASE, ...COL_RAISED, textAlign: 'right', position: 'sticky', top: 0, zIndex: 1 }}>
+                                  <HelpHover tooltip="Efectivo disponible al cierre del día, sin invertir.">Cash</HelpHover>
+                                </th>
+                                <th style={{ ...COL_HEADER_BASE, ...COL_RAISED, textAlign: 'right', position: 'sticky', top: 0, zIndex: 1 }}>
+                                  <HelpHover tooltip="Cash / Valor Portfolio. Indica qué fracción del capital queda sin desplegar ese día.">Cash %</HelpHover>
+                                </th>
+                                <th style={{ ...COL_HEADER_BASE, ...COL_RAISED, textAlign: 'left', position: 'sticky', top: 0, zIndex: 1 }}>
+                                  <HelpHover tooltip="Operaciones ejecutadas el día. Signo + = compra, − = venta. La cantidad está expresada en acciones del subyacente.">Trades</HelpHover>
+                                </th>
                               </tr>
                             </thead>
                             <tbody>
@@ -795,6 +1187,9 @@ export function BacktestingWindow() {
                                         {change >= 0 ? '+' : ''}{change.toFixed(2)}%
                                       </td>
                                       <td style={CELL_RIGHT}>${fmtUSD(day.cash)}</td>
+                                      <td style={CELL_RIGHT}>
+                                        {day.portfolio_value > 0 ? fmtPct(day.cash / day.portfolio_value) : '—'}
+                                      </td>
                                       <td style={{ ...CELL, borderRight: 'none' }}>
                                         {trades.length > 0
                                           ? trades.map(([t, q]) => `${t}: ${q > 0 ? '+' : ''}${q}`).join(', ')
@@ -803,7 +1198,7 @@ export function BacktestingWindow() {
                                     </tr>
                                     {isExpanded && (
                                       <tr>
-                                        <td colSpan={5} style={{ padding: 0, background: '#ffffee', boxShadow: 'inset 0 1px 3px rgba(0,0,0,0.1)' }}>
+                                        <td colSpan={6} style={{ padding: 0, background: '#ffffee', boxShadow: 'inset 0 1px 3px rgba(0,0,0,0.1)' }}>
                                           <div style={{ padding: '4px 12px' }}>
                                             {/* Decisions detail */}
                                             {Object.keys(day.decisions).length > 0 && (
@@ -865,9 +1260,84 @@ export function BacktestingWindow() {
                         </div>
                       </fieldset>
                     )}
-                  </>
+                </>
+              )}
+            </div>
+          )}
+
+          {/* TAB 4: HISTÓRICO */}
+          {activeTab === 'history' && (
+            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0, gap: 8 }}>
+              <div className="win98-scrollbar" style={{ flex: 1, padding: 2, overflowY: 'auto', minHeight: 0 }}>
+                {historyRuns.length === 0 ? (
+                  <div style={{ ...FONT, padding: 16, textAlign: 'center', color: COLOR_SECONDARY }}>
+                    Sin reportes guardados. Los backtests completados se guardan automáticamente acá.
+                  </div>
+                ) : (
+                  <div className="sunken-panel" style={{ padding: 0 }}>
+                    <table style={{ ...FONT, width: '100%', borderCollapse: 'collapse', borderSpacing: 0 }}>
+                      <thead>
+                        <tr>
+                          <th style={{ ...COL_HEADER_BASE, ...COL_RAISED, textAlign: 'left' }}>Fecha</th>
+                          <th style={{ ...COL_HEADER_BASE, ...COL_RAISED, textAlign: 'left' }}>Período</th>
+                          <th style={{ ...COL_HEADER_BASE, ...COL_RAISED, textAlign: 'right' }}>Retorno</th>
+                          <th style={{ ...COL_HEADER_BASE, ...COL_RAISED, textAlign: 'right' }}>SPY</th>
+                          <th style={{ ...COL_HEADER_BASE, ...COL_RAISED, textAlign: 'right' }}>Días</th>
+                          <th style={{ ...COL_HEADER_BASE, ...COL_RAISED, textAlign: 'right' }}>Agentes</th>
+                          <th style={{ ...COL_HEADER_BASE, ...COL_RAISED, textAlign: 'left' }}>Tickers</th>
+                          <th style={{ ...COL_HEADER_BASE, ...COL_RAISED, textAlign: 'center' }}></th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {historyRuns.map((run, i) => {
+                          const initial = run.config.initialCapital;
+                          const last = run.dayResults[run.dayResults.length - 1]?.portfolio_value ?? initial;
+                          const ret = initial > 0 ? ((last - initial) / initial) * 100 : 0;
+                          const spy = run.dayResults[run.dayResults.length - 1]?.benchmark_return_pct ?? null;
+                          return (
+                            <tr
+                              key={run.id}
+                              style={{ background: i % 2 === 0 ? '#ffffff' : '#f0f0f0', cursor: 'pointer' }}
+                              onClick={() => loadHistoricalRun(run)}
+                              title="Click para cargar este reporte en la pestaña Resultados"
+                            >
+                              <td style={CELL}>{formatRunDate(run.timestamp)}</td>
+                              <td style={CELL}>{run.config.startDate} → {run.config.endDate}</td>
+                              <td style={{ ...CELL_RIGHT, color: ret >= 0 ? COLOR_POSITIVE : COLOR_NEGATIVE, fontWeight: 'bold' }}>
+                                {ret >= 0 ? '+' : ''}{ret.toFixed(2)}%
+                              </td>
+                              <td style={{ ...CELL_RIGHT, color: spy != null ? (spy >= 0 ? COLOR_POSITIVE : COLOR_NEGATIVE) : COLOR_SECONDARY }}>
+                                {spy != null ? `${spy >= 0 ? '+' : ''}${spy.toFixed(2)}%` : '—'}
+                              </td>
+                              <td style={CELL_RIGHT}>{run.dayResults.length}</td>
+                              <td style={CELL_RIGHT}>{run.config.agentKeys.length}</td>
+                              <td style={CELL} title={run.config.tickers.join(', ')}>
+                                {run.config.tickers.slice(0, 4).join(', ')}{run.config.tickers.length > 4 ? '…' : ''}
+                              </td>
+                              <td style={{ ...CELL, borderRight: 'none', textAlign: 'center' }}>
+                                <button
+                                  style={FONT}
+                                  title="Borrar este reporte"
+                                  onClick={(e) => { e.stopPropagation(); deleteRunFromHistory(run.id); }}
+                                >
+                                  X
+                                </button>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
                 )}
               </div>
+              {historyRuns.length > 0 && (
+                <div style={{ display: 'flex', justifyContent: 'flex-end', flexShrink: 0, paddingTop: 6, borderTop: '1px solid #dfdfdf' }}>
+                  <button onClick={() => { if (confirm('¿Borrar todo el histórico de backtests?')) clearHistory(); }}>
+                    Borrar todo
+                  </button>
+                </div>
+              )}
             </div>
           )}
 
