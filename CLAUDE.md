@@ -132,6 +132,7 @@ IOL_REFRESH_TOKEN
 FMP_API_KEY                  # Financial Modeling Prep
 AI_HEDGE_FUND_API_URL        # URL of the Python ai-hedge-fund backend (server-side only)
 AI_HEDGE_FUND_API_KEY        # Auth header forwarded by the proxy route
+ANTHROPIC_API_KEY            # Claude API key for the "Oráculo Bursátil" in ActiveDesktopWidget (uses claude-haiku-4-5 with SSE streaming)
 BASIC_AUTH_USER              # Optional HTTP basic auth (enforced by src/proxy.ts)
 BASIC_AUTH_PASSWORD
 NEXT_PUBLIC_DEMO_MODE        # 'true' to use demo fixtures instead of live data
