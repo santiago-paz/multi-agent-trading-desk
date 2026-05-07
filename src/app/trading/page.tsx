@@ -28,6 +28,8 @@ import type { HistoricalRow } from '@/lib/fmp/types';
 import { DESKTOP_APP_ICONS } from '@/lib/win98se-icons';
 import { useWindowManager, AppId, APP_IDS, useAppLabels, COMPANY_DETAIL_DEFAULTS } from '@/hooks/useWindowManager';
 import { useWindowsT } from '@/lib/i18n';
+import { Win98WindowAnimationOverlay } from '@/components/ui/Win98WindowAnimationOverlay';
+import { useWin98AnimStore } from '@/lib/store/win98-anim-store';
 
 interface CompanyDetailInstance {
   symbol: string;
@@ -189,6 +191,40 @@ export default function TradingDashboard() {
       });
     }
   }, [rawCloseWindow]);
+
+  const playZoomAnim = useWin98AnimStore((s) => s.play);
+
+  /**
+   * Click on a taskbar button: animate zoom between the button rect and the
+   * window rect, mirroring Win98 behavior — minimize zooms toward the button,
+   * restore zooms outward to the window's saved bounds.
+   */
+  const handleTaskbarClick = useCallback((id: string, btnEl: HTMLElement | null) => {
+    const w = windows[id];
+    if (!w) return;
+    const btnRect = btnEl?.getBoundingClientRect();
+    const tbRect = btnRect ? { x: btnRect.x, y: btnRect.y, width: btnRect.width, height: btnRect.height } : null;
+    const winRect = { x: w.x, y: w.y, width: w.width, height: w.height };
+
+    if (w.minimized) {
+      if (tbRect) {
+        playZoomAnim(tbRect, winRect, { onComplete: () => toggleMinimize(id) });
+      } else {
+        toggleMinimize(id);
+      }
+    } else if (focusedId === id) {
+      // Currently focused -> minimize with zoom toward the taskbar button
+      if (tbRect) {
+        toggleMinimize(id);
+        playZoomAnim(winRect, tbRect);
+      } else {
+        toggleMinimize(id);
+      }
+    } else {
+      // Not focused, not minimized -> just focus (no zoom)
+      toggleMinimize(id);
+    }
+  }, [windows, focusedId, playZoomAnim, toggleMinimize]);
 
   // Deep-link: ?open=<AppId> from the landing page opens that window on mount.
   const deepLinkHandledRef = useRef(false);
@@ -807,8 +843,9 @@ export default function TradingDashboard() {
               <button
                 key={id}
                 type="button"
+                data-taskbar-id={id}
                 className={`taskbar-button ${focusedId === id ? 'active' : ''}`}
-                onClick={() => toggleMinimize(id)}
+                onClick={(e) => handleTaskbarClick(id, e.currentTarget)}
                 style={{ display: 'inline-flex', alignItems: 'center', gap: 4, minWidth: 0, maxWidth: 160 }}
               >
                 {iconSrc && (
@@ -1004,6 +1041,8 @@ export default function TradingDashboard() {
           </div>
         </div>
       )}
+
+      <Win98WindowAnimationOverlay />
     </div>
   );
 }

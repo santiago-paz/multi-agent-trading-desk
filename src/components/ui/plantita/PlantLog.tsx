@@ -27,7 +27,8 @@ export function PlantLog({ log }: Props) {
       ref={ref}
       style={{
         ...FONT,
-        height: 64,
+        flex: 1,
+        minHeight: 48,
         margin: '4px 6px',
         padding: '3px 5px',
         background: '#fff',

@@ -2,11 +2,20 @@
 
 import React, { useCallback, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
+import { useWin98AnimStore, type Rect } from '@/lib/store/win98-anim-store';
 
 const MIN_WIDTH = 200;
 const MIN_HEIGHT = 120;
 const SNAP_THRESHOLD = 20;
 const TASKBAR_HEIGHT = 32;
+
+function getTaskbarRect(id: string): Rect | null {
+  if (typeof document === 'undefined') return null;
+  const el = document.querySelector(`[data-taskbar-id="${CSS.escape(id)}"]`) as HTMLElement | null;
+  if (!el) return null;
+  const r = el.getBoundingClientRect();
+  return { x: r.x, y: r.y, width: r.width, height: r.height };
+}
 
 export interface WindowState {
   id: string;
@@ -173,9 +182,22 @@ export const DraggableResizableWindow: React.FC<DraggableResizableWindowProps> =
     };
   }, [onMove, onResize, detectSnapZone, applySnap, isSnapped, state.width, state.height]);
 
+  const playZoom = useWin98AnimStore((s) => s.play);
+
+  const currentRect = useCallback((): Rect => ({
+    x: state.x, y: state.y, width: state.width, height: state.height,
+  }), [state.x, state.y, state.width, state.height]);
+
   const handleMinimizeClick = (e: React.MouseEvent) => {
     e.preventDefault();
-    onMinimize();
+    const tb = getTaskbarRect(state.id);
+    if (tb) {
+      const from = currentRect();
+      onMinimize();
+      playZoom(from, tb);
+    } else {
+      onMinimize();
+    }
   };
 
   const handleCloseClick = (e: React.MouseEvent) => {
@@ -186,13 +208,27 @@ export const DraggableResizableWindow: React.FC<DraggableResizableWindowProps> =
   const handleMaximizeClick = (e: React.MouseEvent) => {
     e.preventDefault();
     if (isMaximized) {
-      onResize(prevStateRef.current.width, prevStateRef.current.height);
-      onMove(prevStateRef.current.x, prevStateRef.current.y);
-      setIsSnapped(false);
+      const from = currentRect();
+      const target = { ...prevStateRef.current };
+      playZoom(from, target, {
+        onComplete: () => {
+          onResize(target.width, target.height);
+          onMove(target.x, target.y);
+          setIsSnapped(false);
+        },
+      });
     } else {
-      prevStateRef.current = { x: state.x, y: state.y, width: state.width, height: state.height };
-      onMove(0, 0);
-      onResize(typeof window !== 'undefined' ? window.innerWidth : 800, typeof window !== 'undefined' ? window.innerHeight - TASKBAR_HEIGHT : 600);
+      const from = currentRect();
+      prevStateRef.current = from;
+      const targetW = typeof window !== 'undefined' ? window.innerWidth : 800;
+      const targetH = typeof window !== 'undefined' ? window.innerHeight - TASKBAR_HEIGHT : 600;
+      const target: Rect = { x: 0, y: 0, width: targetW, height: targetH };
+      playZoom(from, target, {
+        onComplete: () => {
+          onMove(0, 0);
+          onResize(targetW, targetH);
+        },
+      });
     }
     setIsMaximized(!isMaximized);
   };
