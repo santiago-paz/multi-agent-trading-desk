@@ -1,6 +1,6 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { LogEntry, LogStatus, Phase, OrderResult, AgentSignal, Decision, HistoricalRun } from '../types';
-import { computeRebalancePlan, RebalancePlan } from '@/lib/trading/rebalance-engine';
+import { fetchOptimizedPlan, RebalancePlan } from '@/lib/trading/rebalance-engine';
 import { placeOrder, getOrderStatus } from '@/app/trading/actions';
 import { parseSSEChunk, remapToIol, fmtARS } from '../utils';
 import { COMMISSION_RATE } from '@/lib/trading/quick-trade';
@@ -20,6 +20,7 @@ export function useTradingEngine({
   arsPrices,
   fmpTickers,
   fmpToIol,
+  iolToFmp,
   panelSymbols,
   selectedAgents,
   modelName,
@@ -34,6 +35,7 @@ export function useTradingEngine({
   arsPrices: Record<string, number>;
   fmpTickers: string[];
   fmpToIol: Record<string, string>;
+  iolToFmp: Record<string, string>;
   panelSymbols: string[];
   selectedAgents: Set<string>;
   modelName: string;
@@ -156,7 +158,7 @@ export function useTradingEngine({
       let progressCount = 0;
       const totalEstimate = agentKeys.length * fmpTickers.length + 5;
 
-      const processCompleteEvent = (d: Record<string, unknown>) => {
+      const processCompleteEvent = async (d: Record<string, unknown>) => {
         const completeData = d.data as Record<string, unknown> | undefined;
         if (!completeData) return;
 
@@ -177,18 +179,38 @@ export function useTradingEngine({
         }
         setCandidateDecisions(candidates);
 
-        // The backend now returns decision.quantity already in CEDEAR units
-        // (matches what the broker trades). The rebalance engine, holdings
-        // map and IOL all speak in CEDEARs, so we pass the decisions through
-        // unchanged.
-        const rebalancePlan = computeRebalancePlan({
-          decisions: iolDecisions,
-          holdings,
-          arsPrices,
-          cashArs,
-          dailyLimitArs: dailyLimit,
-          commissionRate: COMMISSION_RATE,
-        }, t);
+        // USD prices are computed by risk_management_agent during /run; we
+        // forward them so the optimizer's cap math doesn't depend on the
+        // frontend's MEP rate snapshot diverging from what the agents saw.
+        const riskSignals = (rawSignals?.risk_management_agent ?? {}) as Record<string, { current_price?: number }>;
+        const currentPricesUsd: Record<string, number> = {};
+        for (const [fmpTicker, sig] of Object.entries(riskSignals)) {
+          const price = sig?.current_price;
+          if (typeof price === 'number' && price > 0) currentPricesUsd[fmpTicker] = price;
+        }
+
+        let rebalancePlan: RebalancePlan;
+        try {
+          rebalancePlan = await fetchOptimizedPlan({
+            decisions: rawDec,
+            analystSignals: rawSignals,
+            currentPricesUsd,
+            fmpToIol,
+            iolToFmp,
+            holdingsByIol: holdings,
+            arsPrices,
+            cashArs,
+            dailyLimitArs: dailyLimit,
+            effectiveMep,
+            commissionRate: COMMISSION_RATE,
+            signal: abortRef.current?.signal,
+          }, t);
+        } catch (err) {
+          if ((err as Error).name === 'AbortError') return;
+          addLog('error', t('engine.log.networkError', { message: (err as Error).message }), 'error');
+          setPhase('idle');
+          return;
+        }
         setPlan(rebalancePlan);
 
         // Save historical run
@@ -281,7 +303,7 @@ export function useTradingEngine({
                 setPhase('idle');
               } else if (evt.event === 'complete') {
                 receivedComplete = true;
-                processCompleteEvent(d);
+                await processCompleteEvent(d);
               }
             }
           }
@@ -294,7 +316,7 @@ export function useTradingEngine({
         for (const evt of parseSSEChunk(buffer + '\n\n')) {
           if (evt.event === 'complete') {
             receivedComplete = true;
-            processCompleteEvent(evt.data as Record<string, unknown>);
+            await processCompleteEvent(evt.data as Record<string, unknown>);
           } else if (evt.event === 'error') {
             const d = evt.data as Record<string, unknown>;
             addLog('error', `Error: ${(d.message as string) || 'Error desconocido'}`, 'error');

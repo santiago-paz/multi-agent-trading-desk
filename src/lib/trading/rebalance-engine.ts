@@ -12,24 +12,16 @@ export interface Decision {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type Translator = (key: any, params?: Record<string, string | number>) => string;
 
-export interface RebalanceInput {
-  decisions: Record<string, Decision>;  // IOL symbol → AI decision
-  holdings: Record<string, number>;     // IOL symbol → quantity owned
-  arsPrices: Record<string, number>;    // IOL symbol → current ARS price
-  cashArs: number;                      // available cash
-  dailyLimitArs: number;               // max volume to sell/rotate; also caps new cash for buys
-  commissionRate?: number;              // defaults to COMMISSION_RATE
-}
-
 export interface RebalanceOrder {
-  ticker: string;
+  ticker: string;            // IOL ticker (broker-facing)
   side: 'buy' | 'sell';
-  quantity: number;
-  priceArs: number;
-  volumeArs: number;        // quantity * price (raw volume, no commission)
-  estimatedCostArs: number; // volume including commission
+  quantity: number;          // CEDEAR shares — what the broker actually trades
+  priceArs: number;          // per-CEDEAR ARS price
+  volumeArs: number;         // quantity * priceArs (raw, no commission)
+  estimatedCostArs: number;  // buys: volume + commission; sells: commission only
   reasoning: string;
   confidence: number;
+  isOrphan?: boolean;        // true for fractional-CEDEAR cleanup sells
 }
 
 export interface RebalancePlan {
@@ -38,164 +30,189 @@ export interface RebalancePlan {
   totalSellVolume: number;
   totalBuyVolume: number;
   totalVolume: number;
-  estimatedSellProceeds: number; // net after commission
-  newCashUsed: number;           // how much of the daily limit was consumed
-  remainingLimit: number;        // dailyLimit - newCashUsed
+  estimatedSellProceeds: number;
+  newCashUsed: number;
+  remainingLimit: number;
   warnings: string[];
 }
+
+// Wire shape returned by POST /api/hedge-fund/optimize.
+interface OptimizePlannedTrade {
+  ticker: string;
+  action: 'buy' | 'sell';
+  shares_underlying: number;
+  shares_cedear: number;
+  price_usd: number;
+  gross_usd: number;
+  commission_usd: number;
+  net_usd: number;
+  price_ars_display: number;
+  gross_ars_display: number;
+  confidence: number;
+  reasoning: string;
+  agent_signals: Record<string, Record<string, unknown>>;
+  is_orphan: boolean;
+}
+
+interface OptimizeResponse {
+  trades: OptimizePlannedTrade[];
+}
+
+export interface FetchOptimizedPlanInput {
+  decisions: Record<string, Decision>;             // FMP-tickered (as /run returns)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  analystSignals: Record<string, Record<string, any>>;  // FMP-tickered
+  currentPricesUsd: Record<string, number>;        // FMP-tickered
+  fmpToIol: Record<string, string>;                // for response remap
+  iolToFmp: Record<string, string>;                // for holdings remap
+  holdingsByIol: Record<string, number>;           // IOL ticker → CEDEAR shares
+  arsPrices: Record<string, number>;               // IOL ticker → ARS price (last quote)
+  cashArs: number;
+  dailyLimitArs: number;
+  effectiveMep: number;                            // ARS per USD
+  commissionRate?: number;
+  minTradeUsd?: number;
+  liquidateOrphans?: boolean;
+  apiUrl?: string;                                 // override for tests
+  signal?: AbortSignal;
+}
+
+const DEFAULT_API_URL = '/api/hedge-fund/optimize';
 
 // ─── Engine ───────────────────────────────────────────────────────────────────
 
 /**
- * Computes a rebalance plan.
+ * Calls the Python optimizer (POST /api/hedge-fund/optimize) with the agent
+ * decisions and converts the response into the RebalancePlan shape the rest
+ * of the auto-trader UI consumes.
  *
- * Limit semantics:
- * - dailyLimitArs caps TOTAL SELL volume — the AI can't liquidate the whole portfolio.
- * - Sell proceeds are 100% recycled into buys (no free cash left over).
- * - New cash (beyond sell proceeds) is also capped by dailyLimitArs.
- * - Each buy respects the AI's recommended quantity as a maximum.
+ * The Python optimizer owns the CEDEAR-aware logic: lot rounding by BYMA
+ * ratio, orphan-CEDEAR liquidation, dust filtering and independent buy/sell
+ * caps. The frontend only handles I/O remap (FMP↔IOL) and the settlement
+ * warning, which the backend doesn't emit.
  */
-export function computeRebalancePlan(input: RebalanceInput, t: Translator): RebalancePlan {
+export async function fetchOptimizedPlan(
+  input: FetchOptimizedPlanInput,
+  t: Translator,
+): Promise<RebalancePlan> {
   const {
     decisions,
-    holdings,
+    analystSignals,
+    currentPricesUsd,
+    fmpToIol,
+    iolToFmp,
+    holdingsByIol,
     arsPrices,
-    cashArs,
     dailyLimitArs,
+    effectiveMep,
     commissionRate = COMMISSION_RATE,
+    minTradeUsd = 5.0,
+    liquidateOrphans = false,
+    apiUrl = DEFAULT_API_URL,
+    signal,
   } = input;
 
+  // Holdings → FMP-tickered for the optimizer (its CEDEAR table is keyed on
+  // underlying/FMP symbols). Skip empty positions; backend filters them anyway
+  // but sending them inflates the payload.
+  const holdings = Object.entries(holdingsByIol)
+    .filter(([, qty]) => qty > 0)
+    .map(([iol, qty]) => ({
+      ticker: iolToFmp[iol] ?? iol,
+      cedear_shares: qty,
+      avg_cost_ars: 0,
+      last_price_ars: arsPrices[iol] ?? null,
+    }));
+
+  // Single daily cap is split equally across both sides. The Python optimizer
+  // enforces them as independent caps (which is a tighter guarantee than the
+  // old TS engine's "recycle proceeds" semantics — we accept that trade-off).
+  const capUsd = effectiveMep > 0 ? dailyLimitArs / effectiveMep : 0;
+
+  const body = {
+    decisions,
+    analyst_signals: analystSignals,
+    current_prices_usd: currentPricesUsd,
+    holdings,
+    sell_cap_usd: capUsd,
+    buy_cap_usd: capUsd,
+    fx_ars_per_usd: effectiveMep,
+    commission_pct: commissionRate,
+    min_trade_usd: minTradeUsd,
+    liquidate_orphans: liquidateOrphans,
+  };
+
+  const response = await fetch(apiUrl, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+    signal,
+  });
+
+  if (!response.ok) {
+    const errText = await response.text();
+    let message = errText;
+    try {
+      const parsed = JSON.parse(errText) as { detail?: string };
+      if (parsed.detail) message = parsed.detail;
+    } catch {
+      // not JSON — keep raw text
+    }
+    throw new Error(`HTTP ${response.status}: ${message}`);
+  }
+
+  const data = (await response.json()) as OptimizeResponse;
+  return convertResponseToPlan(data, fmpToIol, commissionRate, dailyLimitArs, t);
+}
+
+// ─── Conversion ───────────────────────────────────────────────────────────────
+
+function convertResponseToPlan(
+  data: OptimizeResponse,
+  fmpToIol: Record<string, string>,
+  commissionRate: number,
+  dailyLimitArs: number,
+  t: Translator,
+): RebalancePlan {
   const sells: RebalanceOrder[] = [];
   const buys: RebalanceOrder[] = [];
+  let estimatedSellProceeds = 0;
+
+  for (const trade of data.trades) {
+    const iolTicker = fmpToIol[trade.ticker] ?? trade.ticker;
+    // Re-derive ARS commission from the canonical gross_ars_display so any FX
+    // rounding inconsistency between gross_usd and gross_ars stays internal.
+    const commissionArs = trade.gross_ars_display * commissionRate;
+
+    const order: RebalanceOrder = {
+      ticker: iolTicker,
+      side: trade.action,
+      quantity: trade.shares_cedear,
+      priceArs: trade.price_ars_display,
+      volumeArs: trade.gross_ars_display,
+      estimatedCostArs:
+        trade.action === 'buy'
+          ? trade.gross_ars_display + commissionArs
+          : commissionArs,
+      reasoning: trade.reasoning,
+      confidence: trade.confidence,
+      isOrphan: trade.is_orphan,
+    };
+
+    if (trade.action === 'sell') {
+      sells.push(order);
+      estimatedSellProceeds += trade.gross_ars_display - commissionArs;
+    } else {
+      buys.push(order);
+    }
+  }
+
+  const totalSellVolume = sells.reduce((s, o) => s + o.volumeArs, 0);
+  const totalBuyVolume = buys.reduce((s, o) => s + o.volumeArs, 0);
+  const totalBuyCost = buys.reduce((s, o) => s + o.estimatedCostArs, 0);
+  const newCashUsed = Math.max(0, totalBuyCost - estimatedSellProceeds);
+
   const warnings: string[] = [];
-
-  let sellProceeds = 0;
-
-  // ── 1. Partition decisions ──────────────────────────────────────────────────
-
-  const sellDecisions: [string, Decision][] = [];
-  const buyDecisions: [string, Decision][] = [];
-
-  for (const [ticker, decision] of Object.entries(decisions)) {
-    if (decision.action === 'sell') {
-      sellDecisions.push([ticker, decision]);
-    } else if (decision.action === 'buy') {
-      buyDecisions.push([ticker, decision]);
-    }
-    // hold → skip
-  }
-
-  // Sort by confidence descending (highest confidence first)
-  sellDecisions.sort(([, a], [, b]) => b.confidence - a.confidence);
-  buyDecisions.sort(([, a], [, b]) => b.confidence - a.confidence);
-
-  // ── 2. Process sells (capped at dailyLimitArs) ─────────────────────────────
-
-  let remainingSellBudget = dailyLimitArs;
-
-  for (const [ticker, decision] of sellDecisions) {
-    const price = arsPrices[ticker];
-    const owned = holdings[ticker] ?? 0;
-
-    if (!price || price <= 0) {
-      warnings.push(t('engine.sell.noPrice', { ticker }));
-      continue;
-    }
-    if (owned <= 0) {
-      warnings.push(t('engine.sell.noHolding', { ticker }));
-      continue;
-    }
-    if (remainingSellBudget <= 0) {
-      warnings.push(t('engine.sell.limitReached', { ticker }));
-      continue;
-    }
-
-    // Cap sell quantity to stay within daily limit
-    const maxByBudget = Math.floor(remainingSellBudget / price);
-    const quantity = Math.min(owned, maxByBudget);
-
-    if (quantity <= 0) {
-      warnings.push(t('engine.sell.budgetInsufficient', { ticker, price: fmtARS(price), remaining: fmtARS(remainingSellBudget) }));
-      continue;
-    }
-
-    const volume = quantity * price;
-    const commission = volume * commissionRate;
-    const netProceeds = volume - commission;
-
-    sells.push({
-      ticker,
-      side: 'sell',
-      quantity,
-      priceArs: price,
-      volumeArs: volume,
-      estimatedCostArs: commission,
-      reasoning: decision.reasoning,
-      confidence: decision.confidence,
-    });
-
-    sellProceeds += netProceeds;
-    remainingSellBudget -= volume;
-  }
-
-  // ── 3. Process buys ─────────────────────────────────────────────────────────
-
-  // Buy budget = sell proceeds (recycled, all must be reinvested)
-  //            + new cash capped at dailyLimitArs
-  const maxNewCash = Math.min(cashArs, dailyLimitArs);
-  let availableBudget = sellProceeds + maxNewCash;
-
-  for (const [ticker, decision] of buyDecisions) {
-    const price = arsPrices[ticker];
-
-    if (!price || price <= 0) {
-      warnings.push(t('engine.buy.noPrice', { ticker }));
-      continue;
-    }
-    if (availableBudget <= 0) {
-      warnings.push(t('engine.buy.noLiquidity', { ticker }));
-      continue;
-    }
-
-    const effectiveBudget = availableBudget / (1 + commissionRate);
-    const maxByBudget = Math.floor(effectiveBudget / price);
-    // Respect the AI's recommended quantity as a cap
-    const quantity = decision.quantity > 0
-      ? Math.min(decision.quantity, maxByBudget)
-      : maxByBudget;
-
-    if (quantity <= 0) {
-      warnings.push(t('engine.buy.insufficientFunds', { ticker, budget: fmtARS(availableBudget), price: fmtARS(price) }));
-      continue;
-    }
-
-    const volume = quantity * price;
-    const commission = volume * commissionRate;
-    const totalCost = volume + commission;
-
-    buys.push({
-      ticker,
-      side: 'buy',
-      quantity,
-      priceArs: price,
-      volumeArs: volume,
-      estimatedCostArs: totalCost,
-      reasoning: decision.reasoning,
-      confidence: decision.confidence,
-    });
-
-    availableBudget -= totalCost;
-  }
-
-  const totalBuyCost = buys.reduce((sum, o) => sum + o.estimatedCostArs, 0);
-  const newCashUsed = Math.max(0, totalBuyCost - sellProceeds);
-
-  // ── 4. Compute totals ──────────────────────────────────────────────────────
-
-  const totalSellVolume = sells.reduce((sum, o) => sum + o.volumeArs, 0);
-  const totalBuyVolume = buys.reduce((sum, o) => sum + o.volumeArs, 0);
-
-  // Settlement warning
   if (sells.length > 0 && buys.length > 0) {
     warnings.push(t('engine.settlement'));
   }
@@ -206,15 +223,9 @@ export function computeRebalancePlan(input: RebalanceInput, t: Translator): Reba
     totalSellVolume,
     totalBuyVolume,
     totalVolume: totalSellVolume + totalBuyVolume,
-    estimatedSellProceeds: sellProceeds,
+    estimatedSellProceeds,
     newCashUsed,
     remainingLimit: Math.max(0, dailyLimitArs - newCashUsed),
     warnings,
   };
-}
-
-// ─── Helpers ──────────────────────────────────────────────────────────────────
-
-function fmtARS(n: number): string {
-  return n.toLocaleString('es-AR', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
 }

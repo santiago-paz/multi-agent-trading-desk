@@ -5,13 +5,13 @@ import { renderHook, act, waitFor } from '@testing-library/react';
 const placeOrder = vi.fn();
 const getOrderStatus = vi.fn();
 const waitForOrderSettlement = vi.fn();
-const computeRebalancePlan = vi.fn();
+const fetchOptimizedPlan = vi.fn();
 
 vi.mock('@/app/trading/actions', () => ({ placeOrder, getOrderStatus }));
 vi.mock('@/lib/trading/order-polling', () => ({ waitForOrderSettlement }));
 vi.mock('@/lib/trading/rebalance-engine', async (orig) => {
   const actual = await orig<typeof import('@/lib/trading/rebalance-engine')>();
-  return { ...actual, computeRebalancePlan };
+  return { ...actual, fetchOptimizedPlan };
 });
 
 const { useTradingEngine } = await import('./useTradingEngine');
@@ -27,6 +27,7 @@ const baseProps = {
   arsPrices: { AAPLC: 1000, KOC: 500 } as Record<string, number>,
   fmpTickers: ['AAPL', 'KO'],
   fmpToIol: { AAPL: 'AAPLC', KO: 'KOC' } as Record<string, string>,
+  iolToFmp: { AAPLC: 'AAPL', KOC: 'KO' } as Record<string, string>,
   panelSymbols: ['AAPLC', 'KOC'],
   selectedAgents: new Set<string>(['warren_buffett']),
   modelName: 'claude-opus-4-7',
@@ -42,7 +43,7 @@ beforeEach(() => {
   // Default: settlement resolves instantly as filled so existing tests don't
   // need to know about the polling step. Tests that care override this.
   waitForOrderSettlement.mockResolvedValue({ kind: 'filled', estado: 'terminada' });
-  computeRebalancePlan.mockReset();
+  fetchOptimizedPlan.mockReset();
   localStorage.clear();
   useHistoryStore.setState({ runs: [] });
 });
@@ -182,7 +183,7 @@ describe('useTradingEngine — handleAnalyze SSE complete event', () => {
       estimatedSellProceeds: 0,
       warnings: [],
     };
-    computeRebalancePlan.mockReturnValue(fakePlan);
+    fetchOptimizedPlan.mockResolvedValue(fakePlan);
 
     vi.stubGlobal(
       'fetch',
@@ -217,15 +218,18 @@ describe('useTradingEngine — handleAnalyze SSE complete event', () => {
     expect(result.current.candidateDecisions?.AAPLC).toBeUndefined();
     expect(result.current.candidateDecisions?.KOC?.action).toBe('buy');
 
-    // Plan came from the mocked engine.
+    // Plan came from the mocked optimizer client.
     expect(result.current.plan).toBe(fakePlan);
-    // computeRebalancePlan received remapped IOL decisions and CASH/limit.
-    expect(computeRebalancePlan).toHaveBeenCalledTimes(1);
-    const [planArgs] = computeRebalancePlan.mock.calls[0];
-    expect(planArgs.holdings).toEqual({ AAPLC: 5 });
+    // fetchOptimizedPlan received the agent's FMP-tickered decisions
+    // (no client-side remap before the call) plus IOL-keyed holdings —
+    // the function itself remaps holdings IOL→FMP via iolToFmp.
+    expect(fetchOptimizedPlan).toHaveBeenCalledTimes(1);
+    const [planArgs] = fetchOptimizedPlan.mock.calls[0];
+    expect(planArgs.holdingsByIol).toEqual({ AAPLC: 5 });
     expect(planArgs.cashArs).toBe(100_000);
     expect(planArgs.dailyLimitArs).toBe(50_000);
-    expect(planArgs.decisions.KOC.action).toBe('buy');
+    expect(planArgs.decisions.KO.action).toBe('buy');
+    expect(planArgs.iolToFmp).toEqual({ AAPLC: 'AAPL', KOC: 'KO' });
 
     // Progress should hit 100 and a `complete` log was added.
     expect(result.current.progress).toBe(100);
@@ -279,7 +283,7 @@ describe('useTradingEngine — handleAnalyze request body', () => {
     //      against money that wasn't actually liquid — the rebalance engine
     //      then silently trimmed those orders.
     // Holdings travel via `portfolio_positions`; dailyLimit stays as a
-    // frontend-only activity cap enforced in computeRebalancePlan.
+    // frontend-only activity cap forwarded to the /optimize endpoint.
     const fetchMock = captureBody();
     const props = {
       ...baseProps,
@@ -298,16 +302,16 @@ describe('useTradingEngine — handleAnalyze request body', () => {
     expect(body.initial_cash).toBe(1000);
   });
 
-  it('passes backend decisions through to the rebalance engine without unit conversion', async () => {
-    // The backend now sizes orders in CEDEAR units directly (its built-in
-    // CEDEAR table maps each ticker to its BYMA ratio, no client-side input
-    // needed). The LLM already returns CEDEAR quantities — no client-side
-    // share→CEDEAR translation, just remap FMP→IOL.
+  it('forwards backend decisions to the optimizer in their native FMP/underlying-share units', async () => {
+    // The Python optimizer expects underlying-share quantities — the same
+    // unit /run produces. The hook does not perform any unit conversion;
+    // the optimizer applies BYMA lot rounding server-side.
     const fakePlan = {
       sells: [], buys: [], totalSellVolume: 0, totalBuyVolume: 0,
-      estimatedSellProceeds: 0, warnings: [],
+      totalVolume: 0, estimatedSellProceeds: 0, newCashUsed: 0,
+      remainingLimit: 0, warnings: [],
     };
-    computeRebalancePlan.mockReturnValue(fakePlan);
+    fetchOptimizedPlan.mockResolvedValue(fakePlan);
 
     const sseResponse = (() => {
       const payload = 'event: complete\ndata: ' + JSON.stringify({
@@ -330,6 +334,7 @@ describe('useTradingEngine — handleAnalyze request body', () => {
     const props = {
       ...baseProps,
       fmpToIol: { NVDA: 'NVDA', ORLY: 'ORLY', KO: 'KO' },
+      iolToFmp: { NVDA: 'NVDA', ORLY: 'ORLY', KO: 'KO' },
       holdingTickers: ['NVDA'],
       holdings: { NVDA: 100 },
     };
@@ -337,8 +342,8 @@ describe('useTradingEngine — handleAnalyze request body', () => {
     await act(async () => { await result.current.handleAnalyze(setActiveTab); });
     await waitFor(() => expect(result.current.phase).toBe('planned'));
 
-    expect(computeRebalancePlan).toHaveBeenCalledTimes(1);
-    const [planArgs] = computeRebalancePlan.mock.calls[0];
+    expect(fetchOptimizedPlan).toHaveBeenCalledTimes(1);
+    const [planArgs] = fetchOptimizedPlan.mock.calls[0];
     expect(planArgs.decisions.NVDA.quantity).toBe(48);
     expect(planArgs.decisions.ORLY.quantity).toBe(222);
     expect(planArgs.decisions.KO.quantity).toBe(0);
@@ -381,7 +386,7 @@ describe('useTradingEngine — handleExecuteOrders', () => {
       estimatedSellProceeds: 1990,
       warnings: [],
     };
-    computeRebalancePlan.mockReturnValue(fakePlan);
+    fetchOptimizedPlan.mockResolvedValue(fakePlan);
 
     // First, run handleAnalyze to populate plan + currentRunIdRef.
     const sseResponse = (() => {
@@ -436,7 +441,7 @@ describe('useTradingEngine — handleExecuteOrders', () => {
       estimatedSellProceeds: 1990,
       warnings: [],
     };
-    computeRebalancePlan.mockReturnValue(fakePlan);
+    fetchOptimizedPlan.mockResolvedValue(fakePlan);
 
     const sseResponse = (() => {
       const payload = 'event: complete\ndata: ' + JSON.stringify({
@@ -500,7 +505,7 @@ describe('useTradingEngine — handleExecuteOrders', () => {
       estimatedSellProceeds: 1990,
       warnings: [],
     };
-    computeRebalancePlan.mockReturnValue(fakePlan);
+    fetchOptimizedPlan.mockResolvedValue(fakePlan);
 
     const sseResponse = (() => {
       const payload = 'event: complete\ndata: ' + JSON.stringify({

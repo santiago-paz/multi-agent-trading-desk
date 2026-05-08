@@ -36,6 +36,7 @@ export function AutoTraderWindow({ onCompanyDetail }: AutoTraderWindowProps = {}
     arsPrices: portfolio.arsPrices,
     fmpTickers: portfolio.fmpTickers,
     fmpToIol: portfolio.fmpToIol,
+    iolToFmp: portfolio.iolToFmp,
     panelSymbols: portfolio.panelSymbols,
     selectedAgents: agents.selectedAgents,
     modelName,

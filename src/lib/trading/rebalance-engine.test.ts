@@ -1,312 +1,185 @@
-import { describe, it, expect } from 'vitest';
-import { computeRebalancePlan, Decision, RebalanceInput, Translator } from './rebalance-engine';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { fetchOptimizedPlan, Translator } from './rebalance-engine';
 import { COMMISSION_RATE } from './quick-trade';
 
-// Translator mock — concatenates key + params for easy assertions
+// The optimizer logic itself (lot rounding, orphan handling, caps) lives in
+// Python — see tests/test_app/test_optimize_route.py in the ai-hedge-fund
+// repo. These tests cover only the TS-side concerns: payload shape and
+// response → RebalancePlan conversion.
+
 const t: Translator = (key, params) => {
   if (!params) return String(key);
   const parts = Object.entries(params).map(([k, v]) => `${k}=${v}`).join(',');
   return `${String(key)}(${parts})`;
 };
 
-function decision(action: string, quantity: number, confidence = 0.8, reasoning = 'r'): Decision {
-  return { action, quantity, confidence, reasoning };
-}
+const baseInput = {
+  decisions: { AAPL: { action: 'buy', quantity: 1, confidence: 80, reasoning: 'r' } },
+  analystSignals: {},
+  currentPricesUsd: { AAPL: 200 },
+  fmpToIol: { AAPL: 'AAPLC' } as Record<string, string>,
+  iolToFmp: { AAPLC: 'AAPL' } as Record<string, string>,
+  holdingsByIol: { AAPLC: 60 } as Record<string, number>,
+  arsPrices: { AAPLC: 13000 } as Record<string, number>,
+  cashArs: 100_000,
+  dailyLimitArs: 1_300_000,
+  effectiveMep: 1300,
+};
 
-function baseInput(overrides: Partial<RebalanceInput> = {}): RebalanceInput {
-  return {
-    decisions: {},
-    holdings: {},
-    arsPrices: {},
-    cashArs: 0,
-    dailyLimitArs: 1_000_000,
-    ...overrides,
-  };
-}
+beforeEach(() => {
+  vi.unstubAllGlobals();
+});
 
-describe('computeRebalancePlan', () => {
-  it('returns empty plan when there are no decisions', () => {
-    const plan = computeRebalancePlan(baseInput(), t);
+afterEach(() => {
+  vi.unstubAllGlobals();
+});
+
+describe('fetchOptimizedPlan — request payload', () => {
+  it('POSTs to /api/hedge-fund/optimize with the right body shape', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response(JSON.stringify({ trades: [] }), { status: 200, headers: { 'Content-Type': 'application/json' } }),
+    );
+    vi.stubGlobal('fetch', fetchMock);
+
+    await fetchOptimizedPlan(baseInput, t);
+
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    const [url, init] = fetchMock.mock.calls[0];
+    expect(url).toBe('/api/hedge-fund/optimize');
+    expect(init.method).toBe('POST');
+    expect(init.headers['Content-Type']).toBe('application/json');
+
+    const body = JSON.parse(init.body);
+    // dailyLimit is split equally across both caps (in USD, via MEP).
+    expect(body.sell_cap_usd).toBe(1_300_000 / 1300);
+    expect(body.buy_cap_usd).toBe(1_300_000 / 1300);
+    expect(body.fx_ars_per_usd).toBe(1300);
+    expect(body.commission_pct).toBe(COMMISSION_RATE);
+    expect(body.decisions.AAPL.quantity).toBe(1);
+    // Holdings are remapped IOL→FMP and use FMP-tickered keys.
+    expect(body.holdings).toEqual([
+      { ticker: 'AAPL', cedear_shares: 60, avg_cost_ars: 0, last_price_ars: 13000 },
+    ]);
+  });
+
+  it('drops zero-quantity holdings from the payload', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response(JSON.stringify({ trades: [] }), { status: 200 }),
+    );
+    vi.stubGlobal('fetch', fetchMock);
+    await fetchOptimizedPlan(
+      { ...baseInput, holdingsByIol: { AAPLC: 60, KOC: 0, MSFTC: -5 } },
+      t,
+    );
+    const body = JSON.parse(fetchMock.mock.calls[0][1].body);
+    expect(body.holdings).toEqual([
+      { ticker: 'AAPL', cedear_shares: 60, avg_cost_ars: 0, last_price_ars: 13000 },
+    ]);
+  });
+
+  it('surfaces FastAPI detail messages on 4xx', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue(
+        new Response(JSON.stringify({ detail: "Ticker 'FAKE' is not a CEDEAR." }), { status: 400 }),
+      ),
+    );
+    await expect(fetchOptimizedPlan(baseInput, t)).rejects.toThrow("Ticker 'FAKE' is not a CEDEAR.");
+  });
+});
+
+describe('fetchOptimizedPlan — response → RebalancePlan conversion', () => {
+  function trade(over: Partial<{
+    ticker: string;
+    action: 'buy' | 'sell';
+    shares_underlying: number;
+    shares_cedear: number;
+    price_usd: number;
+    gross_usd: number;
+    commission_usd: number;
+    net_usd: number;
+    price_ars_display: number;
+    gross_ars_display: number;
+    confidence: number;
+    reasoning: string;
+    is_orphan: boolean;
+  }> = {}) {
+    return {
+      ticker: 'AAPL',
+      action: 'buy' as const,
+      shares_underlying: 1,
+      shares_cedear: 20,
+      price_usd: 200,
+      gross_usd: 200,
+      commission_usd: 3,
+      net_usd: 203,
+      price_ars_display: 13000,
+      gross_ars_display: 260000,
+      confidence: 80,
+      reasoning: 'r',
+      agent_signals: {},
+      is_orphan: false,
+      ...over,
+    };
+  }
+
+  function stubResponse(trades: ReturnType<typeof trade>[]) {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue(new Response(JSON.stringify({ trades }), { status: 200 })),
+    );
+  }
+
+  it('remaps FMP tickers back to IOL on every order', async () => {
+    stubResponse([trade({ ticker: 'AAPL' })]);
+    const plan = await fetchOptimizedPlan(baseInput, t);
+    expect(plan.buys[0].ticker).toBe('AAPLC');
+  });
+
+  it('uses shares_cedear as the broker-facing quantity', async () => {
+    stubResponse([trade({ shares_underlying: 3, shares_cedear: 60 })]);
+    const plan = await fetchOptimizedPlan(baseInput, t);
+    expect(plan.buys[0].quantity).toBe(60);
+  });
+
+  it('computes estimatedCostArs as volume + commission for buys', async () => {
+    stubResponse([trade({ action: 'buy', gross_ars_display: 260_000 })]);
+    const plan = await fetchOptimizedPlan(baseInput, t);
+    expect(plan.buys[0].estimatedCostArs).toBeCloseTo(260_000 * (1 + COMMISSION_RATE), 2);
+  });
+
+  it('computes estimatedCostArs as commission-only for sells, and tracks net proceeds', async () => {
+    stubResponse([trade({ action: 'sell', gross_ars_display: 260_000 })]);
+    const plan = await fetchOptimizedPlan(baseInput, t);
+    expect(plan.sells[0].estimatedCostArs).toBeCloseTo(260_000 * COMMISSION_RATE, 2);
+    expect(plan.estimatedSellProceeds).toBeCloseTo(260_000 * (1 - COMMISSION_RATE), 2);
+  });
+
+  it('emits the settlement warning only when both sells and buys exist', async () => {
+    stubResponse([trade({ action: 'sell' }), trade({ ticker: 'AAPL', action: 'buy' })]);
+    const plan = await fetchOptimizedPlan(baseInput, t);
+    expect(plan.warnings).toContain('engine.settlement');
+  });
+
+  it('does not emit the settlement warning when there is only one side', async () => {
+    stubResponse([trade({ action: 'buy' })]);
+    const plan = await fetchOptimizedPlan(baseInput, t);
+    expect(plan.warnings).toEqual([]);
+  });
+
+  it('flags orphan trades on the order so the UI can highlight them', async () => {
+    stubResponse([trade({ action: 'sell', is_orphan: true })]);
+    const plan = await fetchOptimizedPlan(baseInput, t);
+    expect(plan.sells[0].isOrphan).toBe(true);
+  });
+
+  it('returns an empty plan when the optimizer returns no trades', async () => {
+    stubResponse([]);
+    const plan = await fetchOptimizedPlan(baseInput, t);
     expect(plan.sells).toEqual([]);
     expect(plan.buys).toEqual([]);
     expect(plan.totalVolume).toBe(0);
     expect(plan.estimatedSellProceeds).toBe(0);
-    expect(plan.newCashUsed).toBe(0);
     expect(plan.warnings).toEqual([]);
-  });
-
-  it('skips hold decisions silently', () => {
-    const plan = computeRebalancePlan(
-      baseInput({ decisions: { AAPL: decision('hold', 10) } }),
-      t,
-    );
-    expect(plan.sells).toEqual([]);
-    expect(plan.buys).toEqual([]);
-    expect(plan.warnings).toEqual([]);
-  });
-
-  it('builds a sell order with correct volume, commission and net proceeds', () => {
-    const plan = computeRebalancePlan(
-      baseInput({
-        decisions: { AAPL: decision('sell', 10) },
-        holdings: { AAPL: 10 },
-        arsPrices: { AAPL: 100 },
-      }),
-      t,
-    );
-    expect(plan.sells).toHaveLength(1);
-    const order = plan.sells[0];
-    expect(order.ticker).toBe('AAPL');
-    expect(order.quantity).toBe(10);
-    expect(order.volumeArs).toBe(1000);
-    expect(order.estimatedCostArs).toBeCloseTo(1000 * COMMISSION_RATE, 6);
-    // Net proceeds = volume - commission
-    expect(plan.estimatedSellProceeds).toBeCloseTo(1000 * (1 - COMMISSION_RATE), 6);
-  });
-
-  it('caps sell quantity by remaining daily limit', () => {
-    // dailyLimit = 600 → at price 100, max 6 units even though user owns 10
-    const plan = computeRebalancePlan(
-      baseInput({
-        decisions: { AAPL: decision('sell', 10) },
-        holdings: { AAPL: 10 },
-        arsPrices: { AAPL: 100 },
-        dailyLimitArs: 600,
-      }),
-      t,
-    );
-    expect(plan.sells[0].quantity).toBe(6);
-    expect(plan.sells[0].volumeArs).toBe(600);
-  });
-
-  it('warns and skips when ticker has no price', () => {
-    const plan = computeRebalancePlan(
-      baseInput({
-        decisions: { AAPL: decision('sell', 5) },
-        holdings: { AAPL: 5 },
-        arsPrices: {},
-      }),
-      t,
-    );
-    expect(plan.sells).toEqual([]);
-    expect(plan.warnings.some(w => w.includes('engine.sell.noPrice'))).toBe(true);
-    expect(plan.warnings[0]).toContain('ticker=AAPL');
-  });
-
-  it('warns and skips when user has no holdings to sell', () => {
-    const plan = computeRebalancePlan(
-      baseInput({
-        decisions: { AAPL: decision('sell', 5) },
-        arsPrices: { AAPL: 100 },
-      }),
-      t,
-    );
-    expect(plan.sells).toEqual([]);
-    expect(plan.warnings[0]).toContain('engine.sell.noHolding');
-  });
-
-  it('warns when sell budget is exhausted before processing all sells', () => {
-    // Highest-confidence sell uses the full daily limit; the second hits limitReached
-    const plan = computeRebalancePlan(
-      baseInput({
-        decisions: {
-          AAPL: decision('sell', 10, 0.9),
-          KO: decision('sell', 10, 0.5),
-        },
-        holdings: { AAPL: 10, KO: 10 },
-        arsPrices: { AAPL: 100, KO: 100 },
-        dailyLimitArs: 1000,
-      }),
-      t,
-    );
-    expect(plan.sells).toHaveLength(1);
-    expect(plan.sells[0].ticker).toBe('AAPL');
-    expect(plan.warnings.some(w => w.includes('engine.sell.limitReached') && w.includes('ticker=KO'))).toBe(true);
-  });
-
-  it('processes higher-confidence sells first', () => {
-    const plan = computeRebalancePlan(
-      baseInput({
-        decisions: {
-          KO: decision('sell', 5, 0.4),
-          AAPL: decision('sell', 5, 0.95),
-          TSLA: decision('sell', 5, 0.7),
-        },
-        holdings: { AAPL: 5, KO: 5, TSLA: 5 },
-        arsPrices: { AAPL: 100, KO: 100, TSLA: 100 },
-      }),
-      t,
-    );
-    expect(plan.sells.map(s => s.ticker)).toEqual(['AAPL', 'TSLA', 'KO']);
-  });
-
-  it('recycles sell proceeds into buys (no new cash needed)', () => {
-    const plan = computeRebalancePlan(
-      baseInput({
-        decisions: {
-          AAPL: decision('sell', 10),
-          KO: decision('buy', 9),
-        },
-        holdings: { AAPL: 10 },
-        arsPrices: { AAPL: 100, KO: 100 },
-        cashArs: 0,
-      }),
-      t,
-    );
-    expect(plan.sells).toHaveLength(1);
-    expect(plan.buys).toHaveLength(1);
-    // Proceeds = 1000 * (1 - rate); buy budget = proceeds / (1 + rate)
-    // → at price 100, max ~ floor(984.23 / 100) = 9
-    expect(plan.buys[0].quantity).toBe(9);
-    expect(plan.newCashUsed).toBe(0);
-  });
-
-  it('caps new cash for buys at dailyLimitArs', () => {
-    // cashArs = 10_000_000 but dailyLimit caps it at 1000
-    const plan = computeRebalancePlan(
-      baseInput({
-        decisions: { AAPL: decision('buy', 1000) },
-        arsPrices: { AAPL: 100 },
-        cashArs: 10_000_000,
-        dailyLimitArs: 1000,
-      }),
-      t,
-    );
-    // Effective budget = 1000 / 1.015 = 985.22 → 9 units * 100 = 900
-    expect(plan.buys[0].quantity).toBe(9);
-    expect(plan.newCashUsed).toBeGreaterThan(0);
-    expect(plan.newCashUsed).toBeLessThanOrEqual(1000);
-  });
-
-  it('respects AI quantity recommendation as a maximum', () => {
-    // Plenty of budget but AI says only 3 units
-    const plan = computeRebalancePlan(
-      baseInput({
-        decisions: { AAPL: decision('buy', 3) },
-        arsPrices: { AAPL: 100 },
-        cashArs: 1_000_000,
-      }),
-      t,
-    );
-    expect(plan.buys[0].quantity).toBe(3);
-  });
-
-  it('uses max-affordable when AI recommends quantity 0', () => {
-    const plan = computeRebalancePlan(
-      baseInput({
-        decisions: { AAPL: decision('buy', 0) },
-        arsPrices: { AAPL: 100 },
-        cashArs: 500,
-        dailyLimitArs: 1_000_000,
-      }),
-      t,
-    );
-    // 500 / 1.015 / 100 = 4.92 → floor = 4
-    expect(plan.buys[0].quantity).toBe(4);
-  });
-
-  it('warns when buy has no price', () => {
-    const plan = computeRebalancePlan(
-      baseInput({
-        decisions: { AAPL: decision('buy', 5) },
-        cashArs: 10_000,
-      }),
-      t,
-    );
-    expect(plan.buys).toEqual([]);
-    expect(plan.warnings[0]).toContain('engine.buy.noPrice');
-  });
-
-  it('warns with noLiquidity when budget is fully consumed before next buy', () => {
-    // cashArs chosen so first buy spends 100% of budget (5 * 100 + 1.5% = 507.5)
-    const cashArs = 100 * 5 * (1 + COMMISSION_RATE);
-    const plan = computeRebalancePlan(
-      baseInput({
-        decisions: {
-          AAPL: decision('buy', 5, 0.9),
-          KO: decision('buy', 5, 0.5),
-        },
-        arsPrices: { AAPL: 100, KO: 100 },
-        cashArs,
-        dailyLimitArs: cashArs,
-      }),
-      t,
-    );
-    expect(plan.buys).toHaveLength(1);
-    expect(plan.buys[0].ticker).toBe('AAPL');
-    expect(plan.warnings.some(w => w.includes('engine.buy.noLiquidity') && w.includes('ticker=KO'))).toBe(true);
-  });
-
-  it('warns when budget is insufficient for even one unit', () => {
-    const plan = computeRebalancePlan(
-      baseInput({
-        decisions: { AAPL: decision('buy', 5) },
-        arsPrices: { AAPL: 10_000 },
-        cashArs: 100, // can't afford a single share
-        dailyLimitArs: 100,
-      }),
-      t,
-    );
-    expect(plan.buys).toEqual([]);
-    expect(plan.warnings[0]).toContain('engine.buy.insufficientFunds');
-  });
-
-  it('emits settlement warning when both sells and buys exist', () => {
-    const plan = computeRebalancePlan(
-      baseInput({
-        decisions: {
-          AAPL: decision('sell', 5),
-          KO: decision('buy', 5),
-        },
-        holdings: { AAPL: 5 },
-        arsPrices: { AAPL: 100, KO: 100 },
-      }),
-      t,
-    );
-    expect(plan.warnings).toContain('engine.settlement');
-  });
-
-  it('does not emit settlement warning when only sells happen', () => {
-    const plan = computeRebalancePlan(
-      baseInput({
-        decisions: { AAPL: decision('sell', 5) },
-        holdings: { AAPL: 5 },
-        arsPrices: { AAPL: 100 },
-      }),
-      t,
-    );
-    expect(plan.warnings).not.toContain('engine.settlement');
-  });
-
-  it('honors a custom commissionRate override', () => {
-    const plan = computeRebalancePlan(
-      baseInput({
-        decisions: { AAPL: decision('sell', 10) },
-        holdings: { AAPL: 10 },
-        arsPrices: { AAPL: 100 },
-        commissionRate: 0.05,
-      }),
-      t,
-    );
-    // commission = 1000 * 0.05 = 50, proceeds = 950
-    expect(plan.sells[0].estimatedCostArs).toBeCloseTo(50, 6);
-    expect(plan.estimatedSellProceeds).toBeCloseTo(950, 6);
-  });
-
-  it('computes totals and remainingLimit consistently', () => {
-    const plan = computeRebalancePlan(
-      baseInput({
-        decisions: { AAPL: decision('buy', 5) },
-        arsPrices: { AAPL: 100 },
-        cashArs: 600,
-        dailyLimitArs: 1000,
-      }),
-      t,
-    );
-    expect(plan.totalSellVolume).toBe(0);
-    expect(plan.totalBuyVolume).toBe(plan.buys[0].volumeArs);
-    expect(plan.totalVolume).toBe(plan.totalBuyVolume);
-    expect(plan.newCashUsed).toBeCloseTo(plan.buys[0].estimatedCostArs, 6);
-    expect(plan.remainingLimit).toBeCloseTo(1000 - plan.newCashUsed, 6);
   });
 });
