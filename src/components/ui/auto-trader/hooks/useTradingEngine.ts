@@ -17,7 +17,6 @@ export function useTradingEngine({
   holdings,
   holdingTickers,
   portfolioPositions,
-  cedearRatios,
   arsPrices,
   fmpTickers,
   fmpToIol,
@@ -32,7 +31,6 @@ export function useTradingEngine({
   holdings: Record<string, number>;
   holdingTickers: string[];
   portfolioPositions: Array<{ ticker: string; quantity: number; trade_price: number }>;
-  cedearRatios: Record<string, number>;
   arsPrices: Record<string, number>;
   fmpTickers: string[];
   fmpToIol: Record<string, string>;
@@ -112,10 +110,6 @@ export function useTradingEngine({
       start_date: oneYearAgo.toISOString().slice(0, 10),
       end_date: today.toISOString().slice(0, 10),
       portfolio_positions: portfolioPositions.length > 0 ? portfolioPositions : undefined,
-      // Tells the backend to size positions in CEDEAR units (what the broker
-      // actually trades) instead of underlying shares. quantities in
-      // portfolio_positions and decisions[*].quantity share this same unit.
-      cedear_ratios: Object.keys(cedearRatios).length > 0 ? cedearRatios : undefined,
       graph_nodes: graphNodes,
       graph_edges: graphEdges,
     };
@@ -143,8 +137,17 @@ export function useTradingEngine({
       });
 
       if (!response.ok) {
+        // FastAPI rejects unknown CEDEAR tickers with 400 + { detail: "Ticker 'X' is not a CEDEAR..." }.
+        // Surface that detail directly so the user sees which ticker the backend rejected.
         const errText = await response.text();
-        throw new Error(`HTTP ${response.status}: ${errText}`);
+        let message = errText;
+        try {
+          const parsed = JSON.parse(errText) as { detail?: string };
+          if (parsed.detail) message = parsed.detail;
+        } catch {
+          // not JSON — keep raw text
+        }
+        throw new Error(`HTTP ${response.status}: ${message}`);
       }
 
       const reader = response.body!.getReader();

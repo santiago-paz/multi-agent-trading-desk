@@ -33,7 +33,6 @@ export function AutoTraderWindow({ onCompanyDetail }: AutoTraderWindowProps = {}
     holdings: portfolio.holdings,
     holdingTickers: portfolio.holdingTickers,
     portfolioPositions: portfolio.portfolioPositions,
-    cedearRatios: portfolio.cedearRatios,
     arsPrices: portfolio.arsPrices,
     fmpTickers: portfolio.fmpTickers,
     fmpToIol: portfolio.fmpToIol,

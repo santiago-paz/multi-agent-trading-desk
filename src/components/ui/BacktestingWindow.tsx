@@ -747,8 +747,17 @@ export function BacktestingWindow() {
       });
 
       if (!response.ok) {
+        // FastAPI rejects unknown CEDEAR tickers with 400 + { detail: "Ticker 'X' is not a CEDEAR..." }.
+        // Surface that detail so the user sees which ticker the backend rejected.
         const errText = await response.text();
-        throw new Error(`HTTP ${response.status}: ${errText}`);
+        let message = errText;
+        try {
+          const parsed = JSON.parse(errText) as { detail?: string };
+          if (parsed.detail) message = parsed.detail;
+        } catch {
+          // not JSON — keep raw text
+        }
+        throw new Error(`HTTP ${response.status}: ${message}`);
       }
 
       const reader = response.body!.getReader();

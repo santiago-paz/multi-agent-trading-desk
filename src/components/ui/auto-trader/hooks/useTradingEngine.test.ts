@@ -24,7 +24,6 @@ const baseProps = {
   holdings: { AAPLC: 5 } as Record<string, number>,
   holdingTickers: ['AAPLC'],
   portfolioPositions: [{ ticker: 'AAPL', quantity: 5, trade_price: 1 }],
-  cedearRatios: { AAPL: 10, KO: 5 } as Record<string, number>,
   arsPrices: { AAPLC: 1000, KOC: 500 } as Record<string, number>,
   fmpTickers: ['AAPL', 'KO'],
   fmpToIol: { AAPL: 'AAPLC', KO: 'KOC' } as Record<string, string>,
@@ -127,6 +126,25 @@ describe('useTradingEngine — handleAnalyze HTTP errors', () => {
     });
     expect(result.current.phase).toBe('idle');
     expect(result.current.logs.some(l => l.id === 'error')).toBe(true);
+  });
+
+  it('surfaces the FastAPI `detail` when the backend rejects a non-CEDEAR ticker (400)', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({
+        ok: false,
+        status: 400,
+        text: async () => JSON.stringify({ detail: "Ticker 'FAKE123' is not a CEDEAR." }),
+      }),
+    );
+    const { result } = renderHook(() => useTradingEngine(baseProps));
+    await act(async () => {
+      await result.current.handleAnalyze(setActiveTab);
+    });
+    expect(result.current.phase).toBe('idle');
+    const errorLog = result.current.logs.find(l => l.id === 'error');
+    expect(errorLog).toBeDefined();
+    expect(errorLog?.text).toContain("Ticker 'FAKE123' is not a CEDEAR");
   });
 
   it('returns silently when fetch is aborted (AbortError)', async () => {
@@ -281,10 +299,10 @@ describe('useTradingEngine — handleAnalyze request body', () => {
   });
 
   it('passes backend decisions through to the rebalance engine without unit conversion', async () => {
-    // The backend now sizes orders in CEDEAR units directly (it receives the
-    // BYMA ratios in `cedear_ratios` and computes lot prices). So the LLM
-    // already returns CEDEAR quantities — no client-side share→CEDEAR
-    // translation, just remap FMP→IOL.
+    // The backend now sizes orders in CEDEAR units directly (its built-in
+    // CEDEAR table maps each ticker to its BYMA ratio, no client-side input
+    // needed). The LLM already returns CEDEAR quantities — no client-side
+    // share→CEDEAR translation, just remap FMP→IOL.
     const fakePlan = {
       sells: [], buys: [], totalSellVolume: 0, totalBuyVolume: 0,
       estimatedSellProceeds: 0, warnings: [],
@@ -312,7 +330,6 @@ describe('useTradingEngine — handleAnalyze request body', () => {
     const props = {
       ...baseProps,
       fmpToIol: { NVDA: 'NVDA', ORLY: 'ORLY', KO: 'KO' },
-      cedearRatios: { NVDA: 24, ORLY: 222, KO: 5 },
       holdingTickers: ['NVDA'],
       holdings: { NVDA: 100 },
     };
@@ -327,19 +344,9 @@ describe('useTradingEngine — handleAnalyze request body', () => {
     expect(planArgs.decisions.KO.quantity).toBe(0);
   });
 
-  it('sends cedear_ratios in the request body so the backend can size in CEDEAR units', async () => {
+  it('does not send cedear_ratios — the backend resolves CEDEAR ratios from its own internal table', async () => {
     const fetchMock = captureBody();
-    const props = { ...baseProps, cedearRatios: { AAPL: 10, KO: 5 } };
-    const { result } = renderHook(() => useTradingEngine(props));
-    await act(async () => { await result.current.handleAnalyze(setActiveTab); });
-    const body = parseBody(fetchMock);
-    expect(body.cedear_ratios).toEqual({ AAPL: 10, KO: 5 });
-  });
-
-  it('omits cedear_ratios from the body when none are known (backend falls back to underlying)', async () => {
-    const fetchMock = captureBody();
-    const props = { ...baseProps, cedearRatios: {} };
-    const { result } = renderHook(() => useTradingEngine(props));
+    const { result } = renderHook(() => useTradingEngine(baseProps));
     await act(async () => { await result.current.handleAnalyze(setActiveTab); });
     const body = parseBody(fetchMock);
     expect(body.cedear_ratios).toBeUndefined();
