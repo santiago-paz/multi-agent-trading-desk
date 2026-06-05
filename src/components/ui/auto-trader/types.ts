@@ -24,6 +24,17 @@ export interface Decision {
 export type LogStatus = 'running' | 'ok' | 'warn' | 'error';
 export interface LogEntry { id: string; text: string; status: LogStatus; agent?: string; ticker?: string; detail?: string; }
 
+export type FetchResult = 'ok' | 'empty' | 'error';
+
+export interface ProgressEventPayload {
+  agent: string;
+  ticker?: string;
+  status: string;
+  analysis?: string;
+  timestamp?: string;
+  result?: FetchResult;
+}
+
 export interface OrderResult {
   ticker: string;
   side: 'buy' | 'sell';
