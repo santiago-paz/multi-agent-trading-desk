@@ -1,5 +1,7 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { LogEntry, LogStatus, Phase, OrderResult, AgentSignal, Decision, HistoricalRun } from '../types';
+import type { ProgressEventPayload, FetchResult } from '../types';
+import { applyProgressEvent } from './applyProgressEvent';
 import { fetchOptimizedPlan, RebalancePlan } from '@/lib/trading/rebalance-engine';
 import { placeOrder, getOrderStatus } from '@/app/trading/actions';
 import { parseSSEChunk, remapToIol, fmtARS } from '../utils';
@@ -281,22 +283,16 @@ export function useTradingEngine({
                 updateLog('start', t('engine.log.started'), 'ok');
               } else if (evt.event === 'progress') {
                 progressCount++;
-                const agent = (d.agent as string) || '';
                 const fmpTicker = (d.ticker as string) || '';
-                // Remap FMP → IOL so the user sees the symbol that matches their portfolio
                 const ticker = fmpTicker ? (fmpToIol[fmpTicker] ?? fmpTicker) : '';
-                const status = (d.status as string) || '';
-                const analysis = (d.analysis as string) || '';
-                const logId = `progress-${progressCount}`;
-
-                addLog(
-                  logId,
-                  `${agent}${ticker ? ` [${ticker}]` : ''}: ${analysis || status}`,
-                  analysis ? 'ok' : 'running',
-                  agent,
+                const event: ProgressEventPayload = {
+                  agent: (d.agent as string) || '',
                   ticker,
-                  analysis || status
-                );
+                  status: (d.status as string) || '',
+                  analysis: (d.analysis as string) || undefined,
+                  result: (d.result as FetchResult | undefined),
+                };
+                setLogs(prev => applyProgressEvent(prev, event, `progress-${progressCount}`));
                 setProgress(Math.min(95, Math.round((progressCount / totalEstimate) * 100)));
               } else if (evt.event === 'error') {
                 addLog('error', t('engine.log.error', { message: (d.message as string) || t('engine.log.unknownError') }), 'error');
