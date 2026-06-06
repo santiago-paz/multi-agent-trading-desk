@@ -136,6 +136,8 @@ export const autoTraderEn: Record<AutoTraderKey, string> = {
   'accordion.steps': '{count} {unit}',
   'accordion.stepSingular': 'step',
   'accordion.stepPlural': 'steps',
+  'accordion.stepEmpty': 'no data',
+  'accordion.stepError': 'fetch error',
 
   // ── Analyst Detail: shared ──
   'detail.bullish': 'Bullish',

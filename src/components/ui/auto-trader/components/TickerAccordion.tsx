@@ -212,6 +212,12 @@ function TickerGroupRow({ group }: { group: TickerGroup }) {
                 <div key={l.id} style={{ ...FONT, display: 'flex', alignItems: 'center', gap: 4, minHeight: 18, paddingLeft: 8 }}>
                   <LogIcon status={l.status} />
                   <AgentDetail detail={l.detail} ticker={l.ticker} agent={l.agent} status={l.status} />
+                  {l.status === 'warn' && (
+                    <span style={{ marginLeft: 4, opacity: 0.7, fontSize: '0.85em' }}>{t('accordion.stepEmpty')}</span>
+                  )}
+                  {l.status === 'error' && (
+                    <span style={{ marginLeft: 4, opacity: 0.7, fontSize: '0.85em' }}>{t('accordion.stepError')}</span>
+                  )}
                 </div>
               ))}
             </div>

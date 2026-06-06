@@ -134,6 +134,8 @@ export const autoTraderEs = {
   'accordion.steps': '{count} {unit}',
   'accordion.stepSingular': 'paso',
   'accordion.stepPlural': 'pasos',
+  'accordion.stepEmpty': 'sin datos',
+  'accordion.stepError': 'error de fetch',
 
   // ── Analyst Detail: shared ──
   'detail.bullish': 'Alcista',
