@@ -17,6 +17,8 @@ import {
 import { AgentSelector } from '@/components/ui/AgentSelector';
 import { LogIcon } from '@/components/ui/auto-trader/components/LogIcon';
 import { Agent, BacktestDayResult, PerformanceMetrics, LogStatus, LogEntry, HistoricalBacktestRun } from '@/lib/backtesting/types';
+import { applyProgressEvent } from '@/components/ui/auto-trader/hooks/applyProgressEvent';
+import type { ProgressEventPayload, FetchResult } from '@/components/ui/auto-trader/types';
 import { useBacktestHistoryStore } from '@/lib/store/backtest-history-store';
 import { parseSSEChunk } from '@/lib/sse';
 
@@ -837,13 +839,16 @@ export function BacktestingWindow() {
                 }
                 addLog(`progress-${++logCounter.current}`, status, 'running', agent, '', status);
               } else {
-                // Agent-level progress
+                // Agent-level progress — reducer handles running -> ok/warn/error transitions
                 const ticker = (d.ticker as string) || '';
-                const statusStr = (d.status as string) || '';
-                const detailStr = (d.analysis as string) || statusStr;
-                const finalStatus: LogStatus = detailStr !== statusStr || statusStr === 'Done' ? 'ok' : 'running';
-                
-                addLog(`agent-${++logCounter.current}`, `${agent}${ticker ? ` [${ticker}]` : ''}: ${statusStr}`, finalStatus, agent, ticker, detailStr);
+                const event: ProgressEventPayload = {
+                  agent,
+                  ticker,
+                  status: (d.status as string) || '',
+                  analysis: (d.analysis as string) || undefined,
+                  result: (d.result as FetchResult | undefined),
+                };
+                setLogs(prev => applyProgressEvent(prev, event, `agent-${++logCounter.current}`));
               }
             } else if (evt.event === 'error') {
               const msg = (d.message as string) || 'Error desconocido';
