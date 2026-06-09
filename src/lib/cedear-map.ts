@@ -43,6 +43,7 @@ const IOL_TO_FMP: Record<string, string | null> = {
   // stripCurrencySuffix() to leave them alone.
   AMD: 'AMD',      // Advanced Micro Devices (NASDAQ: AMD)
   BBD: 'BBD',      // Banco Bradesco (NYSE: BBD)
+  CRWD: 'CRWD',    // CrowdStrike Holdings (NASDAQ: CRWD) — natural D ending, not a currency variant
   DD: 'DD',        // DuPont de Nemours (NYSE: DD)
   ERIC: 'ERIC',    // Telefonaktiebolaget LM Ericsson (NASDAQ: ERIC)
   GILD: 'GILD',    // Gilead Sciences (NASDAQ: GILD)

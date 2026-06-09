@@ -107,6 +107,7 @@ const CEDEAR_RATIOS: Record<string, [number, number]> = {
   COPX: [14, 1],  // Global X Copper Miners ETF
   COST: [48, 1],  // Costco Wholesale Corp
   CRM: [18, 1],  // Salesforce Inc.
+  CRWD: [79, 1],  // CrowdStrike Holdings
   CRWV: [27, 1],  // CoreWeave Inc
   CS: [1, 1],  // Credit Suisse Group
   CSCO: [5, 1],  // Cisco Systems Inc

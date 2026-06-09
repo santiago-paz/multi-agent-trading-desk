@@ -2728,5 +2728,170 @@
     "companyName": "Tenaris S.A.",
     "found": true,
     "fetchedAt": "2026-05-03T23:15:10.674Z"
+  },
+  "ANETD": {
+    "companyName": null,
+    "found": false,
+    "fetchedAt": "2026-06-09T13:52:32.622Z"
+  },
+  "AZND": {
+    "companyName": null,
+    "found": false,
+    "fetchedAt": "2026-06-09T13:52:32.624Z"
+  },
+  "BNY": {
+    "companyName": "Bank of New York Mellon Corp",
+    "found": true,
+    "fetchedAt": "2026-06-09T13:52:32.630Z"
+  },
+  "ANET": {
+    "companyName": "Arista Networks, Inc.",
+    "found": true,
+    "fetchedAt": "2026-06-09T13:52:32.659Z"
+  },
+  "BNYD": {
+    "companyName": null,
+    "found": false,
+    "fetchedAt": "2026-06-09T13:52:33.175Z"
+  },
+  "CCJD": {
+    "companyName": null,
+    "found": false,
+    "fetchedAt": "2026-06-09T13:52:33.176Z"
+  },
+  "CCJ": {
+    "companyName": "Cameco Corporation",
+    "found": true,
+    "fetchedAt": "2026-06-09T13:52:33.177Z"
+  },
+  "COP": {
+    "companyName": "ConocoPhillips",
+    "found": true,
+    "fetchedAt": "2026-06-09T13:52:33.177Z"
+  },
+  "COPD": {
+    "companyName": null,
+    "found": false,
+    "fetchedAt": "2026-06-09T13:52:33.656Z"
+  },
+  "CRWDD": {
+    "companyName": null,
+    "found": false,
+    "fetchedAt": "2026-06-09T13:52:33.662Z"
+  },
+  "CRWD": {
+    "companyName": "CrowdStrike Holdings, Inc.",
+    "found": true,
+    "fetchedAt": "2026-06-09T13:52:33.663Z"
+  },
+  "EC": {
+    "companyName": "Ecopetrol S.A.",
+    "found": true,
+    "fetchedAt": "2026-06-09T13:52:33.665Z"
+  },
+  "FISV": {
+    "companyName": "Fiserv, Inc.",
+    "found": true,
+    "fetchedAt": "2026-06-09T13:52:34.180Z"
+  },
+  "GLNG": {
+    "companyName": "Golar LNG Limited",
+    "found": true,
+    "fetchedAt": "2026-06-09T13:52:34.183Z"
+  },
+  "FISVD": {
+    "companyName": null,
+    "found": false,
+    "fetchedAt": "2026-06-09T13:52:34.183Z"
+  },
+  "GLNGD": {
+    "companyName": null,
+    "found": false,
+    "fetchedAt": "2026-06-09T13:52:34.185Z"
+  },
+  "HIMSD": {
+    "companyName": null,
+    "found": false,
+    "fetchedAt": "2026-06-09T13:52:34.713Z"
+  },
+  "HIMS": {
+    "companyName": "Hims & Hers Health, Inc.",
+    "found": true,
+    "fetchedAt": "2026-06-09T13:52:34.714Z"
+  },
+  "MP": {
+    "companyName": "MP Materials Corp.",
+    "found": true,
+    "fetchedAt": "2026-06-09T13:52:34.714Z"
+  },
+  "MPD": {
+    "companyName": null,
+    "found": false,
+    "fetchedAt": "2026-06-09T13:52:34.716Z"
+  },
+  "NEE": {
+    "companyName": "NextEra Energy, Inc.",
+    "found": true,
+    "fetchedAt": "2026-06-09T13:52:35.228Z"
+  },
+  "NBISD": {
+    "companyName": null,
+    "found": false,
+    "fetchedAt": "2026-06-09T13:52:35.229Z"
+  },
+  "NBIS": {
+    "companyName": "Nebius Group N.V.",
+    "found": true,
+    "fetchedAt": "2026-06-09T13:52:35.230Z"
+  },
+  "NEED": {
+    "companyName": "Direxion Daily Cnsmr Staples Bull 3XShrs",
+    "found": true,
+    "fetchedAt": "2026-06-09T13:52:35.241Z"
+  },
+  "NVO": {
+    "companyName": "Novo Nordisk A/S",
+    "found": true,
+    "fetchedAt": "2026-06-09T13:52:35.754Z"
+  },
+  "O": {
+    "companyName": "Realty Income Corporation",
+    "found": true,
+    "fetchedAt": "2026-06-09T13:52:35.756Z"
+  },
+  "ONDS": {
+    "companyName": "Ondas Holdings Inc.",
+    "found": true,
+    "fetchedAt": "2026-06-09T13:52:35.762Z"
+  },
+  "NVOD": {
+    "companyName": null,
+    "found": false,
+    "fetchedAt": "2026-06-09T13:52:35.767Z"
+  },
+  "ONDSD": {
+    "companyName": null,
+    "found": false,
+    "fetchedAt": "2026-06-09T13:52:36.274Z"
+  },
+  "SMSN": {
+    "companyName": null,
+    "found": false,
+    "fetchedAt": "2026-06-09T13:52:36.274Z"
+  },
+  "SNDK": {
+    "companyName": "Sandisk Corporation",
+    "found": true,
+    "fetchedAt": "2026-06-09T13:52:36.276Z"
+  },
+  "SNDKD": {
+    "companyName": null,
+    "found": false,
+    "fetchedAt": "2026-06-09T13:52:36.282Z"
+  },
+  "SPCED": {
+    "companyName": null,
+    "found": false,
+    "fetchedAt": "2026-06-09T13:52:36.802Z"
   }
 }

@@ -1,5 +1,5 @@
 // Suggested entries to add to IOL_TO_FMP in src/lib/cedear-map.ts
-// Generated: 2026-05-03T23:16:38.041Z
+// Generated: 2026-06-09T13:52:36.810Z
 
 // ── FIXES (raw symbol matches IOL description) ────────────────────────
 
@@ -7,6 +7,7 @@
   // MANUAL 'CDE' — IOL: "Cedear Coeur D'alene Mines Cor" | toFmpTicker→"CDE" → "Coeur Mining, Inc." | raw "CDE" → "Coeur Mining, Inc."
   // MANUAL 'CDED' — IOL: "Cedear Coeur D'alene Mines Cor" | toFmpTicker→"CDE" → "Coeur Mining, Inc." | raw "CDED" → "(no profile)"
   // MANUAL 'E' — IOL: "Cedear Eni Spa-Adr" | toFmpTicker→"E" → "Eni S.p.A." | raw "E" → "Eni S.p.A."
+  // MANUAL 'EC' — IOL: "Cedear Eni Spa-Adr" | toFmpTicker→"E" → "Eni S.p.A." | raw "EC" → "Ecopetrol S.A."
   // MANUAL 'ERIC' — IOL: "Cedear L.M. Ericsson Telephone" | toFmpTicker→"ERIC" → "Telefonaktiebolaget LM Ericsson (publ)" | raw "ERIC" → "Telefonaktiebolaget LM Ericsson (publ)"
   // MANUAL 'FDX' — IOL: "Cedear Federal Express Corp." | toFmpTicker→"FDX" → "FedEx Corporation" | raw "FDX" → "FedEx Corporation"
   // MANUAL 'FNMA' — IOL: "Cedear Fed.Natl Mort-Fannie Mae Esc." | toFmpTicker→"FNMA" → "Federal National Mortgage Association" | raw "FNMA" → "Federal National Mortgage Association"
@@ -31,3 +32,4 @@
 
 // ── NO FMP EQUIVALENT (consider mapping to null) ──────────────────────
   'BKC*': null,  // The Bank Of New York Cta.Ext. — no FMP profile found
+  'VAL3': null,  // Cedear Vale S.A. — no FMP profile found

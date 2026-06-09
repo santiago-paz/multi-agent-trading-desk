@@ -62,6 +62,7 @@ describe('stripCurrencySuffix', () => {
     expect(stripCurrencySuffix('VOD')).toBe('VOD');   // Vodafone
     expect(stripCurrencySuffix('WFC')).toBe('WFC');   // Wells Fargo
     expect(stripCurrencySuffix('ERIC')).toBe('ERIC'); // Ericsson
+    expect(stripCurrencySuffix('CRWD')).toBe('CRWD'); // CrowdStrike — natural D ending (was stripped to "CRW")
   });
 
   it('does NOT strip ETF symbols ending in D registered in IOL_TO_FMP', () => {
@@ -208,6 +209,15 @@ describe('toFmpTicker', () => {
     expect(toFmpTicker('VOD')).toBe('VOD');     // Vodafone
     expect(toFmpTicker('WFC')).toBe('WFC');     // Wells Fargo
     expect(toFmpTicker('ERIC')).toBe('ERIC');   // Ericsson
+  });
+
+  it('maps CrowdStrike CRWD to itself (natural D ending, not a currency suffix)', () => {
+    // CRWD is CrowdStrike's real ticker — the trailing D is part of the symbol,
+    // not an IOL dollar suffix. IOL emits CRWDC/CRWDD currency variants whose
+    // base is CRWD; that base must NOT be stripped again to "CRW" (a non-CEDEAR).
+    expect(toFmpTicker('CRWD')).toBe('CRWD');
+    expect(toFmpTicker('CRWDC')).toBe('CRWD');
+    expect(toFmpTicker('CRWDD')).toBe('CRWD');
   });
 
   it('resolves IOL-specific symbols to their FMP equivalents', () => {
