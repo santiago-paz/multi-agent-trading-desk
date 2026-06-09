@@ -22,7 +22,7 @@ export interface Decision {
 }
 
 export type LogStatus = 'running' | 'ok' | 'warn' | 'error';
-export interface LogEntry { id: string; text: string; status: LogStatus; agent?: string; ticker?: string; detail?: string; }
+export interface LogEntry { id: string; text: string; status: LogStatus; agent?: string; ticker?: string; detail?: string; isAnalysis?: boolean; }
 
 export type FetchResult = 'ok' | 'empty' | 'error';
 

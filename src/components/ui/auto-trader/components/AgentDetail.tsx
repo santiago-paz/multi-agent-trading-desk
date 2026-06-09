@@ -2,7 +2,7 @@ import React from 'react';
 import { COLOR_LINK } from '@/lib/theme/win98';
 import { TechnicalDetail, SentimentDetail, ValuationDetail, GrowthDetail, FundamentalsDetail, WarrenBuffettDetail, StanleyDruckenmillerDetail, RakeshJhunjhunwalaDetail, PhilFisherDetail, PeterLynchDetail, MohnishPabraiDetail } from './analysts';
 
-export function AgentDetail({ detail, ticker, agent, status }: { detail: string | undefined; ticker?: string; agent?: string; status?: string }) {
+export function AgentDetail({ detail, ticker, agent, status, isAnalysis }: { detail: string | undefined; ticker?: string; agent?: string; status?: string; isAnalysis?: boolean }) {
   if (!detail) return null;
   
   try {
@@ -117,58 +117,33 @@ export function AgentDetail({ detail, ticker, agent, status }: { detail: string 
     // Fall back below if not valid JSON
   }
   
-  // Fall back below if not valid JSON or plain text
-  if ((agent === 'warren_buffett_agent' || agent === 'warren_buffett') && status === 'ok') {
-    return (
-      <div style={{ margin: '4px 0 0 12px' }}>
-        <WarrenBuffettDetail reasoning={detail} />
-      </div>
-    );
-  }
-
-  if ((agent === 'stanley_druckenmiller_agent' || agent === 'stanley_druckenmiller') && status === 'ok') {
-    return (
-      <div style={{ margin: '4px 0 0 12px' }}>
-        <StanleyDruckenmillerDetail reasoning={detail} />
-      </div>
-    );
-  }
-
-  if ((agent === 'rakesh_jhunjhunwala_agent' || agent === 'rakesh_jhunjhunwala') && status === 'ok') {
-    return (
-      <div style={{ margin: '4px 0 0 12px' }}>
-        <RakeshJhunjhunwalaDetail reasoning={detail} />
-      </div>
-    );
-  }
-
-  if ((agent === 'phil_fisher_agent' || agent === 'phil_fisher') && status === 'ok') {
-    return (
-      <div style={{ margin: '4px 0 0 12px' }}>
-        <PhilFisherDetail reasoning={detail} />
-      </div>
-    );
-  }
-
-  if ((agent === 'peter_lynch_agent' || agent === 'peter_lynch') && status === 'ok') {
-    return (
-      <div style={{ margin: '4px 0 0 12px' }}>
-        <PeterLynchDetail reasoning={detail} />
-      </div>
-    );
-  }
-
-  if ((agent === 'mohnish_pabrai_agent' || agent === 'mohnish_pabrai') && status === 'ok') {
-    return (
-      <div style={{ margin: '4px 0 0 12px' }}>
-        <MohnishPabraiDetail reasoning={detail} />
-      </div>
-    );
+  // Persona cards are reserved for the FINAL analysis log (carrying the agent's
+  // reasoning prose). Intermediate steps like "Gathering financial line items"
+  // also have status 'ok' once completed, but should not render the card.
+  if (isAnalysis && status === 'ok') {
+    if (agent === 'warren_buffett_agent' || agent === 'warren_buffett') {
+      return <div style={{ margin: '4px 0 0 12px' }}><WarrenBuffettDetail reasoning={detail} /></div>;
+    }
+    if (agent === 'stanley_druckenmiller_agent' || agent === 'stanley_druckenmiller') {
+      return <div style={{ margin: '4px 0 0 12px' }}><StanleyDruckenmillerDetail reasoning={detail} /></div>;
+    }
+    if (agent === 'rakesh_jhunjhunwala_agent' || agent === 'rakesh_jhunjhunwala') {
+      return <div style={{ margin: '4px 0 0 12px' }}><RakeshJhunjhunwalaDetail reasoning={detail} /></div>;
+    }
+    if (agent === 'phil_fisher_agent' || agent === 'phil_fisher') {
+      return <div style={{ margin: '4px 0 0 12px' }}><PhilFisherDetail reasoning={detail} /></div>;
+    }
+    if (agent === 'peter_lynch_agent' || agent === 'peter_lynch') {
+      return <div style={{ margin: '4px 0 0 12px' }}><PeterLynchDetail reasoning={detail} /></div>;
+    }
+    if (agent === 'mohnish_pabrai_agent' || agent === 'mohnish_pabrai') {
+      return <div style={{ margin: '4px 0 0 12px' }}><MohnishPabraiDetail reasoning={detail} /></div>;
+    }
   }
 
   if (detail.includes('\n')) {
      return <div style={{ margin: '4px 0 0 12px', whiteSpace: 'pre-wrap' }}>{detail}</div>;
   }
-  
+
   return <span style={{ marginLeft: 4 }}>{detail}</span>;
 }

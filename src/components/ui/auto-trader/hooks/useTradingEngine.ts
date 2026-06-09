@@ -84,14 +84,30 @@ export function useTradingEngine({
 
     const agentKeys = Array.from(selectedAgents);
 
+    // The Python backend pairs each portfolio_manager with a risk_manager whose
+    // id is `risk_management_agent_<suffix>`, where <suffix> is the last
+    // underscore-split chunk of the portfolio_manager's node id. It also
+    // expects the suffix to be 6 lowercase-alphanumeric chars so its
+    // `extract_base_agent_key` heuristic can strip it back to "portfolio_manager".
+    // Sending bare "portfolio_manager" used to make the suffix resolve to
+    // "manager", and inside portfolio_manager.py the `startswith("portfolio_manager_")`
+    // check failed → it fell back to looking up "risk_management_agent" (no suffix),
+    // never found the actual risk signals, and prefilled every non-holding with
+    // "No valid trade available".
+    const suffixChars = 'abcdefghijklmnopqrstuvwxyz0123456789';
+    let pmSuffix = '';
+    for (let i = 0; i < 6; i++) pmSuffix += suffixChars[Math.floor(Math.random() * suffixChars.length)];
+    const pmId = `portfolio_manager_${pmSuffix}`;
+    const riskManagerId = `risk_management_agent_${pmSuffix}`;
+
     const graphNodes = [
       ...agentKeys.map(key => ({ id: key, type: 'agent', data: { label: key } })),
-      { id: 'portfolio_manager', type: 'agent', data: { label: 'Portfolio Manager' } },
+      { id: pmId, type: 'agent', data: { label: 'Portfolio Manager' } },
     ];
     const graphEdges = agentKeys.map(key => ({
       id: `${key}-pm`,
       source: key,
-      target: 'portfolio_manager',
+      target: pmId,
     }));
 
     const cashUsd = effectiveMep > 0 ? cashArs / effectiveMep : 100000;
@@ -106,6 +122,17 @@ export function useTradingEngine({
     const oneYearAgo = new Date(today);
     oneYearAgo.setFullYear(today.getFullYear() - 1);
 
+    // Backend agents otherwise see only the ticker symbol and hallucinate the
+    // company (e.g. "B" → "Boeing" instead of "Barrick Mining"). Remap from the
+    // IOL-keyed cache to FMP symbols so prompts include the real name.
+    const companyNamesByFmp: Record<string, string> | undefined = companyNames
+      ? Object.fromEntries(
+          fmpTickers
+            .map(fmp => [fmp, companyNames[fmpToIol[fmp] ?? fmp] ?? companyNames[fmp]])
+            .filter(([, name]) => Boolean(name)),
+        )
+      : undefined;
+
     const body = {
       tickers: fmpTickers,
       model_name: modelName,
@@ -116,6 +143,7 @@ export function useTradingEngine({
       portfolio_positions: portfolioPositions.length > 0 ? portfolioPositions : undefined,
       graph_nodes: graphNodes,
       graph_edges: graphEdges,
+      company_names: companyNamesByFmp,
     };
 
     addLog('cash', t('engine.log.cash', { amount: fmtARS(cashArs), usd: cashUsd.toFixed(0), mep: effectiveMep.toFixed(0) }), 'ok');
@@ -184,7 +212,9 @@ export function useTradingEngine({
         // USD prices are computed by risk_management_agent during /run; we
         // forward them so the optimizer's cap math doesn't depend on the
         // frontend's MEP rate snapshot diverging from what the agents saw.
-        const riskSignals = (rawSignals?.risk_management_agent ?? {}) as Record<string, { current_price?: number }>;
+        // The backend keys the risk agent under our portfolio_manager's suffix
+        // (`risk_management_agent_<suffix>`), so look up our exact id.
+        const riskSignals = (rawSignals?.[riskManagerId] ?? {}) as Record<string, { current_price?: number }>;
         const currentPricesUsd: Record<string, number> = {};
         for (const [fmpTicker, sig] of Object.entries(riskSignals)) {
           const price = sig?.current_price;
@@ -282,17 +312,24 @@ export function useTradingEngine({
               if (evt.event === 'start') {
                 updateLog('start', t('engine.log.started'), 'ok');
               } else if (evt.event === 'progress') {
+                const agent = (d.agent as string) || '';
+                // The Python backend's `progress` singleton broadcasts events to every
+                // registered SSE handler. If another /run (or a zombie task) is alive in
+                // the same process, its events leak into this stream. Drop anything that
+                // isn't from an agent we asked for — 'system' messages pass through.
+                if (agent && agent !== 'system' && !selectedAgents.has(agent)) continue;
                 progressCount++;
                 const fmpTicker = (d.ticker as string) || '';
                 const ticker = fmpTicker ? (fmpToIol[fmpTicker] ?? fmpTicker) : '';
                 const event: ProgressEventPayload = {
-                  agent: (d.agent as string) || '',
+                  agent,
                   ticker,
                   status: (d.status as string) || '',
                   analysis: (d.analysis as string) || undefined,
                   result: (d.result as FetchResult | undefined),
                 };
-                setLogs(prev => applyProgressEvent(prev, event, `progress-${progressCount}`));
+                const nextId = `progress-${progressCount}`;
+                setLogs(prev => applyProgressEvent(prev, event, nextId));
                 setProgress(Math.min(95, Math.round((progressCount / totalEstimate) * 100)));
               } else if (evt.event === 'error') {
                 addLog('error', t('engine.log.error', { message: (d.message as string) || t('engine.log.unknownError') }), 'error');

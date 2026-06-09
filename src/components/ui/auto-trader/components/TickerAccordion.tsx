@@ -48,11 +48,12 @@ function buildGroups(logs: LogEntry[]): { systemLogs: LogEntry[]; groups: Ticker
     const status = deriveStatus(tickerLogs);
     const last = tickerLogs[tickerLogs.length - 1];
     const agents = [...new Set(tickerLogs.map(l => l.agent).filter(Boolean))] as string[];
-    // Find the final analysis log — the last 'ok' log with a JSON-like detail
+    // Find the final analysis log — flagged by applyProgressEvent when the
+    // backend sends the reasoning payload (event.analysis).
     let analysisLog: LogEntry | null = null;
     for (let i = tickerLogs.length - 1; i >= 0; i--) {
       const l = tickerLogs[i];
-      if (l.status === 'ok' && l.detail && l.detail.trim().startsWith('{')) {
+      if (l.isAnalysis) {
         analysisLog = l;
         break;
       }
@@ -211,7 +212,7 @@ function TickerGroupRow({ group }: { group: TickerGroup }) {
               {agentLogs.map(l => (
                 <div key={l.id} style={{ ...FONT, display: 'flex', alignItems: 'center', gap: 4, minHeight: 18, paddingLeft: 8 }}>
                   <LogIcon status={l.status} />
-                  <AgentDetail detail={l.detail} ticker={l.ticker} agent={l.agent} status={l.status} />
+                  <AgentDetail detail={l.detail} ticker={l.ticker} agent={l.agent} status={l.status} isAnalysis={l.isAnalysis} />
                   {l.status === 'warn' && (
                     <span style={{ marginLeft: 4, opacity: 0.7, fontSize: '0.85em' }}>{t('accordion.stepEmpty')}</span>
                   )}

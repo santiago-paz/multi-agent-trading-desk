@@ -40,8 +40,20 @@ export function applyProgressEvent(
     ];
   }
 
+  // The backend only emits an explicit `result` for fetch steps. Pure analytical
+  // steps ("Analyzing fundamentals", "Calculating intrinsic value", …) just
+  // arrive as a new status update. Treat the previous running step for the same
+  // agent+ticker as implicitly completed when the next one starts, otherwise it
+  // stays gray forever even though the work clearly finished.
+  const promoted = logs.map(l =>
+    l.agent === agent && l.ticker === ticker && l.status === 'running'
+      ? { ...l, status: 'ok' as LogStatus }
+      : l,
+  );
+
+  const isAnalysis = Boolean(event.analysis);
   return [
-    ...logs,
-    { id: nextId, text, status: event.analysis ? 'ok' : 'running', agent, ticker, detail: status },
+    ...promoted,
+    { id: nextId, text, status: isAnalysis ? 'ok' : 'running', agent, ticker, detail: isAnalysis ? event.analysis! : status, isAnalysis },
   ];
 }
