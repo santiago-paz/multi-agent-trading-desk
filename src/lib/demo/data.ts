@@ -6,6 +6,7 @@
 
 import type { PortfolioResponse, Operation, DatosPerfil, EstadoCuenta } from '@/lib/iol/types';
 import type { HistoricalRow, NewsItem } from '@/lib/fmp/types';
+import { cedearsToShares } from '@/lib/cedear-ratios';
 
 export const DEMO_MODE = process.env.NEXT_PUBLIC_DEMO_MODE === 'true';
 
@@ -301,14 +302,19 @@ export function getDemoFullPortfolioContext() {
     }
   }
 
-  const portfolioPositions = DEMO_PORTFOLIO.activos.map(a => ({
-    ticker: a.titulo.simbolo,
-    quantity: a.cantidad,
-    trade_price: Math.round((a.ppc / DEMO_MEP_RATE) * 100) / 100,
-  }));
-
-  // Demo backend doesn't model BYMA ratios — fall back to 1:1 across the board.
-  const cedearRatios: Record<string, number> = {};
+  // /run speaks *underlying* shares (see getFullPortfolioContext) — convert
+  // the demo CEDEAR lots the same way; fractional-only positions are omitted.
+  const portfolioPositions = DEMO_PORTFOLIO.activos.flatMap(a => {
+    const underlyingShares = Math.floor(cedearsToShares(a.cantidad, a.titulo.simbolo));
+    if (underlyingShares <= 0) return [];
+    const underlyingPerCedear = cedearsToShares(1, a.titulo.simbolo);
+    const costUsdPerUnderlying = underlyingPerCedear > 0 ? a.ppc / underlyingPerCedear / DEMO_MEP_RATE : 0;
+    return [{
+      ticker: a.titulo.simbolo,
+      quantity: underlyingShares,
+      trade_price: Math.round(costUsdPerUnderlying * 100) / 100,
+    }];
+  });
 
   const iolToFmp: Record<string, string> = {};
   const fmpToIol: Record<string, string> = {};
@@ -337,7 +343,6 @@ export function getDemoFullPortfolioContext() {
     arsPrices,
     mepRate: DEMO_MEP_RATE,
     portfolioPositions,
-    cedearRatios,
   };
 }
 

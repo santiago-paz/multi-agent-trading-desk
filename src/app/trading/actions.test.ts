@@ -573,15 +573,18 @@ describe('getFullPortfolioContext', () => {
     if (!r.success) expect(r.error).toContain('iol-down');
   });
 
-  it('reports CEDEAR holdings in CEDEAR units with per-CEDEAR USD prices, plus the BYMA ratios', async () => {
-    // The backend is ratio-aware now: it receives `cedear_ratios` and computes
-    // lot prices internally. So we ship quantities in CEDEARs and prices in
-    // USD/CEDEAR — that matches what the broker actually trades and avoids the
-    // "Insufficient cash to buy 1 share ($1,807 underlying)" prefill bug.
+  it('converts CEDEAR holdings to whole underlying shares with USD-per-underlying cost basis', async () => {
+    // Mirror of src/rebalancer/portfolio_builder.py::build_portfolio in the
+    // backend repo: /run and /optimize both speak *underlying* shares (the
+    // backend has no cedear_ratios support), so positions are translated
+    // CEDEARs → underlying (floor) and ARS-per-CEDEAR cost → USD-per-underlying.
+    // Fractional remainders are orphan CEDEARs and are excluded from positions.
     iol.getPortfolio.mockResolvedValueOnce({
       pais: 'argentina',
       activos: [
+        // 1 ADBE CEDEAR (ratio 44:1) = 0.0227 underlying → floors to 0 → omitted
         asset({ titulo: { ...asset().titulo, simbolo: 'ADBE', tipo: 'CEDEARS' }, cantidad: 1, ppc: 11275 }),
+        // 101 GOOGL CEDEARs (ratio 58:1) = 1.74 underlying → floors to 1
         asset({ titulo: { ...asset().titulo, simbolo: 'GOOGL', tipo: 'CEDEARS' }, cantidad: 101, ppc: 7577.13 }),
       ],
     } as PortfolioResponse);
@@ -602,21 +605,41 @@ describe('getFullPortfolioContext', () => {
     if (!r.success) throw new Error('expected success');
 
     const positions = r.portfolioPositions;
-    const adbe = positions.find(p => p.ticker === 'ADBE')!;
+
+    // ADBE is fractional-only → orphan, not tradable by the rebalancer.
+    expect(positions.find(p => p.ticker === 'ADBE')).toBeUndefined();
+
     const googl = positions.find(p => p.ticker === 'GOOGL')!;
+    expect(googl.quantity).toBe(1);
+    // 7577.13 ARS/CEDEAR × 58 CEDEARs-per-share ÷ 1429 ARS/USD ≈ 307.54 USD/share
+    expect(googl.trade_price).toBeCloseTo((7577.13 * 58) / 1429, 1);
 
-    // Quantity stays in CEDEARs (what IOL holds + what the broker trades).
-    expect(adbe.quantity).toBe(1);
-    expect(googl.quantity).toBe(101);
+    // `holdings` stays in CEDEAR units — that's what /optimize expects.
+    expect(r.holdings).toEqual({ ADBE: 1, GOOGL: 101 });
+  });
 
-    // trade_price is now USD per CEDEAR (PPC ARS / MEP), no ratio applied.
-    expect(adbe.trade_price).toBeCloseTo(11275 / 1429, 1);
-    expect(googl.trade_price).toBeCloseTo(7577.13 / 1429, 1);
+  it('consolidates currency-suffix variants into a single underlying position', async () => {
+    // AAPLC 30 @ ppc 100 + AAPLD 10 (ppc 0 → falls back to ultimoPrecio 100):
+    // 40 AAPL CEDEARs (ratio 20:1) = 2 underlying, blended cost 100 ARS/CEDEAR
+    // → 100 × 20 / 1200 MEP = 1.67 USD/underlying. One position, not two.
+    iol.getPortfolio.mockResolvedValueOnce({
+      pais: 'argentina',
+      activos: [
+        asset({ titulo: { ...asset().titulo, simbolo: 'AAPLC', tipo: 'CEDEARS' }, cantidad: 30, ppc: 100 }),
+        asset({ titulo: { ...asset().titulo, simbolo: 'AAPLD', tipo: 'cedears' }, cantidad: 10, ppc: 0, ultimoPrecio: 100 }),
+      ],
+    } as PortfolioResponse);
+    iol.getEstadoCuenta.mockResolvedValueOnce(emptyEstado());
+    iol.getMEP.mockResolvedValueOnce(1200);
+    iol.getPanelQuotes.mockResolvedValueOnce(emptyPanel());
+    fmp.getCompanyNames.mockResolvedValueOnce({});
 
-    // BYMA ratios accompany the positions so the backend can compute
-    // lot_price = underlying_price / ratio internally.
-    expect(r.cedearRatios.ADBE).toBe(44);
-    expect(r.cedearRatios.GOOGL).toBe(58);
+    const r = await actions.getFullPortfolioContext();
+    if (!r.success) throw new Error('expected success');
+
+    expect(r.portfolioPositions).toEqual([
+      { ticker: 'AAPL', quantity: 2, trade_price: 1.67 },
+    ]);
   });
 });
 
