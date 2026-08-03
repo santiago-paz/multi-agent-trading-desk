@@ -48,6 +48,9 @@ function writeCompanyNamesCache(cache: Record<string, string>) {
 }
 
 function getFMPApiKey(): string {
+  if (process.env.NEXT_PUBLIC_DEMO_MODE === 'true') {
+    throw new Error('FMP disabled in demo mode (NEXT_PUBLIC_DEMO_MODE)');
+  }
   const key = process.env.FMP_API_KEY;
   if (!key) throw new Error('FMP_API_KEY not set');
   return key;
@@ -281,6 +284,9 @@ function mapFMPToNewsItem(article: FMPNewsArticle): NewsItem {
 }
 
 async function fetchFMPLatestNews(limit: number = 200): Promise<FMPNewsArticle[]> {
+  if (process.env.NEXT_PUBLIC_DEMO_MODE === 'true') {
+    throw new Error('FMP disabled in demo mode (NEXT_PUBLIC_DEMO_MODE)');
+  }
   const apiKey = process.env.FMP_API_KEY;
   if (!apiKey) throw new Error('FMP_API_KEY not set');
   const url = `https://financialmodelingprep.com/stable/news/stock-latest?limit=${limit}&apikey=${apiKey}`;
@@ -294,6 +300,9 @@ async function fetchFMPLatestNews(limit: number = 200): Promise<FMPNewsArticle[]
 
 /** Broad market / macro headlines (not tied to a single ticker). */
 async function fetchFMPGeneralLatestNews(limit: number = 200): Promise<FMPNewsArticle[]> {
+  if (process.env.NEXT_PUBLIC_DEMO_MODE === 'true') {
+    throw new Error('FMP disabled in demo mode (NEXT_PUBLIC_DEMO_MODE)');
+  }
   const apiKey = process.env.FMP_API_KEY;
   if (!apiKey) throw new Error('FMP_API_KEY not set');
   const url = `https://financialmodelingprep.com/stable/news/general-latest?limit=${limit}&apikey=${apiKey}`;
