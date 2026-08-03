@@ -56,6 +56,10 @@ vi.mock('@/lib/demo/data', () => ({
   DEMO_OPERATIONS: [{ id: 'op1' }],
   DEMO_NEWS_GENERAL: [{ title: 'demo-general' }],
   DEMO_NEWS_SPECIFIC: { AAPL: [{ title: 'demo-specific' }] },
+  // Consumed directly by @/lib/demo/company-detail (a separate, unmocked module)
+  // to generate deterministic profiles/fundamentals for the demo action tests below.
+  DEMO_BASE_PRICES: { AAPL: 218 },
+  DEMO_COMPANY_NAMES: { AAPL: 'Apple Inc.' },
   getDemoMarketData: () => ({ marketData: [], ownedSymbols: [], companyNames: {} }),
   getDemoCedearsForTrading: () => ({ cedears: [], cash: 1000, comprometido: 0, effectiveCash: 985, commissionRate: 0.015 }),
   getDemoFullPortfolioContext: () => ({ success: true as const, demo: true }),
@@ -648,6 +652,14 @@ describe('getFullPortfolioContext', () => {
 // ════════════════════════════════════════════════════════════════════════════
 
 describe('searchTickerSymbols', () => {
+  it('returns demo hits in DEMO_MODE without calling FMP', async () => {
+    ctl.DEMO_MODE = true;
+    const r = await actions.searchTickerSymbols('app');
+    expect(r.success).toBe(true);
+    if (r.success) expect(r.data.every(h => h.symbol && h.name)).toBe(true);
+    expect(fmp.searchSymbolHits).not.toHaveBeenCalled();
+  });
+
   it('forwards query and limit to FMP', async () => {
     fmp.searchSymbolHits.mockResolvedValueOnce([{ symbol: 'AAPL' }]);
     const r = await actions.searchTickerSymbols('app');
@@ -663,6 +675,20 @@ describe('searchTickerSymbols', () => {
 });
 
 describe('getCompanyDetail', () => {
+  it('returns demo profile in DEMO_MODE without calling FMP', async () => {
+    ctl.DEMO_MODE = true;
+    const r = await actions.getCompanyDetail('AAPL');
+    expect(r.success).toBe(true);
+    if (r.success) {
+      expect(r.data.fmpTicker).toBe('AAPL');
+      expect(r.data.profile?.companyName).toBeTruthy();
+      expect(r.data.priceHistory.length).toBeGreaterThan(0);
+    }
+    expect(fmp.getCompanyProfile).not.toHaveBeenCalled();
+    expect(fmp.getHistoricalData).not.toHaveBeenCalled();
+    expect(fmp.getIncomeStatements).not.toHaveBeenCalled();
+  });
+
   it('returns noUsEquivalent=true when symbol maps to null in cedear-map', async () => {
     // BPA11 is registered with `null` in IOL_TO_FMP (no US ADR)
     const r = await actions.getCompanyDetail('BPA11');
@@ -703,6 +729,17 @@ describe('getCompanyDetail', () => {
 });
 
 describe('getCompanyAdvancedData', () => {
+  it('returns demo data in DEMO_MODE without calling FMP', async () => {
+    ctl.DEMO_MODE = true;
+    const r = await actions.getCompanyAdvancedData('AAPL');
+    expect(r.success).toBe(true);
+    if (r.success) {
+      expect(r.data.keyMetrics.length).toBeGreaterThan(0);
+      expect(r.data.dcf?.dcf).toBeGreaterThan(0);
+    }
+    expect(fmp.getKeyMetrics).not.toHaveBeenCalled();
+  });
+
   it('aggregates 5 FMP endpoints in one call', async () => {
     fmp.getKeyMetrics.mockResolvedValueOnce([{ metric: 1 }]);
     fmp.getCashFlowStatements.mockResolvedValueOnce([{ cashflow: 1 }]);
@@ -737,6 +774,14 @@ describe('getCompanyAdvancedData', () => {
 });
 
 describe('getCompanyNews', () => {
+  it('returns demo news in DEMO_MODE without calling FMP', async () => {
+    ctl.DEMO_MODE = true;
+    const r = await actions.getCompanyNews('AAPL');
+    expect(r.success).toBe(true);
+    if (r.success) expect(r.data[0].title).toBeTruthy();
+    expect(fmp.getTickerNews).not.toHaveBeenCalled();
+  });
+
   it('forwards ticker and limit=20', async () => {
     fmp.getTickerNews.mockResolvedValueOnce([{ title: 'n' }]);
     const r = await actions.getCompanyNews('AAPL');

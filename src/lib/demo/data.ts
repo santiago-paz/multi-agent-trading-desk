@@ -204,7 +204,7 @@ export const DEMO_BASE_PRICES: Record<string, number> = {
   VIST: 58, INTC: 32, BA: 195, GOLD: 18,
 };
 
-const DEMO_COMPANY_NAMES: Record<string, string> = {
+export const DEMO_COMPANY_NAMES: Record<string, string> = {
   ABT: 'Abbott Laboratories', ADBE: 'Adobe Systems Inc.', B: 'Barrick Mining Corp.',
   BB: 'BlackBerry Ltd.', BIOX: 'Bioceres Crop Solutions', BKNG: 'Booking Holdings Inc.',
   GOOGL: 'Alphabet Inc.', HMY: 'Harmony Gold Mining', KO: 'Coca-Cola Company',

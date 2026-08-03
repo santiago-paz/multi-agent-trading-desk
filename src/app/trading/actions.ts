@@ -16,6 +16,7 @@ function isFmpRateLimitRejection(r: PromiseSettledResult<unknown>): boolean {
 import { stripCurrencySuffix, toFmpTicker, isEtf } from '@/lib/cedear-map';
 import { cedearsToShares } from '@/lib/cedear-ratios';
 import { DEMO_MODE, DEMO_MEP_RATE, DEMO_PERFIL, DEMO_ESTADO_CUENTA, DEMO_PORTFOLIO, DEMO_USD_PRICES, DEMO_VALUE_USD, DEMO_OPERATIONS, DEMO_NEWS_GENERAL, DEMO_NEWS_SPECIFIC, getDemoMarketData, getDemoCedearsForTrading, getDemoFullPortfolioContext } from '@/lib/demo/data';
+import { getDemoCompanyDetail, getDemoCompanyAdvancedData, getDemoCompanyNews, getDemoSymbolSearch } from '@/lib/demo/company-detail';
 
 // Cap on simultaneous outbound FMP fetches. Without this, firing 200+ parallel
 // requests saturates undici's socket pool and trips FMP rate-limiting, surfacing
@@ -545,6 +546,7 @@ interface CompanyDetailResult {
 export async function searchTickerSymbols(
   query: string,
 ): Promise<{ success: true; data: SymbolSearchHit[] } | { success: false; error: string }> {
+  if (DEMO_MODE) return { success: true, data: getDemoSymbolSearch(query) };
   try {
     const data = await searchSymbolHits(query, 15);
     return { success: true, data };
@@ -557,6 +559,7 @@ export async function searchTickerSymbols(
 export type ActionErrorCode = 'fmpRateLimit';
 
 export async function getCompanyDetail(iolBaseSymbol: string): Promise<{ success: true; data: CompanyDetailResult } | { success: false; error: string; errorCode?: ActionErrorCode }> {
+  if (DEMO_MODE) return { success: true, data: getDemoCompanyDetail(iolBaseSymbol) };
   try {
     const etf = isEtf(iolBaseSymbol);
     const fmpTicker = toFmpTicker(iolBaseSymbol);
@@ -609,6 +612,7 @@ export interface AdvancedDetailResult {
 }
 
 export async function getCompanyAdvancedData(fmpTicker: string): Promise<{ success: true; data: AdvancedDetailResult } | { success: false; error: string; errorCode?: ActionErrorCode }> {
+  if (DEMO_MODE) return { success: true, data: getDemoCompanyAdvancedData(fmpTicker) };
   try {
     const [metrics, cashFlow, balanceSheet, scores, dcf] = await Promise.allSettled([
       getKeyMetrics(fmpTicker, 'annual'),
@@ -639,6 +643,7 @@ export async function getCompanyAdvancedData(fmpTicker: string): Promise<{ succe
 }
 
 export async function getCompanyNews(fmpTicker: string): Promise<{ success: true; data: NewsItem[] } | { success: false; error: string; errorCode?: ActionErrorCode }> {
+  if (DEMO_MODE) return { success: true, data: getDemoCompanyNews(fmpTicker) };
   try {
     const news = await getTickerNews(fmpTicker, 20);
     return { success: true, data: news };
