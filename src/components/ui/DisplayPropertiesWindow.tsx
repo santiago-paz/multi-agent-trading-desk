@@ -463,23 +463,25 @@ export function DisplayPropertiesWindow({ onClose }: DisplayPropertiesWindowProp
             </>
           )}
           {activeTab === 'settings' && (
-            <fieldset style={{ margin: 0, padding: '8px 8px 12px 8px' }}>
-              <legend>Language</legend>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, ...FONT }}>
-                <div className="field-row">
-                  <label htmlFor="locale-select">Interface language:</label>
-                  <select
-                    id="locale-select"
-                    value={localLocale}
-                    onChange={(e) => setLocalLocale(e.target.value as Locale)}
-                    style={{ ...FONT, width: 180 }}
-                  >
-                    <option value="es">Espa&#241;ol (Argentina)</option>
-                    <option value="en">English</option>
-                  </select>
+            process.env.NEXT_PUBLIC_DEMO_MODE !== 'true' && (
+              <fieldset style={{ margin: 0, padding: '8px 8px 12px 8px' }}>
+                <legend>Language</legend>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, ...FONT }}>
+                  <div className="field-row">
+                    <label htmlFor="locale-select">Interface language:</label>
+                    <select
+                      id="locale-select"
+                      value={localLocale}
+                      onChange={(e) => setLocalLocale(e.target.value as Locale)}
+                      style={{ ...FONT, width: 180 }}
+                    >
+                      <option value="es">Espa&#241;ol (Argentina)</option>
+                      <option value="en">English</option>
+                    </select>
+                  </div>
                 </div>
-              </div>
-            </fieldset>
+              </fieldset>
+            )
           )}
         </div>
       </div>

@@ -16,11 +16,14 @@ const LocaleContext = createContext<LocaleContextValue>({
   setLocale: () => {},
 });
 
+const DEMO = process.env.NEXT_PUBLIC_DEMO_MODE === 'true';
+
 export function LocaleProvider({ children }: { children: ReactNode }) {
-  const [locale, setLocaleState] = useState<Locale>('es');
+  const [locale, setLocaleState] = useState<Locale>(DEMO ? 'en' : 'es');
 
   // Hydrate from localStorage after mount to avoid SSR mismatch
   useEffect(() => {
+    if (DEMO) return; // demo is locked to English — ignore any stored preference
     const stored = localStorage.getItem(STORAGE_KEY);
     if (stored === 'es' || stored === 'en') {
       setLocaleState(stored);
@@ -28,6 +31,7 @@ export function LocaleProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const setLocale = useCallback((l: Locale) => {
+    if (DEMO) return; // locked in demo mode
     setLocaleState(l);
     localStorage.setItem(STORAGE_KEY, l);
   }, []);
