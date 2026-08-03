@@ -247,6 +247,12 @@ export const autoTraderEn: Record<AutoTraderKey, string> = {
   'detail.peter.title': 'Peter Lynch Analysis:',
   'detail.mohnish.title': 'Mohnish Pabrai Analysis:',
 
+  // ── AgentDetail (raw JSON fallback rendering) ──
+  'detail.agent.signal': 'Signal:',
+  'detail.agent.confidence': '(Confidence: {value}%)',
+  'detail.agent.additionalDetails': 'Additional details:',
+  'detail.agent.summary': 'Summary:',
+
   // ── Rebalance engine warnings ──
   'engine.sell.noPrice': 'Sell {ticker} skipped: market does not report a valid quote price.',
   'engine.sell.noHolding': 'Sell {ticker} skipped: the system suggested selling but the account currently has no holding.',

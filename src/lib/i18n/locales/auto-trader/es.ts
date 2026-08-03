@@ -245,6 +245,12 @@ export const autoTraderEs = {
   'detail.peter.title': 'Análisis de Peter Lynch:',
   'detail.mohnish.title': 'Análisis de Mohnish Pabrai:',
 
+  // ── AgentDetail (raw JSON fallback rendering) ──
+  'detail.agent.signal': 'Señal:',
+  'detail.agent.confidence': '(Confianza: {value}%)',
+  'detail.agent.additionalDetails': 'Detalles adicionales:',
+  'detail.agent.summary': 'Resumen:',
+
   // ── Rebalance engine warnings ──
   'engine.sell.noPrice': 'Venta de {ticker} omitida: el mercado no reporta un precio de cotización válido.',
   'engine.sell.noHolding': 'Venta de {ticker} omitida: el sistema sugirió la venta pero actualmente la cuenta no posee tenencia.',
