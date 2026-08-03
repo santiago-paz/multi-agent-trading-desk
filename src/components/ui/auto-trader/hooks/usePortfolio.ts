@@ -1,8 +1,10 @@
 import { useState, useCallback, useEffect } from 'react';
 import { getFullPortfolioContext } from '@/app/trading/actions';
 import { useMepStore } from '@/lib/store/mep-store';
+import { useAutoTraderT } from '@/lib/i18n';
 
 export function usePortfolio() {
+  const t = useAutoTraderT();
   const mepRate = useMepStore(s => s.mepRate);
 
   const [holdings, setHoldings] = useState<Record<string, number>>({});
@@ -47,11 +49,12 @@ export function usePortfolio() {
       }
     } catch (err) {
       const errMsg = err instanceof Error ? err.message : String(err);
-      setPortfolioError(`Error de conexión: ${errMsg}`);
+      setPortfolioError(t('portfolio.connectionError', { msg: errMsg }));
       console.error('[AutoTrader] Failed to load portfolio context:', err);
     } finally {
       setIsLoadingPortfolio(false);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {

@@ -50,6 +50,9 @@ export const autoTraderEn: Record<AutoTraderKey, string> = {
   'config.actions.analyzing': 'Analyzing...',
   'config.actions.analyze': 'Analyze',
 
+  // ── usePortfolio hook ──
+  'portfolio.connectionError': 'Connection error: {msg}',
+
   // ── AITab ──
   'ai.empty': 'No analysis data. Set the parameters and press "Analyze" in the Configuration tab.',
   'ai.progress': 'Progress',
