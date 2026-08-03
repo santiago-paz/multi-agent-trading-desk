@@ -52,6 +52,8 @@ export const autoTraderEn: Record<AutoTraderKey, string> = {
 
   // ── usePortfolio hook ──
   'portfolio.connectionError': 'Connection error: {msg}',
+  'portfolio.unknownError': 'Unknown error',
+  'portfolio.unknownErrorFetching': 'Unknown error fetching portfolio',
 
   // ── AITab ──
   'ai.empty': 'No analysis data. Set the parameters and press "Analyze" in the Configuration tab.',

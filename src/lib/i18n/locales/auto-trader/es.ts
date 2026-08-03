@@ -50,6 +50,8 @@ export const autoTraderEs = {
 
   // ── usePortfolio hook ──
   'portfolio.connectionError': 'Error de conexión: {msg}',
+  'portfolio.unknownError': 'Error desconocido',
+  'portfolio.unknownErrorFetching': 'Error desconocido al obtener portfolio',
 
   // ── AITab ──
   'ai.empty': 'No hay datos de an\u00e1lisis. Configure los par\u00e1metros y presione "Analizar" en la pesta\u00f1a de Configuraci\u00f3n.',
