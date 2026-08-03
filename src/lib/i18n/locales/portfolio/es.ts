@@ -76,6 +76,19 @@ export const portfolioEs = {
   'account.ready': 'Listo',
   'account.noSession': 'Sin sesión',
   'account.accountPrefix': 'Cta:',
+
+  // ── OperationsFeed — Column headers ──
+  'col.date': 'Fecha',
+  'col.type': 'Tipo',
+  'col.price': 'Precio',
+  'col.amount': 'Monto',
+  'col.status': 'Estado',
+
+  // ── OperationsFeed — Movimientos ──
+  'movements.legend': 'Últimos movimientos (IOL)',
+  'movements.loading': 'Cargando movimientos...',
+  'movements.empty': 'No hay movimientos recientes.',
+  'movements.count': '{count} movimientos',
 } as const;
 
 export type PortfolioKey = keyof typeof portfolioEs;

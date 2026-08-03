@@ -78,4 +78,17 @@ export const portfolioEn: Record<PortfolioKey, string> = {
   'account.ready': 'Ready',
   'account.noSession': 'No session',
   'account.accountPrefix': 'Acct:',
+
+  // ── OperationsFeed — Column headers ──
+  'col.date': 'Date',
+  'col.type': 'Type',
+  'col.price': 'Price',
+  'col.amount': 'Amount',
+  'col.status': 'Status',
+
+  // ── OperationsFeed — Movimientos ──
+  'movements.legend': 'Recent transactions (IOL)',
+  'movements.loading': 'Loading transactions...',
+  'movements.empty': 'No recent transactions.',
+  'movements.count': '{count} transactions',
 };
