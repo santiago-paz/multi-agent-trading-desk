@@ -196,7 +196,7 @@ const DEMO_SYMBOLS = [
 ];
 
 // US stock prices (used for company detail / fundamentals generation)
-const DEMO_BASE_PRICES: Record<string, number> = {
+export const DEMO_BASE_PRICES: Record<string, number> = {
   ABT: 130, ADBE: 450, B: 18, BB: 5, BIOX: 8, BKNG: 5000, GOOGL: 178, HMY: 14,
   KO: 73, NFLX: 920, NIO: 4, NVDA: 890, ORLY: 1300, PAAS: 25,
   AAPL: 218, TSLA: 285, MELI: 2150, MSFT: 445, AMZN: 198, META: 580,
