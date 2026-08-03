@@ -868,6 +868,31 @@ export default function TradingDashboard() {
 
         {/* System tray with clock */}
         <div className="taskbar-tray">
+          {/* Demo-only marker so public viewers know the data is fictitious. Rendered
+              only when NEXT_PUBLIC_DEMO_MODE is on, so it never shows on the real app. */}
+          {process.env.NEXT_PUBLIC_DEMO_MODE === 'true' && (
+            <span
+              title="Datos 100% ficticios · no es asesoramiento financiero"
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 4,
+                padding: '0 6px',
+                marginRight: 6,
+                height: '18px',
+                border: '1px solid',
+                borderColor: '#808080 #ffffff #ffffff #808080',
+                fontFamily: '"Pixelated MS Sans Serif", "MS Sans Serif", Arial, sans-serif',
+                fontSize: '11px',
+                fontWeight: 'bold',
+                color: '#000',
+                cursor: 'help',
+                whiteSpace: 'nowrap',
+              }}
+            >
+              🔮 MODO DEMO · datos ficticios
+            </span>
+          )}
           <span className="taskbar-clock" suppressHydrationWarning>
             {clockNow ? clockNow.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''}
           </span>
