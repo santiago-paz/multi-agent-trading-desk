@@ -16,7 +16,7 @@ describe('demo oráculo', () => {
   });
 
   it('streams text deltas terminated by [DONE]', async () => {
-    const text = await readAll(demoOraculoStream({ title: 'El faro de Alejandría' }));
+    const text = await readAll(demoOraculoStream({ title: 'The Lighthouse of Alexandria' }));
     expect(text).toContain('data: ');
     expect(text.trim().endsWith('data: [DONE]')).toBe(true);
     // reassemble the deltas

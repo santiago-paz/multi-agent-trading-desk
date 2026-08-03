@@ -2,18 +2,18 @@ import { hashString, seededPick } from './seed';
 import { pacedStream, type PacedItem } from './sse';
 
 export const DEMO_WIKI_TOPICS = [
-  { title: 'El faro de Alejandría', extract: 'Una de las siete maravillas del mundo antiguo, guía de navegantes perdidos.' },
-  { title: 'La máquina de Anticitera', extract: 'Un antiguo mecanismo griego considerado la primera computadora analógica.' },
-  { title: 'El experimento de la doble rendija', extract: 'Demostración de la dualidad onda-partícula en la mecánica cuántica.' },
-  { title: 'La Ruta de la Seda', extract: 'Red de rutas comerciales que conectó Oriente y Occidente durante siglos.' },
-  { title: 'El calamar gigante', extract: 'Criatura abisal esquiva que inspiró leyendas de krakens.' },
-  { title: 'La biblioteca de Babel', extract: 'Cuento de Borges sobre una biblioteca infinita que contiene todos los libros posibles.' },
+  { title: 'The Lighthouse of Alexandria', extract: 'One of the seven wonders of the ancient world, a guide for lost sailors.' },
+  { title: 'The Antikythera Mechanism', extract: 'An ancient Greek device considered the first analog computer.' },
+  { title: 'The Double-Slit Experiment', extract: 'A demonstration of wave-particle duality in quantum mechanics.' },
+  { title: 'The Silk Road', extract: 'A network of trade routes that connected East and West for centuries.' },
+  { title: 'The Giant Squid', extract: 'An elusive deep-sea creature that inspired kraken legends.' },
+  { title: 'The Library of Babel', extract: 'Borges’ tale of an infinite library containing every possible book.' },
 ];
 
 const ORACULO_TEMPLATES = [
-  (t: string) => `Las mareas del destino susurran que ${t} y las acciones bailan el mismo vals invisible (no es consejo, es destino).`,
-  (t: string) => `Donde otros ven ruido, el oráculo ve que ${t} presagia un giro en los mercados (no es consejo, es augurio).`,
-  (t: string) => `El humo del incienso dibuja el ticker ${t} sobre las velas japonesas del mañana (no es consejo, es profecía).`,
+  (t: string) => `The tides of fate whisper that ${t} and the markets dance the same invisible waltz (not advice, it's destiny).`,
+  (t: string) => `Where others see noise, the oracle sees ${t} foreshadowing a turn in the markets (not advice, it's an omen).`,
+  (t: string) => `The incense smoke traces the ticker ${t} over tomorrow's candlesticks (not advice, it's prophecy).`,
 ];
 
 export function demoOraculoStream(input: { title?: string }): Response {

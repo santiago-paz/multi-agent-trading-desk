@@ -91,7 +91,7 @@ function demoProfile(sym: string): CompanyProfile {
   return {
     symbol: sym, companyName: name(sym),
     sector, industry,
-    description: `${name(sym)} es una compañía del sector ${sector} con operaciones a nivel global y una trayectoria consolidada en su industria.`,
+    description: `${name(sym)} is a ${sector} sector company with global operations and a well-established track record in its industry.`,
     mktCap: cap, price, beta: 1 + ((hashString(sym) % 100) / 100),
     volAvg: 20_000_000 + (hashString(sym) % 30_000_000),
     website: 'https://example.com', country: 'US', exchange: 'NASDAQ',
@@ -158,9 +158,9 @@ export function getDemoCompanyAdvancedData(fmpTicker: string): AdvancedDetailRes
 export function getDemoCompanyNews(fmpTicker: string): NewsItem[] {
   const n = name(fmpTicker);
   return [
-    { title: `${n} supera expectativas en su último reporte trimestral`, link: '#', publisher: 'Demo Wire', text: `${n} reportó ingresos por encima del consenso.`, relatedTickers: [fmpTicker], image: `https://images.financialmodelingprep.com/symbol/${fmpTicker}.png` },
-    { title: `Analistas elevan el precio objetivo de ${fmpTicker}`, link: '#', publisher: 'Demo Markets', text: `Varias casas de bolsa mejoraron su visión sobre ${fmpTicker}.`, relatedTickers: [fmpTicker] },
-    { title: `${n} anuncia inversión en inteligencia artificial`, link: '#', publisher: 'Demo Tech', text: `La compañía destinará capital a nuevas capacidades de IA.`, relatedTickers: [fmpTicker] },
+    { title: `${n} beats expectations in its latest quarterly report`, link: '#', publisher: 'Demo Wire', text: `${n} reported revenue above consensus.`, relatedTickers: [fmpTicker], image: `https://images.financialmodelingprep.com/symbol/${fmpTicker}.png` },
+    { title: `Analysts raise price target for ${fmpTicker}`, link: '#', publisher: 'Demo Markets', text: `Several brokerages improved their view on ${fmpTicker}.`, relatedTickers: [fmpTicker] },
+    { title: `${n} announces investment in artificial intelligence`, link: '#', publisher: 'Demo Tech', text: `The company will allocate capital to new AI capabilities.`, relatedTickers: [fmpTicker] },
   ];
 }
 

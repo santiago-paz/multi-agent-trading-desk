@@ -872,7 +872,7 @@ export default function TradingDashboard() {
               only when NEXT_PUBLIC_DEMO_MODE is on, so it never shows on the real app. */}
           {process.env.NEXT_PUBLIC_DEMO_MODE === 'true' && (
             <span
-              title="Datos 100% ficticios · no es asesoramiento financiero"
+              title="100% fictitious data · not financial advice"
               style={{
                 display: 'inline-flex',
                 alignItems: 'center',
@@ -890,7 +890,7 @@ export default function TradingDashboard() {
                 whiteSpace: 'nowrap',
               }}
             >
-              🔮 MODO DEMO · datos ficticios
+              🔮 DEMO MODE · fictitious data
             </span>
           )}
           <span className="taskbar-clock" suppressHydrationWarning>
