@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { FONT, COLOR_LINK, STATUS_BAR_STYLE } from '@/lib/theme/win98';
+import { useWindowsT } from '@/lib/i18n';
 
 interface WikiSummary {
   title: string;
@@ -15,6 +16,7 @@ interface WikiSummary {
 }
 
 export function ActiveDesktopWidget() {
+  const tw = useWindowsT();
   const [article, setArticle] = useState<WikiSummary | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
@@ -93,11 +95,11 @@ export function ActiveDesktopWidget() {
         }
       }
     } catch (err) {
-      setOraculoError(err instanceof Error ? err.message : 'Error desconocido');
+      setOraculoError(err instanceof Error ? err.message : tw('oraculo.unknownError'));
     } finally {
       setOraculoStreaming(false);
     }
-  }, [article, oraculoStreaming]);
+  }, [article, oraculoStreaming, tw]);
 
   useEffect(() => {
     fetchRandomArticle();
@@ -122,14 +124,14 @@ export function ActiveDesktopWidget() {
       }}
     >
       <div className="title-bar">
-        <div className="title-bar-text">Active Desktop</div>
+        <div className="title-bar-text">{tw('desktop.title')}</div>
       </div>
 
       <div style={{ flex: 1, minHeight: 0, padding: 8, display: 'flex', flexDirection: 'column', overflow: 'auto' }}>
         {article === null && loading ? (
-          <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>Cargando datos...</div>
+          <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{tw('desktop.loading')}</div>
         ) : error ? (
-          <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'red', textAlign: 'center' }}>Error al conectar con Wikipedia.</div>
+          <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'red', textAlign: 'center' }}>{tw('desktop.error')}</div>
         ) : article ? (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8, minHeight: '100%' }}>
             <h3 style={{ margin: '0 0 4px 0', fontSize: '11px', fontWeight: 'bold' }}>
@@ -158,7 +160,7 @@ export function ActiveDesktopWidget() {
                     display: 'inline-block',
                   }}
                 >
-                  Leer más en Wikipedia
+                  {tw('desktop.readMore')}
                 </a>
               </div>
             )}
@@ -187,7 +189,7 @@ export function ActiveDesktopWidget() {
                 >
                   {oraculoError ? (
                     <span style={{ color: '#8b0000' }}>
-                      {'\u{1F52E} '}El oráculo está mudo: {oraculoError}
+                      {'\u{1F52E} '}{tw('oraculo.muteErrorMessage', { error: oraculoError })}
                     </span>
                   ) : (
                     <>
@@ -211,17 +213,17 @@ export function ActiveDesktopWidget() {
                   <span style={{ color: 'initial', textShadow: 'none' }}>{'\u{1F52E}'}</span>
                   {' '}
                   {oraculoStreaming
-                    ? 'Profetizando...'
+                    ? tw('oraculo.stateStreaming')
                     : oraculoText || oraculoError
-                      ? 'Otra profecía'
-                      : 'Oráculo'}
+                      ? tw('oraculo.stateAnother')
+                      : tw('oraculo.stateInitial')}
                 </button>
                 <button
                   onClick={fetchRandomArticle}
                   disabled={loading}
                   style={{ flex: 1, minWidth: 0, minHeight: 26 }}
                 >
-                  Otro artículo
+                  {tw('desktop.anotherArticle')}
                 </button>
               </section>
             </div>
@@ -230,7 +232,7 @@ export function ActiveDesktopWidget() {
       </div>
 
       <div className="status-bar" style={STATUS_BAR_STYLE}>
-        <p className="status-bar-field">Wikipedia en español</p>
+        <p className="status-bar-field">{tw('desktop.wikiSource')}</p>
       </div>
     </div>
   );

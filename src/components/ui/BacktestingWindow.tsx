@@ -21,6 +21,9 @@ import { applyProgressEvent } from '@/components/ui/auto-trader/hooks/applyProgr
 import type { ProgressEventPayload, FetchResult } from '@/components/ui/auto-trader/types';
 import { useBacktestHistoryStore } from '@/lib/store/backtest-history-store';
 import { parseSSEChunk } from '@/lib/sse';
+import { useBacktestingT, type BacktestingKey } from '@/lib/i18n';
+
+type Translate = (key: BacktestingKey, params?: Record<string, string | number>) => string;
 
 const CHART_FONT = { fontFamily: '"Pixelated MS Sans Serif", Arial, sans-serif', fontSize: 9 };
 const TOOLTIP_STYLE: React.CSSProperties = {
@@ -83,11 +86,11 @@ const API_URL = '/api/hedge-fund';
 
 // ─── Presets ──────────────────────────────────────────────────────────────────
 
-const DATE_PRESETS: { label: string; months: number }[] = [
-  { label: '1 mes', months: 1 },
-  { label: '3 meses', months: 3 },
-  { label: '6 meses', months: 6 },
-  { label: '1 año', months: 12 },
+const DATE_PRESETS: { key: BacktestingKey; months: number }[] = [
+  { key: 'preset.1m', months: 1 },
+  { key: 'preset.3m', months: 3 },
+  { key: 'preset.6m', months: 6 },
+  { key: 'preset.1y', months: 12 },
 ];
 
 function formatDate(d: Date): string {
@@ -111,7 +114,7 @@ function formatRunDate(ts: number): string {
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-function renderAgentDetail(detail: string | undefined): React.ReactNode {
+function renderAgentDetail(detail: string | undefined, tb: Translate): React.ReactNode {
   if (!detail) return null;
   
   try {
@@ -134,20 +137,20 @@ function renderAgentDetail(detail: string | undefined): React.ReactNode {
       let signalText = signal;
       if (typeof signal === 'string') {
         const s = String(signal).toLowerCase();
-        if (s === 'bullish' || s === 'buy') signalText = '🟢 Alcista';
-        else if (s === 'bearish' || s === 'sell') signalText = '🔴 Bajista';
-        else if (s === 'neutral' || s === 'hold') signalText = '⚪ Neutral';
+        if (s === 'bullish' || s === 'buy') signalText = tb('signal.bullish');
+        else if (s === 'bearish' || s === 'sell') signalText = tb('signal.bearish');
+        else if (s === 'neutral' || s === 'hold') signalText = tb('signal.neutral');
       }
-      
+
       const rows = [];
       if (signalText) {
-        rows.push(<div key="signal"><strong>Señal:</strong> {signalText} {confidence !== undefined ? `(Confianza: ${Math.round(confidence)}%)` : ''}</div>);
+        rows.push(<div key="signal"><strong>{tb('detail.signal')}</strong> {signalText} {confidence !== undefined ? tb('detail.confidencePct', { confidence: Math.round(confidence) }) : ''}</div>);
       }
-      
+
       if (info.news_titles && Array.isArray(info.news_titles) && info.news_titles.length > 0) {
         rows.push(
           <div key="news" style={{ marginTop: 6 }}>
-            <strong>Noticias analizadas:</strong>
+            <strong>{tb('detail.newsAnalyzed')}</strong>
             <ul style={{ margin: '4px 0 0 16px', padding: 0, listStyleType: 'none', color: '#333' }}>
               {info.news_titles.map((n: any, idx: number) => {
                 const sent = n.sentiment?.toLowerCase() || '';
@@ -169,7 +172,7 @@ function renderAgentDetail(detail: string | undefined): React.ReactNode {
           </div>
         );
       } else if (reasoning && typeof reasoning === 'string') {
-        rows.push(<div key="reasoning" style={{ marginTop: 4 }}><strong>Resumen:</strong> {reasoning}</div>);
+        rows.push(<div key="reasoning" style={{ marginTop: 4 }}><strong>{tb('detail.summary')}</strong> {reasoning}</div>);
       }
       
       if (rows.length > 0) {
@@ -199,6 +202,7 @@ function fmtAxisUSD(v: number): string {
 }
 
 function EquityCurve({ results, initialCapital }: { results: BacktestDayResult[]; initialCapital: number }) {
+  const tb = useBacktestingT();
   if (results.length < 2) return null;
 
   // Project benchmark return % onto the same dollar scale so both lines share the y-axis.
@@ -226,7 +230,7 @@ function EquityCurve({ results, initialCapital }: { results: BacktestDayResult[]
     <div>
       <div style={{ ...FONT, marginBottom: '4px', display: 'flex', justifyContent: 'space-between' }}>
         <span>
-          <strong>Retorno total:</strong>{' '}
+          <strong>{tb('equity.totalReturn')}</strong>{' '}
           <span style={{ color: portfolioColor, fontWeight: 'bold' }}>
             {isPositive ? '+' : ''}{returnPct.toFixed(2)}%
           </span>
@@ -241,7 +245,7 @@ function EquityCurve({ results, initialCapital }: { results: BacktestDayResult[]
             </>
           )}
         </span>
-        <span style={{ color: COLOR_SECONDARY }}>{results.length} días</span>
+        <span style={{ color: COLOR_SECONDARY }}>{tb('equity.daysCount', { count: results.length })}</span>
       </div>
       <div className="sunken-panel" style={{ padding: '4px', background: '#ffffff' }}>
         <ResponsiveContainer width="100%" height={180}>
@@ -281,7 +285,7 @@ function EquityCurve({ results, initialCapital }: { results: BacktestDayResult[]
               strokeWidth={1}
               ifOverflow="extendDomain"
               label={{
-                value: `inicial $${fmtUSD(initialCapital)}`,
+                value: tb('equity.initialLabel', { amount: fmtUSD(initialCapital) }),
                 position: 'insideTopRight',
                 fill: COLOR_SECONDARY,
                 ...CHART_FONT,
@@ -320,6 +324,7 @@ function EquityCurve({ results, initialCapital }: { results: BacktestDayResult[]
 // ─── Exposure Curve ───────────────────────────────────────────────────────────
 
 function ExposureCurve({ results }: { results: BacktestDayResult[] }) {
+  const tb = useBacktestingT();
   if (results.length < 2) return null;
 
   // gross_exposure comes from the backend as the absolute dollar value of
@@ -337,10 +342,10 @@ function ExposureCurve({ results }: { results: BacktestDayResult[] }) {
     <div>
       <div style={{ ...FONT, marginBottom: '4px', display: 'flex', justifyContent: 'space-between' }}>
         <span>
-          <strong>Exposición bruta actual:</strong>{' '}
+          <strong>{tb('exposure.currentGross')}</strong>{' '}
           <span style={{ fontWeight: 'bold' }}>{fmtPct(finalValue)}</span>
         </span>
-        <span style={{ color: COLOR_SECONDARY }}>máx {fmtPct(max)}</span>
+        <span style={{ color: COLOR_SECONDARY }}>{tb('exposure.max', { value: fmtPct(max) })}</span>
       </div>
       <div className="sunken-panel" style={{ padding: '4px', background: '#ffffff' }}>
         <ResponsiveContainer width="100%" height={100}>
@@ -367,7 +372,7 @@ function ExposureCurve({ results }: { results: BacktestDayResult[] }) {
             />
             <Tooltip
               contentStyle={TOOLTIP_STYLE}
-              formatter={(value) => [fmtPct(Number(value)), 'Exposición']}
+              formatter={(value) => [fmtPct(Number(value)), tb('exposure.tooltipLabel')]}
               labelFormatter={(label) => String(label)}
             />
             <ReferenceLine
@@ -424,6 +429,7 @@ function MetricsTable({
   dayResults: BacktestDayResult[];
   initialCapital: number;
 }) {
+  const tb = useBacktestingT();
   const lastValue = dayResults[dayResults.length - 1]?.portfolio_value ?? 0;
   // Backend returns gross_exposure / net_exposure as absolute USD values
   // (long+short / long-short). Convert to fraction of the final portfolio
@@ -453,7 +459,7 @@ function MetricsTable({
       <MetricRow
         key="sharpe" zebra={zebra}
         label="Sharpe Ratio"
-        tooltip="Retorno ajustado por riesgo: (retorno − tasa libre de riesgo) / desvío estándar. > 1 es bueno, > 2 muy bueno, negativo significa que perdiste contra el cash."
+        tooltip={tb('metrics.sharpe.tooltip')}
         value={metrics.sharpe_ratio.toFixed(3)}
         valueColor={ratioColor(metrics.sharpe_ratio)}
       />
@@ -465,7 +471,7 @@ function MetricsTable({
       <MetricRow
         key="sortino" zebra={zebra}
         label="Sortino Ratio"
-        tooltip="Como Sharpe, pero solo penaliza la volatilidad a la baja. Más representativo cuando los retornos no son simétricos."
+        tooltip={tb('metrics.sortino.tooltip')}
         value={metrics.sortino_ratio.toFixed(3)}
         valueColor={ratioColor(metrics.sortino_ratio)}
       />
@@ -477,7 +483,7 @@ function MetricsTable({
       <MetricRow
         key="dd" zebra={zebra}
         label="Max Drawdown"
-        tooltip="Mayor caída desde un pico hasta un valle del valor del portfolio durante el backtest. Cuanto más cercano a 0%, mejor."
+        tooltip={tb('metrics.maxDrawdown.tooltip')}
         value={<>{ddText}{metrics.max_drawdown_date ? ` (${metrics.max_drawdown_date})` : ''}</>}
         valueColor={COLOR_NEGATIVE}
       />
@@ -488,8 +494,8 @@ function MetricsTable({
     rows.push(
       <MetricRow
         key="ret" zebra={zebra}
-        label="Retorno Total"
-        tooltip="Variación porcentual entre el capital inicial y el valor final del portfolio."
+        label={tb('metrics.totalReturn')}
+        tooltip={tb('metrics.totalReturn.tooltip')}
         value={fmtPct(totalReturn)}
         valueColor={lastValue >= initialCapital ? COLOR_POSITIVE : COLOR_NEGATIVE}
       />
@@ -498,8 +504,8 @@ function MetricsTable({
     rows.push(
       <MetricRow
         key="final" zebra={zebra}
-        label="Valor Final del Portfolio"
-        tooltip="Valor total (cash + posiciones) al cierre del último día del backtest."
+        label={tb('metrics.finalValue')}
+        tooltip={tb('metrics.finalValue.tooltip')}
         value={`$${fmtUSD(lastValue)}`}
       />
     );
@@ -509,8 +515,8 @@ function MetricsTable({
     rows.push(
       <MetricRow
         key="gross" zebra={zebra}
-        label="Exposición Bruta"
-        tooltip="(longs + |shorts|) / valor del portfolio al cierre. Mide cuánto del capital está invertido — 100% = totalmente invertido, > 100% = apalancado."
+        label={tb('metrics.grossExposure')}
+        tooltip={tb('metrics.grossExposure.tooltip')}
         value={fmtPct(grossPct)}
       />
     );
@@ -520,8 +526,8 @@ function MetricsTable({
     rows.push(
       <MetricRow
         key="net" zebra={zebra}
-        label="Exposición Neta"
-        tooltip="(longs − shorts) / valor del portfolio al cierre. Mide la dirección neta: cercano a 100% = sesgo alcista, cercano a 0% = neutral al mercado."
+        label={tb('metrics.netExposure')}
+        tooltip={tb('metrics.netExposure.tooltip')}
         value={fmtPct(netPct)}
       />
     );
@@ -531,8 +537,8 @@ function MetricsTable({
     rows.push(
       <MetricRow
         key="cash" zebra={zebra}
-        label="Cash Promedio"
-        tooltip="Porcentaje promedio del portfolio mantenido en efectivo a lo largo del backtest. Alto = estrategia defensiva o pocas oportunidades; bajo = capital constantemente desplegado."
+        label={tb('metrics.avgCash')}
+        tooltip={tb('metrics.avgCash.tooltip')}
         value={fmtPct(avgCashPct)}
       />
     );
@@ -543,8 +549,8 @@ function MetricsTable({
       <table style={{ ...FONT, width: '100%', borderCollapse: 'collapse', borderSpacing: 0 }}>
         <thead>
           <tr>
-            <th style={{ ...COL_HEADER_BASE, ...COL_RAISED, textAlign: 'left' }}>Métrica</th>
-            <th style={{ ...COL_HEADER_BASE, ...COL_RAISED, textAlign: 'right' }}>Valor</th>
+            <th style={{ ...COL_HEADER_BASE, ...COL_RAISED, textAlign: 'left' }}>{tb('metrics.colMetric')}</th>
+            <th style={{ ...COL_HEADER_BASE, ...COL_RAISED, textAlign: 'right' }}>{tb('metrics.colValue')}</th>
           </tr>
         </thead>
         <tbody>{rows}</tbody>
@@ -560,6 +566,8 @@ const DEFAULT_TICKERS = ['AAPL', 'GOOGL', 'MSFT', 'AMZN', 'TSLA', 'NVDA', 'KO', 
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export function BacktestingWindow() {
+  const tb = useBacktestingT();
+
   // Agent list
   const [agents, setAgents] = useState<Agent[]>([]);
   const [selectedAgents, setSelectedAgents] = useState<Set<string>>(new Set());
@@ -735,10 +743,10 @@ export function BacktestingWindow() {
       graph_edges: graphEdges,
     };
 
-    addLog('config', `Capital inicial: $${fmtUSD(initialCapital)} USD`, 'ok');
-    addLog('config-tickers', `Tickers: ${parsedTickers.join(', ')}`, 'ok');
-    addLog('config-range', `Período: ${startDate} → ${endDate}`, 'ok');
-    addLog('start', `Iniciando backtest con ${agentKeys.length} agente(s)...`);
+    addLog('config', tb('config.initialCapital', { amount: fmtUSD(initialCapital) }), 'ok');
+    addLog('config-tickers', tb('config.tickersList', { tickers: parsedTickers.join(', ') }), 'ok');
+    addLog('config-range', tb('config.period', { start: startDate, end: endDate }), 'ok');
+    addLog('start', tb('run.starting', { count: agentKeys.length }));
 
     try {
       const response = await fetch(`${API_URL}/backtest`, {
@@ -780,7 +788,7 @@ export function BacktestingWindow() {
             const d = evt.data as Record<string, unknown>;
 
             if (evt.event === 'start') {
-              addLog('started', 'Backtest iniciado', 'ok');
+              addLog('started', tb('log.started'), 'ok');
             } else if (evt.event === 'progress') {
               const agent = (d.agent as string) || '';
               const status = (d.status as string) || '';
@@ -815,7 +823,7 @@ export function BacktestingWindow() {
                     if (tradeValue > 0 && tradeValue < minTrade) {
                       addLog(
                         `tiny-${dayResult.date}-${ticker}`,
-                        `${dayResult.date}: ${ticker} trade minúsculo ($${tradeValue.toFixed(0)})`,
+                        tb('log.tinyTrade', { date: dayResult.date, ticker, amount: tradeValue.toFixed(0) }),
                         'warn',
                         agent,
                         ticker,
@@ -851,8 +859,8 @@ export function BacktestingWindow() {
                 setLogs(prev => applyProgressEvent(prev, event, `agent-${++logCounter.current}`));
               }
             } else if (evt.event === 'error') {
-              const msg = (d.message as string) || 'Error desconocido';
-              addLog('error', `Error: ${msg}`, 'error');
+              const msg = (d.message as string) || tb('log.unknownError');
+              addLog('error', tb('log.errorPrefix', { message: msg }), 'error');
               setPhase('error');
             } else if (evt.event === 'complete') {
               const completeData = d.data as Record<string, unknown> | undefined;
@@ -862,7 +870,7 @@ export function BacktestingWindow() {
                   setTotalDays(completeData.total_days as number);
                 }
               }
-              addLog('complete', 'Backtest completado', 'ok');
+              addLog('complete', tb('log.completed'), 'ok');
               setProgress(100);
               setPhase('done');
               setActiveTab('results');
@@ -881,7 +889,7 @@ export function BacktestingWindow() {
             if (completeData) {
               setMetrics(completeData.performance_metrics as PerformanceMetrics);
             }
-            addLog('complete', 'Backtest completado', 'ok');
+            addLog('complete', tb('log.completed'), 'ok');
             setProgress(100);
             setPhase('done');
             setActiveTab('results');
@@ -895,7 +903,7 @@ export function BacktestingWindow() {
       }
     } catch (err: unknown) {
       if ((err as Error).name === 'AbortError') return;
-      addLog('error', `Error: ${(err as Error).message}`, 'error');
+      addLog('error', tb('log.errorPrefix', { message: (err as Error).message }), 'error');
       setPhase('error');
     }
   }
@@ -904,7 +912,7 @@ export function BacktestingWindow() {
 
   function handleAbort() {
     abortRef.current?.abort();
-    addLog('abort', 'Backtest cancelado por el usuario', 'error');
+    addLog('abort', tb('log.cancelled'), 'error');
     setPhase('error');
   }
 
@@ -914,14 +922,14 @@ export function BacktestingWindow() {
   const isLoading = isLoadingAgents;
 
   const statusText = isRunning
-    ? (totalDays > 0 ? `Procesando día ${currentDay}/${totalDays}...` : 'Iniciando backtest...')
+    ? (totalDays > 0 ? tb('run.processing', { current: currentDay, total: totalDays }) : tb('status.starting'))
     : phase === 'done'
-      ? `Backtest completado — ${dayResults.length} días procesados`
+      ? tb('log.completedDays', { count: dayResults.length })
       : phase === 'error'
-        ? 'Error en backtest'
+        ? tb('status.error')
         : isLoading
-          ? 'Cargando...'
-          : 'Listo';
+          ? tb('status.loading')
+          : tb('status.ready');
 
   // ── Render ─────────────────────────────────────────────────────────────────
 
@@ -929,17 +937,17 @@ export function BacktestingWindow() {
     <div style={{ ...WINDOW_CONTAINER, padding: '6px 6px 0 6px', boxSizing: 'border-box' }}>
       <menu role="tablist">
         <li role="tab" aria-selected={activeTab === 'config'}>
-          <a href="#config" onClick={(e) => { e.preventDefault(); setActiveTab('config'); }}>1. Configuración</a>
+          <a href="#config" onClick={(e) => { e.preventDefault(); setActiveTab('config'); }}>{tb('tabs.config')}</a>
         </li>
         <li role="tab" aria-selected={activeTab === 'run'}>
-          <a href="#run" onClick={(e) => { e.preventDefault(); setActiveTab('run'); }}>2. Ejecución</a>
+          <a href="#run" onClick={(e) => { e.preventDefault(); setActiveTab('run'); }}>{tb('tabs.run')}</a>
         </li>
         <li role="tab" aria-selected={activeTab === 'results'}>
-          <a href="#results" onClick={(e) => { e.preventDefault(); setActiveTab('results'); }}>3. Resultados</a>
+          <a href="#results" onClick={(e) => { e.preventDefault(); setActiveTab('results'); }}>{tb('tabs.results')}</a>
         </li>
         <li role="tab" aria-selected={activeTab === 'history'}>
           <a href="#history" onClick={(e) => { e.preventDefault(); setActiveTab('history'); }}>
-            4. Histórico{historyRuns.length > 0 ? ` (${historyRuns.length})` : ''}
+            {tb('tabs.history')}{historyRuns.length > 0 ? ` (${historyRuns.length})` : ''}
           </a>
         </li>
       </menu>
@@ -953,10 +961,10 @@ export function BacktestingWindow() {
               <div className="win98-scrollbar" style={{ flex: 1, overflowY: 'auto', padding: 2, display: 'flex', flexDirection: 'column', gap: 6 }}>
                 {/* ── Date range ──────────────────────────────────────────────── */}
                 <fieldset style={{ margin: 0, flexShrink: 0 }}>
-                  <legend>Período de backtest</legend>
+                  <legend>{tb('config.periodLegend')}</legend>
                   <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
                     <label style={FONT}>
-                      Desde:{' '}
+                      {tb('config.from')}{' '}
                       <input
                         type="date"
                         value={startDate}
@@ -966,7 +974,7 @@ export function BacktestingWindow() {
                       />
                     </label>
                     <label style={FONT}>
-                      Hasta:{' '}
+                      {tb('config.to')}{' '}
                       <input
                         type="date"
                         value={endDate}
@@ -983,7 +991,7 @@ export function BacktestingWindow() {
                         onClick={() => applyPreset(p.months)}
                         disabled={isRunning}
                       >
-                        {p.label}
+                        {tb(p.key)}
                       </button>
                     ))}
                   </div>
@@ -1009,7 +1017,7 @@ export function BacktestingWindow() {
 
                 {/* ── Capital inicial ─────────────────────────────────────────── */}
                 <fieldset style={{ margin: 0, flexShrink: 0 }}>
-                  <legend>Capital inicial (USD)</legend>
+                  <legend>{tb('config.initialCapitalLegend')}</legend>
                   <input
                     type="number"
                     value={initialCapital}
@@ -1031,7 +1039,7 @@ export function BacktestingWindow() {
                     onSelectNone={() => setSelectedAgents(new Set())}
                     isLoading={isLoadingAgents}
                     disabled={isRunning}
-                    errorText={`No se pudo conectar al servidor AI Hedge Fund (${API_URL})`}
+                    errorText={tb('agents.connectionError', { url: API_URL })}
                     idPrefix="bt-agent"
                   />
                 </div>
@@ -1040,7 +1048,7 @@ export function BacktestingWindow() {
               <div style={{ display: 'flex', gap: '6px', justifyContent: 'flex-end', flexShrink: 0, paddingTop: 6, borderTop: '1px solid #dfdfdf' }}>
                 {isRunning && (
                   <button onClick={handleAbort}>
-                    Cancelar
+                    {tb('action.cancel')}
                   </button>
                 )}
                 <button
@@ -1048,7 +1056,7 @@ export function BacktestingWindow() {
                   onClick={handleRun}
                   disabled={isRunning || isLoading || selectedAgents.size === 0 || parsedTickers.length === 0}
                 >
-                  {isRunning ? 'Ejecutando...' : 'Ejecutar backtest'}
+                  {isRunning ? tb('run.executing') : tb('run.button')}
                 </button>
               </div>
             </div>
@@ -1059,11 +1067,11 @@ export function BacktestingWindow() {
             <div className="win98-scrollbar" style={{ flex: 1, overflowY: 'auto', padding: 2, display: 'flex', flexDirection: 'column', gap: 6 }}>
               {phase === 'idle' && logs.length === 0 ? (
                 <div style={{ ...FONT, padding: 16, textAlign: 'center', color: COLOR_SECONDARY }}>
-                  No hay datos de ejecución. Configure los parámetros y presione "Ejecutar backtest" en la pestaña de Configuración.
+                  {tb('run.noDataHint')}
                 </div>
               ) : (
                 <fieldset style={{ margin: 0, flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
-                  <legend>Progreso {totalDays > 0 ? `(${currentDay}/${totalDays} días)` : ''}</legend>
+                  <legend>{tb('run.progress')} {totalDays > 0 ? tb('run.progressDetail', { current: currentDay, total: totalDays }) : ''}</legend>
 
                   <div className="progress-indicator segmented" style={{ marginBottom: '6px', flexShrink: 0 }}>
                     <span className="progress-indicator-bar" style={{ width: `${progress}%` }} />
@@ -1091,7 +1099,7 @@ export function BacktestingWindow() {
                             <strong style={{ color: '#000080' }}>{log.agent.replace(/_/g, ' ')}</strong>
                             {log.ticker && <span style={{ color: '#800000', fontWeight: 'bold' }}> [{log.ticker}]</span>}
                             <span>:</span>
-                            {renderAgentDetail(log.detail)}
+                            {renderAgentDetail(log.detail, tb)}
                           </span>
                         ) : (
                           <span style={{ wordBreak: 'break-word' }}>{log.text}</span>
@@ -1109,7 +1117,7 @@ export function BacktestingWindow() {
             <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0, gap: 8 }}>
               {dayResults.length < 2 ? (
                 <div style={{ ...FONT, padding: 16, textAlign: 'center', color: COLOR_SECONDARY }}>
-                  Los resultados aparecerán aquí cuando el backtest haya procesado al menos 2 días.
+                  {tb('results.empty')}
                 </div>
               ) : (
                 <>
@@ -1119,18 +1127,18 @@ export function BacktestingWindow() {
                     display: 'flex', flexDirection: 'column', gap: 6,
                   }}>
                     <fieldset style={{ margin: 0, flexShrink: 0 }}>
-                      <legend>Curva de Equity</legend>
+                      <legend>{tb('results.equityCurveLegend')}</legend>
                       <EquityCurve results={dayResults} initialCapital={initialCapital} />
                     </fieldset>
 
                     <fieldset style={{ margin: 0, flexShrink: 0 }}>
-                      <legend>Exposición</legend>
+                      <legend>{tb('results.exposureLegend')}</legend>
                       <ExposureCurve results={dayResults} />
                     </fieldset>
 
                     {metrics && (
                       <fieldset style={{ margin: 0, flexShrink: 0 }}>
-                        <legend>Métricas de Rendimiento</legend>
+                        <legend>{tb('results.metricsLegend')}</legend>
                         <MetricsTable
                           metrics={metrics}
                           dayResults={dayResults}
@@ -1143,28 +1151,28 @@ export function BacktestingWindow() {
                   {/* ── Lower region: Resultados Diarios (fills remaining space) ──── */}
                   {dayResults.length > 0 && (
                     <fieldset style={{ margin: 0, flex: 1, display: 'flex', flexDirection: 'column', minHeight: 200 }}>
-                      <legend>Resultados Diarios ({dayResults.length} días)</legend>
+                      <legend>{tb('results.dailyLegend', { count: dayResults.length })}</legend>
                       <div className="sunken-panel win98-scrollbar" style={{ flex: 1, padding: 0, overflow: 'auto', minHeight: 0 }}>
                           <table style={{ ...FONT, width: '100%', borderCollapse: 'collapse', borderSpacing: 0 }}>
                             <thead>
                               <tr>
                                 <th style={{ ...COL_HEADER_BASE, ...COL_RAISED, textAlign: 'left', position: 'sticky', top: 0, zIndex: 1 }}>
-                                  <HelpHover tooltip="Día calendario simulado. Click en una fila con ► para expandir las decisiones de los agentes ese día.">Fecha</HelpHover>
+                                  <HelpHover tooltip={tb('results.dateTooltip')}>{tb('col.date')}</HelpHover>
                                 </th>
                                 <th style={{ ...COL_HEADER_BASE, ...COL_RAISED, textAlign: 'right', position: 'sticky', top: 0, zIndex: 1 }}>
-                                  <HelpHover tooltip="Cash + valor de mercado de las posiciones al cierre del día (en USD).">Valor Portfolio</HelpHover>
+                                  <HelpHover tooltip={tb('results.portfolioValueTooltip')}>{tb('results.colPortfolioValue')}</HelpHover>
                                 </th>
                                 <th style={{ ...COL_HEADER_BASE, ...COL_RAISED, textAlign: 'right', position: 'sticky', top: 0, zIndex: 1 }}>
-                                  <HelpHover tooltip="Variación porcentual del valor del portfolio respecto al día anterior (o respecto al capital inicial el primer día).">Cambio</HelpHover>
+                                  <HelpHover tooltip={tb('results.changeTooltip')}>{tb('results.colChange')}</HelpHover>
                                 </th>
                                 <th style={{ ...COL_HEADER_BASE, ...COL_RAISED, textAlign: 'right', position: 'sticky', top: 0, zIndex: 1 }}>
-                                  <HelpHover tooltip="Efectivo disponible al cierre del día, sin invertir.">Cash</HelpHover>
+                                  <HelpHover tooltip={tb('results.cashTooltip')}>Cash</HelpHover>
                                 </th>
                                 <th style={{ ...COL_HEADER_BASE, ...COL_RAISED, textAlign: 'right', position: 'sticky', top: 0, zIndex: 1 }}>
-                                  <HelpHover tooltip="Cash / Valor Portfolio. Indica qué fracción del capital queda sin desplegar ese día.">Cash %</HelpHover>
+                                  <HelpHover tooltip={tb('results.cashPctTooltip')}>Cash %</HelpHover>
                                 </th>
                                 <th style={{ ...COL_HEADER_BASE, ...COL_RAISED, textAlign: 'left', position: 'sticky', top: 0, zIndex: 1 }}>
-                                  <HelpHover tooltip="Operaciones ejecutadas el día. Signo + = compra, − = venta. La cantidad está expresada en acciones del subyacente.">Trades</HelpHover>
+                                  <HelpHover tooltip={tb('results.tradesTooltip')}>Trades</HelpHover>
                                 </th>
                               </tr>
                             </thead>
@@ -1217,15 +1225,15 @@ export function BacktestingWindow() {
                                             {/* Decisions detail */}
                                             {Object.keys(day.decisions).length > 0 && (
                                               <div style={{ marginBottom: '4px' }}>
-                                                <strong style={FONT}>Decisiones:</strong>
+                                                <strong style={FONT}>{tb('results.decisionsLabel')}</strong>
                                                 <table style={{ ...FONT, width: '100%', borderCollapse: 'collapse', marginTop: '2px' }}>
                                                   <thead>
                                                     <tr>
                                                       <th style={{ ...COL_HEADER_BASE, ...COL_RAISED, textAlign: 'left', fontSize: '10px' }}>Ticker</th>
-                                                      <th style={{ ...COL_HEADER_BASE, ...COL_RAISED, textAlign: 'center', fontSize: '10px' }}>Acción</th>
-                                                      <th style={{ ...COL_HEADER_BASE, ...COL_RAISED, textAlign: 'right', fontSize: '10px' }}>Cantidad</th>
-                                                      <th style={{ ...COL_HEADER_BASE, ...COL_RAISED, textAlign: 'right', fontSize: '10px' }}>Confianza</th>
-                                                      <th style={{ ...COL_HEADER_BASE, ...COL_RAISED, textAlign: 'left', fontSize: '10px' }}>Razonamiento</th>
+                                                      <th style={{ ...COL_HEADER_BASE, ...COL_RAISED, textAlign: 'center', fontSize: '10px' }}>{tb('results.decisionColAction')}</th>
+                                                      <th style={{ ...COL_HEADER_BASE, ...COL_RAISED, textAlign: 'right', fontSize: '10px' }}>{tb('results.decisionColQuantity')}</th>
+                                                      <th style={{ ...COL_HEADER_BASE, ...COL_RAISED, textAlign: 'right', fontSize: '10px' }}>{tb('results.decisionColConfidence')}</th>
+                                                      <th style={{ ...COL_HEADER_BASE, ...COL_RAISED, textAlign: 'left', fontSize: '10px' }}>{tb('results.decisionColReasoning')}</th>
                                                     </tr>
                                                   </thead>
                                                   <tbody>
@@ -1258,7 +1266,7 @@ export function BacktestingWindow() {
                                             {/* Prices */}
                                             {Object.keys(day.current_prices).length > 0 && (
                                               <div style={{ ...FONT, fontSize: '10px', color: COLOR_SECONDARY }}>
-                                                <strong>Precios:</strong>{' '}
+                                                <strong>{tb('results.pricesLabel')}</strong>{' '}
                                                 {Object.entries(day.current_prices).map(([t, p]) => `${t}: $${p.toFixed(2)}`).join(' | ')}
                                               </div>
                                             )}
@@ -1285,19 +1293,19 @@ export function BacktestingWindow() {
               <div className="win98-scrollbar" style={{ flex: 1, padding: 2, overflowY: 'auto', minHeight: 0 }}>
                 {historyRuns.length === 0 ? (
                   <div style={{ ...FONT, padding: 16, textAlign: 'center', color: COLOR_SECONDARY }}>
-                    Sin reportes guardados. Los backtests completados se guardan automáticamente acá.
+                    {tb('history.empty')}
                   </div>
                 ) : (
                   <div className="sunken-panel" style={{ padding: 0 }}>
                     <table style={{ ...FONT, width: '100%', borderCollapse: 'collapse', borderSpacing: 0 }}>
                       <thead>
                         <tr>
-                          <th style={{ ...COL_HEADER_BASE, ...COL_RAISED, textAlign: 'left' }}>Fecha</th>
-                          <th style={{ ...COL_HEADER_BASE, ...COL_RAISED, textAlign: 'left' }}>Período</th>
-                          <th style={{ ...COL_HEADER_BASE, ...COL_RAISED, textAlign: 'right' }}>Retorno</th>
+                          <th style={{ ...COL_HEADER_BASE, ...COL_RAISED, textAlign: 'left' }}>{tb('col.date')}</th>
+                          <th style={{ ...COL_HEADER_BASE, ...COL_RAISED, textAlign: 'left' }}>{tb('history.colPeriod')}</th>
+                          <th style={{ ...COL_HEADER_BASE, ...COL_RAISED, textAlign: 'right' }}>{tb('history.colReturn')}</th>
                           <th style={{ ...COL_HEADER_BASE, ...COL_RAISED, textAlign: 'right' }}>SPY</th>
-                          <th style={{ ...COL_HEADER_BASE, ...COL_RAISED, textAlign: 'right' }}>Días</th>
-                          <th style={{ ...COL_HEADER_BASE, ...COL_RAISED, textAlign: 'right' }}>Agentes</th>
+                          <th style={{ ...COL_HEADER_BASE, ...COL_RAISED, textAlign: 'right' }}>{tb('history.colDays')}</th>
+                          <th style={{ ...COL_HEADER_BASE, ...COL_RAISED, textAlign: 'right' }}>{tb('history.colAgents')}</th>
                           <th style={{ ...COL_HEADER_BASE, ...COL_RAISED, textAlign: 'left' }}>Tickers</th>
                           <th style={{ ...COL_HEADER_BASE, ...COL_RAISED, textAlign: 'center' }}></th>
                         </tr>
@@ -1313,7 +1321,7 @@ export function BacktestingWindow() {
                               key={run.id}
                               style={{ background: i % 2 === 0 ? '#ffffff' : '#f0f0f0', cursor: 'pointer' }}
                               onClick={() => loadHistoricalRun(run)}
-                              title="Click para cargar este reporte en la pestaña Resultados"
+                              title={tb('report.loadHint')}
                             >
                               <td style={CELL}>{formatRunDate(run.timestamp)}</td>
                               <td style={CELL}>{run.config.startDate} → {run.config.endDate}</td>
@@ -1331,7 +1339,7 @@ export function BacktestingWindow() {
                               <td style={{ ...CELL, borderRight: 'none', textAlign: 'center' }}>
                                 <button
                                   style={FONT}
-                                  title="Borrar este reporte"
+                                  title={tb('history.deleteHint')}
                                   onClick={(e) => { e.stopPropagation(); deleteRunFromHistory(run.id); }}
                                 >
                                   X
@@ -1347,8 +1355,8 @@ export function BacktestingWindow() {
               </div>
               {historyRuns.length > 0 && (
                 <div style={{ display: 'flex', justifyContent: 'flex-end', flexShrink: 0, paddingTop: 6, borderTop: '1px solid #dfdfdf' }}>
-                  <button onClick={() => { if (confirm('¿Borrar todo el histórico de backtests?')) clearHistory(); }}>
-                    Borrar todo
+                  <button onClick={() => { if (confirm(tb('confirm.clearHistory'))) clearHistory(); }}>
+                    {tb('history.clearAll')}
                   </button>
                 </div>
               )}
@@ -1364,7 +1372,7 @@ export function BacktestingWindow() {
           {statusText}
         </p>
         <p className="status-bar-field" style={{ flexShrink: 0 }}>
-          {isRunning && totalDays > 0 ? `${progress}%` : `${selectedAgents.size} agentes`}
+          {isRunning && totalDays > 0 ? `${progress}%` : tb('status.agentsCount', { count: selectedAgents.size })}
         </p>
       </div>
     </div>

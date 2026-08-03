@@ -1,8 +1,17 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { getFullPortfolioContext } from '@/app/trading/actions';
 import { useMepStore } from '@/lib/store/mep-store';
+import { useAutoTraderT } from '@/lib/i18n';
 
 export function usePortfolio() {
+  const t = useAutoTraderT();
+  // Keep a ref to the latest translator so loadPortfolio's useCallback can read
+  // it without listing `t` as a dependency (t is a new function every render,
+  // which would otherwise recreate loadPortfolio and re-trigger the fetch
+  // effect on every render). The ref always points at the current locale, so
+  // an in-flight locale switch doesn't leave error text stuck in the old one.
+  const tRef = useRef(t);
+  tRef.current = t;
   const mepRate = useMepStore(s => s.mepRate);
 
   const [holdings, setHoldings] = useState<Record<string, number>>({});
@@ -41,13 +50,13 @@ export function usePortfolio() {
         setMepRateLocal(result.mepRate);
         setPortfolioPositions(result.portfolioPositions);
       } else {
-        const errMsg = 'error' in result ? result.error : 'Error desconocido';
-        setPortfolioError(errMsg ?? 'Error desconocido al obtener portfolio');
+        const errMsg = 'error' in result ? result.error : tRef.current('portfolio.unknownError');
+        setPortfolioError(errMsg ?? tRef.current('portfolio.unknownErrorFetching'));
         console.error('[AutoTrader] getFullPortfolioContext returned error:', errMsg);
       }
     } catch (err) {
       const errMsg = err instanceof Error ? err.message : String(err);
-      setPortfolioError(`Error de conexión: ${errMsg}`);
+      setPortfolioError(tRef.current('portfolio.connectionError', { msg: errMsg }));
       console.error('[AutoTrader] Failed to load portfolio context:', err);
     } finally {
       setIsLoadingPortfolio(false);

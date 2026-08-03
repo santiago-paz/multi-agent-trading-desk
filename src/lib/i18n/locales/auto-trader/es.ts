@@ -48,6 +48,11 @@ export const autoTraderEs = {
   'config.actions.analyzing': 'Analizando...',
   'config.actions.analyze': 'Analizar',
 
+  // ── usePortfolio hook ──
+  'portfolio.connectionError': 'Error de conexión: {msg}',
+  'portfolio.unknownError': 'Error desconocido',
+  'portfolio.unknownErrorFetching': 'Error desconocido al obtener portfolio',
+
   // ── AITab ──
   'ai.empty': 'No hay datos de an\u00e1lisis. Configure los par\u00e1metros y presione "Analizar" en la pesta\u00f1a de Configuraci\u00f3n.',
   'ai.progress': 'Progreso',
@@ -244,6 +249,12 @@ export const autoTraderEs = {
   'detail.phil.title': 'Análisis de Phil Fisher:',
   'detail.peter.title': 'Análisis de Peter Lynch:',
   'detail.mohnish.title': 'Análisis de Mohnish Pabrai:',
+
+  // ── AgentDetail (raw JSON fallback rendering) ──
+  'detail.agent.signal': 'Señal:',
+  'detail.agent.confidence': '(Confianza: {value}%)',
+  'detail.agent.additionalDetails': 'Detalles adicionales:',
+  'detail.agent.summary': 'Resumen:',
 
   // ── Rebalance engine warnings ──
   'engine.sell.noPrice': 'Venta de {ticker} omitida: el mercado no reporta un precio de cotización válido.',

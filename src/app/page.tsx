@@ -4,18 +4,21 @@ import { useRouter } from 'next/navigation';
 import { FONT, HR98, STATUS_BAR_STYLE, COLOR_SECONDARY, COLOR_LINK } from '@/lib/theme/win98';
 import { DESKTOP_APP_ICONS } from '@/lib/win98se-icons';
 import type { AppId } from '@/hooks/useWindowManager';
+import { useWindowsT, type WindowsKey } from '@/lib/i18n';
 
-const MODULES: { id: AppId; icon: string; label: string; description: string }[] = [
-  { id: 'portfolio',   icon: DESKTOP_APP_ICONS.portfolio,   label: 'Portafolio',       description: 'Tenencias, cuenta y resumen consolidado' },
-  { id: 'marketdata',  icon: DESKTOP_APP_ICONS.marketdata,  label: 'Datos de mercado', description: 'OHLCV histórico y sparklines en vivo' },
-  { id: 'news',        icon: DESKTOP_APP_ICONS.news,        label: 'Noticias',         description: 'Feed con análisis de sentimiento' },
-  { id: 'movements',   icon: DESKTOP_APP_ICONS.movements,   label: 'Movimientos',      description: 'Operaciones recientes del bróker' },
-  { id: 'autotrader',  icon: DESKTOP_APP_ICONS.agent,       label: 'Auto Trader',      description: 'Decisiones multi-agente impulsadas por IA' },
-  { id: 'backtesting', icon: DESKTOP_APP_ICONS.backtesting, label: 'Backtesting',      description: 'Motor de pruebas de estrategias' },
+const MODULES: { id: AppId; icon: string; labelKey: WindowsKey; descriptionKey: WindowsKey }[] = [
+  { id: 'portfolio',   icon: DESKTOP_APP_ICONS.portfolio,   labelKey: 'icon.portfolio',                 descriptionKey: 'landing.module.portfolio.desc' },
+  { id: 'marketdata',  icon: DESKTOP_APP_ICONS.marketdata,  labelKey: 'landing.module.marketdata.label', descriptionKey: 'landing.module.marketdata.desc' },
+  { id: 'news',        icon: DESKTOP_APP_ICONS.news,        labelKey: 'icon.news',                       descriptionKey: 'landing.module.news.desc' },
+  { id: 'movements',   icon: DESKTOP_APP_ICONS.movements,   labelKey: 'icon.movements',                  descriptionKey: 'landing.module.movements.desc' },
+  { id: 'autotrader',  icon: DESKTOP_APP_ICONS.agent,       labelKey: 'icon.autotrader',                 descriptionKey: 'landing.module.autotrader.desc' },
+  { id: 'backtesting', icon: DESKTOP_APP_ICONS.backtesting, labelKey: 'icon.backtesting',                descriptionKey: 'landing.module.backtesting.desc' },
 ];
 
 export default function Home() {
   const router = useRouter();
+  const tw = useWindowsT();
+  const enterDesktopLabel = tw('landing.enterDesktop');
 
   const openModule = (id: AppId) => router.push(`/trading?open=${id}`);
 
@@ -32,7 +35,7 @@ export default function Home() {
     >
       <div className="window" style={{ width: 460 }}>
         <div className="title-bar">
-          <div className="title-bar-text">CEDEAR.AI - Sistema de Gestión Automatizada</div>
+          <div className="title-bar-text">{tw('landing.titleBar')}</div>
           <div className="title-bar-controls">
             <button aria-label="Close" />
           </div>
@@ -60,7 +63,7 @@ export default function Home() {
               >
                 CEDEAR.AI
               </div>
-              <div style={FONT}>Versión 1.0 · Build 2026.04</div>
+              <div style={FONT}>{tw('landing.version')}</div>
               <div style={{ ...FONT, color: COLOR_SECONDARY, marginTop: 2 }}>
                 Copyright © 2026 CEDEARs Fund
               </div>
@@ -70,12 +73,11 @@ export default function Home() {
           <hr style={HR98} />
 
           <p style={{ ...FONT, margin: '4px 2px 10px' }}>
-            Plataforma automatizada para operar CEDEARs en InvertirOnline, con análisis de mercado
-            e inteligencia artificial integrados en un escritorio estilo Windows 98.
+            {tw('landing.tagline')}
           </p>
 
           <fieldset style={{ margin: '0 0 4px', padding: '6px 10px 8px' }}>
-            <legend style={FONT}>Módulos del sistema</legend>
+            <legend style={FONT}>{tw('landing.modulesLegend')}</legend>
             <ul style={{ ...FONT, listStyle: 'none', margin: 0, padding: 0 }}>
               {MODULES.map((m) => (
                 <li key={m.id} style={{ padding: '1px 0' }}>
@@ -114,9 +116,9 @@ export default function Home() {
                           fontWeight: 700,
                         }}
                       >
-                        {m.label}
+                        {tw(m.labelKey)}
                       </span>
-                      <span className="module-link-desc" style={{ color: COLOR_SECONDARY }}> — {m.description}</span>
+                      <span className="module-link-desc" style={{ color: COLOR_SECONDARY }}> — {tw(m.descriptionKey)}</span>
                     </span>
                   </button>
                 </li>
@@ -134,15 +136,15 @@ export default function Home() {
               style={{ minWidth: 110 }}
               onClick={() => router.push('/trading')}
             >
-              <u>I</u>ngresar al Escritorio
+              <u>{enterDesktopLabel.charAt(0)}</u>{enterDesktopLabel.slice(1)}
             </button>
           </section>
         </div>
 
         <div className="status-bar" style={STATUS_BAR_STYLE}>
-          <p className="status-bar-field">Listo</p>
-          <p className="status-bar-field">Bróker: InvertirOnline</p>
-          <p className="status-bar-field">Mercado: BCBA</p>
+          <p className="status-bar-field">{tw('landing.statusReady')}</p>
+          <p className="status-bar-field">{tw('landing.statusBroker')}</p>
+          <p className="status-bar-field">{tw('landing.statusMarket')}</p>
         </div>
       </div>
     </div>

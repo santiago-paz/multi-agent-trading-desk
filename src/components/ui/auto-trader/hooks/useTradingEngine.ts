@@ -352,7 +352,7 @@ export function useTradingEngine({
             await processCompleteEvent(evt.data as Record<string, unknown>);
           } else if (evt.event === 'error') {
             const d = evt.data as Record<string, unknown>;
-            addLog('error', `Error: ${(d.message as string) || 'Error desconocido'}`, 'error');
+            addLog('error', t('engine.log.error', { message: (d.message as string) || t('engine.log.unknownError') }), 'error');
             setPhase('idle');
           }
         }
