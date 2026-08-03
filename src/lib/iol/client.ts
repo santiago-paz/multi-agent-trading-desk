@@ -107,6 +107,9 @@ export class IOLClient {
   }
 
   private async requestToken(body: URLSearchParams): Promise<void> {
+    if (process.env.NEXT_PUBLIC_DEMO_MODE === 'true') {
+      throw new Error('IOL disabled in demo mode (NEXT_PUBLIC_DEMO_MODE)');
+    }
     const response = await fetch(`${this.baseUrl}/token`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -134,6 +137,9 @@ export class IOLClient {
   }
 
   private async fetchWithAuth<T>(endpoint: string, options: RequestInit = {}, _isRetry = false): Promise<T> {
+    if (process.env.NEXT_PUBLIC_DEMO_MODE === 'true') {
+      throw new Error('IOL disabled in demo mode (NEXT_PUBLIC_DEMO_MODE)');
+    }
     await this.authenticate();
 
     const response = await fetch(`${this.baseUrl}${endpoint}`, {

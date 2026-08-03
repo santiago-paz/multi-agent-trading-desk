@@ -1,4 +1,5 @@
 import Anthropic from '@anthropic-ai/sdk';
+import { demoOraculoStream } from '@/lib/demo/oraculo';
 
 export const runtime = 'nodejs';
 
@@ -64,6 +65,11 @@ interface OraculoRequest {
 }
 
 export async function POST(req: Request) {
+  if (process.env.NEXT_PUBLIC_DEMO_MODE === 'true') {
+    const body = await req.json().catch(() => ({}));
+    return demoOraculoStream(body);
+  }
+
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) {
     return new Response(

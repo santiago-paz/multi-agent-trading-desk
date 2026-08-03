@@ -103,6 +103,7 @@ export async function fetchOptimizedPlan(
     iolToFmp,
     holdingsByIol,
     arsPrices,
+    cashArs,
     dailyLimitArs,
     effectiveMep,
     commissionRate = COMMISSION_RATE,
@@ -140,6 +141,7 @@ export async function fetchOptimizedPlan(
     commission_pct: commissionRate,
     min_trade_usd: minTradeUsd,
     liquidate_orphans: liquidateOrphans,
+    cash_usd: effectiveMep > 0 ? cashArs / effectiveMep : 0,
   };
 
   const response = await fetch(apiUrl, {

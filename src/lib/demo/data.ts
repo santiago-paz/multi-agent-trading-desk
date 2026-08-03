@@ -6,6 +6,7 @@
 
 import type { PortfolioResponse, Operation, DatosPerfil, EstadoCuenta } from '@/lib/iol/types';
 import type { HistoricalRow, NewsItem } from '@/lib/fmp/types';
+import { cedearsToShares } from '@/lib/cedear-ratios';
 
 export const DEMO_MODE = process.env.NEXT_PUBLIC_DEMO_MODE === 'true';
 
@@ -195,7 +196,7 @@ const DEMO_SYMBOLS = [
 ];
 
 // US stock prices (used for company detail / fundamentals generation)
-const DEMO_BASE_PRICES: Record<string, number> = {
+export const DEMO_BASE_PRICES: Record<string, number> = {
   ABT: 130, ADBE: 450, B: 18, BB: 5, BIOX: 8, BKNG: 5000, GOOGL: 178, HMY: 14,
   KO: 73, NFLX: 920, NIO: 4, NVDA: 890, ORLY: 1300, PAAS: 25,
   AAPL: 218, TSLA: 285, MELI: 2150, MSFT: 445, AMZN: 198, META: 580,
@@ -203,7 +204,7 @@ const DEMO_BASE_PRICES: Record<string, number> = {
   VIST: 58, INTC: 32, BA: 195, GOLD: 18,
 };
 
-const DEMO_COMPANY_NAMES: Record<string, string> = {
+export const DEMO_COMPANY_NAMES: Record<string, string> = {
   ABT: 'Abbott Laboratories', ADBE: 'Adobe Systems Inc.', B: 'Barrick Mining Corp.',
   BB: 'BlackBerry Ltd.', BIOX: 'Bioceres Crop Solutions', BKNG: 'Booking Holdings Inc.',
   GOOGL: 'Alphabet Inc.', HMY: 'Harmony Gold Mining', KO: 'Coca-Cola Company',
@@ -301,14 +302,19 @@ export function getDemoFullPortfolioContext() {
     }
   }
 
-  const portfolioPositions = DEMO_PORTFOLIO.activos.map(a => ({
-    ticker: a.titulo.simbolo,
-    quantity: a.cantidad,
-    trade_price: Math.round((a.ppc / DEMO_MEP_RATE) * 100) / 100,
-  }));
-
-  // Demo backend doesn't model BYMA ratios — fall back to 1:1 across the board.
-  const cedearRatios: Record<string, number> = {};
+  // /run speaks *underlying* shares (see getFullPortfolioContext) — convert
+  // the demo CEDEAR lots the same way; fractional-only positions are omitted.
+  const portfolioPositions = DEMO_PORTFOLIO.activos.flatMap(a => {
+    const underlyingShares = Math.floor(cedearsToShares(a.cantidad, a.titulo.simbolo));
+    if (underlyingShares <= 0) return [];
+    const underlyingPerCedear = cedearsToShares(1, a.titulo.simbolo);
+    const costUsdPerUnderlying = underlyingPerCedear > 0 ? a.ppc / underlyingPerCedear / DEMO_MEP_RATE : 0;
+    return [{
+      ticker: a.titulo.simbolo,
+      quantity: underlyingShares,
+      trade_price: Math.round(costUsdPerUnderlying * 100) / 100,
+    }];
+  });
 
   const iolToFmp: Record<string, string> = {};
   const fmpToIol: Record<string, string> = {};
@@ -337,7 +343,6 @@ export function getDemoFullPortfolioContext() {
     arsPrices,
     mepRate: DEMO_MEP_RATE,
     portfolioPositions,
-    cedearRatios,
   };
 }
 

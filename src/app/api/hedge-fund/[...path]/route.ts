@@ -1,4 +1,8 @@
 import { NextRequest } from 'next/server';
+import { getDemoAgents } from '@/lib/demo/agents';
+import { demoRunStream } from '@/lib/demo/run-stream';
+import { demoOptimize } from '@/lib/demo/optimize';
+import { demoBacktestStream } from '@/lib/demo/backtest-stream';
 
 // Force the Node.js runtime so streaming SSE responses are forwarded as-is.
 export const runtime = 'nodejs';
@@ -7,7 +11,38 @@ export const dynamic = 'force-dynamic';
 const UPSTREAM_URL = process.env.AI_HEDGE_FUND_API_URL;
 const API_KEY = process.env.AI_HEDGE_FUND_API_KEY;
 
+// Serves canned responses for /api/hedge-fund/* in demo mode so the browser
+// never reaches the Python backend. Returns null to fall through to the
+// upstream proxy for any path it doesn't recognize.
+async function demoHedgeFundResponse(path: string[], req: NextRequest): Promise<Response | null> {
+  const endpoint = path[0];
+  const json = (body: unknown, status = 200) =>
+    new Response(JSON.stringify(body), { status, headers: { 'content-type': 'application/json' } });
+
+  if (endpoint === 'agents') return json(getDemoAgents());
+  if (endpoint === 'run') {
+    const body = await req.json().catch(() => ({}));
+    return demoRunStream(body);
+  }
+  if (endpoint === 'optimize') {
+    const body = await req.json().catch(() => ({}));
+    return json(demoOptimize(body));
+  }
+  if (endpoint === 'backtest') {
+    const body = await req.json().catch(() => ({}));
+    return demoBacktestStream(body);
+  }
+  return null;
+}
+
 async function proxy(req: NextRequest, ctx: { params: Promise<{ path: string[] }> }) {
+  const { path } = await ctx.params;
+
+  if (process.env.NEXT_PUBLIC_DEMO_MODE === 'true') {
+    const demo = await demoHedgeFundResponse(path, req);
+    if (demo) return demo;
+  }
+
   if (!UPSTREAM_URL || !API_KEY) {
     return new Response(
       JSON.stringify({ error: 'AI_HEDGE_FUND_API_URL or AI_HEDGE_FUND_API_KEY not configured' }),
@@ -15,7 +50,6 @@ async function proxy(req: NextRequest, ctx: { params: Promise<{ path: string[] }
     );
   }
 
-  const { path } = await ctx.params;
   const search = req.nextUrl.search;
   const target = `${UPSTREAM_URL.replace(/\/$/, '')}/hedge-fund/${path.join('/')}${search}`;
 

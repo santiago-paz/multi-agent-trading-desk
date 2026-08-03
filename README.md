@@ -64,6 +64,15 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000) and click "Enter Dashboard".
 
+## Demo deployment (public, no secrets)
+
+The `demo` branch runs the app in fully-mocked mode. Deploy it as a separate
+Vercel project:
+- Branch: `demo`
+- Env: `NEXT_PUBLIC_DEMO_MODE=true` (and NOTHING else — leave IOL/FMP/Anthropic/
+  AI_HEDGE_FUND/BASIC_AUTH unset).
+- All data is fictitious; no external paid API is ever contacted.
+
 ## Tech Stack
 
 - **Framework** — Next.js 16 (App Router)

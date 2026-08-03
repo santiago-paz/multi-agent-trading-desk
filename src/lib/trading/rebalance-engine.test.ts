@@ -55,6 +55,8 @@ describe('fetchOptimizedPlan — request payload', () => {
     expect(body.buy_cap_usd).toBe(1_300_000 / 1300);
     expect(body.fx_ars_per_usd).toBe(1300);
     expect(body.commission_pct).toBe(COMMISSION_RATE);
+    // Real free cash (not the daily limit) funds the reinvestment stage.
+    expect(body.cash_usd).toBe(100_000 / 1300);
     expect(body.decisions.AAPL.quantity).toBe(1);
     // Holdings are remapped IOL→FMP and use FMP-tickered keys.
     expect(body.holdings).toEqual([

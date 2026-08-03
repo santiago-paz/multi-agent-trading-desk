@@ -14,8 +14,9 @@ function isFmpRateLimitRejection(r: PromiseSettledResult<unknown>): boolean {
   return r.status === 'rejected' && r.reason instanceof FmpRateLimitError;
 }
 import { stripCurrencySuffix, toFmpTicker, isEtf } from '@/lib/cedear-map';
-import { getCedearRatio } from '@/lib/cedear-ratios';
+import { cedearsToShares } from '@/lib/cedear-ratios';
 import { DEMO_MODE, DEMO_MEP_RATE, DEMO_PERFIL, DEMO_ESTADO_CUENTA, DEMO_PORTFOLIO, DEMO_USD_PRICES, DEMO_VALUE_USD, DEMO_OPERATIONS, DEMO_NEWS_GENERAL, DEMO_NEWS_SPECIFIC, getDemoMarketData, getDemoCedearsForTrading, getDemoFullPortfolioContext } from '@/lib/demo/data';
+import { getDemoCompanyDetail, getDemoCompanyAdvancedData, getDemoCompanyNews, getDemoSymbolSearch } from '@/lib/demo/company-detail';
 
 // Cap on simultaneous outbound FMP fetches. Without this, firing 200+ parallel
 // requests saturates undici's socket pool and trips FMP rate-limiting, surfacing
@@ -382,6 +383,9 @@ export async function getFullPortfolioContext() {
     const portfolioPositions: Array<{ ticker: string; quantity: number; trade_price: number }> = [];
 
     if (portfolio?.activos) {
+      // First pass: consolidate currency-suffix variants (AAPLC + AAPLD) into
+      // one CEDEAR lot per base symbol, tracking blended ARS cost.
+      const cedearLots: Record<string, { cedears: number; costArs: number }> = {};
       for (const asset of portfolio.activos) {
         if (asset.titulo.tipo !== 'CEDEARS' && asset.titulo.tipo !== 'cedears') continue;
         if (asset.cantidad <= 0) continue;
@@ -389,29 +393,35 @@ export async function getFullPortfolioContext() {
         holdings[base] = (holdings[base] || 0) + asset.cantidad;
         if (!holdingTickers.includes(base)) holdingTickers.push(base);
 
-        // Also build backend-compatible positions in CEDEAR units. The backend
-        // is now ratio-aware (`cedear_ratios` field): quantities are CEDEARs,
-        // trade_price is USD/CEDEAR. The risk manager translates underlying
-        // FMP prices to CEDEAR lot-prices internally so sizing, cash checks
-        // and trim math all work in the unit the broker actually trades.
+        const lotPriceArs = asset.ppc > 0 ? asset.ppc : asset.ultimoPrecio;
+        const lot = (cedearLots[base] ??= { cedears: 0, costArs: 0 });
+        lot.cedears += asset.cantidad;
+        lot.costArs += asset.cantidad * Math.max(0, lotPriceArs);
+      }
+
+      // Second pass: translate to the unit the backend actually speaks. Both
+      // /run and /optimize think in *underlying* shares — mirror of
+      // src/rebalancer/portfolio_builder.py::build_portfolio in the backend
+      // repo. Quantities floor to whole underlying shares (the fractional
+      // CEDEAR remainder is an orphan the rebalancer can't trade) and cost
+      // basis becomes USD per underlying share. Sending CEDEAR units here
+      // made the risk manager overvalue positions ×ratio and inflated sell
+      // orders ×ratio once /optimize re-applied the ratio.
+      for (const [base, lot] of Object.entries(cedearLots)) {
         const fmp = toFmpTicker(base);
         if (!fmp) continue;
-        const tradePriceArs = asset.ppc > 0 ? asset.ppc : asset.ultimoPrecio;
-        if (tradePriceArs <= 0) continue;
-        const tradePriceUsdPerCedear = tradePriceArs / mepRate;
+        const underlyingShares = Math.floor(cedearsToShares(lot.cedears, base));
+        if (underlyingShares <= 0) continue; // orphan-only position
+        const underlyingPerCedear = cedearsToShares(1, base);
+        const avgCostArsPerCedear = lot.costArs / lot.cedears;
+        const costUsdPerUnderlying = underlyingPerCedear > 0 ? avgCostArsPerCedear / underlyingPerCedear / mepRate : 0;
         portfolioPositions.push({
           ticker: fmp,
-          quantity: asset.cantidad,
-          trade_price: Math.round(tradePriceUsdPerCedear * 100) / 100,
+          quantity: underlyingShares,
+          trade_price: Math.round(costUsdPerUnderlying * 100) / 100,
         });
       }
     }
-
-    // CEDEARs-per-underlying-share for every FMP ticker we'll send. Built
-    // after `iolToFmp` is known (see below). Backend uses this as the
-    // ratio in `lot_price = underlying_price / ratio`.
-    // (filled in after the fmpToIol loop)
-    const cedearRatios: Record<string, number> = {};
 
     // Top 10 most liquid CEDEARs (by volume/operations), excluding those already in portfolio
     const panelSymbols = Object.keys(liquidityMap)
@@ -436,13 +446,6 @@ export async function getFullPortfolioContext() {
           fmpTickerSet.add(fmp);
           fmpTickers.push(fmp);
           fmpToIol[fmp] = sym;
-          // Capture the CEDEARs-per-underlying ratio for the backend. Skip
-          // tickers without a known BYMA entry — the backend falls back to
-          // 1:1 for any ticker missing from this map.
-          const ratio = getCedearRatio(sym);
-          if (ratio) {
-            cedearRatios[fmp] = ratio[0] / ratio[1];
-          }
         }
       }
     }
@@ -522,7 +525,6 @@ export async function getFullPortfolioContext() {
       arsPrices,
       mepRate,
       portfolioPositions,
-      cedearRatios,
     };
   } catch (error) {
     const msg = error instanceof Error ? error.message : String(error);
@@ -544,6 +546,7 @@ interface CompanyDetailResult {
 export async function searchTickerSymbols(
   query: string,
 ): Promise<{ success: true; data: SymbolSearchHit[] } | { success: false; error: string }> {
+  if (DEMO_MODE) return { success: true, data: getDemoSymbolSearch(query) };
   try {
     const data = await searchSymbolHits(query, 15);
     return { success: true, data };
@@ -556,6 +559,7 @@ export async function searchTickerSymbols(
 export type ActionErrorCode = 'fmpRateLimit';
 
 export async function getCompanyDetail(iolBaseSymbol: string): Promise<{ success: true; data: CompanyDetailResult } | { success: false; error: string; errorCode?: ActionErrorCode }> {
+  if (DEMO_MODE) return { success: true, data: getDemoCompanyDetail(iolBaseSymbol) };
   try {
     const etf = isEtf(iolBaseSymbol);
     const fmpTicker = toFmpTicker(iolBaseSymbol);
@@ -608,6 +612,7 @@ export interface AdvancedDetailResult {
 }
 
 export async function getCompanyAdvancedData(fmpTicker: string): Promise<{ success: true; data: AdvancedDetailResult } | { success: false; error: string; errorCode?: ActionErrorCode }> {
+  if (DEMO_MODE) return { success: true, data: getDemoCompanyAdvancedData(fmpTicker) };
   try {
     const [metrics, cashFlow, balanceSheet, scores, dcf] = await Promise.allSettled([
       getKeyMetrics(fmpTicker, 'annual'),
@@ -638,6 +643,7 @@ export async function getCompanyAdvancedData(fmpTicker: string): Promise<{ succe
 }
 
 export async function getCompanyNews(fmpTicker: string): Promise<{ success: true; data: NewsItem[] } | { success: false; error: string; errorCode?: ActionErrorCode }> {
+  if (DEMO_MODE) return { success: true, data: getDemoCompanyNews(fmpTicker) };
   try {
     const news = await getTickerNews(fmpTicker, 20);
     return { success: true, data: news };

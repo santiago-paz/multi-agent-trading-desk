@@ -4,7 +4,7 @@ import { FONT, COLOR_LINK, STATUS_BAR_STYLE } from '@/lib/theme/win98';
 interface WikiSummary {
   title: string;
   extract: string;
-  content_urls: {
+  content_urls?: {
     desktop: {
       page: string;
     };
@@ -27,6 +27,13 @@ export function ActiveDesktopWidget() {
     setError(false);
     setOraculoText('');
     setOraculoError(null);
+    if (process.env.NEXT_PUBLIC_DEMO_MODE === 'true') {
+      const { DEMO_WIKI_TOPICS } = await import('@/lib/demo/oraculo');
+      const pick = DEMO_WIKI_TOPICS[Math.floor(Math.random() * DEMO_WIKI_TOPICS.length)];
+      setArticle(pick as typeof article);
+      setLoading(false);
+      return;
+    }
     try {
       const response = await fetch('https://es.wikipedia.org/api/rest_v1/page/random/summary');
       if (!response.ok) throw new Error('Error fetching Wikipedia');
@@ -139,20 +146,22 @@ export function ActiveDesktopWidget() {
               </div>
             )}
             <p style={{ margin: '0 0 8px 0', lineHeight: '1.4' }}>{article.extract}</p>
-            <div style={{ textAlign: 'center', marginBottom: '8px' }}>
-              <a
-                href={article.content_urls.desktop.page}
-                target="_blank"
-                rel="noopener noreferrer"
-                style={{
-                  color: COLOR_LINK,
-                  textDecoration: 'underline',
-                  display: 'inline-block',
-                }}
-              >
-                Leer más en Wikipedia
-              </a>
-            </div>
+            {article.content_urls && (
+              <div style={{ textAlign: 'center', marginBottom: '8px' }}>
+                <a
+                  href={article.content_urls.desktop.page}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{
+                    color: COLOR_LINK,
+                    textDecoration: 'underline',
+                    display: 'inline-block',
+                  }}
+                >
+                  Leer más en Wikipedia
+                </a>
+              </div>
+            )}
 
             <div
               style={{
