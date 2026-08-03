@@ -33,13 +33,65 @@ function lastNYears(n: number): string[] {
   return Array.from({ length: n }, (_, i) => `${y - i}-12-31`);
 }
 
+// Plausible sector/industry per demo ticker (keys of DEMO_COMPANY_NAMES — the
+// symbols actually reachable in demo mode). Precision doesn't matter, plausibility does.
+const SECTOR_MAP: Record<string, { sector: string; industry: string }> = {
+  AAPL: { sector: 'Technology', industry: 'Consumer Electronics' },
+  MSFT: { sector: 'Technology', industry: 'Software' },
+  ADBE: { sector: 'Technology', industry: 'Software' },
+  BB: { sector: 'Technology', industry: 'Software' },
+  NVDA: { sector: 'Technology', industry: 'Semiconductors' },
+  INTC: { sector: 'Technology', industry: 'Semiconductors' },
+  GLOB: { sector: 'Technology', industry: 'IT Services' },
+  GOOGL: { sector: 'Communication Services', industry: 'Internet Content & Information' },
+  META: { sector: 'Communication Services', industry: 'Internet Content & Information' },
+  DIS: { sector: 'Communication Services', industry: 'Entertainment' },
+  NFLX: { sector: 'Communication Services', industry: 'Entertainment' },
+  AMZN: { sector: 'Consumer Cyclical', industry: 'Internet Retail' },
+  MELI: { sector: 'Consumer Cyclical', industry: 'Internet Retail' },
+  TSLA: { sector: 'Consumer Cyclical', industry: 'Auto Manufacturers' },
+  NIO: { sector: 'Consumer Cyclical', industry: 'Auto Manufacturers' },
+  BKNG: { sector: 'Consumer Cyclical', industry: 'Travel Services' },
+  ORLY: { sector: 'Consumer Cyclical', industry: 'Specialty Retail' },
+  KO: { sector: 'Consumer Defensive', industry: 'Beverages' },
+  PEP: { sector: 'Consumer Defensive', industry: 'Beverages' },
+  V: { sector: 'Financial Services', industry: 'Credit Services' },
+  JPM: { sector: 'Financial Services', industry: 'Banks' },
+  ABT: { sector: 'Healthcare', industry: 'Medical Devices' },
+  VALE: { sector: 'Basic Materials', industry: 'Metals & Mining' },
+  BIOX: { sector: 'Basic Materials', industry: 'Agricultural Inputs' },
+  GOLD: { sector: 'Basic Materials', industry: 'Gold' },
+  HMY: { sector: 'Basic Materials', industry: 'Gold' },
+  B: { sector: 'Basic Materials', industry: 'Gold' },
+  PAAS: { sector: 'Basic Materials', industry: 'Silver' },
+  BA: { sector: 'Industrials', industry: 'Aerospace & Defense' },
+  VIST: { sector: 'Energy', industry: 'Oil & Gas E&P' },
+};
+
+// Small varied fallback for any symbol not in SECTOR_MAP (kept deterministic via hashString).
+const FALLBACK_SECTORS: { sector: string; industry: string }[] = [
+  { sector: 'Technology', industry: 'Information Technology Services' },
+  { sector: 'Financial Services', industry: 'Banks' },
+  { sector: 'Healthcare', industry: 'Biotechnology' },
+  { sector: 'Consumer Cyclical', industry: 'Specialty Retail' },
+  { sector: 'Industrials', industry: 'Manufacturing' },
+  { sector: 'Basic Materials', industry: 'Chemicals' },
+  { sector: 'Energy', industry: 'Oil & Gas E&P' },
+  { sector: 'Communication Services', industry: 'Telecom Services' },
+];
+
+function sectorFor(sym: string): { sector: string; industry: string } {
+  return SECTOR_MAP[sym] ?? FALLBACK_SECTORS[hashString(sym) % FALLBACK_SECTORS.length];
+}
+
 function demoProfile(sym: string): CompanyProfile {
   const price = basePrice(sym);
   const cap = Math.round(price * (5e8 + (hashString(sym) % 2e9)));
+  const { sector, industry } = sectorFor(sym);
   return {
     symbol: sym, companyName: name(sym),
-    sector: 'Technology', industry: 'Consumer Electronics',
-    description: `${name(sym)} es una compañía de demostración usada en el modo demo del dashboard.`,
+    sector, industry,
+    description: `${name(sym)} es una compañía del sector ${sector} con operaciones a nivel global y una trayectoria consolidada en su industria.`,
     mktCap: cap, price, beta: 1 + ((hashString(sym) % 100) / 100),
     volAvg: 20_000_000 + (hashString(sym) % 30_000_000),
     website: 'https://example.com', country: 'US', exchange: 'NASDAQ',
@@ -52,7 +104,10 @@ function demoIncome(sym: string): IncomeStatementRow[] {
   const rev0 = Math.round(basePrice(sym) * 1e9);
   return lastNYears(4).map((date, i) => {
     const rev = Math.round(rev0 * (1 - i * 0.08));
-    return { date, revenue: rev, netIncome: Math.round(rev * 0.24), grossProfit: Math.round(rev * 0.44), operatingIncome: Math.round(rev * 0.30), eps: Math.round(basePrice(sym) * 0.03 * 100) / 100 };
+    return {
+      date, revenue: rev, netIncome: Math.round(rev * 0.24), grossProfit: Math.round(rev * 0.44), operatingIncome: Math.round(rev * 0.30),
+      eps: Math.round(basePrice(sym) * 0.03 * (1 - i * 0.08) * 100) / 100,
+    };
   });
 }
 
@@ -91,7 +146,11 @@ export function getDemoCompanyAdvancedData(fmpTicker: string): AdvancedDetailRes
     totalStockholdersEquity: Math.round(price * 1e9), netDebt: Math.round(price * 3e8),
     totalDebt: Math.round(price * 6e8), cashAndShortTermInvestments: Math.round(price * 3e8),
   }));
-  const scores: FinancialScores = { symbol: fmpTicker, altmanZScore: 6.2, piotroskiScore: 7 };
+  const scores: FinancialScores = {
+    symbol: fmpTicker,
+    altmanZScore: Math.round((3 + (hashString(fmpTicker) % 40) / 10) * 100) / 100, // ~3.0–6.9
+    piotroskiScore: 3 + (hashString(fmpTicker) % 7), // 3–9
+  };
   const dcf: DCFValue = { symbol: fmpTicker, dcf: Math.round(price * 1.1 * 100) / 100, price };
   return { keyMetrics, cashFlow, balanceSheet, scores, dcf };
 }
