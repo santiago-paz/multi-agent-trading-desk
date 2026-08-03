@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server';
 import { getDemoAgents } from '@/lib/demo/agents';
 import { demoRunStream } from '@/lib/demo/run-stream';
+import { demoOptimize } from '@/lib/demo/optimize';
 
 // Force the Node.js runtime so streaming SSE responses are forwarded as-is.
 export const runtime = 'nodejs';
@@ -22,7 +23,11 @@ async function demoHedgeFundResponse(path: string[], req: NextRequest): Promise<
     const body = await req.json().catch(() => ({}));
     return demoRunStream(body);
   }
-  // 'optimize' | 'backtest' added in later tasks.
+  if (endpoint === 'optimize') {
+    const body = await req.json().catch(() => ({}));
+    return json(demoOptimize(body));
+  }
+  // 'backtest' added in a later task.
   return null;
 }
 
