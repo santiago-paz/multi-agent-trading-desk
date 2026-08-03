@@ -889,7 +889,7 @@ export function BacktestingWindow() {
             if (completeData) {
               setMetrics(completeData.performance_metrics as PerformanceMetrics);
             }
-            addLog('complete', 'Backtest completado', 'ok');
+            addLog('complete', tb('log.completed'), 'ok');
             setProgress(100);
             setPhase('done');
             setActiveTab('results');
