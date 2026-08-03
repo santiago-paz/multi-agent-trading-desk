@@ -22,4 +22,23 @@ describe('demo /optimize', () => {
       expect(t.is_orphan).toBe(false);
     }
   });
+
+  it('trims underlying shares to fit a tight buy cap and keeps ARS totals ratio-invariant', () => {
+    const { trades } = demoOptimize({
+      decisions: {
+        AAPL: { action: 'buy', quantity: 3, confidence: 80, reasoning: 'x' },
+      },
+      current_prices_usd: { AAPL: 220 },
+      buy_cap_usd: 500,
+      fx_ars_per_usd: 1347.5,
+    });
+    expect(trades).toHaveLength(1);
+    const [trade] = trades;
+    // floor(500 / 220) = 2 shares, not the requested 3.
+    expect(trade.shares_underlying).toBe(2);
+    // gross_ars_display must track the USD total (2 * 220 * fx), not be
+    // inflated by the CEDEAR ratio (AAPL is 20 CEDEARs per share).
+    const expectedGrossArs = 2 * 220 * 1347.5;
+    expect(trade.gross_ars_display).toBeCloseTo(expectedGrossArs, 0);
+  });
 });

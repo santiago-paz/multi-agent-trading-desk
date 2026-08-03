@@ -44,7 +44,11 @@ export function demoOptimize(body: DemoOptimizeBody): { trades: OptimizeTrade[] 
   for (const [ticker, dec] of Object.entries(decisions)) {
     if (dec.action !== 'buy' && dec.action !== 'sell') continue;
     const priceUsd = prices[ticker] ?? 100;
-    let sharesUnderlying = Math.max(1, Math.round(dec.quantity || 1));
+    // Default to 1 share only when quantity is absent/NaN; a real 0 or
+    // negative quantity is not a trade, so just skip it.
+    const requestedQuantity = Number.isFinite(dec.quantity) ? dec.quantity : 1;
+    let sharesUnderlying = Math.round(requestedQuantity);
+    if (sharesUnderlying <= 0) continue;
     let grossUsd = sharesUnderlying * priceUsd;
 
     // Respect the per-side cap by trimming underlying share count.
@@ -57,8 +61,13 @@ export function demoOptimize(body: DemoOptimizeBody): { trades: OptimizeTrade[] 
 
     const commissionUsd = Math.round(grossUsd * COMMISSION * 100) / 100;
     const netUsd = dec.action === 'buy' ? grossUsd + commissionUsd : grossUsd - commissionUsd;
-    const priceArs = Math.round(priceUsd * fx * 100) / 100;
     const sharesCedear = Math.max(1, Math.round(sharesToCedears(sharesUnderlying, ticker)));
+    // Derive the ARS total from the USD total (ratio-invariant), then back
+    // out the per-CEDEAR ARS price from it — never multiply a CEDEAR-share
+    // count by an underlying-share USD price, which would inflate ARS by
+    // the CEDEAR ratio (e.g. 20x for AAPL, up to ~222x for others).
+    const grossArs = Math.round(grossUsd * fx * 100) / 100;
+    const priceArs = Math.round((grossArs / sharesCedear) * 100) / 100;
 
     if (dec.action === 'buy') spentBuy += grossUsd; else spentSell += grossUsd;
 
@@ -72,7 +81,7 @@ export function demoOptimize(body: DemoOptimizeBody): { trades: OptimizeTrade[] 
       commission_usd: commissionUsd,
       net_usd: Math.round(netUsd * 100) / 100,
       price_ars_display: priceArs,
-      gross_ars_display: Math.round(sharesCedear * priceArs * 100) / 100,
+      gross_ars_display: grossArs,
       confidence: dec.confidence,
       reasoning: dec.reasoning,
       agent_signals: {},
