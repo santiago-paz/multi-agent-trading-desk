@@ -10,6 +10,8 @@ import { marketDataEs } from './locales/market-data/es';
 import { marketDataEn } from './locales/market-data/en';
 import { companyDetailEs } from './locales/company-detail/es';
 import { companyDetailEn } from './locales/company-detail/en';
+import { backtestingEs } from './locales/backtesting/es';
+import { backtestingEn } from './locales/backtesting/en';
 
 // ── Helper ──────────────────────────────────────────────────────────────────
 
@@ -60,4 +62,5 @@ describe('i18n locale completeness', () => {
   testDomain('windows', windowsEs, windowsEn);
   testDomain('market-data', marketDataEs, marketDataEn);
   testDomain('company-detail', companyDetailEs, companyDetailEn);
+  testDomain('backtesting', backtestingEs, backtestingEn);
 });
