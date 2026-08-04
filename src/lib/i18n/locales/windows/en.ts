@@ -77,6 +77,7 @@ export const windowsEn: Record<WindowsKey, string> = {
   'desktop.readMore': 'Read more on Wikipedia',
   'desktop.anotherArticle': 'Another article',
   'desktop.wikiSource': 'Wikipedia (Spanish)',
+  'desktop.alignIcons': 'Align Icons',
   'oraculo.stateInitial': 'Oracle',
   'oraculo.stateStreaming': 'Prophesying...',
   'oraculo.stateAnother': 'Another prophecy',

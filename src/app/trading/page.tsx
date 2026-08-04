@@ -942,7 +942,7 @@ export default function TradingDashboard() {
               (e.currentTarget as HTMLElement).style.color = '#000000';
             }}
           >
-            Alinear Iconos
+            {tw('desktop.alignIcons')}
           </button>
         </div>
       )}

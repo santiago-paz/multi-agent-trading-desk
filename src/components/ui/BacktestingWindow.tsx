@@ -22,6 +22,7 @@ import type { ProgressEventPayload, FetchResult } from '@/components/ui/auto-tra
 import { useBacktestHistoryStore } from '@/lib/store/backtest-history-store';
 import { parseSSEChunk } from '@/lib/sse';
 import { useBacktestingT, type BacktestingKey } from '@/lib/i18n';
+import { useLocale, type Locale } from '@/lib/i18n/context';
 
 type Translate = (key: BacktestingKey, params?: Record<string, string | number>) => string;
 
@@ -106,10 +107,11 @@ function subtractMonths(date: Date, months: number): Date {
 const fmtUSD = (n: number) => n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const fmtPct = (n: number) => (n * 100).toFixed(2) + '%';
 
-function formatRunDate(ts: number): string {
+function formatRunDate(ts: number, locale: Locale): string {
   const d = new Date(ts);
-  return d.toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: '2-digit' })
-    + ' ' + d.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' });
+  const intlLocale = locale === 'en' ? 'en-US' : 'es-AR';
+  return d.toLocaleDateString(intlLocale, { day: '2-digit', month: '2-digit', year: '2-digit' })
+    + ' ' + d.toLocaleTimeString(intlLocale, { hour: '2-digit', minute: '2-digit' });
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -567,6 +569,7 @@ const DEFAULT_TICKERS = ['AAPL', 'GOOGL', 'MSFT', 'AMZN', 'TSLA', 'NVDA', 'KO', 
 
 export function BacktestingWindow() {
   const tb = useBacktestingT();
+  const { locale } = useLocale();
 
   // Agent list
   const [agents, setAgents] = useState<Agent[]>([]);
@@ -1323,7 +1326,7 @@ export function BacktestingWindow() {
                               onClick={() => loadHistoricalRun(run)}
                               title={tb('report.loadHint')}
                             >
-                              <td style={CELL}>{formatRunDate(run.timestamp)}</td>
+                              <td style={CELL}>{formatRunDate(run.timestamp, locale)}</td>
                               <td style={CELL}>{run.config.startDate} → {run.config.endDate}</td>
                               <td style={{ ...CELL_RIGHT, color: ret >= 0 ? COLOR_POSITIVE : COLOR_NEGATIVE, fontWeight: 'bold' }}>
                                 {ret >= 0 ? '+' : ''}{ret.toFixed(2)}%
