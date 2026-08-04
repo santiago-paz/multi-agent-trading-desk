@@ -43,7 +43,7 @@ export function buildDemoRunPayload(body: DemoRunBody) {
       perTicker[t] = {
         signal,
         confidence: 55 + (seed % 40),
-        reasoning: `${agentName} ve a ${t} como ${signal} según su estilo.`,
+        reasoning: `${agentName} views ${t} as ${signal} per their style.`,
       };
     }
     analyst_signals[agent] = perTicker;
@@ -63,7 +63,7 @@ export function buildDemoRunPayload(body: DemoRunBody) {
       action,
       quantity: action === 'hold' ? 0 : 1 + (seed % 5),
       confidence: 60 + (seed % 35),
-      reasoning: `Consenso de agentes sobre ${t}: ${action}.`,
+      reasoning: `Agent consensus on ${t}: ${action}.`,
     };
   }
 
@@ -88,7 +88,7 @@ export function demoRunStream(body: DemoRunBody, opts: { delayMs?: number } = {}
           agent,
           ticker: t,
           status: 'done',
-          analysis: `${agentName} · ${t}: ${sig.signal} (confianza ${sig.confidence}%)`,
+          analysis: `${agentName} · ${t}: ${sig.signal} (confidence ${sig.confidence}%)`,
           result: 'ok',
         }),
         delayMs,

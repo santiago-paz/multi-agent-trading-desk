@@ -59,7 +59,7 @@ export const metadata: Metadata = {
   },
   openGraph: {
     type: "website",
-    locale: "es_AR",
+    locale: DEMO ? "en_US" : "es_AR",
     title: "CEDEARs Fund",
     description: DEMO
       ? "AI-powered CEDEAR portfolio & investment management platform with real-time tracking and smart trading."
@@ -69,8 +69,9 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary",
     title: "CEDEARs Fund",
-    description:
-      "Plataforma de gestión de portafolio e inversiones en CEDEARs con análisis impulsado por IA.",
+    description: DEMO
+      ? "AI-powered CEDEAR portfolio & investment management platform with real-time tracking and smart trading."
+      : "Plataforma de gestión de portafolio e inversiones en CEDEARs con análisis impulsado por IA.",
   },
 };
 
