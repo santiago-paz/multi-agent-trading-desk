@@ -7,12 +7,31 @@ import {
 } from '@/lib/theme/win98';
 import { useMepStore } from '@/lib/store/mep-store';
 import { usePortfolioT } from '@/lib/i18n';
+import type { PortfolioKey } from '@/lib/i18n/locales/portfolio';
 
 interface OperationsFeedProps {
   operations: Operation[];
   isLoading: boolean;
   onRefresh: () => void;
 }
+
+// Display-only maps: raw wire value (op.tipo / op.estado) -> i18n key.
+// ES value of every key is a verbatim copy of the original Spanish string,
+// so locale='es' renders identically. Unknown values fall back to the raw
+// string unchanged. Comparisons elsewhere in this file MUST keep using the
+// raw wire value — these maps affect display only.
+const TIPO_KEY: Record<string, PortfolioKey> = {
+  Compra: 'op.type.buy',
+  Venta: 'op.type.sell',
+};
+
+const ESTADO_KEY: Record<string, PortfolioKey> = {
+  terminada: 'op.status.terminada',
+  pendiente: 'op.status.pendiente',
+  iniciada: 'op.status.iniciada',
+  cancelada: 'op.status.cancelada',
+  rechazada: 'op.status.rechazada',
+};
 
 type SortKey = 'fechaOrden' | 'simbolo' | 'tipo' | 'cantidad' | 'precio' | 'monto' | 'estado';
 type SortDir = 'asc' | 'desc';
@@ -151,7 +170,7 @@ export function OperationsFeed({ operations, isLoading, onRefresh }: OperationsF
                           {op.simbolo}
                         </td>
                         <td style={{ ...CELL, color: tipoColor }}>
-                          {op.tipo}
+                          {TIPO_KEY[op.tipo] ? tp(TIPO_KEY[op.tipo]) : op.tipo}
                         </td>
                         <td style={CELL_RIGHT}>
                           {op.cantidadOperada || op.cantidad || '—'}
@@ -190,7 +209,9 @@ export function OperationsFeed({ operations, isLoading, onRefresh }: OperationsF
                           })()}
                         </td>
                         <td style={{ ...CELL, borderRight: 'none', color: estadoColor }}>
-                          {op.estado ?? '—'}
+                          {op.estado
+                            ? (ESTADO_KEY[op.estado.toLowerCase()] ? tp(ESTADO_KEY[op.estado.toLowerCase()]) : op.estado)
+                            : '—'}
                         </td>
                       </tr>
                     );

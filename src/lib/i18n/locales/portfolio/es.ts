@@ -89,6 +89,24 @@ export const portfolioEs = {
   'movements.loading': 'Cargando movimientos...',
   'movements.empty': 'No hay movimientos recientes.',
   'movements.count': '{count} movimientos',
+
+  // ── OperationsFeed — op.tipo / op.estado display values ──
+  'op.type.buy': 'Compra',
+  'op.type.sell': 'Venta',
+  'op.status.terminada': 'terminada',
+  'op.status.pendiente': 'pendiente',
+  'op.status.iniciada': 'iniciada',
+  'op.status.cancelada': 'cancelada',
+  'op.status.rechazada': 'rechazada',
+
+  // ── AccountData — perfilInversor display values ──
+  'profile.aggressive': 'Agresivo',
+  'profile.moderate': 'Moderado',
+  'profile.conservative': 'Conservador',
+
+  // ── AccountData — estadisticas[].descripcion display values ──
+  'stat.purchases': 'Compras',
+  'stat.sales': 'Ventas',
 } as const;
 
 export type PortfolioKey = keyof typeof portfolioEs;

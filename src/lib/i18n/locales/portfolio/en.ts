@@ -91,4 +91,22 @@ export const portfolioEn: Record<PortfolioKey, string> = {
   'movements.loading': 'Loading transactions...',
   'movements.empty': 'No recent transactions.',
   'movements.count': '{count} transactions',
+
+  // ── OperationsFeed — op.tipo / op.estado display values ──
+  'op.type.buy': 'Buy',
+  'op.type.sell': 'Sell',
+  'op.status.terminada': 'completed',
+  'op.status.pendiente': 'pending',
+  'op.status.iniciada': 'started',
+  'op.status.cancelada': 'cancelled',
+  'op.status.rechazada': 'rejected',
+
+  // ── AccountData — perfilInversor display values ──
+  'profile.aggressive': 'Aggressive',
+  'profile.moderate': 'Moderate',
+  'profile.conservative': 'Conservative',
+
+  // ── AccountData — estadisticas[].descripcion display values ──
+  'stat.purchases': 'Purchases',
+  'stat.sales': 'Sales',
 };
