@@ -1,12 +1,12 @@
 # Multi-Agent Trading Desk
 
+### ▶ Live demo: [multi-agent-trading-desk.vercel.app](https://multi-agent-trading-desk.vercel.app)
+
+Runs in fully-mocked mode with fictitious portfolio data. No broker account or API key required, and no external paid API is ever contacted.
+
 A multi-agent AI trading dashboard for CEDEARs (Argentine depository receipts for international stocks like AAPL, KO, TSLA), wired to the [InvertirOnline](https://www.invertironline.com/) broker API for live portfolio data and order execution. A panel of 12 LLM analyst agents evaluates positions and drives the rebalancing and backtesting engines.
 
 Built with Next.js 16, React 19, and [98.css](https://jdan.github.io/98.css/) for a retro desktop interface — draggable, resizable windows, one per trading module.
-
-[![Live Demo](https://img.shields.io/badge/%E2%96%B6_LIVE_DEMO-multi--agent--trading--desk.vercel.app-2EA043?style=for-the-badge)](https://multi-agent-trading-desk.vercel.app)
-
-Runs in fully-mocked mode with fictitious portfolio data. No broker account or API key required, and no external paid API is ever contacted.
 
 ![Windows 98 Desktop](https://img.shields.io/badge/theme-Windows%2098-008080)
 ![Next.js](https://img.shields.io/badge/Next.js-16-000000?logo=nextdotjs&logoColor=white)
