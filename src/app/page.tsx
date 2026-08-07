@@ -62,7 +62,7 @@ export default function Home() {
               </div>
               <div style={FONT}>Versión 1.0 · Build 2026.04</div>
               <div style={{ ...FONT, color: COLOR_SECONDARY, marginTop: 2 }}>
-                Copyright © 2026 CEDEARs Fund
+                Copyright © 2026 Multi-Agent Trading Desk
               </div>
             </div>
           </div>
