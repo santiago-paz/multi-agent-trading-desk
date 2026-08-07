@@ -4,7 +4,9 @@ A multi-agent AI trading dashboard for CEDEARs (Argentine depository receipts fo
 
 Built with Next.js 16, React 19, and [98.css](https://jdan.github.io/98.css/) for a retro desktop interface — draggable, resizable windows, one per trading module.
 
-**▶ Live demo: [multi-agent-trading-desk.vercel.app](https://multi-agent-trading-desk.vercel.app)** — runs in fully-mocked mode with fictitious portfolio data. No broker account or API key required, and no external paid API is ever contacted.
+[![Live Demo](https://img.shields.io/badge/%E2%96%B6_LIVE_DEMO-multi--agent--trading--desk.vercel.app-2EA043?style=for-the-badge)](https://multi-agent-trading-desk.vercel.app)
+
+Runs in fully-mocked mode with fictitious portfolio data. No broker account or API key required, and no external paid API is ever contacted.
 
 ![Windows 98 Desktop](https://img.shields.io/badge/theme-Windows%2098-008080)
 ![Next.js](https://img.shields.io/badge/Next.js-16-000000?logo=nextdotjs&logoColor=white)
