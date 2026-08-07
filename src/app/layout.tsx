@@ -17,8 +17,8 @@ const DEMO = process.env.NEXT_PUBLIC_DEMO_MODE === 'true';
 
 export const metadata: Metadata = {
   title: {
-    default: "CEDEARs Fund",
-    template: "%s | CEDEARs Fund",
+    default: "Multi-Agent Trading Desk",
+    template: "%s | Multi-Agent Trading Desk",
   },
   icons: {
     icon: "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💸</text></svg>",
@@ -51,8 +51,8 @@ export const metadata: Metadata = {
         "análisis de mercado",
         "Argentina",
       ],
-  authors: [{ name: "CEDEARs Fund" }],
-  creator: "CEDEARs Fund",
+  authors: [{ name: "Multi-Agent Trading Desk" }],
+  creator: "Multi-Agent Trading Desk",
   robots: {
     index: false,
     follow: false,
@@ -60,15 +60,15 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     locale: DEMO ? "en_US" : "es_AR",
-    title: "CEDEARs Fund",
+    title: "Multi-Agent Trading Desk",
     description: DEMO
       ? "AI-powered CEDEAR portfolio & investment management platform with real-time tracking and smart trading."
       : "Plataforma de gestión de portafolio e inversiones en CEDEARs con análisis impulsado por IA.",
-    siteName: "CEDEARs Fund",
+    siteName: "Multi-Agent Trading Desk",
   },
   twitter: {
     card: "summary",
-    title: "CEDEARs Fund",
+    title: "Multi-Agent Trading Desk",
     description: DEMO
       ? "AI-powered CEDEAR portfolio & investment management platform with real-time tracking and smart trading."
       : "Plataforma de gestión de portafolio e inversiones en CEDEARs con análisis impulsado por IA.",

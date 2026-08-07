@@ -65,7 +65,7 @@ export default function Home() {
               </div>
               <div style={FONT}>{tw('landing.version')}</div>
               <div style={{ ...FONT, color: COLOR_SECONDARY, marginTop: 2 }}>
-                Copyright © 2026 CEDEARs Fund
+                Copyright © 2026 Multi-Agent Trading Desk
               </div>
             </div>
           </div>
