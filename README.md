@@ -7,6 +7,15 @@ Built with Next.js 16, React 19, and [98.css](https://jdan.github.io/98.css/) fo
 **▶ Live demo: [multi-agent-trading-desk.vercel.app](https://multi-agent-trading-desk.vercel.app)** — runs in fully-mocked mode with fictitious portfolio data. No broker account or API key required, and no external paid API is ever contacted.
 
 ![Windows 98 Desktop](https://img.shields.io/badge/theme-Windows%2098-008080)
+![Next.js](https://img.shields.io/badge/Next.js-16-000000?logo=nextdotjs&logoColor=white)
+![React](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=black)
+![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript&logoColor=white)
+![Tailwind CSS](https://img.shields.io/badge/Tailwind-v4-06B6D4?logo=tailwindcss&logoColor=white)
+![AI SDK](https://img.shields.io/badge/AI%20SDK-v6-000000?logo=vercel&logoColor=white)
+![Agents](https://img.shields.io/badge/agents-12%20LLM%20analysts-FF6B00)
+![Tests](https://img.shields.io/badge/tests-Vitest-6E9F18?logo=vitest&logoColor=white)
+![Demo](https://img.shields.io/badge/demo-no%20API%20key%20needed-2EA043)
+![i18n](https://img.shields.io/badge/i18n-ES%20%7C%20EN-8B5CF6)
 
 ## Architecture
 
