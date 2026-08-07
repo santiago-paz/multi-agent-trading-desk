@@ -1,8 +1,8 @@
-# Windows Money
+# Multi-Agent Trading Desk
 
-A Win98-themed AI hedge fund dashboard for trading CEDEARs (Argentine depository receipts for international stocks like AAPL, KO, TSLA) via the [InvertirOnline](https://www.invertironline.com/) broker API.
+A multi-agent AI trading dashboard for CEDEARs (Argentine depository receipts for international stocks like AAPL, KO, TSLA), wired to the [InvertirOnline](https://www.invertironline.com/) broker API for live portfolio data and order execution. A panel of 12 LLM analyst agents evaluates positions and drives the rebalancing and backtesting engines.
 
-Built with Next.js 16, React 19, and [98.css](https://jdan.github.io/98.css/) for authentic Windows 98 aesthetics.
+Built with Next.js 16, React 19, and [98.css](https://jdan.github.io/98.css/) for a retro desktop interface — draggable, resizable windows, one per trading module.
 
 ![Windows 98 Desktop](https://img.shields.io/badge/theme-Windows%2098-008080)
 
@@ -12,8 +12,10 @@ The system is composed of two repos that work together:
 
 | Repo | Stack | Role |
 |------|-------|------|
-| **windows-money** (this repo) | Next.js, React 19, 98.css | Win98 desktop UI, broker integration, market data |
+| **multi-agent-trading-desk** (this repo) | Next.js, React 19, 98.css | Retro desktop UI, broker integration, market data, trading engines |
 | **ai-hedge-fund** | Python, FastAPI, LangGraph | AI analyst agents, portfolio management, backtesting engine |
+
+The Python analyst backend builds on the open-source [ai-hedge-fund](https://github.com/virattt/ai-hedge-fund) project. The frontend, broker integration, CEDEAR ratio/symbol translation layer and trading engines in this repo are my own.
 
 The frontend calls the AI backend via `NEXT_PUBLIC_AI_HEDGE_FUND_API_URL` (defaults to `http://localhost:8000`).
 
