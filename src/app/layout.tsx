@@ -16,6 +16,7 @@ const geistMono = Geist_Mono({
 const DEMO = process.env.NEXT_PUBLIC_DEMO_MODE === 'true';
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://multi-agent-trading-desk.vercel.app"),
   title: {
     default: "Multi-Agent Trading Desk",
     template: "%s | Multi-Agent Trading Desk",
@@ -67,7 +68,7 @@ export const metadata: Metadata = {
     siteName: "Multi-Agent Trading Desk",
   },
   twitter: {
-    card: "summary",
+    card: "summary_large_image",
     title: "Multi-Agent Trading Desk",
     description: DEMO
       ? "AI-powered CEDEAR portfolio & investment management platform with real-time tracking and smart trading."

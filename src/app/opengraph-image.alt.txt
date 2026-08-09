@@ -1,0 +1,1 @@
+Multi-Agent Trading Desk — 12 LLM analyst agents trading CEDEARs on a Windows 98 desktop.
