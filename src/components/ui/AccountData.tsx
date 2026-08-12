@@ -17,6 +17,21 @@ import {
   COLOR_POSITIVE, COLOR_NEGATIVE,
 } from '@/lib/theme/win98';
 import { usePortfolioT } from '@/lib/i18n';
+import type { PortfolioKey } from '@/lib/i18n/locales/portfolio';
+
+// Display-only maps: raw wire value -> i18n key. ES value of every key is a
+// verbatim copy of the original Spanish string, so locale='es' renders
+// identically. Unknown values fall back to the raw string unchanged.
+const PROFILE_KEY: Record<string, PortfolioKey> = {
+  Agresivo: 'profile.aggressive',
+  Moderado: 'profile.moderate',
+  Conservador: 'profile.conservative',
+};
+
+const STAT_DESC_KEY: Record<string, PortfolioKey> = {
+  Compras: 'stat.purchases',
+  Ventas: 'stat.sales',
+};
 
 /* ─── Component ──────────────────────────────────────────────────────────── */
 export const AccountData: React.FC<AccountDataProps> = ({
@@ -80,7 +95,7 @@ export const AccountData: React.FC<AccountDataProps> = ({
                     <input
                       type="text"
                       readOnly
-                      value={perfil.perfilInversor}
+                      value={PROFILE_KEY[perfil.perfilInversor] ? t(PROFILE_KEY[perfil.perfilInversor]) : perfil.perfilInversor}
                       style={{ ...FONT, flex: 1, cursor: 'default' }}
                     />
                   </div>
@@ -264,7 +279,7 @@ export const AccountData: React.FC<AccountDataProps> = ({
                                 backgroundColor: i % 2 === 0 ? '#ffffff' : '#f0f0f0',
                               }}
                             >
-                              <td style={CELL}>{est.descripcion}</td>
+                              <td style={CELL}>{STAT_DESC_KEY[est.descripcion] ? t(STAT_DESC_KEY[est.descripcion]) : est.descripcion}</td>
                               <td style={CELL_RIGHT}>{est.cantidad}</td>
                               <td style={{ ...CELL_RIGHT, borderRight: 'none' }}>
                                 {est.volumen.toLocaleString('es-AR')}

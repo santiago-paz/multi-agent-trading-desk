@@ -6,6 +6,8 @@ import {
   COLOR_POSITIVE, COLOR_NEGATIVE,
 } from '@/lib/theme/win98';
 import { useMepStore } from '@/lib/store/mep-store';
+import { usePortfolioT } from '@/lib/i18n';
+import type { PortfolioKey } from '@/lib/i18n/locales/portfolio';
 
 interface OperationsFeedProps {
   operations: Operation[];
@@ -13,20 +15,39 @@ interface OperationsFeedProps {
   onRefresh: () => void;
 }
 
+// Display-only maps: raw wire value (op.tipo / op.estado) -> i18n key.
+// ES value of every key is a verbatim copy of the original Spanish string,
+// so locale='es' renders identically. Unknown values fall back to the raw
+// string unchanged. Comparisons elsewhere in this file MUST keep using the
+// raw wire value — these maps affect display only.
+const TIPO_KEY: Record<string, PortfolioKey> = {
+  Compra: 'op.type.buy',
+  Venta: 'op.type.sell',
+};
+
+const ESTADO_KEY: Record<string, PortfolioKey> = {
+  terminada: 'op.status.terminada',
+  pendiente: 'op.status.pendiente',
+  iniciada: 'op.status.iniciada',
+  cancelada: 'op.status.cancelada',
+  rechazada: 'op.status.rechazada',
+};
+
 type SortKey = 'fechaOrden' | 'simbolo' | 'tipo' | 'cantidad' | 'precio' | 'monto' | 'estado';
 type SortDir = 'asc' | 'desc';
 
-const COLUMNS: { key: SortKey; label: string; align: 'left' | 'right'; width: string }[] = [
-  { key: 'fechaOrden', label: 'Fecha',   align: 'left',  width: '72px' },
-  { key: 'simbolo',    label: 'Símbolo', align: 'left',  width: '60px' },
-  { key: 'tipo',       label: 'Tipo',    align: 'left',  width: '60px' },
-  { key: 'cantidad',   label: 'Cant.',   align: 'right', width: '50px' },
-  { key: 'precio',     label: 'Precio',  align: 'right', width: '72px' },
-  { key: 'monto',      label: 'Monto',   align: 'right', width: '80px' },
-  { key: 'estado',     label: 'Estado',  align: 'left',  width: '80px' },
+const COLUMNS: { key: SortKey; labelKey: string; align: 'left' | 'right'; width: string }[] = [
+  { key: 'fechaOrden', labelKey: 'col.date',   align: 'left',  width: '72px' },
+  { key: 'simbolo',    labelKey: 'col.symbol', align: 'left',  width: '60px' },
+  { key: 'tipo',       labelKey: 'col.type',   align: 'left',  width: '60px' },
+  { key: 'cantidad',   labelKey: 'col.qty',    align: 'right', width: '50px' },
+  { key: 'precio',     labelKey: 'col.price',  align: 'right', width: '72px' },
+  { key: 'monto',      labelKey: 'col.amount', align: 'right', width: '80px' },
+  { key: 'estado',     labelKey: 'col.status', align: 'left',  width: '80px' },
 ];
 
 export function OperationsFeed({ operations, isLoading, onRefresh }: OperationsFeedProps) {
+  const tp = usePortfolioT();
   const { mepRate } = useMepStore();
   const [displayCurrency, setDisplayCurrency] = useState<'ARS' | 'USD'>('ARS');
 
@@ -69,18 +90,18 @@ export function OperationsFeed({ operations, isLoading, onRefresh }: OperationsF
       <div className="win98-scrollbar" style={SCROLLABLE_BODY}>
         {/* Group box: sentence caps for legend (group box label rule) */}
         <fieldset style={{ margin: 0, paddingBottom: '6px', display: 'flex', flexDirection: 'column', height: 'calc(100% - 10px)' }}>
-          <legend>Últimos movimientos (IOL)</legend>
-          
+          <legend>{tp('movements.legend')}</legend>
+
           <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '4px' }}>
             <label style={{ ...FONT, display: 'flex', alignItems: 'center', gap: '4px' }}>
-              Moneda:
-              <select 
-                value={displayCurrency} 
+              {tp('valuation.currency')}
+              <select
+                value={displayCurrency}
                 onChange={(e) => setDisplayCurrency(e.target.value as 'ARS' | 'USD')}
                 style={FONT}
               >
-                <option value="ARS">Pesos (AR$)</option>
-                <option value="USD">Dólar MEP (U$D)</option>
+                <option value="ARS">{tp('valuation.currencyARS')}</option>
+                <option value="USD">{tp('valuation.currencyUSD')}</option>
               </select>
             </label>
           </div>
@@ -90,9 +111,9 @@ export function OperationsFeed({ operations, isLoading, onRefresh }: OperationsF
             style={{ overflow: 'auto', flex: 1, padding: 0 }}
           >
             {isLoading && operations.length === 0 ? (
-              <p style={{ ...FONT, padding: '4px', margin: 0 }}>Cargando movimientos...</p>
+              <p style={{ ...FONT, padding: '4px', margin: 0 }}>{tp('movements.loading')}</p>
             ) : operations.length === 0 ? (
-              <p style={{ ...FONT, padding: '4px', margin: 0 }}>No hay movimientos recientes.</p>
+              <p style={{ ...FONT, padding: '4px', margin: 0 }}>{tp('movements.empty')}</p>
             ) : (
               <table style={{ ...FONT, width: '100%', borderCollapse: 'collapse', borderSpacing: 0 }}>
                 <thead>
@@ -114,7 +135,7 @@ export function OperationsFeed({ operations, isLoading, onRefresh }: OperationsF
                             cursor: 'pointer',
                           }}
                         >
-                          {col.label}{isActive ? (sortDir === 'asc' ? ' ▲' : ' ▼') : ''}
+                          {tp(col.labelKey as Parameters<typeof tp>[0])}{isActive ? (sortDir === 'asc' ? ' ▲' : ' ▼') : ''}
                         </th>
                       );
                     })}
@@ -149,7 +170,7 @@ export function OperationsFeed({ operations, isLoading, onRefresh }: OperationsF
                           {op.simbolo}
                         </td>
                         <td style={{ ...CELL, color: tipoColor }}>
-                          {op.tipo}
+                          {TIPO_KEY[op.tipo] ? tp(TIPO_KEY[op.tipo]) : op.tipo}
                         </td>
                         <td style={CELL_RIGHT}>
                           {op.cantidadOperada || op.cantidad || '—'}
@@ -188,7 +209,9 @@ export function OperationsFeed({ operations, isLoading, onRefresh }: OperationsF
                           })()}
                         </td>
                         <td style={{ ...CELL, borderRight: 'none', color: estadoColor }}>
-                          {op.estado ?? '—'}
+                          {op.estado
+                            ? (ESTADO_KEY[op.estado.toLowerCase()] ? tp(ESTADO_KEY[op.estado.toLowerCase()]) : op.estado)
+                            : '—'}
                         </td>
                       </tr>
                     );
@@ -203,20 +226,20 @@ export function OperationsFeed({ operations, isLoading, onRefresh }: OperationsF
       {/* ── Botón Actualizar ── */}
       <div style={REFRESH_FOOTER}>
         <button onClick={onRefresh} disabled={isLoading}>
-          {isLoading ? 'Actualizando...' : 'Actualizar'}
+          {isLoading ? tp('footer.updating') : tp('footer.update')}
         </button>
       </div>
 
       {/* ── Status Bar ── */}
       <div className="status-bar" style={STATUS_BAR_STYLE}>
         <p className="status-bar-field">
-          {operations.length} movimientos
+          {tp('movements.count', { count: operations.length })}
         </p>
         <p className="status-bar-field">
           MEP: ${mepRate.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
         </p>
         <p className="status-bar-field">
-          {isLoading ? 'Actualizando...' : 'Listo'}
+          {isLoading ? tp('footer.updating') : tp('account.ready')}
         </p>
       </div>
     </div>

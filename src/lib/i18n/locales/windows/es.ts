@@ -51,6 +51,36 @@ export const windowsEs = {
   'appmanager.desc.backtesting': 'Motor de backtesting de estrategias.',
   'appmanager.desc.autotrader': 'Trader automático impulsado por IA.',
   'appmanager.desc.displayproperties': 'Configuración del fondo de pantalla y apariencia.',
+  // Landing page
+  'landing.titleBar': 'CEDEAR.AI - Sistema de Gestión Automatizada',
+  'landing.version': 'Versión 1.0 · Build 2026.04',
+  'landing.tagline':
+    'Plataforma automatizada para operar CEDEARs en InvertirOnline, con análisis de mercado e inteligencia artificial integrados en un escritorio estilo Windows 98.',
+  'landing.modulesLegend': 'Módulos del sistema',
+  'landing.module.marketdata.label': 'Datos de mercado',
+  'landing.module.portfolio.desc': 'Tenencias, cuenta y resumen consolidado',
+  'landing.module.marketdata.desc': 'OHLCV histórico y sparklines en vivo',
+  'landing.module.news.desc': 'Feed con análisis de sentimiento',
+  'landing.module.movements.desc': 'Operaciones recientes del bróker',
+  'landing.module.autotrader.desc': 'Decisiones multi-agente impulsadas por IA',
+  'landing.module.backtesting.desc': 'Motor de pruebas de estrategias',
+  'landing.enterDesktop': 'Ingresar al Escritorio',
+  'landing.statusReady': 'Listo',
+  'landing.statusBroker': 'Bróker: InvertirOnline',
+  'landing.statusMarket': 'Mercado: BCBA',
+  // Active Desktop / Oráculo widget
+  'desktop.title': 'Active Desktop',
+  'desktop.loading': 'Cargando datos...',
+  'desktop.error': 'Error al conectar con Wikipedia.',
+  'desktop.readMore': 'Leer más en Wikipedia',
+  'desktop.anotherArticle': 'Otro artículo',
+  'desktop.wikiSource': 'Wikipedia en español',
+  'desktop.alignIcons': 'Alinear Iconos',
+  'oraculo.stateInitial': 'Oráculo',
+  'oraculo.stateStreaming': 'Profetizando...',
+  'oraculo.stateAnother': 'Otra profecía',
+  'oraculo.muteErrorMessage': 'El oráculo está mudo: {error}',
+  'oraculo.unknownError': 'Error desconocido',
 } as const;
 
 export type WindowsKey = keyof typeof windowsEs;

@@ -50,6 +50,11 @@ export const autoTraderEn: Record<AutoTraderKey, string> = {
   'config.actions.analyzing': 'Analyzing...',
   'config.actions.analyze': 'Analyze',
 
+  // ── usePortfolio hook ──
+  'portfolio.connectionError': 'Connection error: {msg}',
+  'portfolio.unknownError': 'Unknown error',
+  'portfolio.unknownErrorFetching': 'Unknown error fetching portfolio',
+
   // ── AITab ──
   'ai.empty': 'No analysis data. Set the parameters and press "Analyze" in the Configuration tab.',
   'ai.progress': 'Progress',
@@ -246,6 +251,12 @@ export const autoTraderEn: Record<AutoTraderKey, string> = {
   'detail.phil.title': 'Phil Fisher Analysis:',
   'detail.peter.title': 'Peter Lynch Analysis:',
   'detail.mohnish.title': 'Mohnish Pabrai Analysis:',
+
+  // ── AgentDetail (raw JSON fallback rendering) ──
+  'detail.agent.signal': 'Signal:',
+  'detail.agent.confidence': '(Confidence: {value}%)',
+  'detail.agent.additionalDetails': 'Additional details:',
+  'detail.agent.summary': 'Summary:',
 
   // ── Rebalance engine warnings ──
   'engine.sell.noPrice': 'Sell {ticker} skipped: market does not report a valid quote price.',

@@ -1,10 +1,12 @@
 import React from 'react';
 import { COLOR_LINK } from '@/lib/theme/win98';
+import { useAutoTraderT } from '@/lib/i18n';
 import { TechnicalDetail, SentimentDetail, ValuationDetail, GrowthDetail, FundamentalsDetail, WarrenBuffettDetail, StanleyDruckenmillerDetail, RakeshJhunjhunwalaDetail, PhilFisherDetail, PeterLynchDetail, MohnishPabraiDetail } from './analysts';
 
 export function AgentDetail({ detail, ticker, agent, status, isAnalysis }: { detail: string | undefined; ticker?: string; agent?: string; status?: string; isAnalysis?: boolean }) {
+  const ta = useAutoTraderT();
   if (!detail) return null;
-  
+
   try {
     const trimmed = detail.trim();
     if (trimmed.startsWith('{') && trimmed.endsWith('}')) {
@@ -34,20 +36,20 @@ export function AgentDetail({ detail, ticker, agent, status, isAnalysis }: { det
       let signalText = signal;
       if (typeof signal === 'string') {
         const s = String(signal).toLowerCase();
-        if (s === 'bullish' || s === 'buy') signalText = '🟢 Alcista';
-        else if (s === 'bearish' || s === 'sell') signalText = '🔴 Bajista';
-        else if (s === 'neutral' || s === 'hold') signalText = '⚪ Neutral';
+        if (s === 'bullish' || s === 'buy') signalText = `🟢 ${ta('detail.bullish')}`;
+        else if (s === 'bearish' || s === 'sell') signalText = `🔴 ${ta('detail.bearish')}`;
+        else if (s === 'neutral' || s === 'hold') signalText = `⚪ ${ta('detail.neutral')}`;
       }
       
       const rows = [];
       if (signalText) {
-        rows.push(<div key="signal"><strong>Señal:</strong> {signalText} {confidence !== undefined ? `(Confianza: ${Math.round(confidence)}%)` : ''}</div>);
+        rows.push(<div key="signal"><strong>{ta('detail.agent.signal')}</strong> {signalText} {confidence !== undefined ? ta('detail.agent.confidence', { value: Math.round(confidence) }) : ''}</div>);
       }
       
       if (info.news_titles && Array.isArray(info.news_titles) && info.news_titles.length > 0) {
         rows.push(
           <div key="news" style={{ marginTop: 6 }}>
-            <strong>Noticias analizadas:</strong>
+            <strong>{ta('detail.sentiment.newsAnalyzed')}</strong>
             <ul style={{ margin: '4px 0 0 16px', padding: 0, listStyleType: 'none', color: '#333' }}>
               {info.news_titles.map((n: any, idx: number) => {
                 const sent = n.sentiment?.toLowerCase() || '';
@@ -83,7 +85,7 @@ export function AgentDetail({ detail, ticker, agent, status, isAnalysis }: { det
           // Si es un objeto pero no es ninguno de los analistas conocidos, imprimimos como JSON formateado
           rows.push(
             <div key="json-fallback" style={{ marginTop: 4 }}>
-              <strong>Detalles adicionales:</strong>
+              <strong>{ta('detail.agent.additionalDetails')}</strong>
               <pre style={{ margin: '4px 0 0 0', whiteSpace: 'pre-wrap', fontSize: '0.85em', color: '#333' }}>
                 {JSON.stringify(reasoning, null, 2)}
               </pre>
@@ -104,7 +106,7 @@ export function AgentDetail({ detail, ticker, agent, status, isAnalysis }: { det
         } else if ((agent === 'mohnish_pabrai_agent' || agent === 'mohnish_pabrai')) {
           rows.push(<MohnishPabraiDetail key="mohnish-detail" reasoning={reasoning} />);
         } else {
-          rows.push(<div key="reasoning" style={{ marginTop: 4 }}><strong>Resumen:</strong> {reasoning}</div>);
+          rows.push(<div key="reasoning" style={{ marginTop: 4 }}><strong>{ta('detail.agent.summary')}</strong> {reasoning}</div>);
         }
       }
       

@@ -4,3 +4,4 @@ export { usePortfolioT } from './locales/portfolio';
 export { useWindowsT, type WindowsKey } from './locales/windows';
 export { useMarketDataT } from './locales/market-data';
 export { useCompanyDetailT } from './locales/company-detail';
+export { useBacktestingT, type BacktestingKey } from './locales/backtesting';
