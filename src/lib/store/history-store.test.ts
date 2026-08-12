@@ -7,15 +7,23 @@ function makeRun(id: string, overrides: Partial<HistoricalRun> = {}): Historical
   return {
     id,
     timestamp: Date.now(),
-    status: 'completed',
-    plan: null,
-    decisions: null,
-    analystSignals: null,
+    agentKeys: [],
+    tickers: [],
+    analystSignals: {},
+    decisions: {},
+    plan: {
+      sells: [],
+      buys: [],
+      totalSellVolume: 0,
+      totalBuyVolume: 0,
+      estimatedSellProceeds: 0,
+      warnings: [],
+    },
+    executed: false,
     orderResults: [],
-    selectedAgents: [],
-    modelName: 'gpt-4o-mini',
+    snapshot: { cashArs: 0, holdings: {}, dailyLimit: 0 },
     ...overrides,
-  } as HistoricalRun;
+  };
 }
 
 describe('useHistoryStore', () => {
@@ -48,18 +56,18 @@ describe('useHistoryStore', () => {
 
   it('updateRun patches the matching run only', () => {
     const { addRun, updateRun } = useHistoryStore.getState();
-    addRun(makeRun('a', { status: 'running' }));
-    addRun(makeRun('b', { status: 'running' }));
-    updateRun('a', { status: 'completed' });
+    addRun(makeRun('a', { executed: false }));
+    addRun(makeRun('b', { executed: false }));
+    updateRun('a', { executed: true });
     const runs = useHistoryStore.getState().runs;
-    expect(runs.find(r => r.id === 'a')?.status).toBe('completed');
-    expect(runs.find(r => r.id === 'b')?.status).toBe('running');
+    expect(runs.find(r => r.id === 'a')?.executed).toBe(true);
+    expect(runs.find(r => r.id === 'b')?.executed).toBe(false);
   });
 
   it('updateRun is a no-op when id does not exist', () => {
     const { addRun, updateRun } = useHistoryStore.getState();
     addRun(makeRun('a'));
-    updateRun('missing', { status: 'failed' });
+    updateRun('missing', { executed: true });
     expect(useHistoryStore.getState().runs).toHaveLength(1);
     expect(useHistoryStore.getState().runs[0].id).toBe('a');
   });
