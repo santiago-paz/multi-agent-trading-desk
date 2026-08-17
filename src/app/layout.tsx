@@ -16,7 +16,7 @@ const geistMono = Geist_Mono({
 const DEMO = process.env.NEXT_PUBLIC_DEMO_MODE === 'true';
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://multi-agent-trading-desk.vercel.app"),
+  metadataBase: new URL("https://trading-desk.santiagopaz.com"),
   title: {
     default: "Multi-Agent Trading Desk",
     template: "%s | Multi-Agent Trading Desk",

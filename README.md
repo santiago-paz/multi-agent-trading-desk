@@ -1,6 +1,6 @@
 # Multi-Agent Trading Desk
 
-### ▶ Live demo: [multi-agent-trading-desk.vercel.app](https://multi-agent-trading-desk.vercel.app)
+### ▶ Live demo: [trading-desk.santiagopaz.com](https://trading-desk.santiagopaz.com)
 
 Runs in fully-mocked mode with fictitious portfolio data. No broker account or API key required, and no external paid API is ever contacted.
 
