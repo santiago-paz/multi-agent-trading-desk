@@ -13,7 +13,7 @@ describe('useDisplayStore', () => {
       customWallpapers: [],
       screenSaver: '(None)',
       screenSaverWait: 15,
-      screenSaverText: 'Schmid Meier HF',
+      screenSaverText: 'Trading Desk',
       isPasswordProtected: false,
     });
   });

@@ -28,7 +28,7 @@ export const WALLPAPER_OPTIONS: WallpaperOption[] = [
   { name: 'Tiles', url: '/wallpapers/tiles.png' },
   { name: 'TriAzzle', url: '/wallpapers/triazzle.png' },
   { name: 'Waves', url: '/wallpapers/waves.png' },
-  { name: 'Schmid Meier HF', url: '/_wallpaper_win98.gif' },
+  { name: 'Trading Desk', url: '/_wallpaper_win98.gif' },
 ];
 
 export const SCREENSAVER_OPTIONS = [
@@ -76,7 +76,7 @@ export const useDisplayStore = create<DisplayState>()(
       customWallpapers: [],
       screenSaver: '(None)',
       screenSaverWait: 15,
-      screenSaverText: 'Schmid Meier HF',
+      screenSaverText: 'Trading Desk',
       isPasswordProtected: false,
       setWallpaper: (url) => set({ wallpaper: url }),
       setBackgroundColor: (color) => set({ backgroundColor: color }),
