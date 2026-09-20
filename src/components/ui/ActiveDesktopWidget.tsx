@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { FONT, COLOR_LINK, STATUS_BAR_STYLE } from '@/lib/theme/win98';
 import { useWindowsT } from '@/lib/i18n';
 
@@ -11,6 +11,12 @@ const WIKI_RANDOM_SUMMARY = 'https://es.wikipedia.org/api/rest_v1/page/random/su
  * and keep the first illustrated one instead of showing a panel with a hole in it.
  */
 const ARTICLE_DRAWS = 4;
+
+/**
+ * The panel keeps one height whatever the article is, so the two buttons always sit
+ * under the same pixels and you can click them without looking.
+ */
+const PANEL_HEIGHT = 480;
 
 /**
  * Win98 recessed bevel. A raised bevel plus a navy caption is the system's grammar for
@@ -51,6 +57,7 @@ export function ActiveDesktopWidget() {
   const [oraculoText, setOraculoText] = useState('');
   const [oraculoStreaming, setOraculoStreaming] = useState(false);
   const [oraculoError, setOraculoError] = useState<string | null>(null);
+  const bodyRef = useRef<HTMLDivElement>(null);
 
   const fetchRandomArticle = useCallback(async () => {
     setLoading(true);
@@ -144,6 +151,13 @@ export function ActiveDesktopWidget() {
     fetchRandomArticle();
   }, [fetchRandomArticle]);
 
+  // The prophecy arrives below the article, which may be scrolled out of sight.
+  useEffect(() => {
+    if (!oraculoText && !oraculoError) return;
+    const body = bodyRef.current;
+    if (body) body.scrollTop = body.scrollHeight;
+  }, [oraculoText, oraculoError]);
+
   return (
     <aside
       aria-label={tw('desktop.title')}
@@ -153,8 +167,8 @@ export function ActiveDesktopWidget() {
         right: 20,
         top: 20,
         width: 320,
-        minHeight: 280,
-        maxHeight: 'min(560px, calc(100% - 80px))',
+        height: PANEL_HEIGHT,
+        maxHeight: 'calc(100% - 80px)',
         zIndex: 0, // Behind windows
         display: 'flex',
         flexDirection: 'column',
@@ -172,7 +186,7 @@ export function ActiveDesktopWidget() {
         <span aria-hidden="true" style={ETCHED_RULE} />
       </div>
 
-      <div style={{ flex: 1, minHeight: 0, padding: 8, display: 'flex', flexDirection: 'column', overflow: 'auto' }}>
+      <div ref={bodyRef} style={{ flex: 1, minHeight: 0, padding: 8, display: 'flex', flexDirection: 'column', overflow: 'auto' }}>
         {article === null && loading ? (
           <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{tw('desktop.loading')}</div>
         ) : error ? (
@@ -188,6 +202,9 @@ export function ActiveDesktopWidget() {
                   display: 'flex',
                   justifyContent: 'center',
                   alignItems: 'center',
+                  flex: '1 1 auto',
+                  minHeight: 120,
+                  maxHeight: 240,
                 }}
               >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -197,7 +214,7 @@ export function ActiveDesktopWidget() {
                   width={article.thumbnail.width}
                   height={article.thumbnail.height}
                   onError={() => setImageFailed(true)}
-                  style={{ maxWidth: '100%', maxHeight: '150px', objectFit: 'contain', display: 'block' }}
+                  style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain', display: 'block' }}
                 />
               </div>
             )}
@@ -220,74 +237,67 @@ export function ActiveDesktopWidget() {
               </a>
             )}
 
-            <div
-              style={{
-                marginTop: 'auto',
-                display: 'flex',
-                flexDirection: 'column',
-                gap: 6,
-                paddingTop: 4,
-              }}
-            >
-              {/* The live region has to outlive its content, or the prophecy is never announced.
-                  `display: contents` keeps it out of the layout while it waits. */}
-              <div aria-live="polite" style={{ display: 'contents' }}>
-                {(oraculoText || oraculoError) && (
-                  <div
-                    style={{
-                      padding: 8,
-                      background: '#f5e9c8',
-                      boxShadow: SUNKEN,
-                      fontStyle: 'italic',
-                      lineHeight: 1.4,
-                      whiteSpace: 'pre-wrap',
-                      color: '#3a2a0a',
-                    }}
-                  >
-                    {oraculoError ? (
-                      <span style={{ color: '#8b0000' }}>
-                        {'\u{1F52E} '}{tw('oraculo.muteErrorMessage', { error: oraculoError })}
-                      </span>
-                    ) : (
-                      <>
-                        {'\u{1F52E} '}
-                        {oraculoText}
-                        {oraculoStreaming && <span aria-hidden="true" style={{ marginLeft: 1 }}>▊</span>}
-                      </>
-                    )}
-                  </div>
-                )}
-              </div>
-
-              <section
-                className="field-row"
-                style={{ display: 'flex', gap: 4, justifyContent: 'stretch' }}
-              >
-                <button
-                  onClick={consultOracle}
-                  disabled={oraculoStreaming || loading}
-                  style={{ flex: 1, minWidth: 0, minHeight: 26 }}
+            {/* The live region has to outlive its content, or the prophecy is never announced.
+                `display: contents` keeps it out of the layout while it waits. */}
+            <div aria-live="polite" style={{ display: 'contents' }}>
+              {(oraculoText || oraculoError) && (
+                <div
+                  style={{
+                    marginTop: 'auto',
+                    padding: 8,
+                    background: '#f5e9c8',
+                    boxShadow: SUNKEN,
+                    fontStyle: 'italic',
+                    lineHeight: 1.4,
+                    whiteSpace: 'pre-wrap',
+                    color: '#3a2a0a',
+                  }}
                 >
-                  <span aria-hidden="true" style={{ color: 'initial', textShadow: 'none' }}>{'\u{1F52E}'}</span>
-                  {' '}
-                  {oraculoStreaming
-                    ? tw('oraculo.stateStreaming')
-                    : oraculoText || oraculoError
-                      ? tw('oraculo.stateAnother')
-                      : tw('oraculo.stateInitial')}
-                </button>
-                <button
-                  onClick={fetchRandomArticle}
-                  disabled={loading}
-                  style={{ flex: 1, minWidth: 0, minHeight: 26 }}
-                >
-                  {tw('desktop.anotherArticle')}
-                </button>
-              </section>
+                  {oraculoError ? (
+                    <span style={{ color: '#8b0000' }}>
+                      {'\u{1F52E} '}{tw('oraculo.muteErrorMessage', { error: oraculoError })}
+                    </span>
+                  ) : (
+                    <>
+                      {'\u{1F52E} '}
+                      {oraculoText}
+                      {oraculoStreaming && <span aria-hidden="true" style={{ marginLeft: 1 }}>▊</span>}
+                    </>
+                  )}
+                </div>
+              )}
             </div>
           </div>
         ) : null}
       </div>
+
+      {/* Outside the scrolling body on purpose: a long article or a long prophecy must
+          not shift the buttons out from under the pointer. */}
+      <section
+        className="field-row"
+        style={{ display: 'flex', gap: 4, justifyContent: 'stretch', flexShrink: 0, padding: '0 8px 8px' }}
+      >
+        <button
+          onClick={consultOracle}
+          disabled={oraculoStreaming || loading || !article}
+          style={{ flex: 1, minWidth: 0, minHeight: 26 }}
+        >
+          <span aria-hidden="true" style={{ color: 'initial', textShadow: 'none' }}>{'\u{1F52E}'}</span>
+          {' '}
+          {oraculoStreaming
+            ? tw('oraculo.stateStreaming')
+            : oraculoText || oraculoError
+              ? tw('oraculo.stateAnother')
+              : tw('oraculo.stateInitial')}
+        </button>
+        <button
+          onClick={fetchRandomArticle}
+          disabled={loading}
+          style={{ flex: 1, minWidth: 0, minHeight: 26 }}
+        >
+          {tw('desktop.anotherArticle')}
+        </button>
+      </section>
 
       <div className="status-bar" style={STATUS_BAR_STYLE}>
         <p className="status-bar-field">{tw(DEMO ? 'desktop.wikiSourceDemo' : 'desktop.wikiSource')}</p>
