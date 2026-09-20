@@ -11,9 +11,9 @@ function url(path: string): string {
 
 /** Icon URLs verified to be real PNG files (not symlinks) in Win98SE/SE98. */
 export const DESKTOP_APP_ICONS = {
-  portfolio: url('apps/32/homebank.png'), // leather wallet: what you hold
+  portfolio: url('apps/32/accessories-character-map.png'),
   analysis: url('apps/32/system-search.png'), // document + magnifier: inspect a company
-  agent: url('apps/32/gnome-robots.png'), // same robot as autotrader (landing page)
+  agent: url('apps/32/utilities-system-monitor.png'), // same icon as autotrader (landing page)
   orders: url('actions/32/document-new.png'),
   news: url('apps/32/internet-feed-reader.png'), // stack of newspapers
   marketdata: url('apps/32/invest-applet.png'), // 3D bar chart: quotes
@@ -21,8 +21,8 @@ export const DESKTOP_APP_ICONS = {
   movements: url('apps/32/evolution-tasks.png'), // clipboard with ticked entries: executed operations
   backtesting: url('apps/32/timeshift.png'), // red rewind arrow into a PC: replay the past
   quicktrade: url('apps/32/system-software-installer.png'),
-  autotrader: url('apps/32/gnome-robots.png'), // robot head
-  displayproperties: url('apps/32/randr.png'), // monitor with colour bars: Display Properties
+  autotrader: url('apps/32/utilities-system-monitor.png'),
+  displayproperties: url('apps/32/preferences-desktop-wallpaper.png'),
   appmanager: url('apps/32/software-properties.png'), // window of app icons + status list
   start: url('places/16/start-here.png'),
 } as const;
