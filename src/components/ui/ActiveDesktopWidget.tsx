@@ -2,6 +2,31 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { FONT, COLOR_LINK, STATUS_BAR_STYLE } from '@/lib/theme/win98';
 import { useWindowsT } from '@/lib/i18n';
 
+const DEMO = process.env.NEXT_PUBLIC_DEMO_MODE === 'true';
+
+const WIKI_RANDOM_SUMMARY = 'https://es.wikipedia.org/api/rest_v1/page/random/summary';
+
+/**
+ * Plenty of random Wikipedia articles carry no thumbnail, so draw a handful at once
+ * and keep the first illustrated one instead of showing a panel with a hole in it.
+ */
+const ARTICLE_DRAWS = 4;
+
+/**
+ * Win98 recessed bevel. A raised bevel plus a navy caption is the system's grammar for
+ * "this window moves"; an Active Desktop item is painted into the wallpaper and never
+ * moves, so the panel is carved in instead.
+ */
+const SUNKEN = 'inset -1px -1px #ffffff, inset 1px 1px #808080, inset -2px -2px #dfdfdf, inset 2px 2px #0a0a0a';
+
+/** Etched groove rule, as used by Win98 group boxes to separate a section of a pane. */
+const ETCHED_RULE: React.CSSProperties = {
+  flex: 1,
+  height: 0,
+  borderTop: '1px solid #808080',
+  borderBottom: '1px solid #ffffff',
+};
+
 interface WikiSummary {
   title: string;
   extract: string;
@@ -12,6 +37,8 @@ interface WikiSummary {
   };
   thumbnail?: {
     source: string;
+    width?: number;
+    height?: number;
   };
 }
 
@@ -20,6 +47,7 @@ export function ActiveDesktopWidget() {
   const [article, setArticle] = useState<WikiSummary | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
+  const [imageFailed, setImageFailed] = useState(false);
   const [oraculoText, setOraculoText] = useState('');
   const [oraculoStreaming, setOraculoStreaming] = useState(false);
   const [oraculoError, setOraculoError] = useState<string | null>(null);
@@ -27,20 +55,31 @@ export function ActiveDesktopWidget() {
   const fetchRandomArticle = useCallback(async () => {
     setLoading(true);
     setError(false);
+    setImageFailed(false);
     setOraculoText('');
     setOraculoError(null);
-    if (process.env.NEXT_PUBLIC_DEMO_MODE === 'true') {
+    if (DEMO) {
       const { DEMO_WIKI_TOPICS } = await import('@/lib/demo/oraculo');
-      const pick = DEMO_WIKI_TOPICS[Math.floor(Math.random() * DEMO_WIKI_TOPICS.length)];
-      setArticle(pick as typeof article);
+      // Never draw the article already on screen, or the button looks broken.
+      setArticle((prev) => {
+        const pool = DEMO_WIKI_TOPICS.filter((t) => t.title !== prev?.title);
+        return pool[Math.floor(Math.random() * pool.length)] as WikiSummary;
+      });
       setLoading(false);
       return;
     }
     try {
-      const response = await fetch('https://es.wikipedia.org/api/rest_v1/page/random/summary');
-      if (!response.ok) throw new Error('Error fetching Wikipedia');
-      const data = await response.json();
-      setArticle(data);
+      const draws = await Promise.allSettled(
+        Array.from({ length: ARTICLE_DRAWS }, async () => {
+          const response = await fetch(WIKI_RANDOM_SUMMARY);
+          if (!response.ok) throw new Error(`HTTP ${response.status}`);
+          return (await response.json()) as WikiSummary;
+        })
+      );
+      // One bad draw is survivable; show an error only when every draw failed.
+      const summaries = draws.flatMap((d) => (d.status === 'fulfilled' ? [d.value] : []));
+      if (summaries.length === 0) throw new Error('Error fetching Wikipedia');
+      setArticle(summaries.find((s) => s.thumbnail?.source) ?? summaries[0]);
     } catch (err) {
       console.error('Failed to load Wikipedia article', err);
       setError(true);
@@ -106,25 +145,31 @@ export function ActiveDesktopWidget() {
   }, [fetchRandomArticle]);
 
   return (
-    <div
-      className="window"
+    <aside
+      aria-label={tw('desktop.title')}
       style={{
         ...FONT,
         position: 'absolute',
         right: 20,
         top: 20,
         width: 320,
-        height: 480,
-        maxHeight: 'calc(100% - 80px)',
+        minHeight: 280,
+        maxHeight: 'min(560px, calc(100% - 80px))',
         zIndex: 0, // Behind windows
         display: 'flex',
         flexDirection: 'column',
+        background: '#c0c0c0',
+        boxShadow: SUNKEN,
+        padding: 3,
+        cursor: 'default',
         pointerEvents: 'auto',
         overflow: 'hidden',
       }}
     >
-      <div className="title-bar">
-        <div className="title-bar-text">{tw('desktop.title')}</div>
+      {/* Etched label rather than a title bar: there is nothing here to grab. */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '4px 4px 0', userSelect: 'none', flexShrink: 0 }}>
+        <span style={{ fontWeight: 'bold' }}>{tw('desktop.title')}</span>
+        <span aria-hidden="true" style={ETCHED_RULE} />
       </div>
 
       <div style={{ flex: 1, minHeight: 0, padding: 8, display: 'flex', flexDirection: 'column', overflow: 'auto' }}>
@@ -134,35 +179,45 @@ export function ActiveDesktopWidget() {
           <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'red', textAlign: 'center' }}>{tw('desktop.error')}</div>
         ) : article ? (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8, minHeight: '100%' }}>
-            <h3 style={{ margin: '0 0 4px 0', fontSize: '11px', fontWeight: 'bold' }}>
-              {article.title}
-            </h3>
-            {article.thumbnail && (
-              <div style={{ textAlign: 'center' }}>
+            {article.thumbnail && !imageFailed && (
+              <div
+                style={{
+                  background: '#ffffff',
+                  boxShadow: SUNKEN,
+                  padding: 4,
+                  display: 'flex',
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                }}
+              >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={article.thumbnail.source}
                   alt={article.title}
-                  style={{ maxWidth: '100%', maxHeight: '150px', border: '1px solid #000', objectFit: 'contain' }}
+                  width={article.thumbnail.width}
+                  height={article.thumbnail.height}
+                  onError={() => setImageFailed(true)}
+                  style={{ maxWidth: '100%', maxHeight: '150px', objectFit: 'contain', display: 'block' }}
                 />
               </div>
             )}
-            <p style={{ margin: '0 0 8px 0', lineHeight: '1.4' }}>{article.extract}</p>
+            <h3 style={{ margin: 0, fontSize: '11px', fontWeight: 'bold' }}>
+              {article.title}
+            </h3>
+            <p style={{ margin: 0, lineHeight: '1.4' }}>{article.extract}</p>
             {article.content_urls && (
-              <div style={{ textAlign: 'center', marginBottom: '8px' }}>
-                <a
-                  href={article.content_urls.desktop.page}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  style={{
-                    color: COLOR_LINK,
-                    textDecoration: 'underline',
-                    display: 'inline-block',
-                  }}
-                >
-                  {tw('desktop.readMore')}
-                </a>
-              </div>
+              <a
+                href={article.content_urls.desktop.page}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                  color: COLOR_LINK,
+                  textDecoration: 'underline',
+                  alignSelf: 'flex-start',
+                }}
+              >
+                {tw('desktop.readMore')}
+              </a>
             )}
 
             <div
@@ -171,35 +226,38 @@ export function ActiveDesktopWidget() {
                 display: 'flex',
                 flexDirection: 'column',
                 gap: 6,
-                paddingBottom: 10,
+                paddingTop: 4,
               }}
             >
-              {(oraculoText || oraculoError) && (
-                <div
-                  style={{
-                    padding: 8,
-                    background: '#f5e9c8',
-                    boxShadow:
-                      'inset -1px -1px #fff, inset 1px 1px grey, inset -2px -2px #dfdfdf, inset 2px 2px #0a0a0a',
-                    fontStyle: 'italic',
-                    lineHeight: 1.4,
-                    whiteSpace: 'pre-wrap',
-                    color: '#3a2a0a',
-                  }}
-                >
-                  {oraculoError ? (
-                    <span style={{ color: '#8b0000' }}>
-                      {'\u{1F52E} '}{tw('oraculo.muteErrorMessage', { error: oraculoError })}
-                    </span>
-                  ) : (
-                    <>
-                      {'\u{1F52E} '}
-                      {oraculoText}
-                      {oraculoStreaming && <span style={{ marginLeft: 1 }}>▊</span>}
-                    </>
-                  )}
-                </div>
-              )}
+              {/* The live region has to outlive its content, or the prophecy is never announced.
+                  `display: contents` keeps it out of the layout while it waits. */}
+              <div aria-live="polite" style={{ display: 'contents' }}>
+                {(oraculoText || oraculoError) && (
+                  <div
+                    style={{
+                      padding: 8,
+                      background: '#f5e9c8',
+                      boxShadow: SUNKEN,
+                      fontStyle: 'italic',
+                      lineHeight: 1.4,
+                      whiteSpace: 'pre-wrap',
+                      color: '#3a2a0a',
+                    }}
+                  >
+                    {oraculoError ? (
+                      <span style={{ color: '#8b0000' }}>
+                        {'\u{1F52E} '}{tw('oraculo.muteErrorMessage', { error: oraculoError })}
+                      </span>
+                    ) : (
+                      <>
+                        {'\u{1F52E} '}
+                        {oraculoText}
+                        {oraculoStreaming && <span aria-hidden="true" style={{ marginLeft: 1 }}>▊</span>}
+                      </>
+                    )}
+                  </div>
+                )}
+              </div>
 
               <section
                 className="field-row"
@@ -210,7 +268,7 @@ export function ActiveDesktopWidget() {
                   disabled={oraculoStreaming || loading}
                   style={{ flex: 1, minWidth: 0, minHeight: 26 }}
                 >
-                  <span style={{ color: 'initial', textShadow: 'none' }}>{'\u{1F52E}'}</span>
+                  <span aria-hidden="true" style={{ color: 'initial', textShadow: 'none' }}>{'\u{1F52E}'}</span>
                   {' '}
                   {oraculoStreaming
                     ? tw('oraculo.stateStreaming')
@@ -232,8 +290,8 @@ export function ActiveDesktopWidget() {
       </div>
 
       <div className="status-bar" style={STATUS_BAR_STYLE}>
-        <p className="status-bar-field">{tw('desktop.wikiSource')}</p>
+        <p className="status-bar-field">{tw(DEMO ? 'desktop.wikiSourceDemo' : 'desktop.wikiSource')}</p>
       </div>
-    </div>
+    </aside>
   );
 }

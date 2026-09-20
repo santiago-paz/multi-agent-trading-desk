@@ -15,6 +15,13 @@ describe('demo oráculo', () => {
     expect(DEMO_WIKI_TOPICS[0].title).toBeTruthy();
   });
 
+  it('every topic carries an image and an article link', () => {
+    for (const topic of DEMO_WIKI_TOPICS) {
+      expect(topic.thumbnail.source, `${topic.title} has no image`).toMatch(/^https:\/\/.*wikimedia\.org\//);
+      expect(topic.content_urls.desktop.page, `${topic.title} has no link`).toMatch(/^https:\/\/en\.wikipedia\.org\/wiki\//);
+    }
+  });
+
   it('streams text deltas terminated by [DONE]', async () => {
     const text = await readAll(demoOraculoStream({ title: 'The Lighthouse of Alexandria' }));
     expect(text).toContain('data: ');

@@ -75,6 +75,7 @@ export const windowsEs = {
   'desktop.readMore': 'Leer más en Wikipedia',
   'desktop.anotherArticle': 'Otro artículo',
   'desktop.wikiSource': 'Wikipedia en español',
+  'desktop.wikiSourceDemo': 'Wikipedia en inglés',
   'desktop.alignIcons': 'Alinear Iconos',
   'oraculo.stateInitial': 'Oráculo',
   'oraculo.stateStreaming': 'Profetizando...',
