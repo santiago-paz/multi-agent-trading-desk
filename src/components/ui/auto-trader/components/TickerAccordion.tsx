@@ -2,7 +2,9 @@ import React, { useState, useMemo } from 'react';
 import { FONT, COLOR_POSITIVE, COLOR_NEGATIVE, COLOR_SECONDARY, COL_SUNKEN } from '@/lib/theme/win98';
 import { LogEntry } from '../types';
 import { AgentDetail } from './AgentDetail';
+import { AgentAvatar } from './AgentAvatar';
 import { LogIcon } from './LogIcon';
+import { agentDisplayName } from '@/lib/agent-avatars';
 import { useAutoTraderT } from '@/lib/i18n';
 
 /* ── Helpers ──────────────────────────────────────────────────────────────── */
@@ -160,9 +162,12 @@ function TickerGroupRow({ group }: { group: TickerGroup }) {
           {group.ticker}
         </span>
 
-        {/* Agent names */}
-        <span style={{ color: COLOR_SECONDARY, fontSize: 10, flexShrink: 0 }}>
-          ({group.agents.map(a => a.replace(/_/g, ' ')).join(', ')})
+        {/* Agents on the case — portraits plus names */}
+        <span style={{ display: 'flex', alignItems: 'center', gap: 3, flexShrink: 0 }}>
+          {group.agents.map(a => <AgentAvatar key={a} agent={a} size={16} />)}
+          <span style={{ color: COLOR_SECONDARY, fontSize: 10, marginLeft: 2 }}>
+            ({group.agents.map(a => agentDisplayName(a)).join(', ')})
+          </span>
         </span>
 
         {/* Signal badge (when analysis complete) */}
@@ -205,9 +210,10 @@ function TickerGroupRow({ group }: { group: TickerGroup }) {
           background: '#ffffff',
         }}>
           {groupByAgent(group.logs).map(({ agent, logs: agentLogs }) => (
-            <div key={agent} style={{ marginBottom: 4 }}>
-              <div style={{ ...FONT, fontWeight: 'bold', color: '#000080', marginBottom: 2 }}>
-                {agent.replace(/_/g, ' ')}:
+            <div key={agent} style={{ marginBottom: 6 }}>
+              <div style={{ ...FONT, display: 'flex', alignItems: 'center', gap: 6, fontWeight: 'bold', color: '#000080', marginBottom: 3 }}>
+                <AgentAvatar agent={agent} size={24} />
+                <span>{agentDisplayName(agent)}</span>
               </div>
               {agentLogs.map(l => (
                 <div key={l.id} style={{ ...FONT, display: 'flex', alignItems: 'center', gap: 4, minHeight: 18, paddingLeft: 8 }}>

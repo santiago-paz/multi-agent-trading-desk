@@ -1,6 +1,7 @@
 import React from 'react';
 import { COL_SUNKEN, FONT } from '@/lib/theme/win98';
 import { useAutoTraderT } from '@/lib/i18n';
+import { AgentAvatar } from '../AgentAvatar';
 
 export function StanleyDruckenmillerDetail({ reasoning }: { reasoning: string }) {
   const t = useAutoTraderT();
@@ -18,20 +19,7 @@ export function StanleyDruckenmillerDetail({ reasoning }: { reasoning: string })
         padding: '8px',
         backgroundColor: '#ffffff'
       }}>
-        <div style={{ flexShrink: 0 }}>
-          <img
-            src="/stanley.png"
-            alt="Stanley Druckenmiller"
-            style={{
-              width: '48px',
-              height: '48px',
-              imageRendering: 'pixelated',
-              border: '2px solid #dfdfdf',
-              borderBottomColor: '#808080',
-              borderRightColor: '#808080'
-            }}
-          />
-        </div>
+        <AgentAvatar agent="stanley_druckenmiller" size={48} />
         <div style={{ flex: 1, ...FONT, fontSize: '1.05em', color: '#111', display: 'block', paddingTop: '1px' }}>
           <div style={{ wordBreak: 'break-word', lineHeight: '1.4', whiteSpace: 'normal' }}>
             {reasoning.split('\n').filter(line => line.trim() !== '').map((paragraph, idx, arr) => (

@@ -257,6 +257,7 @@ export const autoTraderEn: Record<AutoTraderKey, string> = {
   'detail.agent.confidence': '(Confidence: {value}%)',
   'detail.agent.additionalDetails': 'Additional details:',
   'detail.agent.summary': 'Summary:',
+  'detail.agent.analysisTitle': '{name} Analysis:',
 
   // ── Rebalance engine warnings ──
   'engine.sell.noPrice': 'Sell {ticker} skipped: market does not report a valid quote price.',

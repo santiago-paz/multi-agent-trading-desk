@@ -2,6 +2,7 @@ import { hashString, seededPick } from './seed';
 import { sseEvent, pacedStream, type PacedItem } from './sse';
 import { DEMO_AGENTS } from './agents';
 import { DEMO_BASE_PRICES } from './data';
+import { commentaryFor, eventCountFor, stepsFor } from './commentary';
 
 export interface DemoRunBody {
   tickers?: string[];
@@ -10,6 +11,27 @@ export interface DemoRunBody {
 
 const SIGNALS = ['bullish', 'bearish', 'neutral'] as const;
 const ACTIONS = ['buy', 'sell', 'hold', 'hold', 'hold'] as const; // hold-weighted
+
+/* ── Pacing ───────────────────────────────────────────────────────────────
+   A live run takes minutes because every agent calls an LLM. The demo has no
+   work to do, so without pacing the whole log lands in one frame and there is
+   nothing to show an audience. We spread the events over a target duration
+   instead of using a fixed per-step delay, so a 2-ticker run stays watchable
+   and a 20-ticker run still finishes. Override with DEMO_RUN_TARGET_MS.      */
+
+const DEFAULT_TARGET_MS = 60_000;
+const MIN_STEP_MS = 45;
+const MAX_STEP_MS = 650;
+
+function targetDurationMs(): number {
+  const raw = Number(process.env.DEMO_RUN_TARGET_MS);
+  return Number.isFinite(raw) && raw > 0 ? raw : DEFAULT_TARGET_MS;
+}
+
+export function stepDelayMs(totalEvents: number, targetMs: number): number {
+  const perStep = Math.round(targetMs / Math.max(totalEvents, 1));
+  return Math.min(MAX_STEP_MS, Math.max(MIN_STEP_MS, perStep));
+}
 
 function selectedAgentKeys(body: DemoRunBody): string[] {
   const ids = (body.graph_nodes ?? []).map((n) => n.id);
@@ -29,21 +51,24 @@ function priceUsd(ticker: string): number {
   return Math.round(base * 100) / 100;
 }
 
+function signalFor(agent: string, ticker: string): (typeof SIGNALS)[number] {
+  return seededPick(SIGNALS, hashString(`${agent}:${ticker}`));
+}
+
 export function buildDemoRunPayload(body: DemoRunBody) {
   const tickers = body.tickers ?? [];
   const agents = selectedAgentKeys(body);
 
   const analyst_signals: Record<string, Record<string, unknown>> = {};
   for (const agent of agents) {
-    const agentName = DEMO_AGENTS.find((a) => a.key === agent)?.display_name ?? agent;
     const perTicker: Record<string, unknown> = {};
     for (const t of tickers) {
       const seed = hashString(`${agent}:${t}`);
-      const signal = seededPick(SIGNALS, seed);
+      const signal = signalFor(agent, t);
       perTicker[t] = {
         signal,
         confidence: 55 + (seed % 40),
-        reasoning: `${agentName} views ${t} as ${signal} per their style.`,
+        reasoning: commentaryFor(agent, t, signal),
       };
     }
     analyst_signals[agent] = perTicker;
@@ -70,27 +95,33 @@ export function buildDemoRunPayload(body: DemoRunBody) {
   return { analyst_signals, decisions };
 }
 
-export function demoRunStream(body: DemoRunBody, opts: { delayMs?: number } = {}): Response {
-  const delayMs = opts.delayMs ?? 18;
+export function demoRunStream(body: DemoRunBody, opts: { delayMs?: number; targetMs?: number } = {}): Response {
   const tickers = body.tickers ?? [];
   const agents = selectedAgentKeys(body);
   const payload = buildDemoRunPayload(body);
 
+  // One event per plain step, two per fetch step, one final Done per agent+ticker.
+  const totalEvents = tickers.length * agents.reduce((n, a) => n + eventCountFor(a), 0) + 1;
+  const delayMs = opts.delayMs ?? stepDelayMs(totalEvents, opts.targetMs ?? targetDurationMs());
+
   const items: PacedItem[] = [];
   items.push({ chunk: sseEvent('start', {}), delayMs });
 
-  for (const agent of agents) {
-    const agentName = DEMO_AGENTS.find((a) => a.key === agent)?.display_name ?? agent;
-    for (const t of tickers) {
-      const sig = (payload.analyst_signals[agent] as Record<string, { signal: string; confidence: number }>)[t];
+  // Ticker-major so each accordion row fills up and finishes before the next
+  // one appears, which is easier to narrate than twelve rows moving at once.
+  for (const t of tickers) {
+    for (const agent of agents) {
+      for (const step of stepsFor(agent)) {
+        items.push({ chunk: sseEvent('progress', { agent, ticker: t, status: step.status }), delayMs });
+        if (step.fetch) {
+          items.push({ chunk: sseEvent('progress', { agent, ticker: t, status: step.status, result: 'ok' }), delayMs });
+        }
+      }
+      // Final event carries the reasoning and no `result`, which is what makes
+      // the frontend flag it as the analysis log and render the persona card.
+      const sig = (payload.analyst_signals[agent] as Record<string, { reasoning: string }>)[t];
       items.push({
-        chunk: sseEvent('progress', {
-          agent,
-          ticker: t,
-          status: 'done',
-          analysis: `${agentName} · ${t}: ${sig.signal} (confidence ${sig.confidence}%)`,
-          result: 'ok',
-        }),
+        chunk: sseEvent('progress', { agent, ticker: t, status: 'Done', analysis: sig.reasoning }),
         delayMs,
       });
     }

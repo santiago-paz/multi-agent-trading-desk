@@ -10,9 +10,11 @@ export const DEMO_AGENTS: Agent[] = [
   { key: 'peter_lynch',           display_name: 'Peter Lynch',           description: 'Invest in what you know; hunts for ten-baggers with a reasonable PEG.',                   investing_style: 'growth',       order: 7 },
   { key: 'phil_fisher',           display_name: 'Phil Fisher',           description: 'Scuttlebutt research and quality growth sustained over time.',                          investing_style: 'growth',       order: 8 },
   { key: 'stanley_druckenmiller', display_name: 'Stanley Druckenmiller', description: 'Top-down macro; concentrates heavily when conviction is high.',                         investing_style: 'macro',        order: 9 },
-  { key: 'aswath_damodaran',      display_name: 'Aswath Damodaran',      description: 'DCF valuation and narratives turned into numbers.',                                     investing_style: 'valuation',    order: 10 },
-  { key: 'technical_analyst',     display_name: 'Technical Analyst',     description: 'Trend, momentum, and moving averages over price action.',                               investing_style: 'technical',    order: 11 },
-  { key: 'fundamentals_analyst',  display_name: 'Fundamentals Analyst',  description: 'Ratios, margins, and financial health from the financial statements.',                   investing_style: 'fundamental',  order: 12 },
+  { key: 'mohnish_pabrai',        display_name: 'Mohnish Pabrai',        description: 'Dhandho: heads I win, tails I do not lose much. Few bets, big bets, infrequent bets.',   investing_style: 'value',        order: 10 },
+  { key: 'rakesh_jhunjhunwala',   display_name: 'Rakesh Jhunjhunwala',   description: 'Long-term conviction in structural growth stories and emerging-market demand.',          investing_style: 'growth',       order: 11 },
+  { key: 'aswath_damodaran',      display_name: 'Aswath Damodaran',      description: 'DCF valuation and narratives turned into numbers.',                                     investing_style: 'valuation',    order: 12 },
+  { key: 'technical_analyst',     display_name: 'Technical Analyst',     description: 'Trend, momentum, and moving averages over price action.',                               investing_style: 'technical',    order: 13 },
+  { key: 'fundamentals_analyst',  display_name: 'Fundamentals Analyst',  description: 'Ratios, margins, and financial health from the financial statements.',                   investing_style: 'fundamental',  order: 14 },
 ];
 
 export function getDemoAgents(): { agents: Agent[] } {

@@ -112,6 +112,10 @@ Spanish (`es`) is the default locale; English (`en`) is supported. The system is
 
 Setting `NEXT_PUBLIC_DEMO_MODE=true` swaps real IOL/FMP data for fixtures from `src/lib/demo/data.ts` (DEMO_PORTFOLIO, DEMO_OPERATIONS, DEMO_NEWS_*, etc.). Used for screenshots and social media without exposing real account data. Server actions check `DEMO_MODE` and short-circuit to demo getters before hitting any external API.
 
+The Auto Trader analysis (`/api/hedge-fund/run`) is paced so an audience can follow it. `src/lib/demo/run-stream.ts` walks every agent through the same step sequence the real backend emits (the labels come from `src/agents/*.py`), then closes with a `Done` event carrying prose reasoning from `src/lib/demo/commentary.ts`. That is what makes the frontend render the persona card. Events are spread across a target duration rather than a fixed per-step delay, so a 1-ticker run stays watchable and a 20-ticker run still finishes. Set `DEMO_RUN_TARGET_MS` to change it (default 60000; per-step delay is clamped to 45-650ms).
+
+The commentary is sample text written in each investor's documented style, not real quotes. It stands in for the LLM output a live run produces.
+
 ### Styling & theme
 
 - **98.css** library for the Win98 look-and-feel
@@ -136,6 +140,7 @@ ANTHROPIC_API_KEY            # Claude API key for the "Oráculo Bursátil" in Ac
 BASIC_AUTH_USER              # Optional HTTP basic auth (enforced by src/proxy.ts)
 BASIC_AUTH_PASSWORD
 NEXT_PUBLIC_DEMO_MODE        # 'true' to use demo fixtures instead of live data
+DEMO_RUN_TARGET_MS           # Demo only: target seconds*1000 for the Auto Trader run stream (default 60000)
 IOL_INTEGRATION              # '1' to enable IOL integration tests
 FMP_INTEGRATION              # '1' to enable FMP integration tests
 ```

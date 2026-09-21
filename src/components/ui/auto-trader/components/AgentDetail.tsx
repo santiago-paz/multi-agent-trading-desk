@@ -1,7 +1,7 @@
 import React from 'react';
 import { COLOR_LINK } from '@/lib/theme/win98';
 import { useAutoTraderT } from '@/lib/i18n';
-import { TechnicalDetail, SentimentDetail, ValuationDetail, GrowthDetail, FundamentalsDetail, WarrenBuffettDetail, StanleyDruckenmillerDetail, RakeshJhunjhunwalaDetail, PhilFisherDetail, PeterLynchDetail, MohnishPabraiDetail } from './analysts';
+import { TechnicalDetail, SentimentDetail, ValuationDetail, GrowthDetail, FundamentalsDetail, WarrenBuffettDetail, StanleyDruckenmillerDetail, RakeshJhunjhunwalaDetail, PhilFisherDetail, PeterLynchDetail, MohnishPabraiDetail, PersonaDetail } from './analysts';
 
 export function AgentDetail({ detail, ticker, agent, status, isAnalysis }: { detail: string | undefined; ticker?: string; agent?: string; status?: string; isAnalysis?: boolean }) {
   const ta = useAutoTraderT();
@@ -140,6 +140,11 @@ export function AgentDetail({ detail, ticker, agent, status, isAnalysis }: { det
     }
     if (agent === 'mohnish_pabrai_agent' || agent === 'mohnish_pabrai') {
       return <div style={{ margin: '4px 0 0 12px' }}><MohnishPabraiDetail reasoning={detail} /></div>;
+    }
+    // Every other agent (Munger, Graham, Cathie Wood, …) gets the same card,
+    // with an initials tile standing in for the portraits we don't have yet.
+    if (agent) {
+      return <div style={{ margin: '4px 0 0 12px' }}><PersonaDetail agent={agent} reasoning={detail} /></div>;
     }
   }
 

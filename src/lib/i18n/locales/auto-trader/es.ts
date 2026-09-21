@@ -255,6 +255,7 @@ export const autoTraderEs = {
   'detail.agent.confidence': '(Confianza: {value}%)',
   'detail.agent.additionalDetails': 'Detalles adicionales:',
   'detail.agent.summary': 'Resumen:',
+  'detail.agent.analysisTitle': 'Análisis de {name}:',
 
   // ── Rebalance engine warnings ──
   'engine.sell.noPrice': 'Venta de {ticker} omitida: el mercado no reporta un precio de cotización válido.',

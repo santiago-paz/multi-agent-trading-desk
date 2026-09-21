@@ -9,3 +9,4 @@ export { RakeshJhunjhunwalaDetail } from './RakeshJhunjhunwalaDetail';
 export { PhilFisherDetail } from './PhilFisherDetail';
 export { PeterLynchDetail } from './PeterLynchDetail';
 export { MohnishPabraiDetail } from './MohnishPabraiDetail';
+export { PersonaDetail } from './PersonaDetail';
