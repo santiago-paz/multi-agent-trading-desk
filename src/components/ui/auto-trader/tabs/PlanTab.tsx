@@ -5,6 +5,7 @@ import { RebalancePlan } from '@/lib/trading/rebalance-engine';
 import { OrderTable } from '../components/OrderTable';
 import { fmtARS, fmtARS2 } from '../utils';
 import { useAutoTraderT } from '@/lib/i18n';
+import { ActionRow } from '../components/Page';
 
 interface PlanTabProps {
   plan: RebalancePlan | null;
@@ -32,7 +33,7 @@ export function PlanTab({
   const t = useAutoTraderT();
   return (
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0, gap: 8 }}>
-      <div className="win98-scrollbar" style={{ flex: 1, padding: 2, overflowY: 'auto', minHeight: 0 }}>
+      <div className="win98-scrollbar" style={{ flex: 1, overflowY: 'auto', minHeight: 0 }}>
         {!plan && phase !== 'executing' && phase !== 'done' ? (
           <div style={{ ...FONT, padding: 16, textAlign: 'center', color: COLOR_SECONDARY }}>
             {t('plan.empty')}
@@ -227,11 +228,11 @@ export function PlanTab({
       </div>
 
       {phase === 'planned' && hasOrders && (
-        <div style={{ display: 'flex', justifyContent: 'flex-end', flexShrink: 0, paddingTop: 6, borderTop: '1px solid #dfdfdf' }}>
+        <ActionRow>
           <button className="default" onClick={() => setPhase('confirming')}>
             {t('plan.execute')}
           </button>
-        </div>
+        </ActionRow>
       )}
     </div>
   );

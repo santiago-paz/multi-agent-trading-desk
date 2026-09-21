@@ -8,21 +8,25 @@ export function useAgents() {
   const [selectedAgents, setSelectedAgents] = useState<Set<string>>(new Set());
   const [isLoadingAgents, setIsLoadingAgents] = useState(true);
 
-  useEffect(() => {
-    (async () => {
-      try {
-        const res = await fetch(`${API_URL}/agents`);
-        const data = await res.json();
-        const agentList: Agent[] = (data.agents || []).sort((a: Agent, b: Agent) => a.order - b.order);
-        setAgents(agentList);
-        setSelectedAgents(new Set());
-      } catch (err) {
-        console.error('Failed to fetch agents:', err);
-      } finally {
-        setIsLoadingAgents(false);
-      }
-    })();
+  /** Fetches the agent list. Also the retry path when the backend was down at mount. */
+  const loadAgents = useCallback(async () => {
+    setIsLoadingAgents(true);
+    try {
+      const res = await fetch(`${API_URL}/agents`);
+      const data = await res.json();
+      const agentList: Agent[] = (data.agents || []).sort((a: Agent, b: Agent) => a.order - b.order);
+      setAgents(agentList);
+      setSelectedAgents(new Set());
+    } catch (err) {
+      console.error('Failed to fetch agents:', err);
+    } finally {
+      setIsLoadingAgents(false);
+    }
   }, []);
+
+  useEffect(() => {
+    loadAgents();
+  }, [loadAgents]);
 
   const toggleAgent = useCallback((key: string) => {
     setSelectedAgents(prev => {
@@ -52,6 +56,7 @@ export function useAgents() {
     selectAllAgents,
     selectNoAgents,
     setAgentsByKeys,
+    loadAgents,
     apiUrl: API_URL,
   };
 }

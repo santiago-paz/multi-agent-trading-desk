@@ -5,6 +5,7 @@ import { TickerAccordion } from '../components/TickerAccordion';
 import { TickerCell } from '../components/TickerCell';
 import { fmtARS2 } from '../utils';
 import { useAutoTraderT } from '@/lib/i18n';
+import { ActionRow } from '../components/Page';
 
 interface AITabProps {
   phase: Phase;
@@ -43,7 +44,7 @@ export function AITab({
 
   return (
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0, gap: 8 }}>
-      <div className="win98-scrollbar" style={{ flex: 1, overflowY: 'auto', padding: 2, display: 'flex', flexDirection: 'column', gap: 6 }}>
+      <div className="win98-scrollbar" style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 8 }}>
         {phase === 'idle' && logs.length === 0 ? (
           <div style={{ ...FONT, padding: 16, textAlign: 'center', color: COLOR_SECONDARY }}>
             {t('ai.empty')}
@@ -187,7 +188,7 @@ export function AITab({
       </div>
 
       {logs.length > 0 && (
-        <div style={{ display: 'flex', gap: 6, justifyContent: 'flex-end', flexShrink: 0, paddingTop: 6, borderTop: '1px solid #dfdfdf' }}>
+        <ActionRow>
           <button onClick={() => {
             const text = logs.map(l => {
               const parts = [`[${l.status.toUpperCase()}]`];
@@ -201,7 +202,7 @@ export function AITab({
           }}>
             {t('ai.logs.copy')}
           </button>
-        </div>
+        </ActionRow>
       )}
     </div>
   );

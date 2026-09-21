@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
-import { LogEntry, LogStatus, Phase, OrderResult, AgentSignal, Decision, HistoricalRun } from '../types';
+import { LogEntry, LogStatus, Phase, OrderResult, AgentSignal, Decision, HistoricalRun, AutoTraderTab } from '../types';
 import type { ProgressEventPayload, FetchResult } from '../types';
 import { applyProgressEvent } from './applyProgressEvent';
 import { fetchOptimizedPlan, RebalancePlan } from '@/lib/trading/rebalance-engine';
@@ -66,14 +66,14 @@ export function useTradingEngine({
     setLogs(prev => prev.map(l => l.id === id ? { ...l, text, status, agent, ticker, detail } : l));
   }, []);
 
-  async function handleAnalyze(setActiveTab: (tab: 'config' | 'ai' | 'plan' | 'history') => void) {
+  async function handleAnalyze(setActiveTab: (tab: AutoTraderTab) => void) {
     if (selectedAgents.size === 0 || fmpTickers.length === 0) return;
 
     abortRef.current?.abort();
     abortRef.current = new AbortController();
 
     setPhase('analyzing');
-    setActiveTab('ai');
+    setActiveTab('analysis');
     setLogs([]);
     setProgress(0);
     setAnalystSignals(null);

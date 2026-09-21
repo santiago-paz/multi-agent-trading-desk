@@ -7,6 +7,7 @@ import { useHistoryStore } from '@/lib/store/history-store';
 import type { HistoricalRun } from '../types';
 import { fmtARS, fmtARS2 } from '../utils';
 import { useAutoTraderT } from '@/lib/i18n';
+import { ActionRow } from '../components/Page';
 import { TickerCell } from '../components/TickerCell';
 
 interface HistoryTabProps {
@@ -234,7 +235,7 @@ export function HistoryTab({ onRerun, isAnalyzing }: HistoryTabProps) {
 
   return (
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0, gap: 8 }}>
-      <div className="win98-scrollbar" style={{ flex: 1, padding: 2, overflowY: 'auto', minHeight: 0 }}>
+      <div className="win98-scrollbar" style={{ flex: 1, overflowY: 'auto', minHeight: 0 }}>
         {runs.length === 0 ? (
           <div style={{ ...FONT, padding: 16, textAlign: 'center', color: COLOR_SECONDARY }}>
             {t('history.empty')}
@@ -298,11 +299,11 @@ export function HistoryTab({ onRerun, isAnalyzing }: HistoryTabProps) {
       </div>
 
       {runs.length > 0 && (
-        <div style={{ display: 'flex', justifyContent: 'flex-end', flexShrink: 0, paddingTop: 6, borderTop: '1px solid #dfdfdf' }}>
+        <ActionRow>
           <button onClick={() => { if (confirm(t('history.confirmClear'))) clearAll(); }}>
             {t('history.clearAll')}
           </button>
-        </div>
+        </ActionRow>
       )}
     </div>
   );

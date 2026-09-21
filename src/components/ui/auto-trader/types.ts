@@ -1,5 +1,8 @@
 export type PortfolioSortKey = 'ticker' | 'qty' | 'price' | 'priceUsd' | 'valuation';
 
+/** Pages of the Auto Trader property sheet, in tab order. */
+export type AutoTraderTab = 'portfolio' | 'agents' | 'settings' | 'analysis' | 'plan' | 'history';
+
 export interface Agent {
   key: string;
   display_name: string;

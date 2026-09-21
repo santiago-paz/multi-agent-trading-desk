@@ -2,16 +2,24 @@ import type { AutoTraderKey } from './es';
 
 export const autoTraderEn: Record<AutoTraderKey, string> = {
   // ── AutoTraderWindow tabs & status ──
-  'tabs.config': '1. Configuration',
-  'tabs.ai': '2. AI Intelligence',
-  'tabs.plan': '3. Trading Plan',
-  'tabs.history': '4. History',
+  'tabs.portfolio': 'Portfolio',
+  'tabs.agents': 'Agents',
+  'tabs.settings': 'Settings',
+  'tabs.analysis': 'Analysis',
+  'tabs.plan': 'Plan',
+  'tabs.history': 'History',
+  'actions.analyze': 'Analyze',
+  'actions.stop': 'Stop',
+  'actions.reload': 'Reload Portfolio',
   'status.analyzing': 'Analyzing...',
   'status.plan': 'Plan: {sells} sell(s), {buys} buy(s)',
   'status.executing': 'Executing orders...',
   'status.done': '{count} order(s) executed',
   'status.loading': 'Loading...',
   'status.ready': 'Ready',
+  'status.marketOpen': 'Market open',
+  'status.marketClosed': 'Market closed',
+  'status.marketDetail': 'BYMA: {reason}',
 
   // ── Shared column headers ──
   'col.ticker': 'Ticker',
@@ -27,28 +35,47 @@ export const autoTraderEn: Record<AutoTraderKey, string> = {
   'col.action': 'Action',
   'col.decision': 'Decision',
 
-  // ── ConfigTab ──
-  'config.portfolio.title': 'Current Portfolio',
-  'config.portfolio.cash': 'Available cash: ',
-  'config.portfolio.committed': '(Committed: {amount} ARS)',
-  'config.portfolio.total': 'Total portfolio: ',
-  'config.portfolio.loading': 'Loading...',
-  'config.portfolio.empty': 'No CEDEAR positions',
-  'config.portfolio.candidates': 'Candidates (top {count} liquid): {list}',
-  'config.settings.title': 'Configuration',
-  'config.settings.dailyLimit': 'Daily cap:',
-  'config.settings.dailyLimitHint': 'Caps both sell volume and new cash deployed in buys.',
-  'config.settings.dailyLimitHelp': 'Daily AI activity cap: limits the total sell volume (the AI cannot liquidate the entire portfolio at once) and how much new cash from your balance can be deployed in buys (beyond what is recycled from this plan\u2019s sells). Proceeds from sells are automatically reinvested in buys and do not count against the cap.',
-  'config.settings.commissionLabel': 'IOL commission:',
-  'config.settings.commissionValue': '{rate}% per trade',
-  'config.settings.helpAria': 'Help',
-  'config.settings.model': 'AI Model:',
-  'config.settings.marketClosed': 'Market closed ({reason}). IOL prices may not be up to date.',
+  // ── Shared ──
+  'usdApprox': '(~USD {amount})',
+
+  // ── PortfolioTab ──
+  'portfolio.account.title': 'Account',
+  'portfolio.account.cash': 'Available cash:',
+  'portfolio.account.committed': 'Committed:',
+  'portfolio.account.total': 'Total portfolio:',
+  'portfolio.account.mep': 'MEP rate:',
+  'portfolio.account.mepValue': '{rate} ARS per USD',
+  'portfolio.holdings.title': 'Holdings ({count})',
+  'portfolio.holdings.loading': 'Loading...',
+  'portfolio.holdings.empty': 'No CEDEAR positions',
+  'portfolio.candidates.title': 'Buy candidates',
+  'portfolio.candidates.intro': 'The {count} most liquid CEDEARs outside the portfolio go to the agents as buy candidates:',
+  'portfolio.candidates.empty': 'No buy candidates.',
+  'portfolio.marketClosed': 'Market closed ({reason}). IOL prices may not be up to date.',
+
+  // ── AgentsTab ──
+  'agents.intro': 'Choose the agents that take part in the analysis:',
+  'agents.pick.selectAll': 'Select All',
+  'agents.pick.selectNone': 'Select None',
+  'agents.pick.count': '{selected} of {total} agents selected',
+  'agents.pick.loading': 'Loading agents...',
+  'agents.pick.error': 'Could not connect to the AI Hedge Fund server ({url}). Start the backend, then click Reload Portfolio.',
+  'agents.description.title': 'Description',
+  'agents.description.empty': 'Click an agent to read how it decides. Tick the box to include it.',
+  'agents.description.style': 'Investing style: {style}',
+
+  // ── SettingsTab ──
+  'settings.cap.title': 'Daily cap',
+  'settings.cap.label': 'Amount:',
+  'settings.cap.explain': 'The cap limits two things in one analysis: the total sell volume, so the agents cannot liquidate the whole portfolio at once, and the new cash from your balance that goes into buys. Proceeds from sells go back into buys and do not count against the cap.',
+  'settings.model.title': 'AI model',
+  'settings.model.label': 'Model:',
+  'settings.broker.title': 'Broker',
+  'settings.broker.commission': 'IOL commission:',
+  'settings.broker.commissionValue': '{rate}% per trade',
+
+  // ── AgentSelector (shared with Backtesting) ──
   'config.agents.error': 'Could not connect to AI Hedge Fund server ({url})',
-  'config.actions.cancel': 'Cancel',
-  'config.actions.reload': 'Reload Portfolio',
-  'config.actions.analyzing': 'Analyzing...',
-  'config.actions.analyze': 'Analyze',
 
   // ── usePortfolio hook ──
   'portfolio.connectionError': 'Connection error: {msg}',
@@ -56,7 +83,7 @@ export const autoTraderEn: Record<AutoTraderKey, string> = {
   'portfolio.unknownErrorFetching': 'Unknown error fetching portfolio',
 
   // ── AITab ──
-  'ai.empty': 'No analysis data. Set the parameters and press "Analyze" in the Configuration tab.',
+  'ai.empty': 'No analysis yet. Choose the agents on the Agents tab and click Analyze.',
   'ai.progress': 'Progress',
   'ai.signals.title': 'Analyst Signals',
   'ai.candidates.title': 'AI Suggestions (outside portfolio)',

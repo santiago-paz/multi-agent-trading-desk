@@ -1,15 +1,23 @@
 export const autoTraderEs = {
   // ── AutoTraderWindow tabs & status ──
-  'tabs.config': '1. Configuraci\u00f3n',
-  'tabs.ai': '2. Inteligencia AI',
-  'tabs.plan': '3. Plan de Trading',
-  'tabs.history': '4. Historial',
+  'tabs.portfolio': 'Portafolio',
+  'tabs.agents': 'Agentes',
+  'tabs.settings': 'Configuración',
+  'tabs.analysis': 'Análisis',
+  'tabs.plan': 'Plan',
+  'tabs.history': 'Historial',
+  'actions.analyze': 'Analizar',
+  'actions.stop': 'Detener',
+  'actions.reload': 'Recargar Portafolio',
   'status.analyzing': 'Analizando...',
   'status.plan': 'Plan: {sells} venta(s), {buys} compra(s)',
   'status.executing': 'Ejecutando \u00f3rdenes...',
   'status.done': '{count} orden(es) ejecutada(s)',
   'status.loading': 'Cargando...',
   'status.ready': 'Listo',
+  'status.marketOpen': 'Mercado abierto',
+  'status.marketClosed': 'Mercado cerrado',
+  'status.marketDetail': 'BYMA: {reason}',
 
   // ── Shared column headers ──
   'col.ticker': 'Ticker',
@@ -25,28 +33,47 @@ export const autoTraderEs = {
   'col.action': 'Acci\u00f3n',
   'col.decision': 'Decisi\u00f3n',
 
-  // ── ConfigTab ──
-  'config.portfolio.title': 'Portafolio Actual',
-  'config.portfolio.cash': 'Cash disponible: ',
-  'config.portfolio.committed': '(Comprometido: {amount} ARS)',
-  'config.portfolio.total': 'Total portfolio: ',
-  'config.portfolio.loading': 'Cargando...',
-  'config.portfolio.empty': 'Sin posiciones en CEDEARs',
-  'config.portfolio.candidates': 'Candidatos (top {count} líquidos): {list}',
-  'config.settings.title': 'Configuraci\u00f3n',
-  'config.settings.dailyLimit': 'Tope diario:',
-  'config.settings.dailyLimitHint': 'Tope tanto al volumen de ventas como a la plata nueva que sale del cash.',
-  'config.settings.dailyLimitHelp': 'Tope diario de actividad del AI: limita el volumen total de ventas (el AI no puede liquidar el portfolio entero de una sola vez) y la plata nueva del cash que se puede usar para comprar (m\u00e1s all\u00e1 de lo que se recicla de las ventas del mismo plan). La plata recuperada de las ventas se reinvierte en compras autom\u00e1ticamente, sin contar contra el tope.',
-  'config.settings.commissionLabel': 'Comisi\u00f3n IOL:',
-  'config.settings.commissionValue': '{rate}% por operaci\u00f3n',
-  'config.settings.helpAria': 'Ayuda',
-  'config.settings.model': 'Modelo AI:',
-  'config.settings.marketClosed': 'Mercado cerrado ({reason}). Los precios de IOL pueden no estar actualizados.',
+  // ── Shared ──
+  'usdApprox': '(~USD {amount})',
+
+  // ── PortfolioTab ──
+  'portfolio.account.title': 'Cuenta',
+  'portfolio.account.cash': 'Cash disponible:',
+  'portfolio.account.committed': 'Comprometido:',
+  'portfolio.account.total': 'Total del portafolio:',
+  'portfolio.account.mep': 'Dólar MEP:',
+  'portfolio.account.mepValue': '{rate} ARS por USD',
+  'portfolio.holdings.title': 'Tenencia ({count})',
+  'portfolio.holdings.loading': 'Cargando...',
+  'portfolio.holdings.empty': 'Sin posiciones en CEDEARs',
+  'portfolio.candidates.title': 'Candidatos a compra',
+  'portfolio.candidates.intro': 'Los {count} CEDEARs más líquidos fuera del portafolio van a los agentes como candidatos a compra:',
+  'portfolio.candidates.empty': 'Sin candidatos a compra.',
+  'portfolio.marketClosed': 'Mercado cerrado ({reason}). Los precios de IOL pueden no estar actualizados.',
+
+  // ── AgentsTab ──
+  'agents.intro': 'Elegí los agentes que participan del análisis:',
+  'agents.pick.selectAll': 'Todos',
+  'agents.pick.selectNone': 'Ninguno',
+  'agents.pick.count': '{selected} de {total} agentes seleccionados',
+  'agents.pick.loading': 'Cargando agentes...',
+  'agents.pick.error': 'No se pudo conectar al servidor AI Hedge Fund ({url}). Iniciá el backend y después hacé clic en Recargar Portafolio.',
+  'agents.description.title': 'Descripción',
+  'agents.description.empty': 'Hacé clic en un agente para leer cómo decide. Marcá la casilla para incluirlo.',
+  'agents.description.style': 'Estilo de inversión: {style}',
+
+  // ── SettingsTab ──
+  'settings.cap.title': 'Tope diario',
+  'settings.cap.label': 'Monto:',
+  'settings.cap.explain': 'El tope limita dos cosas en cada análisis: el volumen total de ventas, para que los agentes no puedan liquidar todo el portafolio de una vez, y la plata nueva del cash que va a compras. Lo recuperado de las ventas se reinvierte en compras y no cuenta contra el tope.',
+  'settings.model.title': 'Modelo de IA',
+  'settings.model.label': 'Modelo:',
+  'settings.broker.title': 'Bróker',
+  'settings.broker.commission': 'Comisión de IOL:',
+  'settings.broker.commissionValue': '{rate}% por operación',
+
+  // ── AgentSelector (shared with Backtesting) ──
   'config.agents.error': 'No se pudo conectar al servidor AI Hedge Fund ({url})',
-  'config.actions.cancel': 'Cancelar',
-  'config.actions.reload': 'Recargar Portfolio',
-  'config.actions.analyzing': 'Analizando...',
-  'config.actions.analyze': 'Analizar',
 
   // ── usePortfolio hook ──
   'portfolio.connectionError': 'Error de conexión: {msg}',
@@ -54,7 +81,7 @@ export const autoTraderEs = {
   'portfolio.unknownErrorFetching': 'Error desconocido al obtener portfolio',
 
   // ── AITab ──
-  'ai.empty': 'No hay datos de an\u00e1lisis. Configure los par\u00e1metros y presione "Analizar" en la pesta\u00f1a de Configuraci\u00f3n.',
+  'ai.empty': 'Todavía no hay análisis. Elegí los agentes en la pestaña Agentes y presioná Analizar.',
   'ai.progress': 'Progreso',
   'ai.signals.title': 'Se\u00f1ales de Analistas',
   'ai.candidates.title': 'Sugerencias AI (fuera de portfolio)',
